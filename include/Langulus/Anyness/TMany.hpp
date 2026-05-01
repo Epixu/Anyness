@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Inner
    template<CT::NotVoid T> requires (CT::NotHandle<T> and CT::NotReference<T>)
    using TManyBase = Com::Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
-      Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
+      Com::HeapMovable<0, 0, HeapEntry<0, T*>>,
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
       Com::IndexedLinear<>,            // Indexed directly              

@@ -221,17 +221,17 @@ namespace Langulus::Anyness
          template<class, CT::NotVoid, Cid> modifier struct TypedStatic
 
       /// Data providers                                                      
-      template<Cid = 0, CT::HeapEntry...> struct HeapReference;
+      template<CT::HeapEntry = HeapEntry<0, void*>, CT::HeapEntry...> struct HeapReference;
       #define LglsComHeapReference(modifier) \
-         template<Cid, CT::HeapEntry...> modifier struct HeapReference
+         template<CT::HeapEntry, CT::HeapEntry...> modifier struct HeapReference
 
-      template<Cid = 0, uint = 0, uint = 0, CT::HeapEntry...> struct HeapImmovable;
+      template<uint = 0, uint = 0, CT::HeapEntry = HeapEntry<0, void*>, CT::HeapEntry...> struct HeapImmovable;
       #define LglsComHeapImmovable(modifier) \
-         template<Cid, uint, uint, CT::HeapEntry...> modifier struct HeapImmovable
+         template<uint, uint, CT::HeapEntry, CT::HeapEntry...> modifier struct HeapImmovable
 
-      template<Cid = 0, uint = 0, uint = 0, CT::HeapEntry...> struct HeapMovable;
+      template<uint = 0, uint = 0, CT::HeapEntry = HeapEntry<0, void*>, CT::HeapEntry...> struct HeapMovable;
       #define LglsComHeapMovable(modifier) \
-         template<Cid, uint, uint, CT::HeapEntry...> modifier struct HeapMovable
+         template<uint, uint, CT::HeapEntry, CT::HeapEntry...> modifier struct HeapMovable
 
       template<CT::NotVoid, Cid = 0> struct Stack;
       #define LglsComStack(modifier) \

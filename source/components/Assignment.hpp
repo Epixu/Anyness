@@ -96,6 +96,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument)
       requires (CT::RangeAssignable<C, A> /*and CT::Contiguous<C>*/) {
+         using Dimensions = Values<ID, SHARED...>;
+
          if constexpr (not CT::Contiguous<C>) {
             // Assignment for maps/sets falls back to merge             
             self.Clear();
@@ -118,10 +120,17 @@ namespace Langulus::Anyness::Component
                   // Just construct the first element                   
                   self.PrepareForReconstruction();
 
-                  if constexpr (CT::Copied<IntentOf(argument)>)
-                     self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(argument)));
-                  else
-                     self.GetHandle().EmplaceWithIntent(FWDIntent(argument));
+                  auto first = self.GetHandle();
+                  if constexpr (CT::Copied<IntentOf(argument)>) {
+                     Dimensions::ForEach([&]<Cid D>{
+                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                     });
+                  }
+                  else {
+                     Dimensions::ForEach([&]<Cid D>{
+                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                     });
+                  }
                }
                else static_assert(false, "T can't be reconstructed");
             }
@@ -130,16 +139,22 @@ namespace Langulus::Anyness::Component
                if constexpr (not CT::Cloned<IntentOf(argument)> and CT::UnfoldAssignable<T, A&&>) {
                   // Reduce to one item and reassign if possible        
                   if (self.PrepareForReassignment()) {
-                     if constexpr (CT::Copied<IntentOf(argument)>)
-                        self.GetHandle().AssignWithIntent(Refer(LglsFwd(argument)));
-                     else
-                        self.GetHandle().AssignWithIntent(FWDIntent(argument));
+                     auto first = self.GetHandle();
+                     Dimensions::ForEach([&]<Cid D>{
+                        if constexpr (CT::Copied<IntentOf(argument)>)
+                           first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
+                        else
+                           first.template AssignWithIntent<D>(FWDIntent(argument));
+                     });
                   }
                   else {
-                     if constexpr (CT::Copied<IntentOf(argument)>)
-                        self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(argument)));
-                     else
-                        self.GetHandle().EmplaceWithIntent(FWDIntent(argument));
+                     auto first = self.GetHandle();
+                     Dimensions::ForEach([&]<Cid D>{
+                        if constexpr (CT::Copied<IntentOf(argument)>)
+                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                        else
+                           first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                     });
                   }
                }
                else if constexpr (CT::UnfoldConstructible<T, A&&>) {
@@ -147,10 +162,13 @@ namespace Langulus::Anyness::Component
                   // items and reconstruct the first one                
                   self.PrepareForReconstruction();
 
-                  if constexpr (CT::Copied<IntentOf(argument)>)
-                     self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(argument)));
-                  else
-                     self.GetHandle().EmplaceWithIntent(FWDIntent(argument));
+                  auto first = self.GetHandle();
+                  Dimensions::ForEach([&]<Cid D>{
+                     if constexpr (CT::Copied<IntentOf(argument)>)
+                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                     else
+                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                  });
                }
                else static_assert(false, "T can't be reassigned or reconstructed");
             }

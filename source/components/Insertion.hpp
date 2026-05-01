@@ -151,10 +151,12 @@ namespace Langulus::Anyness::Component
          // Insert the new                                              
          auto to = self.GetHandle() + lhs_count;
          auto insert = [&to](auto&& a) {
-            if constexpr (CT::Copied<IntentOf(a)>)
-               to.EmplaceWithIntent(Refer(LglsFwd(a)));
-            else
-               to.EmplaceWithIntent(FWDIntent(a));
+            Values<ID, SHARED...>::ForEach([&]<Cid D>{
+               if constexpr (CT::Copied<IntentOf(a)>)
+                  to.template EmplaceWithIntent<D>(Refer(LglsFwd(a)));
+               else
+                  to.template EmplaceWithIntent<D>(FWDIntent(a));
+            });
             ++to;
          };
 
@@ -359,7 +361,9 @@ namespace Langulus::Anyness::Component
             auto item = DeintCast(a).GetHandle();
             auto const end = item + DeintCast(a).GetCount();
             while (item.GetRaw() != end.GetRaw()) {
-               to.EmplaceWithIntent(IntentOf(a)::Nest(item));
+               Values<ID, SHARED...>::ForEach([&]<Cid D>{
+                  to.template EmplaceWithIntent<D>(IntentOf(a)::Nest(item));
+               });
                ++item; ++to;
             }
          };

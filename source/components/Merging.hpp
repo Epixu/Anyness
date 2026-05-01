@@ -109,10 +109,12 @@ namespace Langulus::Anyness::Component
                }
 
                auto to = self.GetHandle() + lhs_count;
-               if constexpr (CT::Copied<IntentOf(item)>)
-                  to.EmplaceWithIntent(Refer(LglsFwd(item)));
-               else
-                  to.EmplaceWithIntent(FWDIntent(item));
+               Values<ID, SHARED...>::ForEach([&]<Cid D>{
+                  if constexpr (CT::Copied<IntentOf(item)>)
+                     to.template EmplaceWithIntent<D>(Refer(LglsFwd(item)));
+                  else
+                     to.template EmplaceWithIntent<D>(FWDIntent(item));
+               });
             }
             else {
                // Hash table merge                                      

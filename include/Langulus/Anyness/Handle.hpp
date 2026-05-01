@@ -31,7 +31,7 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
       using THandleEmbeddedDense = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipStack<0, Com::WeakOwnership>,
@@ -46,7 +46,7 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleEmbeddedSparse = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
          Com::OwnershipDeepReference<>,
          Com::HashEmergent<>,
@@ -60,7 +60,7 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
       using THandleEmbeddedDenseEmergent = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipEmergent<0, Com::WeakOwnership>,
@@ -76,7 +76,7 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleEmbeddedSparseEmergent = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
          Com::OwnershipDeepEmergent<>,
          Com::HashEmergent<>,
@@ -90,7 +90,7 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires CT::NotSheddable<T>
       using THandleDisownedEmbedded = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
          Com::HashEmergent<>,
          Com::Assignment<>,
@@ -118,7 +118,7 @@ namespace Langulus::Anyness
       template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleLocalSparse = Com::Container<
          Com::TypedStatic<DMeta, T>,
-         Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
+         Com::HeapMovable<0, 0, HeapEntry<0, T*>>,
          Com::CountStatic<0, 1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipStack<>,

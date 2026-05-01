@@ -225,10 +225,12 @@ namespace Langulus::Anyness::Component
 
                   if (not tableBeg[newIndex] and attempt < *table) {
                      // Empty spot found, so move element there         
-                     auto handle = self.GetHandle();
+                     auto handle = self.GetHandle().ForceMutable();
                      auto from   = handle + oldIndex;
                      auto to     = handle + newIndex;
-                     to.ForceMutable().EmplaceWithIntent(Abandon(from));
+                     Values<ID, SHARED...>::ForEach([&]<Cid D>{
+                        to.template EmplaceWithIntent<D>(Abandon(from));
+                     });
                      from.DestroyElement();
 
                      tableBeg[newIndex] = attempt;
@@ -260,12 +262,12 @@ namespace Langulus::Anyness::Component
          TableType attempts = 1;
          auto insertedAt = reserved;
          auto table = tableBeg + start;
-         auto handle = self.GetHandle();
+         auto handle = self.GetHandle().ForceMutable();
          while (*table) {
             const auto index = table - tableBeg;
             if (attempts > *table) {
                // The value we're inserting is closer to bucket, so swap
-               (handle + index).ForceMutable().SwapInner(swapper);
+               (handle + index).SwapInner(swapper);
                ::std::swap(attempts, *table);
                if (insertedAt == reserved)
                   insertedAt = index;
@@ -280,7 +282,12 @@ namespace Langulus::Anyness::Component
 
          // If reached, then empty slot found, so put the value there   
          const auto index = table - tableBeg;
-         (handle + index).ForceMutable().EmplaceWithIntent(Abandon(swapper));
+         handle += index;
+
+         Values<ID, SHARED...>::ForEach([&]<Cid D>{
+            handle.template EmplaceWithIntent<D>(Abandon(swapper));
+         });
+
          if (insertedAt == reserved)
             insertedAt = index;
 

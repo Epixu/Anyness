@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Handle.hpp"
+#include "HandlePair.hpp"
 #include <Langulus/Retype.hpp>
 
 
@@ -40,10 +40,11 @@ namespace Langulus::Anyness
    ///   @attention not-binary compatible with its type-erased Pair           
    template<CT::NotVoid K, CT::NotVoid V>
    struct TPair : Inner::TPairBase<K, V> {
-      using CTTI_Deep   = Yes<>;
-      using CTTI_Pair   = Yes<>;
-      using CTTI_MapsTo = Text;
-      using CTTI_Typed  = Types<K, V>;
+      using CTTI_ReflectAs = TPair;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_Pair      = Yes<>;
+      using CTTI_MapsTo    = Text;
+      using CTTI_Typed     = Types<K, V>;
 
       static constexpr bool TypeErased = false;
 

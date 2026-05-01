@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Inner
    using TMapBase = Com::Container<
       Com::TypedStack<DMeta, K, true, 0>, // Type-constrained keys      
       Com::TypedStack<DMeta, V, true, 1>, // Type-constrained values    
-      Com::HeapMovable<0, 8, 2,
+      Com::HeapMovable<8, 2,
          HeapEntry<0, K*>,                // Key heap data              
          HeapEntry<1, V*>                 // Value heap data            
       >,

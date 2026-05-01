@@ -29,7 +29,6 @@
 #include <source/states/Encrypted.hpp>
 #include <source/states/Tracked.hpp>
 #include "HandlePair.hpp"
-#include "TPair.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -38,7 +37,7 @@ namespace Langulus::Anyness::Inner
    using MapBase = Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,  // Type-erased keys      
       Com::TypedStack<DMeta, void, false, 1>,  // Type-erased values    
-      Com::HeapMovable<0, 8, 2,
+      Com::HeapMovable<8, 2,
          HeapEntry<0, void*>,             // Key heap data              
          HeapEntry<1, void*>              // Value heap data            
       >,

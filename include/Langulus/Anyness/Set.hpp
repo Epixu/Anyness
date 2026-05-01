@@ -35,7 +35,7 @@ namespace Langulus::Anyness::Inner
    template<StateValue SORT>
    using SetBase = Com::Container<
       Com::TypedStack<DMeta>,          // Type-erased                   
-      Com::HeapMovable<0, 8, 2>,       // Pointer to heap memory        
+      Com::HeapMovable<8, 2>,          // Pointer to heap memory        
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
       Com::IndexedHashStack<>,         // Indexed by hash table         

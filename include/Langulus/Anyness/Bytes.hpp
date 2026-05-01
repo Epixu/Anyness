@@ -34,7 +34,7 @@ namespace Langulus::Anyness
    {
       using BytesBase = Com::Container<
          Com::TypedStatic<DMeta, Byte>,      // Type-constrained        
-         Com::HeapMovable<0, 0, 0, HeapEntry<0, Byte*>>,
+         Com::HeapMovable<0, 0, HeapEntry<0, Byte*>>,
          Com::CountStack<>,                  // Variable count          
          Com::ReserveEmergent<>,             // Emergent reserve        
          Com::IndexedLinear<>,               // Indexed directly        

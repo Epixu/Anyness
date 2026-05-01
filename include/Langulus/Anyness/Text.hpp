@@ -38,7 +38,7 @@ namespace Langulus::Anyness
    {
       using TextBase = Com::Container<
          Com::TypedStatic<DMeta, char>,   // Type-constrained           
-         Com::HeapMovable<0, 0, 0, HeapEntry<0, char*>>,
+         Com::HeapMovable<0, 0, HeapEntry<0, char*>>,
          Com::CountStack<>,               // Variable count             
          Com::ReserveEmergent<>,          // Capacity derived from alloc
          Com::IndexedLinear<>,            // Indexed directly           

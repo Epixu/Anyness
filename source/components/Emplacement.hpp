@@ -360,6 +360,7 @@ namespace Langulus::Anyness::Component
       ///   @attention Does not modify any container state.                   
       ///   @attention This overwrites previous handle without dereferencing  
       ///      it and without destroying anything.                            
+      ///   @attention Works at one dimension at a time!                      
       ///   @param intent constructor argument. If this container             
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the contained type.      
@@ -382,14 +383,20 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Cloned<I>) {
             // Clone a handle or element                                
             if constexpr (CT::Handle<IT>) {
-               static_assert(DimensionMatch<C, IT>, "Dimension mismatch");
+               /*static_assert(DimensionMatch<C, IT>, "Dimension mismatch");
                Values<ID, SHARED...>::ForEach([&]<Cid D>{
                   #if LANGULUS_FEATURE(MANAGED_MEMORY)
                      ThisCom::template EmplaceByCloningCustomPointers<D>(rhs);
                   #else
                      ThisCom::template EmplaceByCloningStandardPointers<D>(rhs);
                   #endif
-               });
+               });*/
+               static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
+               #else
+                  ThisCom::template EmplaceByCloningStandardPointers<SID>(rhs);
+               #endif
             }
             else {
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -400,31 +407,32 @@ namespace Langulus::Anyness::Component
             }
          }
          else if constexpr (CT::Handle<IT>) {
-            static_assert(DimensionMatch<C, IT>, "Dimension mismatch");
+            //static_assert(DimensionMatch<C, IT>, "Dimension mismatch");
+            static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
 
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership.   
             // Doesn't matter if managed memory is disabled.            
             // We emplace each dimension separately.                    
-            Values<ID, SHARED...>::ForEach([&]<Cid D>{
-               void* const dst = self.template GetRawVoid<D>();
+            //Values<ID, SHARED...>::ForEach([&]<Cid D>{
+               void* const dst = self.template GetRawVoid<SID>();
 
                if constexpr (CT::TypeErased<C, IT>) {
                   //                                                    
                   // Either this container or the handle is type-erased 
-                  auto T = rhs.template GetType<D>();
-                  LglsAssumeDev(self.template IsSame<D>(T), "Type mismatch");
-                  void* const src = rhs.template GetRawVoid<D>();
+                  auto T = rhs.template GetType<SID>();
+                  LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");
+                  void* const src = rhs.template GetRawVoid<SID>();
 
                   if constexpr (CT::Moved<I>) {
-                     if (rhs.template IsConstant<D>())
+                     if (rhs.template IsConstant<SID>())
                         T.GetReferConstructor()(src, dst);
                      else
                         T.GetMoveConstructor()(src, dst);
                   }
                   else if constexpr (CT::Abandoned<I>) {
-                     if (rhs.template IsConstant<D>())
+                     if (rhs.template IsConstant<SID>())
                         T.GetReferConstructor()(src, dst);
                      else
                         T.GetAbandonConstructor()(src, dst);
@@ -441,17 +449,17 @@ namespace Langulus::Anyness::Component
                   // Both sides are statically-typed and we can benefit 
                   // from a lot of compile-time optimizations.          
                   if constexpr (CT::Typed<C, IT>)
-                     static_assert(Same<TypeOf<C, D>, TypeOf<IT>>, "Type mismatch");
+                     static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
                   else
-                     LglsAssumeDev(self.template IsSame<D>(rhs), "Type mismatch");
+                     LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
 
-                  using T = Tif<CT::Typed<C>, TypeOf<C, D>, TypeOf<IT>>;
+                  using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
                   if constexpr (CT::Mutable<T> or not I::IsMoved())
                      IntentNew(dst, I::Nest(*rhs.template GetRawAs<T>()));
                   else
                      IntentNew(dst, Refer(*rhs.template GetRawAs<T>()));
                }
-            });
+            //});
                
             if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
@@ -680,10 +688,10 @@ namespace Langulus::Anyness::Component
 
                   // Construct the first element                        
                   if constexpr (CT::Copied<IntentOf(arguments)...>)
-                     ThisCom::EmplaceWithIntent(Refer(LglsFwd(arguments))...);
+                     ThisCom::template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                      //self.GetHandle().template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                   else
-                     ThisCom::EmplaceWithIntent(FWDIntent(arguments)...);
+                     ThisCom::template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
                      //self.GetHandle().template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
                }
             }
@@ -694,7 +702,7 @@ namespace Langulus::Anyness::Component
 
                // Construct the first element                           
                if constexpr (CT::Dense<E>)
-                  ThisCom::EmplaceWithIntent(Abandon{E {LglsFwd(arguments)...}});
+                  ThisCom::template EmplaceWithIntent<SID>(Abandon{E {LglsFwd(arguments)...}});
                else static_assert(false,
                   "Too many arguments for emplacing a sparse instance");
             }
@@ -721,14 +729,14 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C, SID>;
             if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>)) {
                if constexpr (CT::Copied<IntentOf(arguments)...>)
-                  ThisCom::EmplaceWithIntent(Refer(LglsFwd(arguments))...);
+                  ThisCom::template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                   //self.GetHandle().template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                else
-                  ThisCom::EmplaceWithIntent(FWDIntent(arguments)...);
+                  ThisCom::template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
                   //self.GetHandle().template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
             }
             else if constexpr (CT::Dense<T>)
-               ThisCom::EmplaceWithIntent(Abandon {Decvq<T> {LglsFwd(arguments)...}});
+               ThisCom::template EmplaceWithIntent<SID>(Abandon {Decvq<T> {LglsFwd(arguments)...}});
             else static_assert(false,
                "Too many arguments for emplacing a sparse instance");
          }

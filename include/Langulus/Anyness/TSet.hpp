@@ -15,7 +15,7 @@ namespace Langulus::Anyness::Inner
    requires (CT::NotHandle<T> and CT::NotReference<T>)
    using TSetBase = Com::Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
-      Com::HeapMovable<0, 8, 2, HeapEntry<0, T*>>,
+      Com::HeapMovable<8, 2, HeapEntry<0, T*>>,
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
       Com::IndexedHashStack<>,         // Indexed by hash table         
