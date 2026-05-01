@@ -45,17 +45,17 @@ namespace Langulus::CT
          }
          else if constexpr (Container<A>) {
             if constexpr (SA::Shallow) {
-               // Generally, shallow intents are always supported,      
-               // but copying will call element assigners, so we        
-               // have to check if the contained type supports it       
+               // Generally, shallow intents are always supported, but  
+               // copying will call element assigners, so we have to    
+               // check if the contained type supports it               
                if constexpr (Copied<SA>)
                   return ReferAssignable<T>;
                else
                   return true;
             }
             else {
-               // Cloning always calls element assigners, and we        
-               // have to check whether contained elements can do it    
+               // Cloning always calls element assigners, and we have   
+               // to check whether contained elements can do it         
                return IntentAssignable<Langulus::Clone, T>;
             }
          }

@@ -96,8 +96,8 @@ namespace Langulus::Anyness
    protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> THandlePair<HandleMut, HandleMut> const& {
-         return *reinterpret_cast<THandlePair<HandleMut, HandleMut> const*>(this);
+      auto ForceMutable() noexcept -> THandlePair<HandleMut, HandleMut>& {
+         return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
       }
    };
    
@@ -186,7 +186,7 @@ namespace Langulus::Anyness
       }
 
       /// Already as mutable as it gets                                       
-      auto ForceMutable() const noexcept -> THandlePair const& {
+      auto ForceMutable() noexcept -> THandlePair& {
          return *this;
       }
    };
@@ -278,8 +278,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> THandlePair<HandleMut, HandleMut> const& {
-         return *reinterpret_cast<THandlePair<HandleMut, HandleMut> const*>(this);
+      auto ForceMutable() noexcept -> THandlePair<HandleMut, HandleMut>& {
+         return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
       }
    };
 

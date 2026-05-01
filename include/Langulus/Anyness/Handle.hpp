@@ -182,7 +182,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> HandleMut {
+      auto ForceMutable() noexcept -> HandleMut& {
          return *this;
       }
 
@@ -241,7 +241,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> HandleDisownedMut {
+      auto ForceMutable() noexcept -> HandleDisownedMut& {
          return *this;
       }
 
@@ -305,8 +305,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> HandleMut {
-         return *reinterpret_cast<HandleMut const*>(this);
+      auto ForceMutable() noexcept -> HandleMut& {
+         return *reinterpret_cast<HandleMut*>(this);
       }
 
       /*constexpr Handle& operator = (Handle const& other) { //TODO doesn't work properly
@@ -376,8 +376,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> HandleDisownedMut {
-         return *reinterpret_cast<HandleDisownedMut const*>(this);
+      auto ForceMutable() noexcept -> HandleDisownedMut& {
+         return *reinterpret_cast<HandleDisownedMut*>(this);
       }
 
       /*constexpr HandleDisowned& operator = (HandleDisowned const& other) { //TODO doesn't work properly
@@ -447,9 +447,9 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
       }
-      auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
+      /*auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
          return *reinterpret_cast<THandle<Decvq<Deref<T>>&> const*>(this);
-      }
+      }*/
 
       /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
@@ -503,9 +503,9 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
       }
-      auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
+      /*auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
          return *reinterpret_cast<THandle<Decvq<Deref<T>>&> const*>(this);
-      }
+      }*/
 
       /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
@@ -566,9 +566,9 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
       }
-      auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
+      /*auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
          return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&> const*>(this);
-      }
+      }*/
    };
 
 
@@ -617,9 +617,9 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
       }
-      auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
+      /*auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
          return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&> const*>(this);
-      }
+      }*/
    };
    
 
@@ -667,7 +667,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> THandleDisowned<Decvq<Deref<T>>&> {
+      auto ForceMutable() noexcept -> THandleDisowned<Decvq<Deref<T>>&>& {
          return *this;
       }
 
@@ -725,7 +725,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> THandle<Decvq<T>> {
+      auto ForceMutable() noexcept -> THandle<Decvq<T>>& {
          return *this;
       }
 
@@ -787,7 +787,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> THandle<Decvq<T>> {
+      auto ForceMutable() noexcept -> THandle<Decvq<T>>& {
          return *this;
       }
 
