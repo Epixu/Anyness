@@ -185,14 +185,15 @@ namespace Langulus::Anyness::Component
             }
 
             // Make a local pair to use as a swapper                    
-            TPair swapper {LglsFwd(k), LglsFwd(v)}; //TODO Copy maybe?
+            THandlePair<
+               THandle<Decvq<Deref<Deint<K>>>>,
+               THandle<Decvq<Deref<Deint<V>>>>
+            > swapper {LglsFwd(k), LglsFwd(v)};
             result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
             ++result.itemsInserted;
          };
 
-         try {
-            insert(LglsFwd(key), LglsFwd(val));
-         }
+         try { insert(LglsFwd(key), LglsFwd(val)); }
          catch (...) {
             // Account for throws inside constructors                   
             self.SetCountInner(lhs_count + result.itemsInserted);

@@ -93,7 +93,7 @@ namespace Langulus::Anyness
          };
       }
 
-   protected:
+   //protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
       auto ForceMutable() noexcept -> THandlePair<HandleMut, HandleMut>& {
@@ -291,11 +291,11 @@ namespace Langulus::Anyness
       Com::HeapReference<HeapEntry<0, Deref<K>*>>,
       Com::HeapReference<HeapEntry<1, Deref<V>*>>,
       Com::CountStatic<0, 1u, 1>,
-      EnableComponentIf<CT::Dense<K, V>, Com::OwnershipEmergent<0, Com::WeakOwnership, 1>>,
-      EnableComponentIf<CT::Dense<K>,    Com::OwnershipEmergent<0, Com::WeakOwnership>>,
-      EnableComponentIf<CT::Dense<V>,    Com::OwnershipEmergent<1, Com::WeakOwnership>>,
-      EnableComponentIf<CT::Sparse<K>,   Com::OwnershipDeepEmergent<0>>,
-      EnableComponentIf<CT::Sparse<V>,   Com::OwnershipDeepEmergent<1>>,
+      EnableComponentIf<CT::Dense<K, V>,                 Com::OwnershipEmergent<0, Com::WeakOwnership, 1>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipEmergent<0, Com::WeakOwnership>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipEmergent<1, Com::WeakOwnership>>,
+      EnableComponentIf<CT::Sparse<K>,                   Com::OwnershipDeepEmergent<0>>,
+      EnableComponentIf<CT::Sparse<V>,                   Com::OwnershipDeepEmergent<1>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Comparison<0, true, 1>,
       Com::IterationOperators<0, 1>
@@ -344,7 +344,7 @@ namespace Langulus::Anyness
          return {this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()};
       }
 
-   protected:
+   //protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
       auto ForceMutable() noexcept
@@ -358,174 +358,82 @@ namespace Langulus::Anyness
       }
    };
 
-
-   ///                                                                        
-   /// Pair of handles                                                        
-   //TODO this is a temporary setup. A better one would probably be to       
-   // concatenate the components of the two handles, offsetting the IDs of   
-   // V, and thus composing a new container to represent the pair.           
-   /*template<CT::Handle K, CT::Handle V> 
-   struct THandlePair {
-      using CTTI_Container = Yes<>;
+   /// Statically typed embedded handles                                      
+   template<CT::Reference K, CT::Reference V> requires CT::NotSheddable<K, V>
+   struct THandlePair<THandle<K>, THandle<V>> : Com::Container<
+      Com::TypedStatic<DMeta, Deref<K>, 0>,
+      Com::TypedStatic<DMeta, Deref<V>, 1>,
+      Com::HeapReference<HeapEntry<0, Deref<K>*>>,
+      Com::HeapReference<HeapEntry<1, Deref<V>*>>,
+      Com::CountStatic<0, 1u, 1>,
+      EnableComponentIf<CT::Dense<K, V>,                 Com::OwnershipStack<0, Com::WeakOwnership, 1>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<0, Com::WeakOwnership>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<1, Com::WeakOwnership>>,
+      EnableComponentIf<CT::Sparse<K>,                   Com::OwnershipDeepReference<0>>,
+      EnableComponentIf<CT::Sparse<V>,                   Com::OwnershipDeepReference<1>>,
+      Com::HashEmergent<0, Hash, 1>,
+      Com::Assignment<0, 1>,
+      Com::Emplacement<0, 1>,
+      Com::Comparison<0, true, 1>,
+      Com::IterationOperators<0, 1>
+   > {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
-      using CTTI_Typed     = Types<TypeOf<K>, TypeOf<V>>;
       using CTTI_ReflectAs = void;
+      using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
 
-      static constexpr bool ContainsMany = false;
-      using Dimensions = Values<0, 1>;
+      using DeepType  = HandleDisowned; // TODO why disowned?
+      using KeyHandle = THandle<K>;
+      using ValHandle = THandle<V>;
 
-      //using Denser         = Types<typename K::Denser,   typename V::Denser>;
-      //using DeepType       = Types<typename K::DeepType, typename V::DeepType>;
+      static constexpr bool Emergent = true;
 
-      using KeyHandleType = K;
-      using ValHandleType = V;
+      /// Handles can't be piecewise-initialized                              
+      THandlePair(Inner::Piecewise, auto&&) = delete;
 
-      static_assert(CT::NoIntent<K, V> and CT::Decayed<K, V>);
-
-      K key;
-      V val;
-
-      constexpr explicit operator bool() const noexcept {
-         return static_cast<bool>(key);
+      constexpr THandlePair() noexcept {
+         this->ConstructDefault();
       }
 
-      auto& GetKey(this auto&& self) noexcept {
-         return self.key;
-      }
-      auto& GetVal(this auto&& self) noexcept {
-         return self.val;
+      constexpr THandlePair(THandlePair const& other) {
+         this->Absorb(Refer(other));
       }
 
-      /// Get raw data associated with the key                                
-      auto GetRaw() const noexcept {
-         return key.GetRaw();
+      constexpr THandlePair(THandlePair&& other) noexcept {
+         this->Absorb(Move(other));
       }
 
-      /// Get the hash of the pair                                            
-      auto GetHash() const -> Hash {
-         return key.GetHash() ^ val.GetHash();
+      constexpr THandlePair(THandle<K>&& key, THandle<V>&& val) noexcept {
+         this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
       }
-      
+
+      /// Assignment                                                          
+      THandlePair& operator = (THandlePair const& other) = delete;
+      THandlePair& operator = (THandlePair&& other) = delete;
+
+      THandle<K> GetKey() {
+         return {this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()};
+      }
+
+      THandle<V> GetVal() {
+         return {this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()};
+      }
+
+   //protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept {
-         return THandlePair<
-            Decay<decltype(key.ForceMutable())>,
-            Decay<decltype(val.ForceMutable())>
-         > {key.ForceMutable(), val.ForceMutable()};
-      }*/
-
-      /*void SwapInner(CT::ContainsOne auto& rhs) {
-         key.SwapInner(LglsFwd(rhs));
-         val.SwapInner(LglsFwd(rhs));
-      }*/
-
-      /*template<CT::Pair P> requires CT::NoIntent<P>
-      void SwapInner(P& rhs) {
-         key.SwapInner(rhs.GetKey());
-         val.SwapInner(rhs.GetVal());
-      }
-
-      template<CT::Intent I> requires CT::Pair<I>
-      void EmplaceWithIntent(I&& intent) {
-         key.EmplaceWithIntent(I::Nest(intent->GetKey()));
-         val.EmplaceWithIntent(I::Nest(intent->GetVal()));
-      }
-
-      template<bool DESTROY = true>
-      void DestroyElement() {
-         key.template DestroyElement<DESTROY>();
-         val.template DestroyElement<DESTROY>();
-      }
-
-      template<bool FIND_MISSING = false>
-      void KeepElementDeepCustomPointers() {
-         key.template KeepElementDeepCustomPointers<FIND_MISSING>();
-         val.template KeepElementDeepCustomPointers<FIND_MISSING>();
-      }
-
-      /// Offset pair to the right by the desired amount                      
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset the number of elements to offset                    
-      ///   @return a shallow modified copy of this container                 
-      constexpr auto operator + (size_t offset) const assumptious -> THandlePair {
-         THandlePair copy = *this;
-         return copy += offset;
-      }
-
-      /// Offset pair element to the right by the desired amount              
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset the number of elements to offset                    
-      ///   @return reference to this, after being modified                   
-      constexpr auto operator += (size_t offset) assumptious -> THandlePair& {
-         key += offset;
-         val += offset;
-         return *this;
-      }
-
-      /// Prefix increment operator                                           
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @return reference to this, after being modified                   
-      constexpr auto operator ++ () assumptious -> THandlePair& {
-         return (*this += 1);
-      }
-
-      /// Suffix increment operator                                           
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @return a copy of the state, before modifying it                  
-      constexpr auto operator ++ (int) assumptious -> THandlePair {
-         THandlePair backup = *this;
-         *this += 1;
-         return backup;
-      }
-      
-      /// Get the element difference between two iterators                    
-      ///   @attention very usafe - assumes rhs's type is same as self        
-      ///   @param rhs the other iterator                                     
-      ///   @return the difference in number of elements                      
-      constexpr auto operator - (THandlePair const& rhs) const assumptious -> ::std::ptrdiff_t {
-         return key - rhs.key;
-      }
-      
-      /// Offset first element to the left by the desired amount              
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset the number of elements to offset                    
-      ///   @return a shallow modified copy of this container                 
-      constexpr auto operator - (size_t offset) const assumptious -> THandlePair {
-         THandlePair copy = *this;
-         return (copy -= offset);
-      }
-
-      /// Offset first element to the left by the desired amount              
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset the number of elements to offset                    
-      ///   @return reference to this, after being modified                   
-      constexpr auto operator -= (size_t offset) assumptious -> THandlePair& {
-         key -= offset;
-         val -= offset;
-         return *this;
-      }
-
-      /// Prefix decrement operator                                           
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @return reference to this, after being modified                   
-      constexpr auto operator -- () assumptious -> THandlePair& {
-         return (*this -= 1);
-      }
-
-      /// Suffix decrement operator                                           
-      ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @return a copy of the state, before modifying it                  
-      constexpr auto operator -- (int) assumptious -> THandlePair {
-         THandlePair backup = *this;
-         *this -= 1;
-         return backup;
+      auto ForceMutable() noexcept
+         -> THandlePair<THandle<Decvq<Deref<K>>&>,
+                        THandle<Decvq<Deref<V>>&>>&
+      {
+         return *reinterpret_cast<THandlePair<
+            THandle<Decvq<Deref<K>>&>,
+            THandle<Decvq<Deref<V>>&>
+         >*>(this);
       }
    };
-
-   static_assert(not CT::Intent<THandlePair<Handle, Handle>>);*/
 
    template<CT::Handle K, CT::Handle V>
    THandlePair(K&&, V&&) -> THandlePair<Decay<K>, Decay<V>>;
