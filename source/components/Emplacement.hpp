@@ -194,7 +194,8 @@ namespace Langulus::Anyness::Component
       LglsComInsertion(friend);
       LglsComMerging(friend);
       LglsComIndexedCommonHashed(friend);
-      //template<CT::Handle, CT::Handle> friend struct THandlePair;
+      
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 

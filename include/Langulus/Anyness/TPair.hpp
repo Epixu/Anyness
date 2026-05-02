@@ -108,9 +108,16 @@ namespace Langulus::Anyness
       using Com::Comparison<0, true, 1>::operator ==;
 
       decltype(auto) GetKey(this auto&& self) noexcept {
-         return self.GetHandle().GetKey();
+         return self.Com::template Stack<K, 0>::Get();
       }
       decltype(auto) GetVal(this auto&& self) noexcept {
+         return self.Com::template Stack<V, 1>::Get();
+      }
+
+      decltype(auto) GetKeyHandle(this auto&& self) noexcept {
+         return self.GetHandle().GetKey();
+      }
+      decltype(auto) GetValHandle(this auto&& self) noexcept {
          return self.GetHandle().GetVal();
       }
    };

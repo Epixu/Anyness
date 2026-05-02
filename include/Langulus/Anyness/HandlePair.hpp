@@ -52,18 +52,6 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      /*constexpr THandlePair(
-         void const* ptr0, EntryPtr entry0, DMeta type0,
-         void const* ptr1, EntryPtr entry1, DMeta type1
-      ) noexcept {
-         this->Com::HeapReference<0>::SetHeapInner(ptr0);
-         this->Com::HeapReference<1>::SetHeapInner(ptr1);
-         this->Com::OwnershipDeepReference<0>::SetEntriesInner(entry0);
-         this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
-         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
-         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
-      }*/
-
       constexpr THandlePair(Handle&& key, Handle&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0, void*>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1, void*>>::SetHeapInner(val.GetHeapInner());
@@ -144,18 +132,6 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      /*constexpr THandlePair(
-         void const* ptr0, EntryPtr entry0, DMeta type0,
-         void const* ptr1, EntryPtr entry1, DMeta type1
-      ) noexcept {
-         this->Com::HeapReference<0>::SetHeapInner(ptr0);
-         this->Com::HeapReference<1>::SetHeapInner(ptr1);
-         this->Com::OwnershipDeepReference<0>::SetEntriesInner(entry0);
-         this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
-         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
-         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
-      }*/
-
       constexpr THandlePair(HandleMut&& key, HandleMut&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0, void*>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1, void*>>::SetHeapInner(val.GetHeapInner());
@@ -234,18 +210,6 @@ namespace Langulus::Anyness
       constexpr THandlePair(THandlePair&& other) noexcept {
          this->Absorb(Move(other));
       }
-
-      /*constexpr THandlePair(
-         void const* ptr0, EntryPtr entry0, DMeta type0,
-         void const* ptr1, EntryPtr entry1, DMeta type1
-      ) noexcept {
-         this->Com::HeapReference<0>::SetHeapInner(ptr0);
-         this->Com::HeapReference<1>::SetHeapInner(ptr1);
-         this->Com::OwnershipDeepReference<0>::SetEntriesInner(entry0);
-         this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
-         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
-         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
-      }*/
 
       constexpr THandlePair(Handle&& key, HandleMut&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0, void*>>::SetHeapInner(key.GetHeapInner());
@@ -387,8 +351,6 @@ namespace Langulus::Anyness
       using KeyHandle = THandle<K>;
       using ValHandle = THandle<V>;
 
-      static constexpr bool Emergent = true;
-
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
 
@@ -432,6 +394,106 @@ namespace Langulus::Anyness
             THandle<Decvq<Deref<K>>&>,
             THandle<Decvq<Deref<V>>&>
          >*>(this);
+      }
+   };
+
+   /// Statically typed local handles                                         
+   template<CT::NotReference K, CT::NotReference V> requires (CT::NotSheddable<K, V> and CT::NotHandle<K, V>)
+   struct THandlePair<THandle<K>, THandle<V>> : Com::Container<
+      Com::TypedStatic<DMeta, Deref<K>, 0>,
+      Com::TypedStatic<DMeta, Deref<V>, 1>,
+      EnableComponentIf<CT::Dense<K>, Com::Stack<K, 0>>,
+      EnableComponentIf<CT::Dense<V>, Com::Stack<V, 1>>,
+      EnableComponentIf<CT::Sparse<K>, Com::HeapMovable<0, 0, HeapEntry<0, K*>>>,
+      EnableComponentIf<CT::Sparse<V>, Com::HeapMovable<0, 0, HeapEntry<1, V*>>>,
+      Com::CountStatic<0, 1u, 1>,
+      EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipStack<0, Com::StrongOwnership, 1>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<1, Com::StrongOwnership>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<0, Com::StrongOwnership>>,
+      EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipDeepHeap<0, true, 1>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipDeepHeap<1>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipDeepHeap<0>>,
+      Com::HashEmergent<0, Hash, 1>,
+      Com::Assignment<0, 1>,
+      Com::Emplacement<0, 1>,
+      Com::Comparison<0, true, 1>
+   > {
+      using CTTI_Deep      = Yes<>;
+      using CTTI_Handle    = Yes<>;
+      using CTTI_Pair      = Yes<>;
+      using CTTI_ReflectAs = void;
+      using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
+
+      using DeepType  = HandleDisowned; // TODO why disowned?
+      using KeyHandle = Tif<CT::Sparse<K>, THandle<K&>, THandleEmergent<K&>>;
+      using ValHandle = Tif<CT::Sparse<V>, THandle<V&>, THandleEmergent<V&>>;
+
+      /// Handles can't be piecewise-initialized                              
+      THandlePair(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandlePair() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr THandlePair(THandlePair const& other) {
+         this->Absorb(Refer(other));
+      }
+
+      constexpr THandlePair(THandlePair&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+
+      constexpr THandlePair(auto&& key, auto&& val) noexcept {
+         this->template EmplaceWithIntent<0>(FWDIntent(key));
+         this->template EmplaceWithIntent<1>(FWDIntent(val));
+      }
+
+      /*constexpr THandlePair(THandle<K>&& key, THandle<V>&& val) noexcept {
+         this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
+      }*/
+
+      /// Assignment                                                          
+      THandlePair& operator = (THandlePair const& other) = delete;
+      THandlePair& operator = (THandlePair&& other) = delete;
+
+      auto GetKey() -> KeyHandle {
+         if constexpr (CT::Sparse<K, V>) {
+            return THandle<K&> {
+               this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
+               this->Com::OwnershipDeepHeap<0, true, 1>::template GetEntriesInner<0>()
+            };
+         }
+         else if constexpr (CT::Sparse<K>) {
+            return THandle<K&> {
+               this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
+               this->Com::OwnershipDeepHeap<0>::GetEntriesInner()
+            };
+         }
+         else return THandleEmergent<K&> {this->Com::Stack<K, 0>::GetRaw()};
+      }
+
+      auto GetVal() -> ValHandle {
+         if constexpr (CT::Sparse<K, V>) {
+            return THandle<V&> {
+               this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
+               this->Com::OwnershipDeepHeap<0, true, 1>::template GetEntriesInner<1>()
+            };
+         }
+         else if constexpr (CT::Sparse<V>) {
+            return THandle<V&> {
+               this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
+               this->Com::OwnershipDeepHeap<1>::GetEntriesInner()
+            };
+         }
+         else return THandleEmergent<V&> {this->Com::Stack<V, 1>::GetRaw()};
+      }
+
+   //protected:
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() noexcept  -> THandlePair<THandle<Decvq<K>>, THandle<Decvq<V>>>& {
+         return *reinterpret_cast<THandlePair<THandle<Decvq<K>>, THandle<Decvq<V>>>*>(this);
       }
    };
 

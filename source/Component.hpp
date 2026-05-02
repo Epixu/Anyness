@@ -53,13 +53,16 @@ namespace Langulus::Anyness
 
    namespace Component
    {
-      template<class WHATEVER>
+      /// Used to disable components at compile-time                          
+      template<class>
       struct DisabledComponent {
          using CTTI_Component = Yes<>;
          static constexpr bool SkipThisComponent = true;
       };
    }
 
+   /// Enables COMPONENT only if CONDITION is met.                            
+   /// Useful for making container definitions more flexible.                 
    template<bool CONDITION, CT::Component COMPONENT>
    using EnableComponentIf = Tif<CONDITION, COMPONENT, Component::DisabledComponent<COMPONENT>>;
 }

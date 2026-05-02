@@ -122,10 +122,10 @@ namespace Langulus::Anyness
       using Com::Comparison<0, true, 1>::operator <=>;
       using Com::Comparison<0, true, 1>::operator ==;
 
-      decltype(auto) GetKey(this auto&& self) noexcept {
+      decltype(auto) GetKeyHandle(this auto&& self) noexcept {
          return self.GetHandle().GetKey();
       }
-      decltype(auto) GetVal(this auto&& self) noexcept {
+      decltype(auto) GetValHandle(this auto&& self) noexcept {
          return self.GetHandle().GetVal();
       }
    };
