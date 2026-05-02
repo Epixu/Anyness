@@ -234,6 +234,7 @@ namespace Langulus::Anyness
       LglsComReserveStack(friend);
       LglsComOwnershipDeepHeap(friend);
       LglsComOwnershipDeepReference(friend);
+      LglsComOwnershipDeepEmergent(friend);
       LglsComHashStack(friend);
       LglsComHashHeap(friend);
       LglsComHashEmergent(friend);

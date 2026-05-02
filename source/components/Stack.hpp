@@ -30,29 +30,31 @@ namespace Langulus::Anyness::Component
       static constexpr Cid Id = ID;
       static constexpr Cid StackProvider = ID;
       static constexpr int ComponentPrecedence = -2000;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID>;
       
       /// Get a direct access to the stack memory                             
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
-      constexpr auto GetRaw(this C&& self) noexcept {
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr auto GetRaw(this auto&& self) noexcept {
          return &ThisCom::GetStackInner();
       }
 
       /// Get a direct access to the stack memory as a different type         
-      template<class AS, Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<class AS, Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr auto GetRawAs(this C&& self) noexcept {
          using AScvq = LglsMutIf(C, AS*);
          return static_cast<AScvq>(ThisCom::GetRaw());
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
-      constexpr auto GetRawEnd(this C&& self) noexcept {
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr auto GetRawEnd(this auto&& self) noexcept {
          return ThisCom::GetRaw() + 1;
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
-      constexpr auto GetRawReserveEnd(this C&& self) noexcept {
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr auto GetRawReserveEnd(this auto&& self) noexcept {
          return ThisCom::GetRawEnd();
       }
 
@@ -62,7 +64,7 @@ namespace Langulus::Anyness::Component
       ///   @attention no type-safety                                         
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the stack                                              
-      template<class AS = void, Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<class AS = void, Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -97,7 +99,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
       template<CT::NotVoid AS, Cid SID = ID, CT::Container C>
-      requires (SID == ID and CT::Contiguous<C>)
+      requires (Relevant<SID> and CT::Contiguous<C>)
       decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
@@ -123,7 +125,7 @@ namespace Langulus::Anyness::Component
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
       template<class AS = void, Cid SID = ID, CT::Container C>
-      requires (SID == ID and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
+      requires (Relevant<SID> and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
       auto GetResolved(this C&& self) {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -149,7 +151,7 @@ namespace Langulus::Anyness::Component
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
       template<class AS = void, Cid SID = ID, CT::Container C>
-      requires (SID == ID and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
+      requires (Relevant<SID> and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
       auto GetDense(this C&& self, size_t count = -1) {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -192,6 +194,12 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      /// Get a direct access to the stack memory                             
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr void* GetRawVoid(this auto&& self) noexcept {
+         return const_cast<void*>(static_cast<const void*>(&ThisCom::GetStackInner()));
+      }
+
       /// Default-initialize the variable                                     
       constexpr void ConstructDefault(this auto& self) noexcept requires CT::NotReference<T> {
          ThisCom::SetStackInner({});

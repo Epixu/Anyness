@@ -151,8 +151,11 @@ namespace Langulus::Anyness::Component
 
       /// Check if container is in the default state                          
       ///   @return true if either contains state, or has stuff inserted      
-      constexpr bool IsDefaultState(this auto const& self) noexcept requires HasStates {
-         return self.GetState().mState == self.GetDefaultState();
+      constexpr bool IsDefaultState(this auto const& self) noexcept {
+         if constexpr (HasStates)
+            return self.GetState().mState == self.GetDefaultState();
+         else
+            return true;
       }
 
    protected:

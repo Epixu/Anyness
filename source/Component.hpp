@@ -50,6 +50,18 @@ namespace Langulus::Anyness
 {
    /// A component ID                                                         
    using Cid = uint;
+
+   namespace Component
+   {
+      template<class WHATEVER>
+      struct DisabledComponent {
+         using CTTI_Component = Yes<>;
+         static constexpr bool SkipThisComponent = true;
+      };
+   }
+
+   template<bool CONDITION, CT::Component COMPONENT>
+   using EnableComponentIf = Tif<CONDITION, COMPONENT, Component::DisabledComponent<COMPONENT>>;
 }
 
 namespace Langulus::Anyness::Component
@@ -487,38 +499,49 @@ namespace Langulus::Anyness
       ///   @tparam C1, CN... components                                      
       template<int ACC, int PRECEDENCE, class C1, class...CN>
       consteval bool ValidateComponentOrderNested() {
-         static_assert(C1::ComponentPrecedence >= PRECEDENCE,
-            "Wrong component order");
-         
-         if constexpr (requires { C1::StackProvider; }) {
-            static_assert(C1::StackProvider == ACC,
-               "Invalid stack provider ID");
-            static_assert(not requires { C1::HeapProvider; }, 
-               "Component can't be both a stack and a heap provider");
-
+         if constexpr (requires { C1::SkipThisComponent; }) {
             if constexpr (sizeof...(CN) > 0)
-               return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
-            else
-               return true;
-         }
-         else if constexpr (requires { C1::HeapProvider; }) {
-            static_assert(C1::HeapProvider == ACC,
-               "Invalid heap provider ID");
-            static_assert(not requires { C1::StackProvider; },
-               "Component can't be both a stack and a heap provider");
-
-            if constexpr (sizeof...(CN) > 0)
-               return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
-            else
-               return true;
-         }
-         else {
-            if constexpr (sizeof...(CN) > 0)
-               return ValidateComponentOrderNested<ACC, C1::ComponentPrecedence, CN...>();
+               return ValidateComponentOrderNested<ACC, PRECEDENCE, CN...>();
             else {
                static_assert(ACC > 0,
                   "Container must have at least one heap or stack provider");
                return true;
+            }
+         }
+         else {
+            static_assert(C1::ComponentPrecedence >= PRECEDENCE,
+               "Wrong component order");
+
+            if constexpr (requires { C1::StackProvider; }) {
+               static_assert(C1::StackProvider == ACC,
+                  "Invalid stack provider ID");
+               static_assert(not requires { C1::HeapProvider; },
+                  "Component can't be both a stack and a heap provider");
+
+               if constexpr (sizeof...(CN) > 0)
+                  return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
+               else
+                  return true;
+            }
+            else if constexpr (requires { C1::HeapProvider; }) {
+               static_assert(C1::HeapProvider == ACC,
+                  "Invalid heap provider ID");
+               static_assert(not requires { C1::StackProvider; },
+                  "Component can't be both a stack and a heap provider");
+
+               if constexpr (sizeof...(CN) > 0)
+                  return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
+               else
+                  return true;
+            }
+            else {
+               if constexpr (sizeof...(CN) > 0)
+                  return ValidateComponentOrderNested<ACC, C1::ComponentPrecedence, CN...>();
+               else {
+                  static_assert(ACC > 0,
+                     "Container must have at least one heap or stack provider");
+                  return true;
+               }
             }
          }
       }

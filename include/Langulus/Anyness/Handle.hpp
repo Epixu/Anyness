@@ -28,7 +28,7 @@ namespace Langulus::Anyness
       //TODO define the type-erased bases for handles here as well??
 
       /// Statically typed handle to a dense element held inside a container  
-      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
+      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleEmbeddedDense = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
@@ -43,7 +43,7 @@ namespace Langulus::Anyness
       >;
       
       /// Statically typed handle to a sparse element held inside a container 
-      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
+      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleEmbeddedSparse = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
@@ -57,7 +57,7 @@ namespace Langulus::Anyness
       >;
       
       /// Statically typed handle to a dense element held inside a container  
-      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
+      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleEmbeddedDenseEmergent = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
@@ -73,7 +73,7 @@ namespace Langulus::Anyness
 
       /// Statically typed handle to a sparse element held inside a container 
       /// (with emergent deep ownership)                                      
-      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
+      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleEmbeddedSparseEmergent = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
@@ -87,7 +87,7 @@ namespace Langulus::Anyness
       >;
       
       /// Statically typed handle to a disowned element held inside container 
-      template<CT::Reference T> requires CT::NotSheddable<T>
+      template<CT::Reference T> requires (CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleDisownedEmbedded = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
@@ -102,7 +102,7 @@ namespace Langulus::Anyness
       /// Statically typed handle to a local dense value                      
       /// (isomorphic to TOwn)                                                
       //TODO inherit TOwn from this?
-      template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
+      template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleLocalDense = Com::Container<
          Com::TypedStatic<DMeta, T>,
          Com::Stack<T>,
@@ -115,7 +115,7 @@ namespace Langulus::Anyness
       
       /// Statically typed handle to a local sparse value.                    
       ///   @attention this handle is local and has strong ownership!         
-      template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
+      template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleLocalSparse = Com::Container<
          Com::TypedStatic<DMeta, T>,
          Com::HeapMovable<0, 0, HeapEntry<0, T*>>,

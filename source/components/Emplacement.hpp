@@ -51,6 +51,143 @@ namespace Langulus::Anyness::Component
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+
+      /// Generic emplacement that constructs/overwrites specific element.    
+      /// Any overwritten element will be dereferenced/destroyed first.       
+      ///   @tparam E Sets the type of the container if empty. Ignored if     
+      ///      container is statically-typed.                                 
+      ///   @param at The index at which to emplace                           
+      ///   @param arguments Constructor arguments for initializing an        
+      ///      element. If C is type-erased, argument must be Describe.       
+      ///   @return a reference or handle to the newly created element        
+      template<class E = void, Cid SID = ID, CT::ContainsMany C, class...A> requires Relevant<SID>
+      auto EmplaceAt(this C& self, CT::Index auto&& at, A&&...arguments)
+      -> DecidePick<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
+         DecidePick<C> pick = self.template AsAt<DecidePick<C>, SID>(LglsFwd(at));
+         pick.template Emplace<E, SID>(LglsFwd(arguments)...);
+         return pick;
+      }
+
+      /// Generic emplacement that constructs/overwrites the first element.   
+      /// Any overwritten element will be dereferenced/destroyed first.       
+      ///   @tparam E Sets the type of the container if empty. Ignored if     
+      ///      container is statically-typed.                                 
+      ///   @param arguments Constructor arguments                            
+      ///   @return a reference or handle to the newly created element        
+      template<class E = void, Cid SID = ID, CT::Container C, class...A> requires Relevant<SID>
+      auto Emplace(this C& self, A&&...arguments)
+      -> DecidePick<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
+         auto a = self.template GetAllocation<SID>();
+         if (not a) {
+            // No ownership, just fresh-allocate                        
+            try {
+               if constexpr (sizeof...(arguments) > 0)
+                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+               else
+                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
+            }
+            catch (...) {
+               // Reset heap count in case 'self' was disowned          
+               if_available(self.template SetReservedInner<SID>(0));
+               if_available(self.template SetHashTableInner<SID>(nullptr));
+               self.template ResetCount<SID>();
+               throw;
+            }
+         }
+         else if (self.template IsEmpty<SID>()) {
+            // The container is empty, but an allocation is available   
+            if (a->GetUses() != 1) {
+               // We're not the only owner of this memory.              
+               // We have to branch off with a fresh allocation.        
+               DecvqAllCast(a)->AddRef(-1);
+
+               try {
+                  if constexpr (sizeof...(arguments) > 0)
+                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                  else
+                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
+               }
+               catch (...) {
+                  self.template SetAllocationInner<SID>(nullptr);
+                  if_available(self.template SetReservedInner<SID>(0));
+                  if_available(self.template SetHashTableInner<SID>(nullptr));
+                  self.template ResetCount<SID>();
+                  throw;
+               }
+            }
+            else {
+               // Emplace a new element on the first position.          
+               // We're allowed to reuse the memory.                    
+               if constexpr (sizeof...(arguments) > 0)
+                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndReallocate, E>(LglsFwd(arguments)...);
+               else
+                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndReallocate, E>();
+            }
+         }
+         else {
+            // The container is not empty                               
+            if (a->GetUses() != 1) {
+               // We're not the only owner of this memory.              
+               // We have to branch off with a fresh allocation.        
+               self.template Free<SID>();
+
+               try {
+                  if constexpr (sizeof...(arguments) > 0)
+                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                  else
+                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
+               }
+               catch (...) {
+                  self.template SetAllocationInner<SID>(nullptr);
+                  if_available(self.template SetReservedInner<SID>(0));
+                  if_available(self.template SetHashTableInner<SID>(nullptr));
+                  self.template ResetCount<SID>();
+                  throw;
+               }
+            }
+            else {
+               // We're allowed to reuse the memory.                    
+               // Need to destroy and overwrite only the first element. 
+               auto item = self.template GetHandle<void, SID>();
+               item.template DestroyElement<SID>();
+               if_available(item.template ResetEntries<SID>());
+               //TODO clear the correspnding hash table spot?
+
+               // Emplace a new element on the first position.          
+               // Any state change is forbidden - container is full.    
+               try {
+                  if constexpr (sizeof...(arguments) > 0)
+                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
+                  else
+                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::NoStateChange, E>();
+               }
+               catch (...) {
+                  // If emplacement fails, we are forced to destroy     
+                  // all remaining elements as well.                    
+                  if constexpr (CT::ContainsMany<C>) {
+                     item += 1;
+                     const auto itemsEnd = self.template GetHandle<void, SID>() + self.template GetCount<SID>();
+                     while (item.GetRaw() != itemsEnd.GetRaw()) {
+                        item.template DestroyElement<SID>();
+                        ++item;
+                     }
+                  }
+
+                  Allocator::Deallocate(DecvqAllCast(a));
+                  self.template SetAllocationInner<SID>(nullptr);
+                  if_available(self.template SetReservedInner<SID>(0));
+                  if_available(self.template SetHashTableInner<SID>(nullptr));
+                  self.template ResetCount<SID>();
+                  throw;
+               }
+            }
+         }
+
+         // Return a reference/handle to the newly emplaced element     
+         return self.template As<Deref<DecidePick<C>>, SID>();
+      }
 
    protected:
       LglsComHeapMovable(friend);
@@ -62,8 +199,7 @@ namespace Langulus::Anyness::Component
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 
       ///   @attention handles one dimension at a time!                       
-      template<Cid SID = ID, CT::Container C, CT::NoIntent IT>
-      requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C, CT::NoIntent IT> requires Relevant<SID>
       void EmplaceByCloningStandardPointers(this C& self, IT const& rhs) {
          /*static_assert(CT::ContainsOne<C>,
             "Emplacing only first element in a container with many. "
@@ -266,8 +402,7 @@ namespace Langulus::Anyness::Component
       /// This is a more generic approach that is considerably slower.        
       ///   @attention handles one dimension at a time!                       
       //TODO could benefit from static optimization                          
-      template<Cid SID = ID, CT::Container C, CT::NoIntent IT>
-      requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C, CT::NoIntent IT> requires Relevant<SID>
       void EmplaceByCloningCustomPointers(this C& self, IT const& rhs) {
          /*static_assert(CT::ContainsOne<C>,
             "Emplacing only first element in a container with many. "
@@ -364,8 +499,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent constructor argument. If this container             
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the contained type.      
-      template<Cid SID = ID, CT::Container C, CT::Intent I>
-      requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C, CT::Intent I> requires Relevant<SID>
       void EmplaceWithIntent(this C&& self, I&& intent) {
          /*static_assert(CT::ContainsOne<C>,
             "Emplacing only first element in a container with many. "
@@ -391,7 +525,7 @@ namespace Langulus::Anyness::Component
                      ThisCom::template EmplaceByCloningStandardPointers<D>(rhs);
                   #endif
                });*/
-               static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
+               //static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
                   ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
                #else
@@ -408,7 +542,7 @@ namespace Langulus::Anyness::Component
          }
          else if constexpr (CT::Handle<IT>) {
             //static_assert(DimensionMatch<C, IT>, "Dimension mismatch");
-            static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
+            //static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
 
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
@@ -416,49 +550,49 @@ namespace Langulus::Anyness::Component
             // Doesn't matter if managed memory is disabled.            
             // We emplace each dimension separately.                    
             //Values<ID, SHARED...>::ForEach([&]<Cid D>{
-               void* const dst = self.template GetRawVoid<SID>();
+            void* const dst = self.template GetRawVoid<SID>();
 
-               if constexpr (CT::TypeErased<C, IT>) {
-                  //                                                    
-                  // Either this container or the handle is type-erased 
-                  auto T = rhs.template GetType<SID>();
-                  LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");
-                  void* const src = rhs.template GetRawVoid<SID>();
+            if constexpr (CT::TypeErased<C, IT>) {
+               //                                                    
+               // Either this container or the handle is type-erased 
+               auto T = rhs.template GetType<SID>();
+               LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");
+               void* const src = rhs.template GetRawVoid<SID>();
 
-                  if constexpr (CT::Moved<I>) {
-                     if (rhs.template IsConstant<SID>())
-                        T.GetReferConstructor()(src, dst);
-                     else
-                        T.GetMoveConstructor()(src, dst);
-                  }
-                  else if constexpr (CT::Abandoned<I>) {
-                     if (rhs.template IsConstant<SID>())
-                        T.GetReferConstructor()(src, dst);
-                     else
-                        T.GetAbandonConstructor()(src, dst);
-                  }
-                  else if constexpr (CT::Referred<I>)
+               if constexpr (CT::Moved<I>) {
+                  if (rhs.template IsConstant<SID>())
                      T.GetReferConstructor()(src, dst);
-                  else if constexpr (CT::Disowned<I>)
-                     T.GetDisownConstructor()(src, dst);
                   else
-                     static_assert(false, "Unrecognized intent");
+                     T.GetMoveConstructor()(src, dst);
                }
-               else {
-                  //                                                    
-                  // Both sides are statically-typed and we can benefit 
-                  // from a lot of compile-time optimizations.          
-                  if constexpr (CT::Typed<C, IT>)
-                     static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
+               else if constexpr (CT::Abandoned<I>) {
+                  if (rhs.template IsConstant<SID>())
+                     T.GetReferConstructor()(src, dst);
                   else
-                     LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
+                     T.GetAbandonConstructor()(src, dst);
+               }
+               else if constexpr (CT::Referred<I>)
+                  T.GetReferConstructor()(src, dst);
+               else if constexpr (CT::Disowned<I>)
+                  T.GetDisownConstructor()(src, dst);
+               else
+                  static_assert(false, "Unrecognized intent");
+            }
+            else {
+               //                                                    
+               // Both sides are statically-typed and we can benefit 
+               // from a lot of compile-time optimizations.          
+               if constexpr (CT::Typed<C, IT>)
+                  static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
+               else
+                  LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
 
-                  using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
-                  if constexpr (CT::Mutable<T> or not I::IsMoved())
-                     IntentNew(dst, I::Nest(*rhs.template GetRawAs<T>()));
-                  else
-                     IntentNew(dst, Refer(*rhs.template GetRawAs<T>()));
-               }
+               using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
+               if constexpr (CT::Mutable<T> or not I::IsMoved())
+                  IntentNew(dst, I::Nest(*rhs.template GetRawAs<T>()));
+               else
+                  IntentNew(dst, Refer(*rhs.template GetRawAs<T>()));
+            }
             //});
                
             if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
@@ -510,7 +644,7 @@ namespace Langulus::Anyness::Component
       ///      it, and without destroying anything                            
       ///   @attention doesn't modify count                                   
       template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C>
-      requires IdMatch<SID, ID, SHARED...>
+      requires Relevant<SID>
       void EmplaceDefault(this C& self) {
          static_assert(CT::ContainsOne<C>,
             "Emplacing only first element in a container with many. "
@@ -612,7 +746,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
       template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C, class...A>
-      requires IdMatch<SID, ID, SHARED...>
+      requires Relevant<SID>
       void EmplaceConstruct(this C& self, A&&...arguments) {
          /*static_assert(STRAT != AllocationStrategy::NoStateChange or CT::ContainsOne<C>,
             "Emplacing only first element in a container with many. "
@@ -753,144 +887,6 @@ namespace Langulus::Anyness::Component
 
          // Update hash                                                 
          if_available(self.template SetHashInner<SID>(0));
-      }
-
-   public:
-      /// Generic emplacement that constructs/overwrites specific element.    
-      /// Any overwritten element will be dereferenced/destroyed first.       
-      ///   @tparam E Sets the type of the container if empty. Ignored if     
-      ///      container is statically-typed.                                 
-      ///   @param at The index at which to emplace                           
-      ///   @param arguments Constructor arguments for initializing an        
-      ///      element. If C is type-erased, argument must be Describe.       
-      ///   @return a reference or handle to the newly created element        
-      template<class E = void, Cid SID = ID, CT::ContainsMany C, class...A>
-      requires IdMatch<SID, ID, SHARED...>
-      auto EmplaceAt(this C& self, CT::Index auto&& at, A&&...arguments)
-      -> DecidePick<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
-         DecidePick<C> pick = self.template AsAt<DecidePick<C>, SID>(LglsFwd(at));
-         pick.template Emplace<E, SID>(LglsFwd(arguments)...);
-         return pick;
-      }
-
-      /// Generic emplacement that constructs/overwrites the first element.   
-      /// Any overwritten element will be dereferenced/destroyed first.       
-      ///   @tparam E Sets the type of the container if empty. Ignored if     
-      ///      container is statically-typed.                                 
-      ///   @param arguments Constructor arguments                            
-      ///   @return a reference or handle to the newly created element        
-      template<class E = void, Cid SID = ID, CT::Container C, class...A>
-      requires IdMatch<SID, ID, SHARED...>
-      auto Emplace(this C& self, A&&...arguments)
-      -> DecidePick<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
-         auto a = self.template GetAllocation<SID>();
-         if (not a) {
-            // No ownership, just fresh-allocate                        
-            try {
-               if constexpr (sizeof...(arguments) > 0)
-                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
-               else
-                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
-            }
-            catch (...) {
-               // Reset heap count in case 'self' was disowned          
-               if_available(self.template SetReservedInner<SID>(0));
-               if_available(self.template SetHashTableInner<SID>(nullptr));
-               self.template ResetCount<SID>();
-               throw;
-            }
-         }
-         else if (self.template IsEmpty<SID>()) {
-            // The container is empty, but an allocation is available   
-            if (a->GetUses() != 1) {
-               // We're not the only owner of this memory.              
-               // We have to branch off with a fresh allocation.        
-               DecvqAllCast(a)->AddRef(-1);
-
-               try {
-                  if constexpr (sizeof...(arguments) > 0)
-                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
-                  else
-                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
-               }
-               catch (...) {
-                  self.template SetAllocationInner<SID>(nullptr);
-                  if_available(self.template SetReservedInner<SID>(0));
-                  if_available(self.template SetHashTableInner<SID>(nullptr));
-                  self.template ResetCount<SID>();
-                  throw;
-               }
-            }
-            else {
-               // Emplace a new element on the first position.          
-               // We're allowed to reuse the memory.                    
-               if constexpr (sizeof...(arguments) > 0)
-                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndReallocate, E>(LglsFwd(arguments)...);
-               else
-                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndReallocate, E>();
-            }
-         }
-         else {
-            // The container is not empty                               
-            if (a->GetUses() != 1) {
-               // We're not the only owner of this memory.              
-               // We have to branch off with a fresh allocation.        
-               self.template Free<SID>();
-
-               try {
-                  if constexpr (sizeof...(arguments) > 0)
-                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
-                  else
-                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
-               }
-               catch (...) {
-                  self.template SetAllocationInner<SID>(nullptr);
-                  if_available(self.template SetReservedInner<SID>(0));
-                  if_available(self.template SetHashTableInner<SID>(nullptr));
-                  self.template ResetCount<SID>();
-                  throw;
-               }
-            }
-            else {
-               // We're allowed to reuse the memory.                    
-               // Need to destroy and overwrite only the first element. 
-               auto item = self.template GetHandle<void, SID>();
-               item.template DestroyElement<SID>();
-               if_available(item.template ResetEntries<SID>());
-               //TODO clear the correspnding hash table spot?
-
-               // Emplace a new element on the first position.          
-               // Any state change is forbidden - container is full.    
-               try {
-                  if constexpr (sizeof...(arguments) > 0)
-                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
-                  else
-                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::NoStateChange, E>();
-               }
-               catch (...) {
-                  // If emplacement fails, we are forced to destroy     
-                  // all remaining elements as well.                    
-                  if constexpr (CT::ContainsMany<C>) {
-                     item += 1;
-                     const auto itemsEnd = self.template GetHandle<void, SID>() + self.template GetCount<SID>();
-                     while (item.GetRaw() != itemsEnd.GetRaw()) {
-                        item.template DestroyElement<SID>();
-                        ++item;
-                     }
-                  }
-
-                  Allocator::Deallocate(DecvqAllCast(a));
-                  self.template SetAllocationInner<SID>(nullptr);
-                  if_available(self.template SetReservedInner<SID>(0));
-                  if_available(self.template SetHashTableInner<SID>(nullptr));
-                  self.template ResetCount<SID>();
-                  throw;
-               }
-            }
-         }
-
-         // Return a reference/handle to the newly emplaced element     
-         return self.template As<Deref<DecidePick<C>>, SID>();
       }
    };
 

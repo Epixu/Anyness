@@ -85,6 +85,8 @@ namespace Langulus::Anyness::Component
 
       static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
 
       //template<CT::Container C, class A>
       //void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
@@ -277,23 +279,24 @@ namespace Langulus::Anyness::Component
       }
       
       /// Overwrite first element using an intent                             
-      ///   @attention assumes destination memory has been constructed,       
+      ///   @attention Assumes destination memory has been constructed,       
       ///      including all levels of indirection                            
-      ///   @attention does not modify any container state                    
-      ///   @attention this overwrites previous entry without dereferencing   
+      ///   @attention Does not modify any container state                    
+      ///   @attention This overwrites previous entry without dereferencing   
       ///      it, and without destroying anything                            
+      ///   @attention Works at one dimension at a time!                      
       ///   @param intent assignment argument. If this container              
       ///      is statically typed, this can be any assignment argument,      
       ///      otherwise it has to be an instance of the contained type.      
-      template<CT::Container C, CT::Intent I>
+      template<Cid SID = ID, CT::Container C, CT::Intent I> requires Relevant<SID>
       void AssignWithIntent(this C&& self, I&& intent) {
          static_assert(CT::ContainsOne<C>,
             "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
          using IT = Decvq<Deref<TypeOf<I>>>;
-         LglsAssumeDev(self.GetRaw(), "Invalid heap");
-         LglsAssumeDev(self.IsTyped(), "Invalid type");
+         LglsAssumeDev(self.template GetRaw<SID>(), "Invalid heap");
+         LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");
          decltype(auto) rhs = LglsFwd(intent.what);
          static_assert(not CT::Cloned<I> and not CT::Copied<I>,
             "Since this function assumes container has been preallocated, "
@@ -308,10 +311,10 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
                //                                                       
                // Either this container or the handle is type-erased    
-               auto T = rhs.GetTypeInner();
-               LglsAssumeDev(self.IsSame(T), "Type mismatch");
-               const auto src = const_cast<void*>(rhs.GetRaw());
-               const auto dst = self.template AccessProvider<ID>();
+               auto T = rhs.template GetType<SID>();
+               LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");
+               void* const src = rhs.template GetRawVoid<SID>();
+               void* const dst = self.template GetRawVoid<SID>();
 
                if constexpr (CT::Moved<I>)
                   T.GetMoveAssigner()(src, dst);
@@ -323,29 +326,35 @@ namespace Langulus::Anyness::Component
                   T.GetDisownAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
-
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
             else {
                //                                                       
                // Both sides are statically-typed and we can benefit    
                // from a lot of compile-time optimizations              
-               using T = TypeOf<C>;
-               static_assert(Same<T, TypeOf<IT>>, "Type mismatch");
-               T* data = static_cast<T*>(self.template AccessProvider<ID>());
-               IntentAssign(*data, I::Nest(*rhs.GetRaw()));
+               if constexpr (CT::Typed<C, IT>)
+                  static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
+               else
+                  LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
 
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
+               using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
+               T* const dst = self.template GetRawAs<T, SID>();
+
+               if constexpr (CT::Mutable<T> or not I::IsMoved())
+                  IntentAssign(*dst, I::Nest(*rhs.template GetRawAs<T, SID>()));
+               else
+                  IntentAssign(*dst, Refer(*rhs.template GetRawAs<T, SID>()));
             }
+
+            if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
          else {
-            if constexpr (CT::TypeErased<C>) {
+            if constexpr (CT::TypeErased<C, IT>) {
                //                                                       
                // This container is type-erased                         
-               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
-               auto T = self.GetTypeInner();
-               const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
-               const auto dst = self.template AccessProvider<ID>();
+               LglsAssumeDev((self.template IsSame<IT, SID>()), "Type mismatch");
+               auto T = self.template GetType<SID>();
+               void* const src = const_cast<void*>(static_cast<const void*>(&rhs));
+               void* const dst = self.template GetRawVoid<SID>();
 
                if constexpr (CT::Moved<I>)
                   T.GetMoveAssigner()(src, dst);
@@ -357,19 +366,20 @@ namespace Langulus::Anyness::Component
                   T.GetDisownAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
-
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
             else {
                //                                                       
                // This container is statically-typed                    
-               using T = TypeOf<C>;
-               static_assert(Same<T, IT>, "Type mismatch");
-               T* data = static_cast<T*>(self.template AccessProvider<ID>());
-               IntentAssign(*data, LglsFwd(intent));
+               if constexpr (CT::Typed<C>)
+                  static_assert(Same<TypeOf<C, SID>, IT>, "Type mismatch");
+               else
+                  LglsAssumeDev((self.template IsSame<IT, SID>()), "Type mismatch");
 
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
+               IT* const dst = self.template GetRawAs<IT, SID>();
+               IntentAssign(*dst, LglsFwd(intent));
             }
+
+            if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
       }
 

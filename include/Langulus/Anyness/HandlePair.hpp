@@ -284,14 +284,18 @@ namespace Langulus::Anyness
    };
 
    /// Statically typed emergent handles                                      
-   template<CT::Reference K, CT::Reference V> requires (CT::Dense<K, V> and CT::NotSheddable<K, V>)
+   template<CT::Reference K, CT::Reference V> requires CT::NotSheddable<K, V>
    struct THandlePair<THandleEmergent<K>, THandleEmergent<V>> : Com::Container<
       Com::TypedStatic<DMeta, Deref<K>, 0>,
       Com::TypedStatic<DMeta, Deref<V>, 1>,
       Com::HeapReference<HeapEntry<0, Deref<K>*>>,
       Com::HeapReference<HeapEntry<1, Deref<V>*>>,
       Com::CountStatic<0, 1u, 1>,
-      Com::OwnershipEmergent<0, Com::WeakOwnership, 1>,
+      EnableComponentIf<CT::Dense<K, V>, Com::OwnershipEmergent<0, Com::WeakOwnership, 1>>,
+      EnableComponentIf<CT::Dense<K>,    Com::OwnershipEmergent<0, Com::WeakOwnership>>,
+      EnableComponentIf<CT::Dense<V>,    Com::OwnershipEmergent<1, Com::WeakOwnership>>,
+      EnableComponentIf<CT::Sparse<K>,   Com::OwnershipDeepEmergent<0>>,
+      EnableComponentIf<CT::Sparse<V>,   Com::OwnershipDeepEmergent<1>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Comparison<0, true, 1>,
       Com::IterationOperators<0, 1>

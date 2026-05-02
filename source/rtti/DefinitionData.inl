@@ -643,7 +643,7 @@ namespace Langulus::RTTI
          "Can't reflect constant as data");
       static_assert(CT::Reflectable<T>,
          "Can't reflect data that was explicitly marked unreflectable");
-      static_assert(Exact<CT::ReflectedAs<T>, T>,
+      static_assert(Same<CT::ReflectedAs<T>, T>,
          "Data is marked to be reflected as something else, "
          "make sure this is respected before reaching this function");
       static_assert(not ::std::is_function_v<T>,

@@ -44,6 +44,8 @@ namespace Langulus::Anyness::Component
       static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = REF_INDIVIDUAL;
       static constexpr int  ComponentPrecedence = 2000;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
 
    protected:
       LglsComHeapReference(friend);
@@ -62,8 +64,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
-      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
-      requires IdMatch<SID, ID, SHARED...>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many. GetHandle() first?");
@@ -157,8 +158,7 @@ namespace Langulus::Anyness::Component
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
       ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
-      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
-      requires IdMatch<SID, ID, SHARED...>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many. GetHandle() first?");
@@ -245,8 +245,7 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
-      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
-      requires IdMatch<SID, ID, SHARED...>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeep(this C& self) assumptious {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             ThisCom::template KeepElementDeepCustomPointers<FIND_MISSING>();
@@ -261,8 +260,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state or entry            
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
-      requires IdMatch<SID, ID, SHARED...>
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
@@ -439,8 +437,7 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't change any container state                     
       ///   @tparam DESTROY will never destroy a dense element if true        
       //TODO could use some statically-typed optimizations
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
-      requires IdMatch<SID, ID, SHARED...>
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
@@ -520,7 +517,7 @@ namespace Langulus::Anyness::Component
          else if constexpr (DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
-               void* const ptr = self.GetRaw();// self.GetHeapInnerAsVoid();
+               void* const ptr = self.template GetRawVoid<SID>();
                if constexpr (REF_INDIVIDUAL) {
                   IF_SAFE(if (const auto referencer = T.GetReferencer())
                      referencer(ptr, -1));
@@ -531,8 +528,7 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
-      requires IdMatch<SID, ID, SHARED...>
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeep(this C& self) assumptious {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             ThisCom::template DestroyElementDeepCustomPointers<DESTROY>();
@@ -551,7 +547,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
       template<Cid SID = ID, CT::Container C, CT::Intent I>
-      requires(IdMatch<SID, ID, SHARED...>
+      requires(Relevant<SID>
            and (CT::TypeErased<C>        or CT::Sparse<TypeOf<C>>)
            and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>>>))
       void EmplaceEntries(this C& self, I&& intent) {
@@ -562,9 +558,9 @@ namespace Langulus::Anyness::Component
                return;
          }
 
-         static_assert(CT::ContainsOne<C>,
+         /*static_assert(CT::ContainsOne<C>,
             "Emplacing only first element in a container with many. "
-            "GetHandle() first?");
+            "GetHandle() first?");*/
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations");
@@ -650,8 +646,7 @@ namespace Langulus::Anyness::Component
       /// Reset all entries for the first element                             
       ///   @attention this overwrites previous entries without dereferencing 
       template<Cid SID = ID, CT::Container C>
-      requires(IdMatch<SID, ID, SHARED...>
-          and (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>))
+      requires(Relevant<SID> and (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>))
       void ResetEntries(this C&& self) {
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   

@@ -83,7 +83,7 @@ namespace Langulus::Anyness::Component
       template<class T, Cid SID = Id, CT::Container C> requires Relevant<SID>
       constexpr auto GetRawAs(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, T*);
-         return static_cast<Tcvq>(ThisCom::GetRawVoid());
+         return static_cast<Tcvq>(ThisCom::template GetRawVoid<SID>());
       }
 
       /// Get a direct access to the initialized heap memory's end.           

@@ -255,9 +255,9 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
                      //TODO magic numbers here
                      if constexpr (SID == 0)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandleType, 0>(LglsFwd(idx))};
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandle, 0>(LglsFwd(idx))};
                      else if constexpr (SID == 1)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandleType, 1>(LglsFwd(idx))};
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandle, 1>(LglsFwd(idx))};
                      else
                         static_assert(false, "Unsupported SID");
                   }
@@ -288,9 +288,9 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
                      //TODO magic numbers here
                      if constexpr (SID == 0)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandleType, 0>(LglsFwd(idx))};
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandle, 0>(LglsFwd(idx))};
                      else if constexpr (SID == 1)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandleType, 1>(LglsFwd(idx))};
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandle, 1>(LglsFwd(idx))};
                      else
                         static_assert(false, "Unsupported SID");
                   }
