@@ -661,7 +661,7 @@ namespace Langulus::Anyness
    
       #define unify_getter(name) \
          template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto&& self) noexcept \
+         constexpr decltype(auto) name(this auto&& self) \
          if_inherits(template name<ID>()) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(); }) \
@@ -672,7 +672,7 @@ namespace Langulus::Anyness
 
       #define unify_getter_argumented(name) \
          template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto&& self, auto&&...arguments) noexcept \
+         constexpr decltype(auto) name(this auto&& self, auto&&...arguments) \
          if_inherits(template name<ID>(LglsFwd(arguments)...)) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
@@ -683,7 +683,7 @@ namespace Langulus::Anyness
 
       #define unify_getter_templated(name) \
          template<class ARG, Cid ID = 0> \
-         constexpr decltype(auto) name(this auto&& self) noexcept \
+         constexpr decltype(auto) name(this auto&& self) \
          if_inherits(template name<ARG, ID>()) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) \
@@ -694,7 +694,7 @@ namespace Langulus::Anyness
 
       #define unify_setter(name) \
          template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto& self, auto&&...arguments) noexcept \
+         constexpr decltype(auto) name(this auto& self, auto&&...arguments) \
          if_inherits(template name<ID>(LglsFwd(arguments)...)) { \
             ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
@@ -706,7 +706,7 @@ namespace Langulus::Anyness
 
       #define unify_setter_templated(name) \
          template<class ARG, Cid ID = 0> \
-         constexpr decltype(auto) name(this auto& self) noexcept \
+         constexpr decltype(auto) name(this auto& self) \
          if_inherits(template name<ARG, ID>()) { \
             ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
