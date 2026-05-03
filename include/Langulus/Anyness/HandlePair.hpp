@@ -351,6 +351,10 @@ namespace Langulus::Anyness
       using KeyHandle = THandle<K>;
       using ValHandle = THandle<V>;
 
+      static constexpr bool TypeErased = false;
+      static constexpr bool DeeplyOwned = CT::Sparse<K> or CT::Sparse<V>;
+      static constexpr bool ReferenceElements = true;
+
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
 
@@ -375,12 +379,46 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      THandle<K> GetKey() {
-         return {this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()};
+      auto GetKey() -> KeyHandle {
+         if constexpr (CT::Dense<K, V>) {
+            return {
+               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
+               this->Com::OwnershipStack<0, Com::WeakOwnership, 1>::GetAllocation()
+            };
+         }
+         else if constexpr (CT::Dense<K>) {
+            return {
+               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
+               this->Com::OwnershipStack<0, Com::WeakOwnership>::GetAllocation()
+            };
+         }
+         else {
+            return {
+               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
+               this->Com::OwnershipDeepReference<0>::GetEntriesInner()
+            };
+         }
       }
 
-      THandle<V> GetVal() {
-         return {this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()};
+      auto GetVal() -> ValHandle {
+         if constexpr (CT::Dense<K, V>) {
+            return {
+               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
+               this->Com::OwnershipStack<0, Com::WeakOwnership, 1>::GetAllocation()
+            };
+         }
+         else if constexpr (CT::Dense<V>) {
+            return {
+               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
+               this->Com::OwnershipStack<1, Com::WeakOwnership>::GetAllocation()
+            };
+         }
+         else {
+            return {
+               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
+               this->Com::OwnershipDeepReference<1>::GetEntriesInner()
+            };
+         }
       }
 
    //protected:
@@ -407,6 +445,9 @@ namespace Langulus::Anyness
       EnableComponentIf<CT::Sparse<K>, Com::HeapMovable<0, 0, HeapEntry<0, K*>>>,
       EnableComponentIf<CT::Sparse<V>, Com::HeapMovable<0, 0, HeapEntry<1, V*>>>,
       Com::CountStatic<0, 1u, 1>,
+      EnableComponentIf<CT::Sparse<K, V>,                Com::ReserveEmergent<size_t, 0, 1>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::ReserveEmergent<size_t, 0>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::ReserveEmergent<size_t, 1>>,
       EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipStack<0, Com::StrongOwnership, 1>>,
       EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<1, Com::StrongOwnership>>,
       EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<0, Com::StrongOwnership>>,
@@ -428,6 +469,10 @@ namespace Langulus::Anyness
       using KeyHandle = Tif<CT::Sparse<K>, THandle<K&>, THandleEmergent<K&>>;
       using ValHandle = Tif<CT::Sparse<V>, THandle<V&>, THandleEmergent<V&>>;
 
+      static constexpr bool TypeErased = false;
+      static constexpr bool DeeplyOwned = CT::Sparse<K> or CT::Sparse<V>;
+      static constexpr bool ReferenceElements = true;
+
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
 
@@ -444,8 +489,30 @@ namespace Langulus::Anyness
       }
 
       constexpr THandlePair(auto&& key, auto&& val) noexcept {
-         this->template EmplaceWithIntent<0>(FWDIntent(key));
-         this->template EmplaceWithIntent<1>(FWDIntent(val));
+         this->Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(key));
+         this->Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(val));
+         /*using IK = IntentOf(key);
+         using IV = IntentOf(val);
+
+         if constexpr (CT::Sparse<Deint<IK>>) {
+            this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::SetHeapInner(DeintCast(key));
+            if constexpr (not CT::Disowned<IK>) {
+               if constexpr (CT::Sparse<K, V>)
+                  this->Com::OwnershipStack<0, Com::StrongOwnership, 1>::template FindAllocationInner<0>();
+               else
+                  this->Com::OwnershipStack<0, Com::StrongOwnership>::FindAllocationInner();
+            }
+         }
+
+         if constexpr (CT::Sparse<Deint<IV>>) {
+            this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::SetHeapInner(DeintCast(val));
+            if constexpr (not CT::Disowned<IV>) {
+               if constexpr (CT::Sparse<K, V>)
+                  this->Com::OwnershipStack<0, Com::StrongOwnership, 1>::template FindAllocationInner<1>();
+               else
+                  this->Com::OwnershipStack<1, Com::StrongOwnership>::FindAllocationInner();
+            }
+         }*/
       }
 
       /*constexpr THandlePair(THandle<K>&& key, THandle<V>&& val) noexcept {

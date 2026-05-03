@@ -65,6 +65,8 @@ namespace Langulus::Anyness
       using PickMut        = HandleMutType;
 
       static constexpr bool TypeErased = false;
+      static constexpr bool DeeplyOwned = true;
+      static constexpr bool ReferenceElements = true;
 
       using Key = K;
       using Val = V;

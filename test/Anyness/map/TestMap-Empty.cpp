@@ -229,7 +229,10 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
 
    constexpr bool Ambiguous = LANGULUS(SAFE) and ((not Same<T, E1> and CT::Map<E1>)
                                                or (not Same<T, E2> and CT::Map<E2>));
+
+#if LANGULUS(BENCHMARK)
    using stdmap = ::std::unordered_map<E1, E2>;
+#endif
 
    GIVEN("Gap test") {
       alignas(T) char unininitialized[sizeof(T)];

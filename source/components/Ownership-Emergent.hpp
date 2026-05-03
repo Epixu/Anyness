@@ -33,11 +33,12 @@ namespace Langulus::Anyness::Component
       static constexpr Cid  Id = ID;
       static constexpr uint Owned = STYLE;
       static constexpr int  ComponentPrecedence = 1000;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
 
       /// Get the allocation                                                  
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       auto GetAllocation(this auto const& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             return Allocator::Find(self.template GetRaw<SID>());
          #else
@@ -48,9 +49,8 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get the memory reference count                                      
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       auto GetUses(this auto const& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          auto a = self.template GetAllocation<SID>();
          return a ? a->GetUses() : 0;
       }
@@ -60,9 +60,9 @@ namespace Langulus::Anyness::Component
       ///   @attention does nothing if we already have ownership              
       ///   @attention when emergent, this will copy data only if not owned   
       ///      by the memory manager.                                         
-      template<Cid SID = ID, CT::Container C> requires CT::HeapAllocated<C>
+      template<Cid SID = ID, CT::Container C>
+      requires (CT::HeapAllocated<C> and Relevant<SID>)
       void TakeOwnership(this C& self) {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (not self.template GetHeapInner<SID>()
               or self.template GetAllocation<SID>())
             return;
@@ -124,9 +124,8 @@ namespace Langulus::Anyness::Component
       /// Reference the allocation once.                                      
       /// If container has DeepOwnership component, all entries will be       
       /// individually referenced as well.                                    
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void Keep(this C& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          auto a = self.template GetAllocation<SID>();
          if (not a)
             return; // Container is disowned, and nothing gets reffed   
@@ -153,9 +152,8 @@ namespace Langulus::Anyness::Component
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced                                                  
       ///   @attention this never modifies any state                          
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void Free(this C& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          auto a = self.template GetAllocation<SID>();
          if (not a)
             return;
@@ -179,11 +177,10 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't perform any referencing or indirection         
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementShallow(this C& self) noexcept {
          //static_assert(CT::ContainsOne<C>,
          //   "Destroying only first element in a container with many");
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          static_assert(not CT::DeeplyOwned<C>,
             "Can't shallow-destroy a deeply-owned container");
 

@@ -15,10 +15,10 @@ namespace Langulus::Anyness::Component
    /// A dynamic reserve derived from the allocation size directly.           
    /// As such, it will not increase container's stack size, but will require 
    /// an indirection (and a division) in order to read it.                   
-   ///   @tparam ID provider ID to keep reserve of                            
    ///   @tparam T the reserve type                                           
+   ///   @tparam ID provider ID to keep reserve of                            
    ///   @tparam SHARED provider IDs that share the same reserve variable     
-   template<Cid ID, class T, Cid...SHARED>
+   template<class T, Cid ID, Cid...SHARED>
    struct ReserveEmergent {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -26,14 +26,15 @@ namespace Langulus::Anyness::Component
 
       static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = -1000;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
 
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Reserve type must be an unsigned integer");
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr T GetReserved(this const C& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if constexpr (requires { self.template GetAllocation<SID>(); }) {
             const auto al = self.template GetAllocation<SID>();
             if (not al)
@@ -68,9 +69,8 @@ namespace Langulus::Anyness::Component
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
       ///   @param reserve number of elements to reserve                      
-      template<Cid SID = ID, CT::ContainsMany C>
+      template<Cid SID = ID, CT::ContainsMany C> requires Relevant<SID>
       C& Reserve(this C& self, const T reserve) {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (reserve < self.template GetCount<SID>())
             self.template AllocateLess<SID>(reserve);
          else

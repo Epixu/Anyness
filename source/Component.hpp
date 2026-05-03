@@ -265,9 +265,9 @@ namespace Langulus::Anyness
       #define LglsComCountStatic(modifier) \
          template<Cid, auto, Cid...> modifier struct CountStatic
 
-      template<Cid = 0, class T = size_t, Cid...> struct ReserveEmergent;
+      template<class T = size_t, Cid = 0, Cid...> struct ReserveEmergent;
       #define LglsComReserveEmergent(modifier) \
-         template<Cid, class, Cid...> modifier struct ReserveEmergent
+         template<class, Cid, Cid...> modifier struct ReserveEmergent
 
       template<Cid = 0, class T = size_t, Cid...> struct ReserveStack;
       #define LglsComReserveStack(modifier) \

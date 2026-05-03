@@ -364,8 +364,10 @@ namespace Langulus::Anyness::Component
             ThisCom::GetHeapInner() = heap;
          else if constexpr (CT::CustomPointer<P>)
             ThisCom::GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
-         else
+         else {
+            static_assert(Same<StackRequest, DecvqAll<StackRequest>>);
             ThisCom::GetHeapInner() = const_cast<StackRequest>(static_cast<DecvqAll<StackRequest>>(DecvqAllCast(heap)));
+         }
       }
 
       /// Reset the heap pointer to null                                      
@@ -476,10 +478,12 @@ namespace Langulus::Anyness::Component
                self.template DestroyElementDeep<true, SID>();
             else if constexpr (CT::Owned<C>)
                self.template DestroyElementShallow<SID>();
-            else static_assert(false, "No destruction routine was called");
+            else
+               static_assert(false, "No destruction routine was called");
          }
-         else if constexpr (CT::DeeplyOwned<C>)
+         else if constexpr (CT::DeeplyOwned<C>) {
             self.template DestroyElementDeep<false, SID>();
+         }
       }
 
       /// Destroys all elements.                                              

@@ -510,9 +510,10 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.template GetRaw<SID>(), "Invalid heap");
          LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");
          decltype(auto) rhs = LglsFwd(intent.what);
-         static_assert(not CT::Copied<I>,
+         static_assert(not CT::Copied<I> or not CT::HeapAllocated<C>,
             "Since this function assumes container has been preallocated, "
-            "it makes no sense to copy here - it should be handled outside this call."
+            "it makes no sense to copy here unless data is on the stack - "
+            "it should be handled outside this call."
          );
 
          if constexpr (CT::Cloned<I>) {
@@ -853,11 +854,11 @@ namespace Langulus::Anyness::Component
             // Allocate if we have to                                   
             if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
                self.template GetType<SID>();
-               self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
+               if_available(self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1)));
             }
             else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate) {
                self.template GetType<SID>();
-               self.template AllocateMore<SID>(1);
+               if_available(self.template AllocateMore<SID>(1));
             }
 
             // Construct the first element                              
