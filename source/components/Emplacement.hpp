@@ -150,8 +150,8 @@ namespace Langulus::Anyness::Component
             else {
                // We're allowed to reuse the memory.                    
                // Need to destroy and overwrite only the first element. 
-               auto item = self.template GetHandle<void, SID>();
-               item.template DestroyElement<SID>();
+               auto item = self.GetHandle();
+               item.DestroyElement();
                if_available(item.template ResetEntries<SID>());
                //TODO clear the correspnding hash table spot?
 
@@ -168,9 +168,9 @@ namespace Langulus::Anyness::Component
                   // all remaining elements as well.                    
                   if constexpr (CT::ContainsMany<C>) {
                      item += 1;
-                     const auto itemsEnd = self.template GetHandle<void, SID>() + self.template GetCount<SID>();
+                     const auto itemsEnd = self.GetHandle() + self.template GetCount<SID>();
                      while (item.GetRaw() != itemsEnd.GetRaw()) {
-                        item.template DestroyElement<SID>();
+                        item.DestroyElement();
                         ++item;
                      }
                   }
@@ -654,7 +654,7 @@ namespace Langulus::Anyness::Component
          );
 
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-            if_available(self.template ResetState<SID>());
+            if_available(self.ResetState());
          }
 
          if constexpr (CT::TypeErased<C>) {
@@ -758,7 +758,7 @@ namespace Langulus::Anyness::Component
             "No arguments - use EmplaceDefault instead");
 
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-            if_available(self.template ResetState<SID>());
+            if_available(self.ResetState());
          }
 
          if constexpr (CT::TypeErased<C>) {

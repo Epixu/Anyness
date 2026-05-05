@@ -248,7 +248,7 @@ namespace Langulus::Anyness::Component
 
                // Use comparison operator between all elements          
                bool result = true;
-               auto t2 = rhs.template GetHandle<void, SID>();
+               auto t2 = rhs.GetHandle();
                lhs.template Apply<false>([&](auto&& t1) -> bool {
                   if constexpr (CT::Supported<decltype(t1)>) {
                      if constexpr (not CT::Contiguous<RHS>) {

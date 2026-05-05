@@ -440,7 +440,7 @@ namespace Langulus::Anyness
          }
       }
 
-      template<bool FIND_MISSING = false, Cid ID = 0>
+      template<bool FIND_MISSING = true, Cid ID = 0>
       void KeepElementDeep(this auto&& self) noexcept
       if_inherits(template KeepElementDeep<FIND_MISSING, ID>()) {
          ComponentList::ForEachConstOr([&]<class C> {
@@ -452,7 +452,7 @@ namespace Langulus::Anyness
          });
       }
 
-      template<bool FORCE_DESTROY = false, Cid ID = 0>
+      template<bool FORCE_DESTROY = true, Cid ID = 0>
       void DestroyElementDeep(this auto&& self) noexcept
       if_inherits(template DestroyElementDeep<FORCE_DESTROY, ID>()) {
          ComponentList::ForEachConstOr([&]<class C> {
@@ -464,7 +464,7 @@ namespace Langulus::Anyness
          });
       }
 
-      template<bool FORCE_DESTROY = false>
+      template<bool FORCE_DESTROY = true>
       void DestroyElement(this auto& self) noexcept
       if_inherits(template DestroyElement<FORCE_DESTROY>()) {
          ComponentList::ForEach([&]<class C> {

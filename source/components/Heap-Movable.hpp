@@ -118,7 +118,6 @@ namespace Langulus::Anyness::Component
                ThisCom::AllocateFresh(ThisCom::RequestHeap(from.template GetReserved<Id>()));
 
             if_available(self.template SetCountInner<Id>(count));
-            //auto dst = self.template GetHandle<void, ID>();
             auto dst = self.GetHandle().ForceMutable();
             try {
                from.template Apply<false>([&dst,&self,&from](auto const& src) {
@@ -134,7 +133,6 @@ namespace Langulus::Anyness::Component
 
                      if constexpr (not CT::Contiguous<C>) {
                         // Copy hash table entry as well                
-                        //const auto idx = dst - self.template GetHandle<void, ID>();
                         const auto idx = dst - self.GetHandle();
                         self.template GetHashTableInner<Id>()[idx] = from.template GetHashTableInner<Id>()[idx];
                      }
@@ -144,7 +142,6 @@ namespace Langulus::Anyness::Component
             }
             catch (...) {
                // Partial success                                       
-               //auto n = dst - self.template GetHandle<void, ID>();
                auto n = dst - self.GetHandle();
                if constexpr (not requires { self.template SetCountInner<Id>(1); }) {
                   // Partial success is not allowed - we have to        
@@ -178,7 +175,7 @@ namespace Langulus::Anyness::Component
                   // Move                                               
                   if constexpr (CT::StronglyOwned<I>) {
                      from.template SetHeapInner<Id>(nullptr);
-                     if_available(from.template ResetState<Id>());
+                     if_available(from.ResetState());
                      if_available(from.template ResetType<Id>());
                   }
                }
