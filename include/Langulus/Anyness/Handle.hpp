@@ -176,7 +176,7 @@ namespace Langulus::Anyness
          this->SetTypeInner(type);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       HandleMut& operator = (HandleMut const& other) = delete;
       HandleMut& operator = (HandleMut&& other) = delete;
 
@@ -186,12 +186,13 @@ namespace Langulus::Anyness
          return *this;
       }
 
-      /*constexpr HandleMut& operator = (HandleMut const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Refer(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr HandleMut& operator = (HandleMut&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Move(other));
-      }*/
    };
    
 
@@ -235,7 +236,7 @@ namespace Langulus::Anyness
          this->SetTypeInner(type);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       HandleDisownedMut& operator = (HandleDisownedMut const& other) = delete;
       HandleDisownedMut& operator = (HandleDisownedMut&& other) = delete;
 
@@ -245,12 +246,13 @@ namespace Langulus::Anyness
          return *this;
       }
 
-      /*constexpr HandleDisownedMut& operator = (HandleDisownedMut const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Disown(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr HandleDisownedMut& operator = (HandleDisownedMut&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Disown(other));
-      }*/
    };
    
 
@@ -299,7 +301,7 @@ namespace Langulus::Anyness
          this->SetTypeInner(type);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       Handle& operator = (Handle const& other) = delete;
       Handle& operator = (Handle&& other) = delete;
 
@@ -309,12 +311,13 @@ namespace Langulus::Anyness
          return *reinterpret_cast<HandleMut*>(this);
       }
 
-      /*constexpr Handle& operator = (Handle const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Refer(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr Handle& operator = (Handle&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Move(other));
-      }*/
    };
    
 
@@ -370,7 +373,7 @@ namespace Langulus::Anyness
          this->SetTypeInner(type);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       HandleDisowned& operator = (HandleDisowned const& other) = delete;
       HandleDisowned& operator = (HandleDisowned&& other) = delete;
 
@@ -380,12 +383,13 @@ namespace Langulus::Anyness
          return *reinterpret_cast<HandleDisownedMut*>(this);
       }
 
-      /*constexpr HandleDisowned& operator = (HandleDisowned const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Disown(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr HandleDisowned& operator = (HandleDisowned&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Disown(other));
-      }*/
    };
 
 
@@ -428,17 +432,12 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      /*constexpr THandle(T ptr, AllocationPtr alloc) noexcept {
-         this->SetHeapInner(&ptr);
-         this->SetAllocationInner(alloc);
-      }*/
-
       constexpr THandle(void const* ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
 
@@ -447,16 +446,14 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
       }
-      /*auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
-         return *reinterpret_cast<THandle<Decvq<Deref<T>>&> const*>(this);
-      }*/
 
-      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Refer(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Move(other));
-      }*/
    };
    
    template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
@@ -494,7 +491,7 @@ namespace Langulus::Anyness
          this->SetEntriesInner(entry);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
 
@@ -503,16 +500,14 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
       }
-      /*auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
-         return *reinterpret_cast<THandle<Decvq<Deref<T>>&> const*>(this);
-      }*/
 
-      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Refer(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Move(other));
-      }*/
    };
    
    
@@ -557,7 +552,7 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandleEmergent& operator = (THandleEmergent const& other) = delete;
       THandleEmergent& operator = (THandleEmergent&& other) = delete;
 
@@ -566,9 +561,14 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
       }
-      /*auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
-         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&> const*>(this);
-      }*/
+
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
+      }
    };
 
 
@@ -608,7 +608,7 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandleEmergent& operator = (THandleEmergent const& other) = delete;
       THandleEmergent& operator = (THandleEmergent&& other) = delete;
 
@@ -617,9 +617,14 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
          return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
       }
-      /*auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
-         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&> const*>(this);
-      }*/
+
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
+      }
    };
    
 
@@ -661,7 +666,7 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandleDisowned& operator = (THandleDisowned const& other) = delete;
       THandleDisowned& operator = (THandleDisowned&& other) = delete;
 
@@ -671,12 +676,13 @@ namespace Langulus::Anyness
          return *this;
       }
 
-      /*constexpr THandleDisowned& operator = (THandleDisowned const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Disown(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr THandleDisowned& operator = (THandleDisowned&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Disown(other));
-      }*/
    };
    
 
@@ -719,7 +725,7 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
 
@@ -729,12 +735,13 @@ namespace Langulus::Anyness
          return *this;
       }
 
-      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Refer(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Move(other));
-      }*/
    };
    
 
@@ -781,7 +788,7 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
 
@@ -791,11 +798,12 @@ namespace Langulus::Anyness
          return *this;
       }
 
-      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
-         return this->AssignAbsorb(Refer(other));
+      /// Pick a specific dimension if handle is complex (like THandlePair).  
+      /// In this case it returns itself for dimension #0.                    
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+         static_assert(SID == 0, "No such dimension");
+         return LglsFwd(self);
       }
-      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
-         return this->AssignAbsorb(Move(other));
-      }*/
    };
 }

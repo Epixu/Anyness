@@ -11,7 +11,9 @@
 
 namespace Langulus::Anyness
 {
+   ///                                                                        
    /// Type-erased immutable handle                                           
+   ///                                                                        
    template<>
    struct THandlePair<Handle, Handle> : Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,
@@ -61,11 +63,11 @@ namespace Langulus::Anyness
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      Handle GetKey() {
+      Handle GetKey() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<0, void*>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
@@ -73,7 +75,7 @@ namespace Langulus::Anyness
          };
       }
 
-      Handle GetVal() {
+      Handle GetVal() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<1, void*>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
@@ -81,15 +83,25 @@ namespace Langulus::Anyness
          };
       }
 
-   //protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
       auto ForceMutable() noexcept -> THandlePair<HandleMut, HandleMut>& {
          return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
       }
+
+      /// Pick a specific dimension                                           
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+              if constexpr (SID == 0)  return self.GetKey();
+         else if constexpr (SID == 1)  return self.GetVal();
+         else static_assert(false, "No such dimension");
+      }
    };
    
+
+   ///                                                                        
    /// Type-erased mutable handle                                             
+   ///                                                                        
    template<>
    struct THandlePair<HandleMut, HandleMut> : Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,
@@ -141,11 +153,11 @@ namespace Langulus::Anyness
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      HandleMut GetKey() {
+      HandleMut GetKey() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<0, void*>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
@@ -153,7 +165,7 @@ namespace Langulus::Anyness
          };
       }
 
-      HandleMut GetVal() {
+      HandleMut GetVal() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<1, void*>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
@@ -165,10 +177,20 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandlePair& {
          return *this;
       }
+
+      /// Pick a specific dimension                                           
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+              if constexpr (SID == 0)  return self.GetKey();
+         else if constexpr (SID == 1)  return self.GetVal();
+         else static_assert(false, "No such dimension");
+      }
    };
    
-   /// Type-erased immutable key paired with mutable value                    
-   /// Often used for mutable access in maps, where keys can't be modified    
+
+   ///                                                                        
+   /// Type-erased immutable key paired with mutable value.                   
+   /// Often used for mutable access in maps, where keys can't be modified.   
    template<>
    struct THandlePair<Handle, HandleMut> : Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,
@@ -220,11 +242,11 @@ namespace Langulus::Anyness
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      Handle GetKey() {
+      Handle GetKey() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<0, void*>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
@@ -232,7 +254,7 @@ namespace Langulus::Anyness
          };
       }
 
-      HandleMut GetVal() {
+      HandleMut GetVal() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<1, void*>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
@@ -245,9 +267,20 @@ namespace Langulus::Anyness
       auto ForceMutable() noexcept -> THandlePair<HandleMut, HandleMut>& {
          return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
       }
+
+      /// Pick a specific dimension                                           
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+              if constexpr (SID == 0)  return self.GetKey();
+         else if constexpr (SID == 1)  return self.GetVal();
+         else static_assert(false, "No such dimension");
+      }
    };
 
+
+   ///                                                                        
    /// Statically typed emergent handles                                      
+   ///                                                                        
    template<CT::Reference K, CT::Reference V> requires CT::NotSheddable<K, V>
    struct THandlePair<THandleEmergent<K>, THandleEmergent<V>> : Com::Container<
       Com::TypedStatic<DMeta, Deref<K>, 0>,
@@ -297,33 +330,42 @@ namespace Langulus::Anyness
          this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      THandleEmergent<K> GetKey() {
+      THandleEmergent<K> GetKey() noexcept {
          return {this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()};
       }
 
-      THandleEmergent<V> GetVal() {
+      THandleEmergent<V> GetVal() noexcept {
          return {this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()};
       }
 
-   //protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept
-         -> THandlePair<THandleEmergent<Decvq<Deref<K>>&>,
-                        THandleEmergent<Decvq<Deref<V>>&>>&
+      auto ForceMutable() noexcept -> THandlePair<THandleEmergent<Decvq<Deref<K>>&>,
+                                                  THandleEmergent<Decvq<Deref<V>>&>>&
       {
          return *reinterpret_cast<THandlePair<
             THandleEmergent<Decvq<Deref<K>>&>,
             THandleEmergent<Decvq<Deref<V>>&>
          >*>(this);
       }
+
+      /// Pick a specific dimension                                           
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+              if constexpr (SID == 0)  return self.GetKey();
+         else if constexpr (SID == 1)  return self.GetVal();
+         else static_assert(false, "No such dimension");
+      }
    };
 
+
+   ///                                                                        
    /// Statically typed embedded handles                                      
+   ///                                                                        
    template<CT::Reference K, CT::Reference V> requires CT::NotSheddable<K, V>
    struct THandlePair<THandle<K>, THandle<V>> : Com::Container<
       Com::TypedStatic<DMeta, Deref<K>, 0>,
@@ -377,11 +419,11 @@ namespace Langulus::Anyness
          this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      auto GetKey() -> KeyHandle {
+      auto GetKey() noexcept -> KeyHandle {
          if constexpr (CT::Dense<K, V>) {
             return {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
@@ -402,7 +444,7 @@ namespace Langulus::Anyness
          }
       }
 
-      auto GetVal() -> ValHandle {
+      auto GetVal() noexcept -> ValHandle {
          if constexpr (CT::Dense<K, V>) {
             return {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
@@ -423,7 +465,6 @@ namespace Langulus::Anyness
          }
       }
 
-   //protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
       auto ForceMutable() noexcept
@@ -435,9 +476,20 @@ namespace Langulus::Anyness
             THandle<Decvq<Deref<V>>&>
          >*>(this);
       }
+
+      /// Pick a specific dimension                                           
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+              if constexpr (SID == 0)  return self.GetKey();
+         else if constexpr (SID == 1)  return self.GetVal();
+         else static_assert(false, "No such dimension");
+      }
    };
 
+
+   ///                                                                        
    /// Statically typed local handles                                         
+   ///                                                                        
    template<CT::NotReference K, CT::NotReference V> requires (CT::NotSheddable<K, V> and CT::NotHandle<K, V>)
    struct THandlePair<THandle<K>, THandle<V>> : Com::Container<
       Com::TypedStatic<DMeta, Deref<K>, 0>,
@@ -496,11 +548,11 @@ namespace Langulus::Anyness
          this->Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(val));
       }
 
-      /// Assignment                                                          
+      /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      auto GetKey() -> KeyHandle {
+      auto GetKey() noexcept -> KeyHandle {
          if constexpr (CT::Sparse<K, V>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
@@ -516,7 +568,7 @@ namespace Langulus::Anyness
          else return THandleEmergent<K&> {this->Com::Stack<K, 0>::GetRaw()};
       }
 
-      auto GetVal() -> ValHandle {
+      auto GetVal() noexcept -> ValHandle {
          if constexpr (CT::Sparse<K, V>) {
             return THandle<V&> {
                this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
@@ -532,11 +584,20 @@ namespace Langulus::Anyness
          else return THandleEmergent<V&> {this->Com::Stack<V, 1>::GetRaw()};
       }
 
-   //protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept  -> THandlePair<THandle<Decvq<K>>, THandle<Decvq<V>>>& {
+      auto ForceMutable() noexcept  -> THandlePair<THandle<Decvq<K>>, 
+                                                   THandle<Decvq<V>>>&
+      {
          return *reinterpret_cast<THandlePair<THandle<Decvq<K>>, THandle<Decvq<V>>>*>(this);
+      }
+
+      /// Pick a specific dimension                                           
+      template<Cid SID>
+      constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
+              if constexpr (SID == 0)  return self.GetKey();
+         else if constexpr (SID == 1)  return self.GetVal();
+         else static_assert(false, "No such dimension");
       }
    };
 

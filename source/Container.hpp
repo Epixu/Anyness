@@ -506,7 +506,7 @@ namespace Langulus::Anyness
                if constexpr (CT::DeeplyOwned<H>) {
                   return H {
                      self.template Get<void, SID>(),
-                     self.template GetEntriesInner<SID>(),
+                     self.template GetEntries<SID>(),
                      self.template GetType<SID>()
                   };
                }
@@ -547,7 +547,7 @@ namespace Langulus::Anyness
                   else {
                      return H {
                         &self.template Get<void, SID>(),
-                        self.template GetEntriesInner<SID>()
+                        self.template GetEntries<SID>()
                      };
                   }
                }

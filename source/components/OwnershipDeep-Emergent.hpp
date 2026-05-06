@@ -68,8 +68,8 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
-            "Referencing only first element in a container with many. GetHandle() first?");
+         /*static_assert(CT::ContainsOne<C>,
+            "Referencing only first element in a container with many. GetHandle() first?");*/
 
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.template GetAllocation<SID>(),
@@ -79,6 +79,7 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>())
             return;
 
+         using H = Decay<decltype(Fake<DecideHandle<C>>().template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Referencing a type-erased element                        
@@ -95,7 +96,7 @@ namespace Langulus::Anyness::Component
 
                if (subT.IsSparse()) {
                   // Pointer to pointer                                 
-                  DecideHandle<C> temp {ptr, entries + 1, subT};
+                  H temp {ptr, entries + 1, subT};
                   temp.template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
                }
                else if constexpr (REF_INDIVIDUAL) {
@@ -132,7 +133,7 @@ namespace Langulus::Anyness::Component
 
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer                                 
-                  typename DecideHandle<C>::Denser temp {ptr, entries + 1};
+                  typename H::Denser temp {ptr, entries + 1};
                   temp.template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
                }
                else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
@@ -163,8 +164,8 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
-            "Referencing only first element in a container with many. GetHandle() first?");
+         /*static_assert(CT::ContainsOne<C>,
+            "Referencing only first element in a container with many. GetHandle() first?");*/
          LglsAssumeDev(not self.template IsEmpty<SID>(),
             "No point in calling this on an empty container");
 
