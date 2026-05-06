@@ -41,10 +41,10 @@ namespace Langulus::Anyness::Inner
          HeapEntry<0, void*>,             // Key heap data              
          HeapEntry<1, void*>              // Value heap data            
       >,
-      Com::CountStack<0, size_t, 1>,      // Dynamically sized          
+      Com::CountStack<size_t, 0, 1>,      // Dynamically sized          
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     
       Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
-      Com::OwnershipStack<0, Com::StrongOwnership, 1>,
+      Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
       Com::OwnershipDeepHeap<0, true, 1>, // Separate key deep ownership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      

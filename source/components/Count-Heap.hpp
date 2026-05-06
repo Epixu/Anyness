@@ -13,6 +13,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.CountHeap<T, ID, SHARED...>
+
    ///                                                                        
    /// Defines count as a part of the heap                                    
    /// Count shows how many elements inside a container are initialized       
@@ -20,10 +24,10 @@ namespace Langulus::Anyness::Component
    /// allocation, and requires an indirection everytime count is accessed.   
    /// It is a bit slower and less cache-friendly, but results in more        
    /// compact containers                                                     
-   ///   @tparam ID provider ID to keep count of                              
    ///   @tparam T the count type                                             
+   ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
-   template<Cid ID, class T, Cid...SHARED>
+   template<class T, Cid ID, Cid...SHARED>
    struct CountHeap {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -35,6 +39,8 @@ namespace Langulus::Anyness::Component
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
 
       using Dimensions = Values<ID, SHARED...>;
 
@@ -42,22 +48,20 @@ namespace Langulus::Anyness::Component
          "Count type must be an unsigned integer");
 
       /// Check if there are no initialized elements                          
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr bool IsEmpty(this auto const& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
-         return self.template GetCountInner<SID>() == 0;
+         return ThisCom::GetCountInner() == 0;
       }
 
       /// Get the number of initialized elements                              
-      template<Cid SID = ID, CT::Container C>
-      constexpr T GetCount(this C const& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
-         return self.template GetCountInner<SID>();
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr T GetCount(this auto const& self) noexcept {
+         return ThisCom::GetCountInner();
       }
 
       /// Explicit boolean conversion to allow using containers in ifs        
       explicit constexpr operator bool(this auto const& self) noexcept {
-         return self.GetCountInner() != 0;
+         return ThisCom::GetCountInner() != 0;
       }
 
       T GetCountDeep() const noexcept;
@@ -73,22 +77,20 @@ namespace Langulus::Anyness::Component
       LglsComConversion(friend);
 
       /// Get count (inner)                                                   
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto& GetCountInner(this auto&& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessHeap<CountHeap>();
       }
       
       /// Set the number of initialized elements                              
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr void SetCountInner(this auto& self, T c) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
-         self.template GetCountInner<SID>() = c;
+         ThisCom::GetCountInner() = c;
       }
       
       /// Default-initialize count to zero                                    
       constexpr void ConstructDefault(this auto& self) noexcept {
-         self.SetCountInner(0);
+         ThisCom::SetCountInner(0);
       }
       
       /// Transfer from any kind of container, respecting intents             
@@ -100,7 +102,7 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
-            self.SetCountInner(from.GetCountInner());
+            ThisCom::SetCountInner(from.GetCountInner());
             if constexpr (I::ResetsOnMove())
                from.SetCountInner(0);
          }
@@ -108,11 +110,12 @@ namespace Langulus::Anyness::Component
 
       /// Reset count (inner)                                                 
       ///   @attention doesn't destroy elements, only resets hash and count   
-      template<Cid SID = ID, CT::Container C>
-      constexpr void ResetCount(this C& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
-         self.template SetCountInner<SID>(0);
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr void ResetCount(this auto& self) noexcept {
+         ThisCom::SetCountInner(0);
          if_available(self.template SetHashInner<SID>(1));
       }
    };
+
+   #undef ThisCom
 }

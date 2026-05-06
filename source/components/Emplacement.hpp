@@ -110,10 +110,7 @@ namespace Langulus::Anyness::Component
                      ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
                }
                catch (...) {
-                  self.template SetAllocationInner<SID>(nullptr);
-                  if_available(self.template SetReservedInner<SID>(0));
-                  if_available(self.template SetHashTableInner<SID>(nullptr));
-                  self.template ResetCount<SID>();
+                  self.template ResetAllocationInner<SID>();
                   throw;
                }
             }
@@ -140,10 +137,7 @@ namespace Langulus::Anyness::Component
                      ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
                }
                catch (...) {
-                  self.template SetAllocationInner<SID>(nullptr);
-                  if_available(self.template SetReservedInner<SID>(0));
-                  if_available(self.template SetHashTableInner<SID>(nullptr));
-                  self.template ResetCount<SID>();
+                  self.template ResetAllocationInner<SID>();
                   throw;
                }
             }
@@ -176,10 +170,7 @@ namespace Langulus::Anyness::Component
                   }
 
                   Allocator::Deallocate(DecvqAllCast(a));
-                  self.template SetAllocationInner<SID>(nullptr);
-                  if_available(self.template SetReservedInner<SID>(0));
-                  if_available(self.template SetHashTableInner<SID>(nullptr));
-                  self.template ResetCount<SID>();
+                  self.template ResetAllocationInner<SID>();
                   throw;
                }
             }

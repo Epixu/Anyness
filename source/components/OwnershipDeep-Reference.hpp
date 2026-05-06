@@ -61,13 +61,11 @@ namespace Langulus::Anyness::Component
       LglsComEmplacement(friend);
 
       /// Get the entry array (inner)                                         
-      //template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessStack<OwnershipDeepReference>();
       }
 
       /// Set the entry array (inner)                                         
-      //template<Cid SID = ID> requires (SID == ID)
       constexpr void SetEntriesInner(this auto& self, EntryPtr entries) noexcept {
          ThisCom::GetEntriesInner() = DecvqAllCast(entries);
       }
@@ -81,26 +79,6 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this auto& self, I&& intent) noexcept {
          ThisCom::SetEntriesInner(intent.what.GetEntries());
       }
-
-      /// Transfer from any kind of container, respecting intents             
-      ///   @param intent the intent and container to transfer from           
-      /*template<CT::Container C, CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this C& self, I&& intent) {
-         decltype(auto) from = LglsFwd(intent.what);
-
-         if constexpr (CT::Copied<I> or CT::Cloned<I>) {
-            // Do a copy or clone.                                      
-            // Since new memory is allocated, we recalculate the        
-            // pointer to the entries. Populating the pointers is       
-            // handled by the heap component.                           
-            self.SetEntriesInner(self.template AccessHeap<OwnershipDeepStack>());
-         }
-         else if constexpr (I::IsKept() or I::IsMoved()) {
-            // Move/Refer/Abandon other                                 
-            static_assert(I::IsShallow());
-            self.SetEntriesInner(from.GetEntriesInner());
-         }
-      }*/
    };
 
    #undef ThisCom

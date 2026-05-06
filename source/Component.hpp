@@ -253,17 +253,17 @@ namespace Langulus::Anyness
          template<CT::NotVoid, Cid> modifier struct Stack
 
       /// Count, reserve, dimensions                                          
-      template<Cid = 0, class T = size_t, Cid...> struct CountHeap;
+      template<class T = size_t, Cid = 0, Cid...> struct CountHeap;
       #define LglsComCountHeap(modifier) \
-         template<Cid, class, Cid...> modifier struct CountHeap
+         template<class, Cid, Cid...> modifier struct CountHeap
 
-      template<Cid = 0, class T = size_t, Cid...> struct CountStack;
+      template<class T = size_t, Cid = 0, Cid...> struct CountStack;
       #define LglsComCountStack(modifier) \
-         template<Cid, class, Cid...> modifier struct CountStack
+         template<class, Cid, Cid...> modifier struct CountStack
 
-      template<Cid = 0, auto COUNT = 0u, Cid...> struct CountStatic;
+      template<auto COUNT = 0u, Cid = 0, Cid...> struct CountStatic;
       #define LglsComCountStatic(modifier) \
-         template<Cid, auto, Cid...> modifier struct CountStatic
+         template<auto, Cid, Cid...> modifier struct CountStatic
 
       template<class T = size_t, Cid = 0, Cid...> struct ReserveEmergent;
       #define LglsComReserveEmergent(modifier) \
@@ -273,18 +273,18 @@ namespace Langulus::Anyness
       #define LglsComReserveStack(modifier) \
          template<class, Cid, Cid...> modifier struct ReserveStack
 
-      template<Cid = 0, auto COUNT = 0u, Cid...> struct ReserveStatic;
+      template<auto COUNT = 0u, Cid = 0, Cid...> struct ReserveStatic;
       #define LglsComReserveStatic(modifier) \
-         template<Cid, auto, Cid...> modifier struct ReserveStatic
+         template<auto, Cid, Cid...> modifier struct ReserveStatic
       
       /// Ownership                                                           
-      template<Cid = 0, uint = StrongOwnership, Cid...> struct OwnershipEmergent;
+      template<uint = StrongOwnership, Cid = 0, Cid...> struct OwnershipEmergent;
       #define LglsComOwnershipEmergent(modifier) \
-         template<Cid, uint, Cid...> modifier struct OwnershipEmergent
+         template<uint, Cid, Cid...> modifier struct OwnershipEmergent
 
-      template<Cid = 0, uint = StrongOwnership, Cid...> struct OwnershipStack;
+      template<uint = StrongOwnership, Cid = 0, Cid...> struct OwnershipStack;
       #define LglsComOwnershipStack(modifier) \
-         template<Cid, uint, Cid...> modifier struct OwnershipStack
+         template<uint, Cid, Cid...> modifier struct OwnershipStack
 
       template<Cid = 0, bool REF_INDIVIDUAL = true, Cid...> struct OwnershipDeepReference;
       #define LglsComOwnershipDeepReference(modifier) \

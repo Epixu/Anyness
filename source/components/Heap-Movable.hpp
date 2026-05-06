@@ -76,10 +76,7 @@ namespace Langulus::Anyness::Component
             self.template SetType<Id>(type);
             auto count = from.template GetCount<Id>();
             if (0 == count) {
-               self.template SetAllocationInner<Id>(nullptr);
-               if_available(self.template SetReservedInner<Id>(0)); //TODO redundant?
-               if_available(self.template SetHashTableInner<Id>(nullptr));
-               self.template ResetCount<Id>();
+               self.template ResetAllocationInner<Id>();
                return;
             }
 
@@ -511,10 +508,7 @@ namespace Langulus::Anyness::Component
             // and make sure CountStatic reports as empty.              
             (void) n;
             Allocator::Deallocate(DecvqAllCast(self.template GetAllocationInner<SID>()));
-            self.template SetAllocationInner<SID>(nullptr);
-            if_available(self.template SetReservedInner<SID>(0));
-            if_available(self.template SetHashTableInner<SID>(nullptr));
-            self.template ResetCount<SID>();
+            self.template ResetAllocationInner<SID>();
          }
       }
 

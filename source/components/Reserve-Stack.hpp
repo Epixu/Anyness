@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Container.hpp"
+#include "Reserve-Emergent.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -22,19 +22,11 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID provider ID to keep reserve of                            
    ///   @tparam SHARED provider IDs that share the same reserve variable     
    template<class T, Cid ID, Cid...SHARED>
-   struct ReserveStack {
-      using CTTI_Component = Yes<>;
-      using CTTI_ReflectAs = void;
-      using ReserveType = T;
+   struct ReserveStack : ReserveEmergent<T, ID, SHARED...> {
       using StackRequest = T;
 
-      static constexpr Cid Id = ID;
-      static constexpr int ComponentPrecedence = -1000;
       template<Cid SID>
       static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
-
-      static_assert(CT::Integer<T> and not CT::Signed<T>,
-         "Reserve type must be an unsigned integer");
 
       /// Get the number of reserved (maybe uninitialized) elements           
       template<Cid SID = ID> requires Relevant<SID>
@@ -77,13 +69,45 @@ namespace Langulus::Anyness::Component
       
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I>
-      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I>)
+      template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
-         decltype(auto) from = LglsFwd(intent.what);
-         ThisCom::SetReservedInner(from.GetReserved());
-         if constexpr (I::ResetsOnMove()) {
-            if_available(from.SetReservedInner(0));
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+            decltype(auto) from = LglsFwd(intent.what);
+
+            if constexpr (requires { from.template GetReserved<ID>(); }) {
+               // Always propagate custom reserve if available          
+               ThisCom::SetReservedInner(from.template GetReserved<ID>());
+               if constexpr (I::ResetsOnMove()) {
+                  if_available(from.template SetReservedInner<ID>(0));
+               }
+            }
+            else {
+               // Otherwise derive reserve from current heap pointer,   
+               // the start of the allocation, and by element size.     
+               // This is the same as if 'I' has a Com::ReserveEmergent.
+               if constexpr (requires { from.template GetAllocation<ID>(); }) {
+                  const auto al = from.template GetAllocation<ID>();
+                  if (not al) {
+                     ThisCom::SetReservedInner(0);
+                     return;
+                  }
+
+                  if constexpr (CT::ContainsOne<I>)
+                     ThisCom::SetReservedInner(1);
+                  else {
+                     const size_t header = from.template GetHeapHeaderSize<ID>();
+                     ThisCom::SetReservedInner((al->GetSize() - header) / self.template GetStride<ID>());
+                  }
+               }
+               else if constexpr (CT::ContainsOne<I>)
+                  ThisCom::SetReservedInner(1);
+               else {
+                  static_assert(false,
+                     "Can't derive the amount of reserved items from source container, "
+                     "because it has neither a reserve, nor ownership components"
+                  );
+               }
+            }
          }
       }
    };

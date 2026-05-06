@@ -18,14 +18,14 @@ namespace Langulus::Anyness::Component
    /// Heap allocation will be searched on demand every time.                 
    /// Manage its ownership by referencing and dereferencing it, if enabled.  
    /// Emergent ownership disallows disownment.                               
-   ///   @tparam ID provider we're keeping track of                           
    ///   @tparam STYLE whether ownership will be automatically applied on     
    ///      construction, reassignment and destruction. Usually 0 if container
    ///      is just a view, or in other cases where you want to carry an      
    ///      allocation pointer, but not necessarily reference it.             
+   ///   @tparam ID provider we're keeping track of                           
    ///   @tparam SHARED other providers that will share the same allocation   
    ///      variable.                                                         
-   template<Cid ID, uint STYLE, Cid...SHARED>
+   template<uint STYLE, Cid ID, Cid...SHARED>
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -84,13 +84,14 @@ namespace Langulus::Anyness::Component
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I> requires CT::Container<I>
+      ///   @important notice that Copy and Clone intents are not handled     
+      ///      here. They're handled in heap components instead, in case      
+      ///      something throws an exception while constructing.              
+      template<CT::Intent I>
+      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I>)
       void ConstructFrom(this auto& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
 
-         // @important notice that Copy and Clone intents are not       
-         //    handled here. They're handled in heap components instead,
-         //    in case something throws an exception while constructing 
          if constexpr (CT::Referred<I>) {
             // Refer                                                    
             if constexpr (STYLE & OnCreate)

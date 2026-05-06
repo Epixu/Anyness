@@ -19,9 +19,9 @@ namespace Langulus::Anyness::Inner
       Com::TypedStatic<DMeta, V, 1>,
       Com::Stack<K, 0>,
       Com::Stack<V, 1>,
-      Com::CountStatic<0, 1u, 1>,         // Statically sized to 1      
-      Com::ReserveStatic<0, 1u, 1>,       // Statically reserved to 1   
-      Com::OwnershipEmergent<0, Com::NoOwnership, 1>,
+      Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
+      Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
+      Com::OwnershipEmergent<Com::NoOwnership, 0, 1>,
       Com::OwnershipDeepEmergent<0, true, 1>,
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         

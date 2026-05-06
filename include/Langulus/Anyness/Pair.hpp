@@ -37,9 +37,9 @@ namespace Langulus::Anyness::Inner
          HeapEntry<0, void*>,             // Key heap data              
          HeapEntry<1, void*>              // Value heap data            
       >,
-      Com::CountStatic<0, 1u, 1>,         // Statically sized to 1      
-      Com::ReserveStatic<0, 1u, 1>,       // Statically reserved to 1   
-      Com::OwnershipStack<0, Com::StrongOwnership, 1>,
+      Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
+      Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
+      Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
       Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
       Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  

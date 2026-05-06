@@ -15,7 +15,7 @@ namespace Langulus::Anyness::Inner
    using TAnyBase = Com::Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
       Com::HeapMovable<0, 0, HeapEntry<0, T*>>,
-      Com::CountStatic<0, 1u>,         // Statically sized to 1         
+      Com::CountStatic<1u>,            // Statically sized to 1         
       Com::ReserveEmergent<>,          // Reserve derived from alloc    
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced

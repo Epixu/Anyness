@@ -18,7 +18,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, false, 1>,
       Com::HeapReference<HeapEntry<0, void*>>,
       Com::HeapReference<HeapEntry<1, void*>>,
-      Com::CountStatic<0, 1u, 1>,
+      Com::CountStatic<1u, 0, 1>,
       Com::OwnershipDeepReference<0>,
       Com::OwnershipDeepReference<1>,
       Com::HashEmergent<0, Hash, 1>,
@@ -96,7 +96,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, false, 1>,
       Com::HeapReference<HeapEntry<0, void*>>,
       Com::HeapReference<HeapEntry<1, void*>>,
-      Com::CountStatic<0, 1u, 1>,
+      Com::CountStatic<1u, 0, 1>,
       Com::OwnershipDeepReference<0>,
       Com::OwnershipDeepReference<1>,
       Com::HashEmergent<0, Hash, 1>,
@@ -175,7 +175,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, false, 1>,
       Com::HeapReference<HeapEntry<0, void*>>,
       Com::HeapReference<HeapEntry<1, void*>>,
-      Com::CountStatic<0, 1u, 1>,
+      Com::CountStatic<1u, 0, 1>,
       Com::OwnershipDeepReference<0>,
       Com::OwnershipDeepReference<1>,
       Com::HashEmergent<0, Hash, 1>,
@@ -254,10 +254,10 @@ namespace Langulus::Anyness
       Com::TypedStatic<DMeta, Deref<V>, 1>,
       Com::HeapReference<HeapEntry<0, Deref<K>*>>,
       Com::HeapReference<HeapEntry<1, Deref<V>*>>,
-      Com::CountStatic<0, 1u, 1>,
-      EnableComponentIf<CT::Dense<K, V>,                 Com::OwnershipEmergent<0, Com::WeakOwnership, 1>>,
-      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipEmergent<0, Com::WeakOwnership>>,
-      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipEmergent<1, Com::WeakOwnership>>,
+      Com::CountStatic<1u, 0, 1>,
+      EnableComponentIf<CT::Dense<K, V>,                 Com::OwnershipEmergent<Com::WeakOwnership, 0, 1>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipEmergent<Com::WeakOwnership, 0>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipEmergent<Com::WeakOwnership, 1>>,
       EnableComponentIf<CT::Sparse<K>,                   Com::OwnershipDeepEmergent<0>>,
       EnableComponentIf<CT::Sparse<V>,                   Com::OwnershipDeepEmergent<1>>,
       Com::HashEmergent<0, Hash, 1>,
@@ -329,10 +329,10 @@ namespace Langulus::Anyness
       Com::TypedStatic<DMeta, Deref<V>, 1>,
       Com::HeapReference<HeapEntry<0, Deref<K>*>>,
       Com::HeapReference<HeapEntry<1, Deref<V>*>>,
-      Com::CountStatic<0, 1u, 1>,
-      EnableComponentIf<CT::Dense<K, V>,                 Com::OwnershipStack<0, Com::WeakOwnership, 1>>,
-      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<0, Com::WeakOwnership>>,
-      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<1, Com::WeakOwnership>>,
+      Com::CountStatic<1u, 0, 1>,
+      EnableComponentIf<CT::Dense<K, V>,                 Com::OwnershipStack<Com::WeakOwnership, 0, 1>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<Com::WeakOwnership, 0>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<Com::WeakOwnership, 1>>,
       EnableComponentIf<CT::Sparse<K>,                   Com::OwnershipDeepReference<0>>,
       EnableComponentIf<CT::Sparse<V>,                   Com::OwnershipDeepReference<1>>,
       Com::HashEmergent<0, Hash, 1>,
@@ -383,13 +383,13 @@ namespace Langulus::Anyness
          if constexpr (CT::Dense<K, V>) {
             return {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<0, Com::WeakOwnership, 1>::GetAllocation()
+               this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
             };
          }
          else if constexpr (CT::Dense<K>) {
             return {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<0, Com::WeakOwnership>::GetAllocation()
+               this->Com::OwnershipStack<Com::WeakOwnership, 0>::GetAllocation()
             };
          }
          else {
@@ -404,13 +404,13 @@ namespace Langulus::Anyness
          if constexpr (CT::Dense<K, V>) {
             return {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<0, Com::WeakOwnership, 1>::GetAllocation()
+               this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
             };
          }
          else if constexpr (CT::Dense<V>) {
             return {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<1, Com::WeakOwnership>::GetAllocation()
+               this->Com::OwnershipStack<Com::WeakOwnership, 1>::GetAllocation()
             };
          }
          else {
@@ -444,13 +444,13 @@ namespace Langulus::Anyness
       EnableComponentIf<CT::Dense<V>, Com::Stack<V, 1>>,
       EnableComponentIf<CT::Sparse<K>, Com::HeapMovable<0, 0, HeapEntry<0, K*>>>,
       EnableComponentIf<CT::Sparse<V>, Com::HeapMovable<0, 0, HeapEntry<1, V*>>>,
-      Com::CountStatic<0, 1u, 1>,
+      Com::CountStatic<1u, 0, 1>,
       EnableComponentIf<CT::Sparse<K, V>,                Com::ReserveEmergent<size_t, 0, 1>>,
       EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::ReserveEmergent<size_t, 0>>,
       EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::ReserveEmergent<size_t, 1>>,
-      EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipStack<0, Com::StrongOwnership, 1>>,
-      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<1, Com::StrongOwnership>>,
-      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<0, Com::StrongOwnership>>,
+      EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipStack<Com::StrongOwnership, 0, 1>>,
+      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<Com::StrongOwnership, 0>>,
+      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<Com::StrongOwnership, 1>>,
       EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipDeepHeap<0, true, 1>>,
       EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipDeepHeap<1>>,
       EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipDeepHeap<0>>,
@@ -491,34 +491,7 @@ namespace Langulus::Anyness
       constexpr THandlePair(auto&& key, auto&& val) noexcept {
          this->Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(key));
          this->Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(val));
-         /*using IK = IntentOf(key);
-         using IV = IntentOf(val);
-
-         if constexpr (CT::Sparse<Deint<IK>>) {
-            this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::SetHeapInner(DeintCast(key));
-            if constexpr (not CT::Disowned<IK>) {
-               if constexpr (CT::Sparse<K, V>)
-                  this->Com::OwnershipStack<0, Com::StrongOwnership, 1>::template FindAllocationInner<0>();
-               else
-                  this->Com::OwnershipStack<0, Com::StrongOwnership>::FindAllocationInner();
-            }
-         }
-
-         if constexpr (CT::Sparse<Deint<IV>>) {
-            this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::SetHeapInner(DeintCast(val));
-            if constexpr (not CT::Disowned<IV>) {
-               if constexpr (CT::Sparse<K, V>)
-                  this->Com::OwnershipStack<0, Com::StrongOwnership, 1>::template FindAllocationInner<1>();
-               else
-                  this->Com::OwnershipStack<1, Com::StrongOwnership>::FindAllocationInner();
-            }
-         }*/
       }
-
-      /*constexpr THandlePair(THandle<K>&& key, THandle<V>&& val) noexcept {
-         this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(key.GetHeapInner());
-         this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
-      }*/
 
       /// Assignment                                                          
       THandlePair& operator = (THandlePair const& other) = delete;

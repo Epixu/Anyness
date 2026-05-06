@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Inner
    using TOwnBase = Com::Container<
       Com::TypedStatic<DMeta, T>,         // Statically typed           
       Com::Stack<T>,                      // Element on the stack       
-      Com::CountStatic<0, 1u>,            // Statically sized           
+      Com::CountStatic<1u>,               // Statically sized           
       Com::Emplacement<>,                 // Can be emplaced            
       Com::Assignment<>,                  // Can be reassigned          
       Com::Comparison<>                   // Can be compared            

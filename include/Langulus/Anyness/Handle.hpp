@@ -32,9 +32,9 @@ namespace Langulus::Anyness
       using THandleEmbeddedDense = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<0, 1u>,
+         Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
-         Com::OwnershipStack<0, Com::WeakOwnership>,
+         Com::OwnershipStack<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -47,7 +47,7 @@ namespace Langulus::Anyness
       using THandleEmbeddedSparse = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<0, 1u>,
+         Com::CountStatic<1u>,
          Com::OwnershipDeepReference<>,
          Com::HashEmergent<>,
          Com::Assignment<>,
@@ -61,9 +61,9 @@ namespace Langulus::Anyness
       using THandleEmbeddedDenseEmergent = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<0, 1u>,
+         Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
-         Com::OwnershipEmergent<0, Com::WeakOwnership>,
+         Com::OwnershipEmergent<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -77,7 +77,7 @@ namespace Langulus::Anyness
       using THandleEmbeddedSparseEmergent = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<0, 1u>,
+         Com::CountStatic<1u>,
          Com::OwnershipDeepEmergent<>,
          Com::HashEmergent<>,
          Com::Assignment<>,
@@ -91,7 +91,7 @@ namespace Langulus::Anyness
       using THandleDisownedEmbedded = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<0, 1u>,
+         Com::CountStatic<1u>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -106,7 +106,7 @@ namespace Langulus::Anyness
       using THandleLocalDense = Com::Container<
          Com::TypedStatic<DMeta, T>,
          Com::Stack<T>,
-         Com::CountStatic<0, 1u>,
+         Com::CountStatic<1u>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -119,7 +119,7 @@ namespace Langulus::Anyness
       using THandleLocalSparse = Com::Container<
          Com::TypedStatic<DMeta, T>,
          Com::HeapMovable<0, 0, HeapEntry<0, T*>>,
-         Com::CountStatic<0, 1u>,
+         Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipStack<>,
          Com::OwnershipDeepHeap<>,
@@ -139,7 +139,7 @@ namespace Langulus::Anyness
    struct HandleMut : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<0, 1u>,
+      Com::CountStatic<1u>,
       //Com::ReserveEmergent<>,
       Com::OwnershipDeepReference<>,
       Com::HashEmergent<>,
@@ -201,7 +201,7 @@ namespace Langulus::Anyness
    struct HandleDisownedMut : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<0, 1u>,
+      Com::CountStatic<1u>,
       Com::HashEmergent<>,
       Com::Assignment<>,
       Com::Emplacement<>,
@@ -265,7 +265,7 @@ namespace Langulus::Anyness
    struct Handle : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<0, 1u>,
+      Com::CountStatic<1u>,
       Com::OwnershipDeepReference<>,
       Com::HashEmergent<>,
       Com::Comparison<>,
@@ -324,7 +324,7 @@ namespace Langulus::Anyness
    struct HandleDisowned : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<0, 1u>,
+      Com::CountStatic<1u>,
       Com::HashEmergent<>,
       Com::Comparison<>,
       Com::IterationOperators<>

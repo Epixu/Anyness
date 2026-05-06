@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.CountStatic<ID, COUNT, SHARED...>
+   #define ThisCom self.CountStatic<COUNT, ID, SHARED...>
 
    ///                                                                        
    ///   A compile-time count                                                 
@@ -29,10 +29,10 @@ namespace Langulus::Anyness::Component
    ///   In these cases, count is equal to COUNT if container has a heap      
    /// component that has been allocated - otherwise it is 0. If no heap      
    /// component exists or can't be null, then the count is always COUNT.     
-   ///   @tparam ID provider ID to keep count of                              
    ///   @tparam COUNT the count type and value                               
+   ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
-   template<Cid ID, auto COUNT, Cid...SHARED>
+   template<auto COUNT, Cid ID, Cid...SHARED>
    struct CountStatic {
       using CTTI_Component  = Yes<>;
       using CTTI_ReflectAs  = void;
@@ -41,6 +41,8 @@ namespace Langulus::Anyness::Component
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = COUNT > 1;
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
 
       using Dimensions  = Values<ID, SHARED...>;
       using CountType   = decltype(COUNT);
@@ -55,13 +57,13 @@ namespace Langulus::Anyness::Component
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated - zero otherwise. If no heap component exists, then the   
       /// count is always COUNT.                                              
-      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetCount(this auto const& self) noexcept -> CountType {
          return ThisCom::template GetCountInner<SID>();
       }
       
       /// Check if empty                                                      
-      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr bool IsEmpty(this auto const& self) noexcept {
          return ThisCom::template GetCountInner<SID>() == CountType {0};
       }
@@ -80,7 +82,7 @@ namespace Langulus::Anyness::Component
       LglsComConversion(friend);
 
       /// Get count (inner)                                                   
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr auto GetCountInner(this C const& self) noexcept -> CountType {
          if constexpr (CT::HasVariableCount<C>)
             return self.template GetRaw<SID>() ? COUNT : CountType {0};
@@ -90,8 +92,8 @@ namespace Langulus::Anyness::Component
 
       /// Reset count (inner)                                                 
       ///   @attention doesn't destroy elements, only resets hash and count   
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
-      constexpr void ResetCount(this C& self) noexcept {
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr void ResetCount(this auto& self) noexcept {
          if_available(self.template SetHeapInner<SID>(nullptr));
          if_available(self.template SetHashInner<SID>(1));
       }

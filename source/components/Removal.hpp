@@ -84,6 +84,7 @@ namespace Langulus::Anyness::Component
       /// Destroy all elements but don't deallocate memory, unless we have to 
       ///   @attention will never reset state or type                         
       void Clear(this auto& self) {
+         //TODO clear all dimensions??
          const auto al = self.GetAllocation();
          if (not al) {
             // Data is either static or unallocated.                    
@@ -100,6 +101,7 @@ namespace Langulus::Anyness::Component
             // only if the container keeps track of the count separately
             self.DestroyAllElements();
             if_available(self.ResetHashTable());
+            self.ResetCount();
          }
          else {
             // If reached, then data is referenced from multiple places.
@@ -108,12 +110,8 @@ namespace Langulus::Anyness::Component
 
             // Dereference memory                                       
             DecvqAllCast(al)->AddRef(-1);
-            if_available(self.SetAllocationInner(nullptr));
-            if_available(self.SetReservedInner(0));
-            if_available(self.SetHashTableInner(nullptr));
+            self.ResetAllocationInner();
          }
-
-         self.ResetCount();
       }
 
       /// Destroy all elements, deallocate block and reset state and type,    
@@ -121,11 +119,9 @@ namespace Langulus::Anyness::Component
       ///   @attention notice that heap pointer is not zeroed here, as it     
       ///      is not a requirement. It is UB if you GetRaw while count is 0! 
       void Reset(this auto& self) {
+         //TODO reset all dimensions??
          self.Free();
-         if_available(self.SetAllocationInner(nullptr));
-         if_available(self.SetReservedInner(0));
-         if_available(self.SetHashTableInner(nullptr));
-         self.ResetCount();
+         self.ResetAllocationInner();
          if_available(self.ResetState());
          if_available(self.ResetType());
       }

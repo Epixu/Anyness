@@ -267,7 +267,7 @@ namespace Langulus::Anyness::Component
             else if (T.IsDeep()) {
                bool result = false;
                self.Apply([&result](auto const& item) noexcept {
-                  if (item.template As<typename C::DeepType const, SID>().template IsExecutable<ID>()) {
+                  if (item.template Get<typename C::DeepType const, SID>().template IsExecutable<ID>()) {
                      result = true;
                      return false;
                   }
@@ -308,28 +308,6 @@ namespace Langulus::Anyness::Component
             else return false;
          }
       }
-
-      /// Returns true if a type constraint is specified                      
-      /*template<Cid SID = ID> requires (SID == ID)
-      constexpr bool IsTypeConstrained() const noexcept {
-         return CONSTRAIN;
-      }
-
-      template<Cid SID = ID> requires (SID == ID)
-      constexpr void EnableTypeConstrained() const noexcept {
-         static_assert(CONSTRAIN,
-            "Can't enable type-constraint in type-erased container. "
-            "Make sure you've added Typed state and properly disambiguated it"
-         );
-      }
-
-      template<Cid SID = ID> requires (SID == ID)
-      constexpr void DisableTypeConstrained() const noexcept {
-         static_assert(not CONSTRAIN,
-            "Can't disable type-constraint in a statically-typed container. "
-            "Make sure you've added Typed state and properly disambiguated it"
-         );
-      }*/
 
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
@@ -468,28 +446,30 @@ namespace Langulus::Anyness::Component
       ///      since element constructors might throw and stuff be partially  
       ///      inserted. In those cases, type is set by the heap components.  
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I, CT::Container C> requires CT::Container<I>
-      void ConstructFrom(this C& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
-            if constexpr (ThisCom::TypeErased) {
-               ThisCom::SetType(intent->template GetType<ID>());
+      template<CT::Intent I>
+      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I>)
+      void ConstructFrom(this auto& self, I&& intent) {
+         if constexpr (ThisCom::TypeErased) {
+            ThisCom::SetType(intent->template GetType<ID>());
 
-               // While we are interfacing external memory, we have to  
-               // keep the type-constrained state, otherwise we risk    
-               // interpreting contents the wrong way                   
-               if constexpr (not CONSTRAIN) {
-                  if constexpr (CT::TypeErased<I>)
-                     ThisCom::EnableTypeConstrained();
-                  else if (intent->IsTypeConstrained())
-                     ThisCom::EnableTypeConstrained();
-               }
+            // While we are interfacing external memory, we have to     
+            // keep the type-constrained state, otherwise we risk       
+            // interpreting static memory the wrong way.                
+            if constexpr (not CONSTRAIN) {
+               if constexpr (not CT::TypeErased<I>)
+                  // From statically-typed to dynamically-typed         
+                  ThisCom::EnableTypeConstrained();
+               else if (intent->IsTypeConstrained())
+                  // From dynamically-typed to dynamically-typed        
+                  ThisCom::EnableTypeConstrained();
             }
-            else {
-               if constexpr (CT::TypeErased<I>)
-                  ThisCom::SetType(intent->template GetType<ID>());
-               else
-                  ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
-            }
+         }
+         else {
+            // These are called just to do compile-time type safety     
+            if constexpr (CT::TypeErased<I>)
+               ThisCom::SetType(intent->template GetType<ID>());
+            else
+               ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
          }
       }
    };
