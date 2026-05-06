@@ -248,6 +248,7 @@ namespace Langulus::Anyness
       LglsComIndexedHashHeap(friend);
       LglsComIndexedHashStack(friend);
       LglsComStateStack(friend);
+      LglsComIndexedCommon(friend);
       LglsComIndexedCommonHashed(friend);
 
       // Here lies the stack. It is an optimized tuple that is filled   
@@ -505,7 +506,7 @@ namespace Langulus::Anyness
                if constexpr (CT::DeeplyOwned<H>) {
                   return H {
                      self.template Get<void, SID>(),
-                     self.template GetEntries<SID>(),
+                     self.template GetEntriesInner<SID>(),
                      self.template GetType<SID>()
                   };
                }
@@ -546,7 +547,7 @@ namespace Langulus::Anyness
                   else {
                      return H {
                         &self.template Get<void, SID>(),
-                        self.template GetEntries<SID>()
+                        self.template GetEntriesInner<SID>()
                      };
                   }
                }
@@ -776,6 +777,7 @@ namespace Langulus::Anyness
 
    protected:
       unify_getter(GetHeapInner);
+      unify_getter(GetEntriesInner);
       unify_getter(GetRawVoid);
       unify_setter(SetReservedInner);
 

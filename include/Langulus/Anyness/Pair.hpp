@@ -40,8 +40,8 @@ namespace Langulus::Anyness::Inner
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
-      Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
-      Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
+      Com::OwnershipDeepHeap<true, 0>,    // Separate key deep ownership
+      Com::OwnershipDeepHeap<true, 1>,    // Separate val deep onwership
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         
       Com::Assignment<0, 1>,              // Allows assignment          

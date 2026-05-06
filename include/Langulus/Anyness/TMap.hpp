@@ -24,7 +24,7 @@ namespace Langulus::Anyness::Inner
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     
       Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
-      Com::OwnershipDeepHeap<0, true, 1>, // Separate key deep ownership
+      Com::OwnershipDeepHeap<true, 0, 1>, // Separate key deep ownership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      
       //Com::Insertion<1>,                  // Allows inserting values    

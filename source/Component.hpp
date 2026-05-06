@@ -286,17 +286,17 @@ namespace Langulus::Anyness
       #define LglsComOwnershipStack(modifier) \
          template<uint, Cid, Cid...> modifier struct OwnershipStack
 
-      template<Cid = 0, bool REF_INDIVIDUAL = true, Cid...> struct OwnershipDeepReference;
+      template<bool REF_INDIVIDUAL = true, Cid = 0, Cid...> struct OwnershipDeepReference;
       #define LglsComOwnershipDeepReference(modifier) \
-         template<Cid, bool, Cid...> modifier struct OwnershipDeepReference
+         template<bool, Cid, Cid...> modifier struct OwnershipDeepReference
 
-      template<Cid = 0, bool REF_INDIVIDUAL = true, Cid...> struct OwnershipDeepEmergent;
+      template<bool REF_INDIVIDUAL = true, Cid = 0, Cid...> struct OwnershipDeepEmergent;
       #define LglsComOwnershipDeepEmergent(modifier) \
-         template<Cid, bool, Cid...> modifier struct OwnershipDeepEmergent
+         template<bool, Cid, Cid...> modifier struct OwnershipDeepEmergent
 
-      template<Cid = 0, bool REF_INDIVIDUAL = true, Cid...> struct OwnershipDeepHeap;
+      template<bool REF_INDIVIDUAL = true, Cid = 0, Cid...> struct OwnershipDeepHeap;
       #define LglsComOwnershipDeepHeap(modifier) \
-         template<Cid, bool, Cid...> modifier struct OwnershipDeepHeap
+         template<bool, Cid, Cid...> modifier struct OwnershipDeepHeap
 
       /// Hashing                                                             
       template<Cid = 0, class H = Hash, Cid...> struct HashEmergent;

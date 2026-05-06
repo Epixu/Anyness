@@ -13,7 +13,7 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.OwnershipDeepHeap<ID, REF_INDIVIDUAL, SHARED...>
+   #define ThisCom self.OwnershipDeepHeap<REF_INDIVIDUAL, ID, SHARED...>
 
    ///                                                                        
    /// Reserves a part of the heap to keep track of sparse element's          
@@ -26,22 +26,27 @@ namespace Langulus::Anyness::Component
    ///   third  int*** allocations... etc.},                                  
    /// essentially forming an array of indirections indexed like:             
    ///   entries[item_index * number_of_indirections + indirection_index]     
-   ///   @tparam ID which heap provider are we using?                         
    ///   @tparam REF_INDIVIDUAL toggles whether contained items that were     
    ///      reflected as CT::Referenced get referenced. Elements will get     
    ///      referenced even if no entry for the element exist, but you can    
    ///      avoid referencing altogether if you use the Disown intent.        
    ///      To be more specific - when GetReference() is nullptr and the      
    ///      entire container is considered disowned.                          
-   template<Cid ID, bool REF_INDIVIDUAL, Cid...SHARED>
-   struct OwnershipDeepHeap : OwnershipDeepEmergent<ID, REF_INDIVIDUAL, SHARED...> {
+   ///   @tparam ID which heap/stack are we keeping track of?                 
+   ///   @tparam SHARED additional provider IDs that share the same behavior  
+   template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
+   struct OwnershipDeepHeap : OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...> {
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
+
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
 
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
-      auto GetEntries(this auto const& self) assumptious -> Allocation const* const* {
+      template<Cid SID = ID> requires Relevant<SID>
+      auto GetEntries(this auto const& self) assumptious
+      -> Allocation const* const* {
          if (self.template IsSparse<SID>()
          and self.template GetRaw<SID>() and self.template GetAllocation<SID>())
             return ThisCom::GetEntriesInner();
@@ -50,19 +55,20 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID = ID, CT::Container C> requires (IdMatch<SID, ID, SHARED...> and CT::Indexed<C>)
-      auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious -> Allocation const* const* {
+      template<Cid SID = ID, CT::Container C> requires (Relevant<SID> and CT::Indexed<C>)
+      auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
+      -> Allocation const* const* {
          if constexpr (CT::TypeErased<C>) {
-            auto T = self.GetType();
-            if (T.IsSparse() and self.GetRaw() and self.GetAllocation()) {
+            auto T = self.template GetType<SID>();
+            if (T.IsSparse() and self.template GetRaw<SID>() and self.template GetAllocation<SID>()) {
                return ThisCom::GetEntriesInner()
                     + self.SimplifyIndex(LglsFwd(idx)) * T.GetIndirections();
             }
          }
          else {
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             if constexpr (CT::Sparse<T>) {
-               if (self.GetRaw() and self.GetAllocation()) {
+               if (self.template GetRaw<SID>() and self.template GetAllocation<SID>()) {
                   return ThisCom::GetEntriesInner()
                        + self.SimplifyIndex(LglsFwd(idx)) * IndirectsOf<T>;
                }
@@ -79,7 +85,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   
-      //template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessHeap<OwnershipDeepHeap>();
       }
@@ -87,6 +93,7 @@ namespace Langulus::Anyness::Component
       /// This method is called upon allocation to nullify entries            
       template<CT::Container C>
       constexpr void ConstructHeapRequest(this C& self) noexcept {
+         //TODO do it for all IDs?
          const auto reserved = self.GetReserved();
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();

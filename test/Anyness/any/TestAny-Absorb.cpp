@@ -10,6 +10,8 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
+   , Types<Any, RT*, ScopedElement<RT*>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
    , Types<Any, int,    ScopedElement<int>>
@@ -20,7 +22,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, Text*,  ScopedElement<Text*>>
    , Types<Any, int*,   ScopedElement<int*>>
    , Types<Any, Any*,   ScopedElement<Any*>>
-   , Types<Any, RT*,    ScopedElement<RT*>>
    , Types<Any, char*,  ScopedElement<char*>>
 
    , Types<Any, Text**, ScopedElement<Text**>>

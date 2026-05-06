@@ -177,7 +177,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::DeeplyOwned<AS>) {
                   return AS {
                      self.template GetAt<void, SID>(LglsFwd(idx)),
-                     self.template GetEntries<SID>(),
+                     self.template GetEntriesInner<SID>(),
                      self.template GetType<SID>()
                   };
                }
@@ -210,7 +210,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::DeeplyOwned<AS>) {
                   return AS {
                      self.template GetAt<void, SID>(LglsFwd(idx)),
-                     self.template GetEntries<SID>()
+                     self.template GetEntriesInner<SID>()
                   };
                }
                else if constexpr (CT::Owned<AS>) {

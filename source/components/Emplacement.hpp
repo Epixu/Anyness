@@ -198,7 +198,7 @@ namespace Langulus::Anyness::Component
             "GetHandle() first?"
          );*/
 
-         constexpr bool has_entries = requires { self.template GetEntries<SID>(); };
+         constexpr bool has_entries = requires { self.template GetEntriesInner<SID>(); };
          [[maybe_unused]] DMeta T;
          // If T is Text**, then dst/src are Text***                    
          void** dst = static_cast<void**>(self.template GetRawVoid<SID>());
@@ -243,8 +243,7 @@ namespace Langulus::Anyness::Component
                // If T is Text**, ent is Allocation*[2]                 
                [[maybe_unused]] Allocation const* const* ent;
                if constexpr (has_entries)
-                  ent = self.template GetEntries<SID>();
-                  //ent = self.template GetEntriesInner<SID>();
+                  ent = self.template GetEntriesInner<SID>();
                
                if (indirects > 1) {
                   // Allocate multiple indirections                     
@@ -332,7 +331,7 @@ namespace Langulus::Anyness::Component
                LglsAssert(cloned_origin, "Out of memory");
                [[maybe_unused]] Allocation const* const* ent;
                if constexpr (has_entries)
-                  ent = self.template GetEntries<SID>();
+                  ent = self.template GetEntriesInner<SID>();
 
                if constexpr (indirects > 1) {
                   // Multiple indirections                              
@@ -443,8 +442,7 @@ namespace Langulus::Anyness::Component
             // Then clone all indirection layers in reverse order       
             [[maybe_unused]] EntryPtr entries;
             if constexpr (CT::DeeplyOwned<C>) {
-               //entries = self.template GetEntriesInner<SID>();
-               entries = self.template GetEntries<SID>();
+               entries = self.template GetEntriesInner<SID>();
                DecvqAllCast(entries[indirections]) = cloned;
             }
          
@@ -672,7 +670,7 @@ namespace Langulus::Anyness::Component
                new (self.template GetRaw<SID>()) E {};
 
                if constexpr (CT::Sparse<E>)
-                  if_available(*self.template GetEntries<SID>() = nullptr);
+                  if_available(*self.template GetEntriesInner<SID>() = nullptr);
             }
             else {
                // The type we're constructing isn't statically known    
@@ -691,9 +689,9 @@ namespace Langulus::Anyness::Component
                // Construct the first element                           
                constructor(self.template GetRaw<SID>());
 
-               if constexpr (requires { self.template GetEntries<SID>(); }) {
+               if constexpr (requires { self.template GetEntriesInner<SID>(); }) {
                   if (T.IsSparse())
-                     *self.template GetEntries<SID>() = nullptr;
+                     *self.template GetEntriesInner<SID>() = nullptr;
                }
             }
          }
@@ -716,7 +714,7 @@ namespace Langulus::Anyness::Component
             new (self.template GetRaw<SID>()) T {};
             
             if constexpr (CT::Sparse<T>)
-               if_available(*self.template GetEntries<SID>() = nullptr);
+               if_available(*self.template GetEntriesInner<SID>() = nullptr);
          }
 
          // Update count                                                

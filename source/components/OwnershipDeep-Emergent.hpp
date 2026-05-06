@@ -23,19 +23,20 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.OwnershipDeepEmergent<ID, REF_INDIVIDUAL, SHARED...>
+   #define ThisCom self.OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...>
 
    ///                                                                        
    /// Manages deep ownership by searching for an allocation every time.      
    /// Also used as base for other deep ownership components.                 
-   ///   @tparam ID which heap/stack are we keeping track of?                 
    ///   @tparam REF_INDIVIDUAL toggles whether contained items that were     
    ///      reflected as CT::Referenced get referenced. Elements will get     
    ///      referenced even if no entry for the element exist, but you can    
    ///      avoid referencing altogether if you use the Disown intent.        
    ///      To be more specific - when GetReference() is nullptr and the      
    ///      entire container is considered disowned.                          
-   template<Cid ID, bool REF_INDIVIDUAL, Cid...SHARED>
+   ///   @tparam ID which heap/stack are we keeping track of?                 
+   ///   @tparam SHARED additional provider IDs that share the same behavior  
+   template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -64,6 +65,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
+      ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
@@ -88,7 +90,7 @@ namespace Langulus::Anyness::Component
                   return;
 
                const auto subT = T.GetDeptr();
-               const auto ptr = *static_cast<void**>(const_cast<void*>(self.template GetRaw<SID>()));
+               const auto ptr = *static_cast<void**>(self.template GetRawVoid<SID>());
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
                if (subT.IsSparse()) {
@@ -158,6 +160,7 @@ namespace Langulus::Anyness::Component
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
       ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
+      ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
@@ -171,7 +174,7 @@ namespace Langulus::Anyness::Component
          }
 
          // Check if disowned/outside authority                         
-         auto entries = self.template GetEntries<SID>();
+         auto entries = self.template GetEntriesInner<SID>();
          if (not entries)
             return;
 
@@ -245,6 +248,8 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
+      /// Deep-reference an element                                           
+      ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeep(this C& self) assumptious {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -362,7 +367,7 @@ namespace Langulus::Anyness::Component
             
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
-               auto entries = self.template GetEntries<SID>();
+               auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
                   return;
 
@@ -455,8 +460,7 @@ namespace Langulus::Anyness::Component
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
          if (T.IsSparse()) {
-            //auto entries = self.template GetEntriesInner<SID>();
-            auto entries = self.template GetEntries<SID>();
+            auto entries = self.template GetEntriesInner<SID>();
             if (not entries)
                return;
             
@@ -547,9 +551,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
       template<Cid SID = ID, CT::Container C, CT::Intent I>
-      requires(Relevant<SID>
-           and (CT::TypeErased<C>        or CT::Sparse<TypeOf<C>>)
-           and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>>>))
+      requires(Relevant<SID> and (CT::TypeErased<C> or CT::Sparse<TypeOf<C, SID>>))
       void EmplaceEntries(this C& self, I&& intent) {
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
@@ -568,7 +570,7 @@ namespace Langulus::Anyness::Component
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         const auto entries = self.template GetEntries<SID>();
+         const auto entries = self.template GetEntriesInner<SID>();
 
          if constexpr (CT::Handle<I>) {
             static_assert(not CT::Pair<I>,
@@ -583,9 +585,9 @@ namespace Langulus::Anyness::Component
             );
 
             if constexpr (not CT::Disowned<I>
-            and requires { rhs.template GetEntries<SID>(); }) {
+            and requires { rhs.template GetEntriesInner<SID>(); }) {
                // We can copy entries from RHS handle                   
-               auto entries_src = rhs.template GetEntries<SID>();
+               auto entries_src = rhs.template GetEntriesInner<SID>();
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
@@ -646,7 +648,7 @@ namespace Langulus::Anyness::Component
       /// Reset all entries for the first element                             
       ///   @attention this overwrites previous entries without dereferencing 
       template<Cid SID = ID, CT::Container C>
-      requires(Relevant<SID> and (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>))
+      requires(Relevant<SID> and (CT::TypeErased<C> or CT::Sparse<TypeOf<C, SID>>))
       void ResetEntries(this C&& self) {
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
@@ -666,8 +668,7 @@ namespace Langulus::Anyness::Component
 
          const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         //auto entries = self.template GetEntriesInner<SID>();
-         auto entries = self.template GetEntries<SID>();
+         auto entries = self.template GetEntriesInner<SID>();
          memset(DecvqAllCast(entries), 0, entries_size);
       }
    };

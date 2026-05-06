@@ -403,29 +403,29 @@ namespace Langulus::Anyness::Component
                memcpy(self.Get(), rhs.Get(),  S);
                memcpy(rhs.Get(),  &tmp,       S);
 
-               if constexpr (requires { self.GetEntries(); rhs.GetEntries(); }) {
+               if constexpr (requires { self.GetEntriesInner(); rhs.GetEntriesInner(); }) {
                   // Both entry arrays are available, just swap them    
-                  auto lhs_entry = self.GetEntries();
-                  auto rhs_entry = rhs.GetEntries();
+                  auto lhs_entry = self.GetEntriesInner();
+                  auto rhs_entry = rhs.GetEntriesInner();
                   for (int i = 0; i < T.GetIndirections(); ++i) {
                      ::std::swap(*lhs_entry, *rhs_entry);
                      ++lhs_entry;
                      ++rhs_entry;
                   }
                }
-               else if constexpr (requires { self.GetEntries(); }) {
+               else if constexpr (requires { self.GetEntriesInner(); }) {
                   // Left entry array is available, right is emergent   
                   // Find the entries and reference them if we have to  
-                  auto lhs_entry = self.GetEntries();
+                  auto lhs_entry = self.GetEntriesInner();
                   for (int i = 0; i < T.GetIndirections(); ++i) {
                      ++lhs_entry;
                      TODO();
                   }
                }
-               else if constexpr (requires { rhs.GetEntries(); }) {
+               else if constexpr (requires { rhs.GetEntriesInner(); }) {
                   // Right entry array is available, left is emergent   
                   // Find the entries and reference them if we have to  
-                  auto rhs_entry = rhs.GetEntries();
+                  auto rhs_entry = rhs.GetEntriesInner();
                   for (int i = 0; i < T.GetIndirections(); ++i) {
                      ++rhs_entry;
                      TODO();
@@ -449,29 +449,29 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Sparse<T>) {
                ::std::swap(lhs_item, rhs_item);
 
-               if constexpr (requires { self.GetEntries(); rhs.GetEntries(); }) {
+               if constexpr (requires { self.GetEntriesInner(); rhs.GetEntriesInner(); }) {
                   // Both entry arrays are available, just swap them    
-                  auto lhs_entry = DecvqAllCast(self.GetEntries());
-                  auto rhs_entry = DecvqAllCast(rhs.GetEntries());
+                  auto lhs_entry = DecvqAllCast(self.GetEntriesInner());
+                  auto rhs_entry = DecvqAllCast(rhs.GetEntriesInner());
                   ForEachIndirection<T>([&lhs_entry, &rhs_entry] {
                      ::std::swap(*lhs_entry, *rhs_entry);
                      ++lhs_entry;
                      ++rhs_entry;
                   });
                }
-               else if constexpr (requires { self.GetEntries(); }) {
+               else if constexpr (requires { self.GetEntriesInner(); }) {
                   // Left entry array is available, right is emergent   
                   // Find the entries and reference them if we have to  
-                  auto lhs_entry = DecvqAllCast(self.GetEntries());
+                  auto lhs_entry = DecvqAllCast(self.GetEntriesInner());
                   ForEachIndirection<T>([&lhs_entry] {
                      ++lhs_entry;
                      TODO();
                   });
                }
-               else if constexpr (requires { rhs.GetEntries(); }) {
+               else if constexpr (requires { rhs.GetEntriesInner(); }) {
                   // Right entry array is available, left is emergent   
                   // Find the entries and reference them if we have to  
-                  auto rhs_entry = DecvqAllCast(rhs.GetEntries());
+                  auto rhs_entry = DecvqAllCast(rhs.GetEntriesInner());
                   ForEachIndirection<T>([&rhs_entry] {
                      ++rhs_entry;
                      TODO();
