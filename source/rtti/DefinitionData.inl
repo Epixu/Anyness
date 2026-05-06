@@ -965,10 +965,18 @@ namespace Langulus::RTTI
          definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
          auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
 
-         if constexpr (not CT::CustomPointer<T>)
+         if constexpr (Exact<DenserT*, DTOnce>) {
+            LglsAssumeDev(
+               not deptr->mAddPtr or deptr->mAddPtr == definition.mDecvqOnce,
+               "mAddPtr was set with different value"
+            );
+            deptr->mAddPtr = definition.mDecvqOnce;
+         }
+
+         /*if constexpr (not CT::CustomPointer<T>)
             deptr->mAddPtr = definition.mDecvqOnce;
          else if (not deptr->mAddPtr)
-            deptr->mAddPtr = definition.mDecvqOnce;
+            deptr->mAddPtr = definition.mDecvqOnce;*/
 
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             // Propagate ID only if there's exactly one level of        

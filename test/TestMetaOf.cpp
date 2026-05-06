@@ -449,6 +449,8 @@ TEST_CASE_TEMPLATE("Reflecting abstract types", T
    REQUIRE(meta.IsAbstract() == true);
    REQUIRE(meta.GetSize() == sizeof(T));
    REQUIRE(meta.GetAlignment() == alignof(T));
+   REQUIRE(meta.GetDecvqAll() == MetaDataOf<T>());
+   REQUIRE(meta.GetDecvq() == MetaDataOf<T>());
 }
 
 TEST_CASE_TEMPLATE("Reflecting non-abstract types", T
@@ -463,6 +465,8 @@ TEST_CASE_TEMPLATE("Reflecting non-abstract types", T
    REQUIRE(meta.IsPOD() == CT::POD<T>);
    REQUIRE(meta.IsNullable() == CT::Nullable<T>);
    REQUIRE(meta.GetConcrete() == nullptr);
+   REQUIRE(meta.GetDecvqAll() == MetaDataOf<T>());
+   REQUIRE(meta.GetDecvq() == MetaDataOf<T>());
 }
 
 ///                                                                           
@@ -484,6 +488,9 @@ TEST_CASE_TEMPLATE("Reflecting virtual bases", T,
    REQUIRE(DMeta(meta.GetBases()[1].type).Is(MetaDataOf<int>()));
    REQUIRE(meta.GetBases()[1].binaryCompatible == false);
    REQUIRE(meta.GetBases()[1].getBase == nullptr);
+
+   REQUIRE(meta.GetDecvqAll() == MetaDataOf<T>());
+   REQUIRE(meta.GetDecvq() == MetaDataOf<T>());
 }
 
 TEST_CASE_TEMPLATE("Reflecting non-virtual bases", T,
@@ -504,6 +511,9 @@ TEST_CASE_TEMPLATE("Reflecting non-virtual bases", T,
    REQUIRE(DMeta(meta.GetBases()[2].type).Is(MetaDataOf<float>()));
    REQUIRE(meta.GetBases()[2].binaryCompatible == false);
    REQUIRE(meta.GetBases()[2].getBase == nullptr);
+
+   REQUIRE(meta.GetDecvqAll() == MetaDataOf<T>());
+   REQUIRE(meta.GetDecvq() == MetaDataOf<T>());
 }
 
 ///                                                                           
@@ -539,6 +549,7 @@ SCENARIO("A type reflected with all traits") {
    REQUIRE(meta.IsConstant() == false);
    REQUIRE(meta.GetDeptr() == nullptr);
    REQUIRE(meta.GetDecvqAll() == MetaDataOf<ImplicitlyReflectedDataWithTraits>());
+   REQUIRE(meta.GetDecvq() == MetaDataOf<ImplicitlyReflectedDataWithTraits>());
 
    REQUIRE(meta.GetBases().size() == 1);
    REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImplicitlyReflectedData>()));

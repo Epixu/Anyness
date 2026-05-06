@@ -29,6 +29,7 @@ add_langulus_test(LangulusAnynessTest
                CT/TestContainer.cpp
                CT/TestConvertible.cpp
                CT/TestDeep.cpp
+               CT/TestReflectAs.cpp
                CT/TestSuffix.cpp
                CT/TestUnfold.cpp
                

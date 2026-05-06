@@ -20,9 +20,25 @@ enum class Pi {
    ConflictingNumber = 666
 };
 
-struct NotReflectable    { using CTTI_ReflectAs = void; };
-struct NotReflectableAlt { using CTTI_ReflectAs = No;   };
+struct NotReflectable       { using CTTI_ReflectAs = void; };
+struct NotReflectableIntern { using CTTI_ReflectAs = No;   };
+struct NotReflectableExtern {};
+struct ReflectableIntern    { using CTTI_ReflectAs = char; };
+struct ReflectableExtern    {};
+struct ReflectableAsSelf    { using CTTI_ReflectAs = ReflectableAsSelf; };
 
+namespace Langulus::CTTI
+{
+   template<>
+   struct ReflectAs<NotReflectableExtern> {
+      using Type = void;
+   };
+
+   template<>
+   struct ReflectAs<ReflectableExtern> {
+      using Type = char;
+   };
+}
 
 namespace Langulus::Tags
 {

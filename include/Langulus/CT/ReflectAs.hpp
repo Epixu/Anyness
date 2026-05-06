@@ -37,6 +37,7 @@ namespace Langulus::CT
       consteval auto IsReflectable() {
          static_assert(NotReference<T>, "Strip references first");
          static_assert(NotSheddable<T>, "Strip sheddable types first");
+         static_assert(not ::std::is_bounded_array_v<T>, "Strip extents first");
 
          if constexpr (not Complete<T>) {
             // Incomplete types are never reflectable                   
@@ -89,10 +90,12 @@ namespace Langulus::CT
    /// Get the type a given T is reflected as. This is very useful as a       
    /// a build-time optimization, because many type-erased containers are     
    /// binary-compatible with their templated equivalents, and the use of     
-   /// CTTI_ReflectAs can drastically lower build time for meta generation,   
+   /// CTTI_ReflectAs can drastically lower build time for RTTI generation,   
    /// by reducing unnessesary template reflections of redundant types.       
    ///   @attention this is designed only for affecting the reflection of     
    ///      data types, not tag, verb, or constant definitions                
+   ///   @attention this will strip all references, but will preserve CV      
+   ///      qualifiers and indirections!                                      
    template<class T>
    using ReflectedAs = typename decltype(Inner::IsReflectable<T>())::First;
 }

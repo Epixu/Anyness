@@ -10,7 +10,11 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
-   , Types<Any, RT*, ScopedElement<RT*>>
+   , Types<TAny<Text*>, Text*, ScopedElement<Text*>>
+
+   , Types<TAny<char*>, char*, ScopedElement<char*>>
+
+   , Types<TAny<RT*>, RT*, ScopedElement<RT*>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
@@ -22,6 +26,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, Text*,  ScopedElement<Text*>>
    , Types<Any, int*,   ScopedElement<int*>>
    , Types<Any, Any*,   ScopedElement<Any*>>
+   , Types<Any, RT*,    ScopedElement<RT*>>
    , Types<Any, char*,  ScopedElement<char*>>
 
    , Types<Any, Text**, ScopedElement<Text**>>
@@ -36,11 +41,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<TAny<RT>,     RT,     ScopedElement<RT>>
    , Types<TAny<char>,   char,   ScopedElement<char>>
                                  
-   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*>>
    , Types<TAny<int*>,   int*,   ScopedElement<int*>>
    , Types<TAny<Any*>,   Any*,   ScopedElement<Any*>>
-   , Types<TAny<RT*>,    RT*,    ScopedElement<RT*>>
-   , Types<TAny<char*>,  char*,  ScopedElement<char*>>
 
    , Types<TAny<Text**>, Text**, ScopedElement<Text**>>
    , Types<TAny<int**>,  int**,  ScopedElement<int**>>
@@ -101,6 +103,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
+
+   auto testtype1 = MetaDataOf<E>();
+   auto testtype2 = MetaDataOf<E const*>();
+   auto testtype3 = MetaDataOf<Deptr<E> const*>();
+   REQUIRE(testtype1.IsExact(testtype1.GetDecvq()));
+   REQUIRE(testtype2.IsExact(testtype2.GetDecvq()));
+   REQUIRE(testtype3.IsExact(testtype3.GetDecvq()));
    
    GIVEN("Absorb-constructed container") {
       const ScopedE originalElement {556};
