@@ -58,6 +58,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Set the number of reserved elements                                 
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr void SetReservedInner(this auto& self, T c) noexcept {
          ThisCom::GetReservedInner() = c;
       }
@@ -77,6 +78,7 @@ namespace Langulus::Anyness::Component
             if constexpr (requires { from.template GetReserved<ID>(); }) {
                // Always propagate custom reserve if available          
                ThisCom::SetReservedInner(from.template GetReserved<ID>());
+
                if constexpr (I::ResetsOnMove()) {
                   if_available(from.template SetReservedInner<ID>(0));
                }

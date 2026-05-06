@@ -771,22 +771,13 @@ namespace Langulus::Anyness
          });
       }
 
-      /*template<Cid ID = 0, class CON>
-      constexpr bool IsTypeConstrained(this CON&& self) noexcept 
-      if_inherits(template IsTypeConstrained<ID>()) {
-         return ComponentList::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (requires { self.C::template IsTypeConstrained<ID>(); })
-               return self.C::template IsTypeConstrained<ID>();
-            else return No{};
-         });
-      }*/
-
       unify_setter(SetType);
       unify_setter_templated(SetType);
 
    protected:
       unify_getter(GetHeapInner);
       unify_getter(GetRawVoid);
+      unify_setter(SetReservedInner);
 
       #undef if_inherits
       #undef unify_compose
