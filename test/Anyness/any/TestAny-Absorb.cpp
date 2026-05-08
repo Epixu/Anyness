@@ -7,9 +7,12 @@
 ///                                                                           
 #include "TestAnyCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
+#include <Langulus/Assume.hpp>
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
+   , Types<Any, Text**, ScopedElement<Text**>>
+
    , Types<TAny<Text*>, Text*, ScopedElement<Text*>>
 
    , Types<TAny<char*>, char*, ScopedElement<char*>>
@@ -29,7 +32,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, RT*,    ScopedElement<RT*>>
    , Types<Any, char*,  ScopedElement<char*>>
 
-   , Types<Any, Text**, ScopedElement<Text**>>
    , Types<Any, int**,  ScopedElement<int**>>
    , Types<Any, Any**,  ScopedElement<Any**>>
    , Types<Any, RT**,   ScopedElement<RT**>>
@@ -107,6 +109,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    auto testtype1 = MetaDataOf<E>();
    auto testtype2 = MetaDataOf<E const*>();
    auto testtype3 = MetaDataOf<Deptr<E> const*>();
+   LglsAssumeDev(testtype1.IsExact(testtype1.GetDecvq()), testtype1.GetName(), " != ", testtype1.GetDecvq().GetName());
    REQUIRE(testtype1.IsExact(testtype1.GetDecvq()));
    REQUIRE(testtype2.IsExact(testtype2.GetDecvq()));
    REQUIRE(testtype3.IsExact(testtype3.GetDecvq()));

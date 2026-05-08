@@ -43,7 +43,7 @@ namespace Langulus::CT
             // Incomplete types are never reflectable                   
             return NoTypes {};
          }
-         else if constexpr (Void<T>) {
+         else if constexpr (Void<T> or Typelist<T>) {
             // Void types are never reflectable                         
             return NoTypes {};
          }
@@ -62,7 +62,7 @@ namespace Langulus::CT
                return Types<AS> {};
             }
          }
-         else if constexpr (Dense<T>) {
+         else if constexpr (Decayed<T>) {
             if constexpr (requires { typename Decay<T>::CTTI_ReflectAs; }) {
                // Substitution through internal type                    
                using AS = typename Decay<T>::CTTI_ReflectAs;
@@ -78,13 +78,33 @@ namespace Langulus::CT
             }
             else return Types<T> {};
          }
-         else return Types<T> {};
+         else {
+            if constexpr (::std::is_const_v<T>) {
+               using AS = decltype(IsReflectable<Decvq<T>>());
+               if constexpr (Void<AS>)
+                  return NoTypes {};
+               else
+                  return Types<typename AS::First const> {};
+            }
+            else if constexpr (::std::is_pointer_v<T>) {
+               if constexpr (not Complete<Deptr<T>>)
+                  return Types<T> {};
+               else {
+                  using AS = decltype(IsReflectable<Deptr<T>>());
+                  if constexpr (Void<AS>)
+                     return NoTypes{};
+                  else
+                     return Types<typename AS::First*> {};
+               }
+            }
+            else return Types<T> {};
+         }
       }
    }
 
    /// Check if all T are reflectable                                         
    template<class...T>
-   concept Reflectable = Validate<T...>
+   concept Reflectable = PartialValidate<T...>
        and (CT::NotVoid<typename decltype(Inner::IsReflectable<T>())::First> and ...);
 
    /// Get the type a given T is reflected as. This is very useful as a       

@@ -76,7 +76,7 @@ namespace Langulus
    template<class E = Exception, class...MORE>
    void ErrorInner(
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown error>",
+      ::std::string_view const& m1 = "<unknown error>",
       MORE&&...mn
    ) {
       // Log error message                                              
@@ -92,9 +92,9 @@ namespace Langulus
 
       // Throw                                                          
       if constexpr (CT::Exception<E>)
-         throw E {m1, location};
+         throw E {m1.data(), location};
       else
-         throw E {m1};
+         throw E {m1.data()};
    }
 
    #define LglsError(...) ::Langulus::ErrorInner(HERE() __VA_OPT__(,) __VA_ARGS__)
@@ -109,7 +109,7 @@ namespace Langulus
    constexpr void AssertInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown assertion failure>",
+      ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) {
       if not consteval {
@@ -127,9 +127,9 @@ namespace Langulus
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
-               throw E {m1, location};
+               throw E {m1.data(), location};
             else
-               throw E {m1};
+               throw E {m1.data()};
          }
       }
    }
@@ -147,7 +147,7 @@ namespace Langulus
    constexpr void AssertWarnInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown assertion failure>",
+      ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
       if not consteval {
@@ -181,7 +181,7 @@ namespace Langulus
    constexpr void AssumeUserInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown user assumption failure>",
+      ::std::string_view const& m1 = "<unknown user assumption failure>",
       MORE&&...mn
    ) {
       if not consteval {
@@ -199,9 +199,9 @@ namespace Langulus
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
-               throw E {m1, location};
+               throw E {m1.data(), location};
             else
-               throw E {m1};
+               throw E {m1.data()};
          }
       }
    }
@@ -217,7 +217,7 @@ namespace Langulus
    constexpr void AssumeUserWarnInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown assertion failure>",
+      ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
       if not consteval {
@@ -265,7 +265,7 @@ namespace Langulus
    constexpr void AssumeDevInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown dev assumption failure>",
+      ::std::string_view const& m1 = "<unknown dev assumption failure>",
       MORE&&...mn
    ) {
       if not consteval {
@@ -283,9 +283,9 @@ namespace Langulus
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
-               throw E {m1, location};
+               throw E {m1.data(), location};
             else
-               throw E {m1};
+               throw E {m1.data()};
          }
       }
    }
@@ -300,7 +300,7 @@ namespace Langulus
    constexpr void AssumeDevWarnInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown assertion failure>",
+      ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
       if not consteval {
@@ -347,7 +347,7 @@ namespace Langulus
    constexpr void AssumeInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown assumption failure>",
+      ::std::string_view const& m1 = "<unknown assumption failure>",
       MORE&&...mn
    ) {
       if constexpr (LANGULUS(SAFE) >= LEVEL) {
@@ -366,9 +366,9 @@ namespace Langulus
 
                // Throw                                                 
                if constexpr (CT::Exception<E>)
-                  throw E {m1, location};
+                  throw E {m1.data(), location};
                else
-                  throw E {m1};
+                  throw E {m1.data()};
             }
          }
       }
@@ -393,7 +393,7 @@ namespace Langulus
    constexpr void AssumeWarnInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown assertion failure>",
+      ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
       if constexpr (LANGULUS(SAFE) >= LEVEL) {

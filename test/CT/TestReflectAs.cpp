@@ -29,7 +29,8 @@ TEST_CASE_TEMPLATE("Testing CT::Reflectable", TestType
    , ReflectableAsSelf const
    //, ReflectableAsSelf&     // shouldn't compile at all
    , ReflectableAsSelf*
-   , int, int const
+   , int
+   , int const
    //, int const&, int&       // shouldn't compile at all
    , void*
    , IncompleteType*
@@ -39,34 +40,35 @@ TEST_CASE_TEMPLATE("Testing CT::Reflectable", TestType
 
 TEST_CASE_TEMPLATE("Testing not CT::Reflectable", TestType
    , IncompleteType
-   , IncompleteType&                      // shouldn't compile at all
+   //, IncompleteType&                    // shouldn't compile at all
    , IncompleteType const
-   , IncompleteType const&                // shouldn't compile at all
-   , SheddableType<IncompleteType>        // shouldn't compile at all
-   , SheddableType<IncompleteType>&       // shouldn't compile at all
-   , SheddableType<IncompleteType>*       // shouldn't compile at all
-   , void, nullptr_t
+   //, IncompleteType const&              // shouldn't compile at all
+   //, SheddableType<IncompleteType>      // shouldn't compile at all
+   //, SheddableType<IncompleteType>&     // shouldn't compile at all
+   //, SheddableType<IncompleteType>*     // shouldn't compile at all
+   , void
+   , nullptr_t
    , Types<void*>
-   , SheddableType<int>                   // shouldn't compile at all
-   , SheddableType<int*>                  // shouldn't compile at all
-   , SheddableType<int* const>            // shouldn't compile at all
-   , SheddableType<int* const&>           // shouldn't compile at all
+   //, SheddableType<int>                 // shouldn't compile at all
+   //, SheddableType<int*>                // shouldn't compile at all
+   //, SheddableType<int* const>          // shouldn't compile at all
+   //, SheddableType<int* const&>         // shouldn't compile at all
    , Types<void*>*
-   , SheddableType<int>*                  // shouldn't compile at all
-   , SheddableType<int*>*                 // shouldn't compile at all
-   , SheddableType<int* const>*           // shouldn't compile at all
-   , SheddableType<int* const&>*          // shouldn't compile at all
-   , SheddableType<NotReflectable>        // shouldn't compile at all
+   //, SheddableType<int>*                // shouldn't compile at all
+   //, SheddableType<int*>*               // shouldn't compile at all
+   //, SheddableType<int* const>*         // shouldn't compile at all
+   //, SheddableType<int* const&>*        // shouldn't compile at all
+   //, SheddableType<NotReflectable>      // shouldn't compile at all
    , NotReflectable
-   , NotReflectable&                      // shouldn't compile at all
+   //, NotReflectable&                    // shouldn't compile at all
    , NotReflectable*
-   , SheddableType<NotReflectableIntern>  // shouldn't compile at all
+   //, SheddableType<NotReflectableIntern>// shouldn't compile at all
    , NotReflectableIntern
-   , NotReflectableIntern&                // shouldn't compile at all
+   //, NotReflectableIntern&              // shouldn't compile at all
    , NotReflectableIntern*
-   , SheddableType<NotReflectableExtern>  // shouldn't compile at all
+   //, SheddableType<NotReflectableExtern>// shouldn't compile at all
    , NotReflectableExtern
-   , NotReflectableExtern&                // shouldn't compile at all
+   //, NotReflectableExtern&              // shouldn't compile at all
    , NotReflectableExtern*
 ) {
    static_assert(not CT::Reflectable<TestType>);
@@ -102,6 +104,7 @@ SCENARIO("CT::ReflectedAs") {
    DEFINE_REFLECTAS_TYPE_TEST(int const,     int const)
    DEFINE_REFLECTAS_TYPE_TEST(int*,          int*)
    DEFINE_REFLECTAS_TYPE_TEST(int const*,    int const*)
+   DEFINE_REFLECTAS_TYPE_TEST(int const* const* const,    int const* const* const)
    //DEFINE_REFLECTAS_TYPE_TEST(int const*&&,  int const*)  // shouldn't compile at all
 
    DEFINE_REFLECTAS_TYPE_TEST(NotReflectable,          void)
@@ -114,37 +117,61 @@ SCENARIO("CT::ReflectedAs") {
    DEFINE_REFLECTAS_TYPE_TEST(NotReflectable*,         void)
    DEFINE_REFLECTAS_TYPE_TEST(NotReflectable const*,   void)
    //DEFINE_REFLECTAS_TYPE_TEST(NotReflectable const*&&, void) // shouldn't compile at all
+   
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern,          void)
+   //DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern&,         void) // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern const,    void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern const*,   void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern,          void)
+   //DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern&,         void) // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern const,    void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern*,         void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern const*,   void)
+   //DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern const*&&, void) // shouldn't compile at all
+   
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern,          void)
+   //DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern&,         void) // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern const,    void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern const*,   void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern,          void)
+   //DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern&,         void) // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern const,    void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern*,         void)
+   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableExtern const*,   void)
+   //DEFINE_REFLECTAS_TYPE_TEST(NotReflectableIntern const*&&, void) // shouldn't compile at all
+   
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern,          char)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern&,         char)    // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern const,    char const)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern const*,   char const*)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern,          char)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern&,         char)    // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern const,    char const)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern*,         char*)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern const*,   char const*)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableIntern const*&&, char const*&&) // shouldn't compile at all
 
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt,          void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt&,         void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt const,    void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt const*,   void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt,          void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt&,         void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt const,    void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt*,         void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt const*,   void)
-   DEFINE_REFLECTAS_TYPE_TEST(NotReflectableAlt const*&&, void)
-
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided,          char)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided&,         char)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided const,    char const)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided const*,   char const*)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided,          char)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided&,         char)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided const,    char const)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided*,         char*)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided const*,   char const*)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableOverrided const*&&, char const*&&)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern,          char)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern&,         char)       // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern const,    char const)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern const*,   char const*)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern,          char)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern&,         char)       // shouldn't compile at all
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern const,    char const)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern*,         char*)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern const*,   char const*)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern const* const* const,   char const* const* const)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableExtern const*&&, char const*&&) // shouldn't compile at all
 
    DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf,          ReflectableAsSelf)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf&,         ReflectableAsSelf)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf&,         ReflectableAsSelf)         // shouldn't compile at all
    DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf const,    ReflectableAsSelf const)
    DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf const*,   ReflectableAsSelf const*)
    DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf,          ReflectableAsSelf)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf&,         ReflectableAsSelf)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf&,         ReflectableAsSelf)         // shouldn't compile at all
    DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf const,    ReflectableAsSelf const)
    DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf*,         ReflectableAsSelf*)
    DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf const*,   ReflectableAsSelf const*)
-   DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf const*&&, ReflectableAsSelf const*&&)
+   DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf const* const* const,   ReflectableAsSelf const* const* const)
+   //DEFINE_REFLECTAS_TYPE_TEST(ReflectableAsSelf const*&&, ReflectableAsSelf const*&&)// shouldn't compile at all
 }
