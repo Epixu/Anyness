@@ -58,8 +58,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
-      /// Nests through all indirection layers and references elements and    
-      /// their entries.                                                      
+      /// Nests through all indirection layers of the first contained element 
       ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
       ///   @attention assumes container is not disowned!                     
@@ -76,8 +75,8 @@ namespace Langulus::Anyness::Component
                "Can't keep anything in a container without ownership");
          }
 
-         if (self.template IsEmpty<SID>())
-            return;
+         /*if (self.template IsEmpty<SID>())
+            return;*/
 
          using H = Decay<decltype(Fake<DecideHandle<C>>().template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
@@ -155,8 +154,8 @@ namespace Langulus::Anyness::Component
       }
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      /// Nests through all indirection layers and references elements and    
-      /// their entries. Supports any number or custom pointer indirections.  
+      /// Nests through all indirection layers of the first contained element.
+      /// Supports any number of custom pointer indirections.                 
       ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
       ///   @attention assumes container is not disowned!                     
@@ -166,8 +165,8 @@ namespace Langulus::Anyness::Component
       void KeepElementDeepCustomPointers(this C& self) assumptious {
          /*static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many. GetHandle() first?");*/
-         LglsAssumeDev(not self.template IsEmpty<SID>(),
-            "No point in calling this on an empty container");
+         /*LglsAssumeDev(not self.template IsEmpty<SID>(),
+            "No point in calling this on an empty container");*/
 
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.template GetAllocation<SID>(),

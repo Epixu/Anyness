@@ -544,8 +544,8 @@ namespace Langulus::Anyness::Component
             void* const dst = self.template GetRawVoid<SID>();
 
             if constexpr (CT::TypeErased<C, IT>) {
-               //                                                    
-               // Either this container or the handle is type-erased 
+               //                                                       
+               // Either this container or the handle is type-erased    
                auto T = rhs.template GetType<SID>();
                LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");
                void* const src = rhs.template GetRawVoid<SID>();
@@ -570,9 +570,9 @@ namespace Langulus::Anyness::Component
                   static_assert(false, "Unrecognized intent");
             }
             else {
-               //                                                    
-               // Both sides are statically-typed and we can benefit 
-               // from a lot of compile-time optimizations.          
+               //                                                       
+               // Both sides are statically-typed and we can benefit    
+               // from a lot of compile-time optimizations.             
                if constexpr (CT::Typed<C, IT>)
                   static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
                else
@@ -866,7 +866,9 @@ namespace Langulus::Anyness::Component
                "Too many arguments for emplacing a sparse instance");
          }
          
-         // Update count                                                
+         // Update count always _after_ emplacement - EmplaceWithIntent 
+         // might throw, and we wouldn't want to have valid elements if 
+         // this happens!                                               
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
             if_available(self.template SetCountInner<SID>(1));
          }
