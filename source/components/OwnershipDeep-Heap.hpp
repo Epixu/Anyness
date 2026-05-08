@@ -94,13 +94,12 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       constexpr void ConstructHeapRequest(this C& self) noexcept {
          //TODO do it for all IDs?
-         const auto reserved = self.GetReserved();
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();
             if (T.IsSparse()) {
                memset(
                   ThisCom::GetEntriesInner(), 0,
-                  reserved * T.GetIndirections() * sizeof(AllocationPtr)
+                  self.GetReserved() * T.GetIndirections() * sizeof(AllocationPtr)
                );
             }
          }
@@ -109,7 +108,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Sparse<T>) {
                memset(
                   ThisCom::GetEntriesInner(), 0,
-                  reserved * IndirectsOf<T> * sizeof(AllocationPtr)
+                  self.GetReserved() * IndirectsOf<T> * sizeof(AllocationPtr)
                );
             }
          }

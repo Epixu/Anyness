@@ -405,6 +405,7 @@ namespace Langulus::Anyness::Component
       ///   @param reserve the number of elements to request                  
       template<Cid SID = Id, CT::Container C> requires Relevant<SID>
       Request RequestHeap(this C const& self, const size_t reserve) assumptious {
+         //TODO account for multiple dimensions sharing the same heap
          Request result;
          result.mHeaderBytes = self.template GetHeapHeaderSize<SID>();
 

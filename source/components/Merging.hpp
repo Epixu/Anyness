@@ -102,10 +102,11 @@ namespace Langulus::Anyness::Component
          auto insert = [&]<class E>(E&& item) {
             if constexpr (CT::Contiguous<C>) {
                // Contiguous merge                                      
-               const auto found = self.FindInner(DeintCast(item), 0);
-               if (found) {
-                  result.lastInsertedIndex = found - self.GetHandle();
-                  return;
+               if (not self.IsEmpty()) {
+                  if (const auto found = self.FindInner(DeintCast(item), 0)) {
+                     result.lastInsertedIndex = found - self.GetHandle();
+                     return;
+                  }
                }
 
                auto to = self.GetHandle() + lhs_count;
@@ -119,10 +120,11 @@ namespace Langulus::Anyness::Component
             else {
                // Hash table merge                                      
                const auto bucket = self.GetOffset(DeintCast(item));
-               const auto found = self.FindInner(DeintCast(item), bucket);
-               if (found) {
-                  result.lastInsertedIndex = found - self.GetHandle();
-                  return;
+               if (not self.IsEmpty()) {
+                  if (const auto found = self.FindInner(DeintCast(item), bucket)) {
+                     result.lastInsertedIndex = found - self.GetHandle();
+                     return;
+                  }
                }
 
                // Move the element to a temporary local swapper first   
@@ -178,10 +180,11 @@ namespace Langulus::Anyness::Component
          auto insert = [&self,&result](K&& k, V&& v) {
             // Hash table merge only                                    
             const auto bucket = self.GetOffset(DeintCast(k));
-            const auto found = self.FindInner(DeintCast(k), bucket);
-            if (found) {
-               result.lastInsertedIndex = found - self.GetHandle();
-               return;
+            if (not self.IsEmpty()) {
+               if (const auto found = self.FindInner(DeintCast(k), bucket)) {
+                  result.lastInsertedIndex = found - self.GetHandle();
+                  return;
+               }
             }
 
             // Make a local pair to use as a swapper                    
