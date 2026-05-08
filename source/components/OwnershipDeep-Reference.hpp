@@ -40,10 +40,10 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires Relevant<SID>
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
-         if (self.template IsSparse<SID>()) {
-            LglsAssumeDev(self.template GetRaw<SID>(), "No memory available");
+         if (self.template IsSparse<SID>())// {
+            //LglsAssumeDev(self.template GetRaw<SID>(), "No memory available");
             return ThisCom::GetEntriesInner();
-         }
+         //}
          return nullptr;
       }
 
@@ -73,7 +73,12 @@ namespace Langulus::Anyness::Component
       constexpr void SetEntriesInner(this auto& self, EntryPtr entries) noexcept {
          ThisCom::GetEntriesInner() = DecvqAllCast(entries);
       }
-      
+
+      /// Default-initialization of this component                            
+      void ConstructDefault(this auto& self) noexcept {
+         ThisCom::SetEntriesInner(nullptr);
+      }
+
       /// Transfer from any kind of container.                                
       /// This is only a reference to the entries and is not allowed          
       /// to allocate any new memory, so all this does is copy the            
