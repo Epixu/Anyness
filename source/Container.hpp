@@ -250,6 +250,7 @@ namespace Langulus::Anyness
       LglsComStateStack(friend);
       LglsComIndexedCommon(friend);
       LglsComIndexedCommonHashed(friend);
+      LglsComRemoval(friend);
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with requests from components.                                 
