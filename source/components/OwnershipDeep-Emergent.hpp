@@ -58,6 +58,43 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
+      /// Find and populate an indirection entry                              
+      template<bool CUSTOM_POINTERS, CT::Container C>
+      void FindEntry(
+         this C& self, AllocationPtr const* entries, CT::Sparse auto ptr,
+         [[maybe_unused]] const DMeta& T = {},
+         [[maybe_unused]] const DMeta& nextT = {}
+      ) noexcept {
+         static_assert(LANGULUS_FEATURE(MANAGED_MEMORY));
+         if (*entries)
+            return;
+
+         // We can find the allocation behind the pointer but in order  
+         // to save it, we must make sure that entry array resides in   
+         // non-shared memory (when OwnershipDeepHeap is used)          
+         auto entry_allocation = Allocator::Find(entries);
+         if (not entry_allocation or entry_allocation->GetUses() != 1)
+            return;
+
+         auto& entry = DecvqAllCast(*entries);
+         if constexpr (CT::TypeErased<C>) {
+            if constexpr (CUSTOM_POINTERS) {
+               const auto ptrSpec = T.GetPointerSpecification();
+               if (ptrSpec.IsPacked()) {
+                  uintptr_t derefptr = 0;
+                  memcpy(&derefptr, ptr, ptrSpec.GetTotalBytes());
+                  entry =
+                     DecvqAllCast(Allocator::FindPackedPointer(
+                        ptrSpec, nextT, derefptr
+                     ));
+               }
+               else entry = DecvqAllCast(Allocator::Find(*static_cast<void**>(ptr)));
+            }
+            else entry = DecvqAllCast(Allocator::Find(ptr));
+         }
+         else entry = DecvqAllCast(Allocator::Find(ptr));
+      }
+
       /// Nests through all indirection layers of the first contained element 
       ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
@@ -105,12 +142,8 @@ namespace Langulus::Anyness::Component
                   }
                }
 
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  if constexpr (FIND_MISSING) {
-                     if (not *entries)
-                        DecvqAllCast(*entries) = DecvqAllCast(Allocator::Find(ptr));
-                  }
-               #endif
+               if constexpr (FIND_MISSING and LANGULUS_FEATURE(MANAGED_MEMORY))
+                  ThisCom::template FindEntry<false>(entries, ptr);
 
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
@@ -127,7 +160,8 @@ namespace Langulus::Anyness::Component
                if (not entries)
                   return;
 
-               auto& ptr = *self.template GetRawAs<T, SID>();
+               //auto ptr = *self.template GetRawAs<T, SID>();
+               auto ptr = *self.template GetRaw<SID>();
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
                if constexpr (CT::Sparse<DT>) {
@@ -140,12 +174,8 @@ namespace Langulus::Anyness::Component
                   ptr->Reference(1);
                }
             
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  if constexpr (FIND_MISSING) {
-                     if (not *entries)
-                        DecvqAllCast(*entries) = DecvqAllCast(Allocator::Find(ptr));
-                  }
-               #endif
+               if constexpr (FIND_MISSING and LANGULUS_FEATURE(MANAGED_MEMORY))
+                  ThisCom::template FindEntry<false>(entries, ptr);
 
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
@@ -183,27 +213,11 @@ namespace Langulus::Anyness::Component
             auto T = self.template GetType<SID>();
             LglsAssumeDev(T.IsSparse(), "Sparseness mismatch");
 
-            //void* src = DecvqAllCast(self.template GetHeapInner<SID>());
-            void* src = DecvqAllCast(self.template GetRaw<SID>());
+            void* src = self.template GetRawVoid<SID>();
             while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
-               if constexpr (FIND_MISSING) {
-                  if (not *entries) {
-                     const auto srcSpec = T.GetPointerSpecification();
-                     if (srcSpec.IsPacked()) {
-                        uintptr_t derefSrc = 0;
-                        memcpy(&derefSrc, src, srcSpec.GetTotalBytes());
-                        DecvqAllCast(*entries) =
-                           DecvqAllCast(Allocator::FindPackedPointer(
-                              srcSpec, nextT, derefSrc
-                           ));
-                     }
-                     else {
-                        DecvqAllCast(*entries) =
-                           DecvqAllCast(Allocator::Find(*static_cast<void**>(src)));
-                     }
-                  }
-               }
+               if constexpr (FIND_MISSING)
+                  ThisCom::template FindEntry<true>(entries, src, T, nextT);
 
                if (nextT.IsSparse()) {
                   // Pointer T -> Pointer nextT                         
@@ -229,13 +243,10 @@ namespace Langulus::Anyness::Component
             static_assert(CT::Sparse<T>, "Sparseness mismatch");
 
             auto ptr = self.template Get<void, SID>();
-            ForEachIndirection(ptr, [&entries](auto& i) {
-               if constexpr (FIND_MISSING) {
-                  if (not *entries)
-                     DecvqAllCast(*entries) = DecvqAllCast(Allocator::Find(i));
-               }
+            ForEachIndirection(ptr, [&](auto& i) {
+               if constexpr (FIND_MISSING)
+                  ThisCom::template FindEntry<true>(entries, i);
 
-               // Reference valid entries if not zero                   
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
 

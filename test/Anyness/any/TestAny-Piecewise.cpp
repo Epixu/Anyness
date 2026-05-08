@@ -116,6 +116,56 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
    }
 
+   GIVEN("Piecewise-constructed container and then destroyed (refer)") {
+      const ScopedE originalElement {556};
+      T pack {Piecewise, *originalElement};
+   }
+
+   GIVEN("Piecewise-constructed container and then destroyed (refer using intent)") {
+      const ScopedE originalElement {556};
+      T pack {Piecewise, Refer(*originalElement)};
+   }
+
+   GIVEN("Piecewise-constructed container and then destroyed (copy)") {
+      const ScopedE originalElement {556};
+      T pack {Piecewise, Copy(*originalElement)};
+   }
+
+   GIVEN("Piecewise-constructed container and then destroyed (clone)") {
+      const ScopedE originalElement {556};
+      T pack {Piecewise, Clone(*originalElement)};
+   }
+
+   GIVEN("Piecewise-constructed container and then destroyed (move)") {
+      const ScopedE originalElement {556};
+      auto originalElement_movable = *originalElement;
+      T pack {Piecewise, ::std::move(originalElement_movable)};
+   }
+
+   GIVEN("Piecewise-constructed container and then destroyed (move using intent)") {
+      const ScopedE originalElement {556};
+      auto originalElement_movable = *originalElement;
+      T pack {Piecewise, Move(originalElement_movable)};
+   }
+
+   GIVEN("Piecewise-constructed container and then destroyed (abandon)") {
+      const ScopedE originalElement {556};
+      auto originalElement_movable = *originalElement;
+      T pack {Piecewise, Abandon(originalElement_movable)};
+   }
+
+   GIVEN("Piecewise-constructed container and then destroyed (disown)") {
+      const ScopedE originalElement{556};
+      T pack {Piecewise, Disown(*originalElement)};
+
+      WHEN("Absorbed by referral") {
+         T absorbed {pack};
+
+         Any_Helper_TestSame(absorbed, pack);
+         REQUIRE(absorbed.GetUses() == 2);
+      }
+   }
+
    GIVEN("Piecewise-constructed container") {
       const ScopedE originalElement {556};
       const ScopedE element {555};
