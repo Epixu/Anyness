@@ -867,11 +867,13 @@ namespace Langulus::RTTI
          else {
             // Custom pointers                                          
             cppname = CppNameOf<Decvq<T>>();
+            if constexpr (CT::Constant<T>) cppname += " const";
             meta = Instance.GetMetaDataByCppName(cppname);
             if (meta and meta->IsInRelevantBoundary())
                return meta;
 
             token = NameOf<Decvq<T>, false>();
+            if constexpr (CT::Constant<T>) token += " const";
          }
 
          DefinitionData& definition = meta
@@ -965,7 +967,20 @@ namespace Langulus::RTTI
          // Reflect the denser type                                     
          definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
          auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
+         LglsAssumeDev(deptr->mConst == CT::Constant<DenserT>,
+            "Deptr didn't preserve mutability, reflecting ", NameOf<DenserT>(),
+            " (reflected as ", NameOf<CT::ReflectedAs<DenserT>>(),
+            ") as ", deptr->mNameOf
+         );
+
          if constexpr (Exact<DenserT*, DTOnce>) {
+            IF_SAFE(if (deptr->mAddPtr and deptr->mAddPtr != definition.mDecvqOnce) {
+               Logger::Error(
+                  deptr->mNameOf, "'s mAddPtr (", deptr->mAddPtr->mNameOf,
+                  ") was erroneously replaced with ", definition.mDecvqOnce->mNameOf,
+                  " while reflecting ", definition.mNameOf
+               );
+            })
             LglsAssumeDev(
                not deptr->mAddPtr or deptr->mAddPtr == definition.mDecvqOnce,
                "mAddPtr was set with different value"

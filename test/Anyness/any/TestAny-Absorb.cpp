@@ -13,6 +13,8 @@
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, Text**, ScopedElement<Text**>>
 
+   , Types<Any, pptr8, ScopedElementPacked<pptr8>>
+
    , Types<TAny<Text*>, Text*, ScopedElement<Text*>>
 
    , Types<TAny<char*>, char*, ScopedElement<char*>>
@@ -91,7 +93,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<TAny<char**>, char**, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Any, pptr8,  ScopedElementPacked<pptr8>>
    , Types<Any, pptr16, ScopedElementPacked<pptr16>>
    , Types<Any, pptr32, ScopedElementPacked<pptr32>>
 
