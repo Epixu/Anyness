@@ -331,23 +331,11 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      //template<CT::Handle, CT::Handle> friend struct THandlePair;
-
       /// Get the heap pointer (inner)                                        
       template<Cid SID = Id> requires Relevant<SID>
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
          return self.template AccessStack<HeapReference>();
       }
-
-      /// Get the heap pointer as a void* (inner)                             
-      /*template<Cid SID = ID> requires IdMatch<SID, ID, ENTRIES::Id...>
-      constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
-         auto& p = ThisCom::GetHeapInner();
-         if constexpr (CT::CustomPointer<StackRequest>)
-            return const_cast<void*>(static_cast<void const*>(p.Unpack()));
-         else
-            return const_cast<void*>(static_cast<void const*>(p));
-      }*/
 
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
@@ -397,71 +385,79 @@ namespace Langulus::Anyness::Component
       struct Request {
          pot_t  mTotalBytes;
          size_t mHeaderBytes;
-         size_t mFooterBytes;
+         //size_t mFooterBytes;
          size_t mReserved;
       };
       
-      /// Get a size based on reflected allocation page and count             
+      /// Get a size based on reflected allocation page and count.            
+      /// This will allocate memory for relevant headers, footers, and types  
+      /// across all dimensions used in this heap component.                  
       ///   @param reserve the number of elements to request                  
       template<Cid SID = Id, CT::Container C> requires Relevant<SID>
-      Request RequestHeap(this C const& self, const size_t reserve) assumptious {
-         //TODO account for multiple dimensions sharing the same heap
+      Request RequestHeap(this C const& self, size_t reserve) assumptious {
          Request result;
-         result.mHeaderBytes = self.template GetHeapHeaderSize<SID>();
+         result.mHeaderBytes = self.template GetHeapHeaderSize<Id, ENTRYN::Id...>();
+         size_t total = result.mHeaderBytes;
 
-         if constexpr (C::CountHeapFooterRequests()) {
+         if constexpr (C::template CountHeapFooterRequests<Id, ENTRYN::Id...>()) {
             // When there are footer requests (heap requests that       
             // depend on count & indirections), we aren't allowed to    
             // change the requested reserve to avoid heap corruptions.  
-            result.mFooterBytes = self.template GetHeapFooterSize<SID>(reserve);
+            total += self.template GetHeapFooterSize<Id, ENTRYN::Id...>(reserve);
 
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime     
-               const auto T = self.template GetType<SID>();
+               const auto T = self.template GetType<Id>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
-               const auto size = T.GetSize();
-               result.mTotalBytes = Roof2(
-                  reserve * size + result.mHeaderBytes + result.mFooterBytes
-               );
+               total += reserve * T.GetSize();
             }
             else {
                // Check for reflected minimal allocation at compile-time
-               using T = TypeOf<C, SID>;
-               result.mTotalBytes = Roof2(
-                  reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes
-               );
+               using T = TypeOf<C, Id>;
+               total += reserve * sizeof(T);
             }
-
-            result.mReserved = reserve;
          }
          else {
             // When there are no footer requests, we are allowed to     
-            // reserve more bytes than requested.                       
-            result.mFooterBytes = 0;
-
+            // reserve more bytes than requested. Makes reallocations   
+            // less frequent and is thus faster.                        
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime     
-               const auto T = self.template GetType<SID>();
+               const auto T = self.template GetType<Id>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                const auto size = T.GetSize();
-               result.mTotalBytes = Roof2(::std::max(
-                  reserve * size + result.mHeaderBytes,
-                  static_cast<size_t>(T.GetMinAllocation())
-               ));
-               result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / size;
+               size_t for_T = ::std::max(reserve * size, static_cast<size_t>(T.GetMinAllocation()));
+               reserve = for_T / size;
+               total += for_T;
             }
             else {
                // Check for reflected minimal allocation at compile-time
-               using T = TypeOf<C, SID>;
-               result.mTotalBytes = Roof2(::std::max(
-                  reserve * sizeof(T) + result.mHeaderBytes,
-                  CT::GetMinAlloc<T>()
-               ));
-               result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / sizeof(T);
+               using T = TypeOf<C, Id>;
+               size_t for_T = ::std::max(reserve * sizeof(T), CT::GetMinAlloc<T>());
+               reserve = for_T / sizeof(T);
+               total += for_T;
             }
          }
 
-         LglsAssumeDev(result.mReserved >= reserve);
+         // Add space for any additional dimensions, with alignment     
+         Values<ENTRYN::Id...>::ForEach([&]<auto i>{
+            if constexpr (CT::TypeErased<C>) {
+               // Check for reflected minimal allocation at runtime     
+               const auto T = self.template GetType<i>();
+               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               total = Align(total, T.GetAlignment());
+               total += reserve * T.GetSize();
+            }
+            else {
+               // Check for reflected minimal allocation at compile-time
+               using T = TypeOf<C, i>;
+               total = Align(total, alignof(T));
+               total += reserve * sizeof(T);
+            }
+         });
+
+         result.mTotalBytes = Roof2(total);
+         result.mReserved = reserve;
          return result;
       }
 

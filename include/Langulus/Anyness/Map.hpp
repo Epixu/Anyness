@@ -37,9 +37,9 @@ namespace Langulus::Anyness::Inner
    using MapBase = Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,  // Type-erased keys      
       Com::TypedStack<DMeta, void, false, 1>,  // Type-erased values    
-      Com::HeapMovable<8, 2,
-         HeapEntry<0, void*>,             // Key heap data              
-         HeapEntry<1, void*>              // Value heap data            
+      Com::HeapMovable<8, 2,              // Keys and values share heap 
+         HeapEntry<0, void*>,
+         HeapEntry<1, void*> 
       >,
       Com::CountStack<size_t, 0, 1>,      // Dynamically sized          
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     

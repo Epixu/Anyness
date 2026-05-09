@@ -257,13 +257,11 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::ContainsOne<C>)
             LglsAssumeDev(elements == 1, "Container allows only one allocated element");
          const auto al = DecvqAllCast(self.template GetAllocation<SID>());
-         //const auto request = self.template RequestHeap<SID>(elements);
          const auto request = ThisCom::RequestHeap(elements);
 
          if (not al) {
             //                                                          
             // Allocate a fresh set of elements                         
-            //self.template AllocateFresh<SID>(request);
             ThisCom::AllocateFresh(request);
             return;
          }
@@ -292,7 +290,6 @@ namespace Langulus::Anyness::Component
             self.template SetAllocationInner<SID>(reallocated);
 
             if (reallocated != al) {
-               //self.template SetHeapInner<SID>(static_cast<void*>(reallocated->GetBlockStart() + request.mHeaderBytes));
                ThisCom::SetHeapInner(static_cast<void*>(reallocated->GetBlockStart() + request.mHeaderBytes));
 
                if (previous.GetCount()) {
@@ -351,7 +348,6 @@ namespace Langulus::Anyness::Component
             //                                                          
             // We have to branch out                                    
             const C backup{Abandon{self}};
-            //self.template AllocateFresh<SID>(self.template RequestHeap<SID>(desiredReserve));
             ThisCom::AllocateFresh(ThisCom::RequestHeap(desiredReserve));
 
             // Reinsert only the relevant items                         
