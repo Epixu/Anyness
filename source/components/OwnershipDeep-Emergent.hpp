@@ -40,13 +40,13 @@ namespace Langulus::Anyness::Component
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      
-      static constexpr Cid  Id = ID;
+      using Id = Values<ID, SHARED...>;
+
       static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = REF_INDIVIDUAL;
       static constexpr int  ComponentPrecedence = 2000;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
       LglsComHeapReference(friend);
@@ -60,8 +60,8 @@ namespace Langulus::Anyness::Component
 
       /// Find and populate an indirection entry                              
       template<bool CUSTOM_POINTERS, CT::Container C>
-      void FindEntry(
-         this C& self, AllocationPtr const* entries, CT::Sparse auto ptr,
+      static void FindEntry(
+         AllocationPtr const* entries, CT::Sparse auto ptr,
          [[maybe_unused]] const DMeta& T = {},
          [[maybe_unused]] const DMeta& nextT = {}
       ) noexcept {
@@ -83,10 +83,9 @@ namespace Langulus::Anyness::Component
                if (ptrSpec.IsPacked()) {
                   uintptr_t derefptr = 0;
                   memcpy(&derefptr, ptr, ptrSpec.GetTotalBytes());
-                  entry =
-                     DecvqAllCast(Allocator::FindPackedPointer(
-                        ptrSpec, nextT, derefptr
-                     ));
+                  entry = DecvqAllCast(Allocator::FindPackedPointer(
+                     ptrSpec, nextT, derefptr
+                  ));
                }
                else entry = DecvqAllCast(Allocator::Find(*static_cast<void**>(ptr)));
             }
@@ -143,7 +142,7 @@ namespace Langulus::Anyness::Component
                }
 
                if constexpr (FIND_MISSING and LANGULUS_FEATURE(MANAGED_MEMORY))
-                  ThisCom::template FindEntry<false>(entries, ptr);
+                  ThisCom::template FindEntry<false, C>(entries, ptr);
 
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
@@ -175,7 +174,7 @@ namespace Langulus::Anyness::Component
                }
             
                if constexpr (FIND_MISSING and LANGULUS_FEATURE(MANAGED_MEMORY))
-                  ThisCom::template FindEntry<false>(entries, ptr);
+                  ThisCom::template FindEntry<false, C>(entries, ptr);
 
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
@@ -217,7 +216,7 @@ namespace Langulus::Anyness::Component
             while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
                if constexpr (FIND_MISSING)
-                  ThisCom::template FindEntry<true>(entries, src, T, nextT);
+                  ThisCom::template FindEntry<true, C>(entries, src, T, nextT);
 
                if (nextT.IsSparse()) {
                   // Pointer T -> Pointer nextT                         
@@ -245,7 +244,7 @@ namespace Langulus::Anyness::Component
             auto ptr = self.template Get<void, SID>();
             ForEachIndirection(ptr, [&](auto& i) {
                if constexpr (FIND_MISSING)
-                  ThisCom::template FindEntry<true>(entries, i);
+                  ThisCom::template FindEntry<true, C>(entries, i);
 
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
@@ -264,9 +263,9 @@ namespace Langulus::Anyness::Component
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeep(this C& self) assumptious {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            ThisCom::template KeepElementDeepCustomPointers<FIND_MISSING>();
+            ThisCom::template KeepElementDeepCustomPointers<FIND_MISSING, SID>();
          #else
-            ThisCom::template KeepElementDeepStandardPointers<FIND_MISSING>();
+            ThisCom::template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
          #endif
       }
 
@@ -280,6 +279,7 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
+
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't destroy anything in a container without ownership");
@@ -385,7 +385,6 @@ namespace Langulus::Anyness::Component
                auto& ptr = *self.template GetRawAs<T, SID>();
                if (not ptr)
                   return;
-               //LglsAssumeDev(ptr, "Null pointer");
 
                if (*entries and 1 == (*entries)->GetUses()) {
                   if constexpr (CT::Sparse<DT>) {
@@ -546,9 +545,9 @@ namespace Langulus::Anyness::Component
       template<bool DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeep(this C& self) assumptious {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            ThisCom::template DestroyElementDeepCustomPointers<DESTROY>();
+            ThisCom::template DestroyElementDeepCustomPointers<DESTROY, SID>();
          #else
-            ThisCom::template DestroyElementDeepStandardPointers<DESTROY>();
+            ThisCom::template DestroyElementDeepStandardPointers<DESTROY, SID>();
          #endif
       }
 

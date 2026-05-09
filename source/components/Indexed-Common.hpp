@@ -22,11 +22,13 @@ namespace Langulus::Anyness::Component
    struct IndexedCommon {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr bool Indexed = true;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
       static constexpr int  ComponentPrecedence = 0;
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
       template<CT::Container C>
@@ -58,13 +60,11 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID can be used to access specific provider               
       ///   @param idx the index                                              
       ///   @return pointer to the chosen element                             
-      template<class AS = void, Cid SID = ID, CT::Container C>
+      template<class AS = void, Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Pair<AS>,      "AS can't be a pair");
          static_assert(not CT::Reference<AS>, "Strip references first");
-         static_assert(SID == ID or ((SID == SHARED) or ...),
-            "SID must be one of the IDs that share the same indexing method");
 
          using TC   = LglsMutIf(C, TypeOf<C, SID>);
          using TCP  = LglsMutIf(C, TC*);
@@ -157,7 +157,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID can be used to access specific provider               
       ///   @param idx the index                                              
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = ID, CT::Container C>
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires Relevant<SID>
       decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
@@ -178,7 +178,6 @@ namespace Langulus::Anyness::Component
                   return AS {
                      self.template GetAt<void, SID>(LglsFwd(idx)),
                      self.template GetEntries<SID>(),
-                     //self.template GetEntriesInner<SID>(),
                      self.template GetType<SID>()
                   };
                }
@@ -211,7 +210,6 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::DeeplyOwned<AS>) {
                   return AS {
                      self.template GetAt<void, SID>(LglsFwd(idx)),
-                     //self.template GetEntriesInner<SID>()
                      self.template GetEntries<SID>()
                   };
                }
@@ -307,7 +305,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparseness                                     
       ///   @param idx the deep index                                         
       ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<class AS = void, CT::Container C> //requires (not Shared)
+      template<class AS = void, CT::Container C>
       auto GetDeepAt(this C&& self, CT::Index auto&&) noexcept {
          using D = Tif<CT::Void<AS>, LglsMutIf(C, Deep<C>*), LglsMutIf(C, AS*)>;
          if (self.IsEmpty() or not self.IsDeep())
@@ -318,7 +316,7 @@ namespace Langulus::Anyness::Component
       /// Get Nth element after being resolved to the most concrete type.     
       ///   @param idx the index                                              
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, CT::Container C> //requires (not Shared)
+      template<class AS = void, CT::Container C>
       auto GetResolvedAt(this C&& self, CT::Index auto&&) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -354,7 +352,7 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<Cid SID = ID, class AS = void, CT::Container C> //requires (not Shared)
+      template<Cid SID = ID, class AS = void, CT::Container C>
       auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -420,7 +418,7 @@ namespace Langulus::Anyness::Component
          return temp;
       }
 
-      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C> //requires (not Shared)
+      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
       auto CastAt(this C const&, CT::Index auto&&) -> AS;
    };
 }

@@ -37,17 +37,17 @@ namespace Langulus::Anyness::Component
       using CTTI_Component  = Yes<>;
       using CTTI_ReflectAs  = void;
       using CTTI_Contiguous = Maybe<COUNT == 1>;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = COUNT > 1;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
-      using Dimensions  = Values<ID, SHARED...>;
       using CountType   = decltype(COUNT);
       using ReserveType = CountType;
       using IndexType   = Index::At<CountType>;
+      using Dimensions  = Id;
 
       static_assert(COUNT > 0,
          "Can't have a container of zero or negative count");

@@ -24,9 +24,10 @@ namespace Langulus::Anyness::Component
    template<class T, Cid ID, Cid...SHARED>
    struct ReserveStack : ReserveEmergent<T, ID, SHARED...> {
       using StackRequest = T;
+      using Id = typename ReserveEmergent<T, ID, SHARED...>::Id;
 
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the number of reserved (maybe uninitialized) elements           
       template<Cid SID = ID> requires Relevant<SID>

@@ -37,9 +37,10 @@ namespace Langulus::Anyness::Component
    template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
    struct OwnershipDeepHeap : OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...> {
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
+      using Id = typename OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...>::Id;
 
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  

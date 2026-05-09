@@ -29,12 +29,12 @@ namespace Langulus::Anyness::Component
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr uint Owned = STYLE;
       static constexpr int  ComponentPrecedence = 1000;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the allocation                                                  
       template<Cid SID = ID> requires Relevant<SID>

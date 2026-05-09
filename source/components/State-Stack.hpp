@@ -27,7 +27,7 @@ namespace Langulus::Anyness::Component
    /// a container.                                                           
    ///   @tparam STATES... the possible states                                
    template<CT::State...STATES>
-   struct /*LANGULUS_EBCO*/ StateStack /*: STATES...*/ {
+   struct StateStack {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
 

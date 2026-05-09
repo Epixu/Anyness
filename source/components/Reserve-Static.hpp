@@ -18,11 +18,11 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
       using ReserveType = decltype(SIZE);
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       static_assert(SIZE > 0,
          "Can't have a container of zero or negative capacity");

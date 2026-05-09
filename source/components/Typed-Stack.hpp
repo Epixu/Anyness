@@ -38,18 +38,14 @@ namespace Langulus::Anyness::Component
       using CTTI_Typed     = TYPE;
       using CTTI_ReflectAs = void;
       using StackRequest   = META;
+      using Id             = Values<ID>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -3000;
       static constexpr bool TypeErased = CT::Void<TYPE>;
       /// @attention valid only if not TypeErased                             
       static constexpr bool Sparse = not TypeErased and CT::Sparse<TYPE>;
       /// @attention valid only if not TypeErased                             
       static constexpr bool Dense  = not TypeErased and CT::Dense<TYPE>;
-
-      /*using InnerState = State::Typed<CONSTRAIN or CT::NotVoid<TYPE> ? StateValue::Enabled : StateValue::Variable, ID>;
-      using InnerState::IsTypeConstrained;
-      using InnerState::EnableTypeConstrained;*/
 
       /// Get the contained type - not possible at compile-time yet           
       ///   @tparam SID - type selector                                       

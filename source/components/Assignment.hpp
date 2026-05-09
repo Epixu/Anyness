@@ -82,11 +82,11 @@ namespace Langulus::Anyness::Component
    struct Assignment {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       //template<CT::Container C, class A>
       //void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
@@ -98,8 +98,6 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument)
       requires (CT::RangeAssignable<C, A> /*and CT::Contiguous<C>*/) {
-         using Dimensions = Values<ID, SHARED...>;
-
          if constexpr (not CT::Contiguous<C>) {
             // Assignment for maps/sets falls back to merge             
             self.Clear();
@@ -124,12 +122,12 @@ namespace Langulus::Anyness::Component
 
                   auto first = self.GetHandle();
                   if constexpr (CT::Copied<IntentOf(argument)>) {
-                     Dimensions::ForEach([&]<Cid D>{
+                     Id::ForEach([&]<Cid D>{
                         first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
                      });
                   }
                   else {
-                     Dimensions::ForEach([&]<Cid D>{
+                     Id::ForEach([&]<Cid D>{
                         first.template EmplaceWithIntent<D>(FWDIntent(argument));
                      });
                   }
@@ -142,7 +140,7 @@ namespace Langulus::Anyness::Component
                   // Reduce to one item and reassign if possible        
                   if (self.PrepareForReassignment()) {
                      auto first = self.GetHandle();
-                     Dimensions::ForEach([&]<Cid D>{
+                     Id::ForEach([&]<Cid D>{
                         if constexpr (CT::Copied<IntentOf(argument)>)
                            first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
                         else
@@ -151,7 +149,7 @@ namespace Langulus::Anyness::Component
                   }
                   else {
                      auto first = self.GetHandle();
-                     Dimensions::ForEach([&]<Cid D>{
+                     Id::ForEach([&]<Cid D>{
                         if constexpr (CT::Copied<IntentOf(argument)>)
                            first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
                         else
@@ -165,7 +163,7 @@ namespace Langulus::Anyness::Component
                   self.PrepareForReconstruction();
 
                   auto first = self.GetHandle();
-                  Dimensions::ForEach([&]<Cid D>{
+                  Id::ForEach([&]<Cid D>{
                      if constexpr (CT::Copied<IntentOf(argument)>)
                         first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
                      else

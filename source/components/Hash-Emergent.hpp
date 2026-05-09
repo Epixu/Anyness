@@ -22,22 +22,22 @@ namespace Langulus::Anyness::Component
    struct HashEmergent {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 2000;
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the hash, recompute it every time                               
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       H GetHash(this auto const& self) {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template HashRecompute<SID>();
       }
 
       /// Generate a hash from contiguous data. Allows for batch optimization.
       ///   @attention order matters                                          
-      template<Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, CT::Container C> requires (CT::Contiguous<C> and Relevant<SID>)
       H HashRecompute(this C const& self) {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (self.template IsEmpty<SID>())
             return {1};
 
@@ -134,9 +134,8 @@ namespace Langulus::Anyness::Component
       /// Generate a hash from discontiguous data. Basically disables batch   
       /// optimizations.                                                      
       ///   @attention order matters                                          
-      template<Cid SID = ID, CT::Container C> requires CT::NotContiguous<C>
+      template<Cid SID = ID, CT::Container C> requires (CT::NotContiguous<C> and Relevant<SID>)
       H HashRecompute(this C const& self) {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (self.template IsEmpty<SID>())
             return {1};
 
@@ -175,9 +174,8 @@ namespace Langulus::Anyness::Component
       LglsComHeapMovable(friend);
 
       /// This always returns an invalid hash to enforce regeneration         
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr H GetHashInner() const noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          return 0;
       }
    };

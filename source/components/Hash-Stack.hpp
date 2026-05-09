@@ -19,22 +19,22 @@ namespace Langulus::Anyness::Component
    ///   @tparam SHARED additional provider IDs that are hashed together.     
    ///      They will all share the same cached hash variable.                
    template<Cid ID, class H, Cid...SHARED>
-   struct HashStack : HashEmergent<ID, H> {
+   struct HashStack : HashEmergent<ID, H, SHARED...> {
       using StackRequest = H;
-      
-      static constexpr Cid Id = ID;
+      using Id = typename HashEmergent<ID, H, SHARED...>::Id;
+
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Reset the hash. It will be recomputed on next comparison.           
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       void ResetHash(this auto& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          self.template SetHashInner<SID>(self.template IsEmpty<SID>() ? 1 : 0);
       }
 
       /// Get the hash, recompute it if uninitialized                         
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       H GetHash(this auto const& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          auto& cached = self.template GetHashInner<SID>();
          if (not cached)
             const_cast<H&>(cached) = self.template HashRecompute<SID>();
@@ -46,24 +46,21 @@ namespace Langulus::Anyness::Component
       LglsComConversion(friend);
 
       /// Get hash (inner) - will not recompute it                            
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto& GetHashInner(this auto&& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessStack<HashStack>();
       }
       
       /// Set the hash (inner)                                                
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr void SetHashInner(this auto& self, H h) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          self.template GetHashInner<SID>() = h;
       }
 
       /// Hash is default-initialized to 1, because that's a universal value  
       /// for an empty container. Prevents rehash until something is pushed.  
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr void ConstructDefault(this auto& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          self.template SetHashInner<SID>(1);
       }
       

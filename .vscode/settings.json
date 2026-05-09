@@ -132,5 +132,7 @@
    "hide-files.files": [],
   "workbench.colorTheme": "Dark 2026",
   "debug.console.fontSize": 10,
-  "terminal.integrated.fontSize": 10
+  "terminal.integrated.fontSize": 10,
+  "diffEditor.renderGutterMenu": true,
+  "scm.diffDecorations": "none"
 }

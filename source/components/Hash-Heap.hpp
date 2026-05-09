@@ -24,22 +24,22 @@ namespace Langulus::Anyness::Component
    ///   @tparam SHARED additional provider IDs that are hashed together.     
    ///      They will all share the same cached hash variable.                
    template<Cid ID, class H, Cid...SHARED>
-   struct HashHeap : HashEmergent<ID, H> {
+   struct HashHeap : HashEmergent<ID, H, SHARED...> {
       using HeapRequest = H;
+      using Id = typename HashEmergent<ID, H, SHARED...>::Id;
 
-      static constexpr Cid Id = ID;
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Reset the hash. It will be recomputed on next comparison.           
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       void ResetHash(this auto& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          self.template SetHashInner<SID>(self.template IsEmpty<SID>() ? 1 : 0);
       }
 
       /// Get the hash, recompute it if uninitialized or of we don't own it.  
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       H GetHash(this auto const& self) assumptious {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (self.template IsEmpty<SID>())
             return H {1};
          else if (self.template GetUses<SID>() == 0)
@@ -57,9 +57,8 @@ namespace Langulus::Anyness::Component
       LglsComConversion(friend);
 
       /// Get hash (inner) - will never recompute it                          
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (self.template IsEmpty<SID>())
             return H {1};
          else if (self.template GetUses<SID>() == 0)
@@ -71,9 +70,8 @@ namespace Langulus::Anyness::Component
       
       /// Set the hash (inner)                                                
       ///   @attention will not work for disowned containers                  
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr void SetHashInner(this auto& self, H h) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (self.template IsEmpty<SID>() or self.template GetUses<SID>() == 0)
             return;
 

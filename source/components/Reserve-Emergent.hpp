@@ -23,11 +23,11 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
       using ReserveType = T;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = -1000;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Reserve type must be an unsigned integer");
@@ -43,10 +43,10 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::ContainsOne<C>)
                return 1;
             else {
-               static_assert(C::CountHeapFooterRequests() == 0,
+               static_assert(C::template CountHeapFooterRequests<SID>() == 0,
                   "ReserveEmergent can't be used in containers with heap footer, "
                   "because it causes a circular dependency - "
-                  "reserved count can't be calculated without knowing the "
+                  "reserved count becomes impossible to get without knowing the "
                   "reserved elements beforehand."
                );
 

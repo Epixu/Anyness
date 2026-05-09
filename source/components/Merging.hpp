@@ -24,8 +24,8 @@ namespace Langulus::Anyness::Component
    struct Merging {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
 
@@ -110,7 +110,7 @@ namespace Langulus::Anyness::Component
                }
 
                auto to = self.GetHandle() + lhs_count;
-               Values<ID, SHARED...>::ForEach([&]<Cid D>{
+               Id::ForEach([&]<Cid D>{
                   if constexpr (CT::Copied<IntentOf(item)>)
                      to.template EmplaceWithIntent<D>(Refer(LglsFwd(item)));
                   else

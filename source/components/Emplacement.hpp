@@ -47,12 +47,12 @@ namespace Langulus::Anyness::Component
    struct Emplacement {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Generic emplacement that constructs/overwrites specific element.    
       /// Any overwritten element will be dereferenced/destroyed first.       
@@ -402,7 +402,6 @@ namespace Langulus::Anyness::Component
 
          void const* src_origin;         
          if constexpr (CT::Handle<IT>) {
-            //static_assert(not CT::Pair<IT>);
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>)
                LglsAssumeDev(self.template IsSame<SID>(rhs.template GetType<SID>()), "Type mismatch");
             else
@@ -508,15 +507,6 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Cloned<I>) {
             // Clone a handle or element                                
             if constexpr (CT::Handle<IT>) {
-               /*static_assert(DimensionMatch<C, IT>, "Dimension mismatch");
-               Values<ID, SHARED...>::ForEach([&]<Cid D>{
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     ThisCom::template EmplaceByCloningCustomPointers<D>(rhs);
-                  #else
-                     ThisCom::template EmplaceByCloningStandardPointers<D>(rhs);
-                  #endif
-               });*/
-               //static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
                   ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
                #else
@@ -540,7 +530,6 @@ namespace Langulus::Anyness::Component
             // instead of searching for it when having DeepOwnership.   
             // Doesn't matter if managed memory is disabled.            
             // We emplace each dimension separately.                    
-            //Values<ID, SHARED...>::ForEach([&]<Cid D>{
             void* const dst = self.template GetRawVoid<SID>();
 
             if constexpr (CT::TypeErased<C, IT>) {
@@ -584,7 +573,6 @@ namespace Langulus::Anyness::Component
                else
                   IntentNew(dst, Refer(*rhs.template GetRawAs<T>()));
             }
-            //});
                
             if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
@@ -814,10 +802,8 @@ namespace Langulus::Anyness::Component
                   // Construct the first element                        
                   if constexpr (CT::Copied<IntentOf(arguments)...>)
                      ThisCom::template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
-                     //self.GetHandle().template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                   else
                      ThisCom::template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
-                     //self.GetHandle().template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
                }
             }
             else if constexpr (CT::NotVoid<E>) {
@@ -855,10 +841,8 @@ namespace Langulus::Anyness::Component
             if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>)) {
                if constexpr (CT::Copied<IntentOf(arguments)...>)
                   ThisCom::template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
-                  //self.GetHandle().template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                else
                   ThisCom::template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
-                  //self.GetHandle().template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
             }
             else if constexpr (CT::Dense<T>)
                ThisCom::template EmplaceWithIntent<SID>(Abandon {Decvq<T> {LglsFwd(arguments)...}});

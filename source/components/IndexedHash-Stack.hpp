@@ -21,22 +21,25 @@ namespace Langulus::Anyness::Component
    ///   @tparam SHARED providers that share the same indexing scheme         
    template<Cid ID, class HASH, Cid...SHARED>
    struct IndexedHashStack : IndexedCommonHashed<ID, HASH, SHARED...> {
-      using TableType        = typename IndexedCommonHashed<ID, HASH>::TableType;
+      using Base             = IndexedCommonHashed<ID, HASH, SHARED...>;
+      using TableType        = typename Base::TableType;
       using HeapRequest      = PerElement<TableType>;
       using StackRequest     = TableType*;
-      using IteratorCategory = typename IndexedCommonHashed<ID, HASH>::IteratorCategory;
+      using IteratorCategory = typename Base::IteratorCategory;
+      using Id               = typename Base::Id;
+
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the start of the hash table                                     
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template GetHashTableInner<SID>();
       }
 
       /// Get the end of the hash table                                       
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetHashTableEnd(this auto const& self) noexcept -> TableType const* {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template GetHashTable<SID>() + self.template GetReserved<SID>();
       }
 
@@ -48,23 +51,20 @@ namespace Langulus::Anyness::Component
       LglsComRemoval(friend);
 
       /// Get hash table (inner)                                              
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessStack<IndexedHashStack>();
       }
       
       /// Set the number of initialized elements                              
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr void SetHashTableInner(this auto& self, TableType const* c) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          self.template GetHashTableInner<SID>() = const_cast<TableType*>(c);
       }
 
       /// This method is called to erase the hash table                       
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr void ResetHashTable(this auto& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          memset(
             self.template GetHashTableInner<SID>(), 0,
             self.template GetReserved<SID>() * sizeof(TableType)

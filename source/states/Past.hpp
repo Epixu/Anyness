@@ -22,13 +22,15 @@ namespace Langulus::Anyness::Component::State
       using CTTI_Component = Yes<>;
       using CTTI_State     = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Static  = V != StateValue::Variable;
       static constexpr bool Dynamic = not Static;
       static constexpr bool Enable  = V == StateValue::Enabled;
       static constexpr bool CanBeMissing = Dynamic or Enable;
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       using StateRequest = Tif<Dynamic, Past, void>;
 
@@ -36,32 +38,26 @@ namespace Langulus::Anyness::Component::State
       // when template arguments are different                          
       static constexpr StateUid UID = StateUid::Past;
 
-      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr bool IsPast() const requires Static {
          return Enable;
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr bool IsPast(this C const& self) noexcept requires Dynamic {
          return self.GetStateInner() & Past<V, ID, SHARED...> {};
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto EnablePast(this C& self) noexcept -> C& requires Dynamic {
          self.GetStateInner() += Past<V, ID, SHARED...> {};
          return self;
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto DisablePast(this C& self) noexcept -> C& requires Dynamic {
          self.GetStateInner() -= Past<V, ID, SHARED...> {};
          return self;
       }
    };
 }
-
-/*namespace Langulus::Anyness::State
-{
-   constexpr DefineState::Past<> Past = {};
-}
-*/

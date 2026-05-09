@@ -28,9 +28,10 @@ namespace Langulus::Anyness::Component
    template<uint STYLE, Cid ID, Cid...SHARED>
    struct OwnershipStack : OwnershipEmergent<STYLE, ID, SHARED...> {
       using StackRequest = AllocationPtr;
+      using Id = typename OwnershipEmergent<STYLE, ID, SHARED...>::Id;
 
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the allocation                                                  
       template<Cid SID = ID> requires Relevant<SID>

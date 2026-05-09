@@ -49,10 +49,12 @@ namespace Langulus::Anyness::Component
    struct Comparison {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-
-      static constexpr Cid  Id = ID;
+      using Id = Values<ID, SHARED...>;
+      
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = (sizeof...(SHARED) > 0);
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
    private:
       LglsComMerging(friend);
@@ -63,15 +65,11 @@ namespace Langulus::Anyness::Component
    public:
       /// Compare two containers for equality.                                
       /// This has much greater performance when hashed.                      
-      ///   @tparam ID the provider we're comparing                           
       ///   @param lhs left container                                         
       ///   @param rhs right container                                        
       ///   @return true if the two containers are identical                  
-      template<Cid SID = ID, CT::Container LHS, CT::Container RHS>
+      template<Cid SID = ID, CT::Container LHS, CT::Container RHS> requires Relevant<SID>
       constexpr bool CompareEqual(this const LHS& lhs, const RHS& rhs) {
-         static_assert(SID == ID,
-            "All shared comparisons should happen at once");
-
          if consteval {
             // Heap should be empty at compile-time                     
             //TODO what about stacks??

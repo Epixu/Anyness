@@ -19,44 +19,41 @@ namespace Langulus::Anyness::Component::State
       using CTTI_Component = Yes<>;
       using CTTI_State     = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Static  = V != StateValue::Variable;
       static constexpr bool Dynamic = not Static;
       static constexpr bool Enable  = V == StateValue::Enabled;
-      
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
+
       using StateRequest = Tif<Dynamic, Tracked, void>;
 
       // Every state needs a unique ID in order to find matches even    
       // when template arguments are different                          
       static constexpr StateUid UID = StateUid::Tracked;
 
-      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr bool IsTracked() const requires Static {
          return Enable;
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr bool IsTracked(this const C& self) noexcept requires Dynamic {
          return self.GetStateInner() & Tracked<V, ID, SHARED...> {};
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto EnableTracking(this C& self) noexcept -> C& requires Dynamic {
          self.GetStateInner() += Tracked<V, ID, SHARED...> {};
          return self;
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto DisableTracking(this C& self) noexcept -> C& requires Dynamic {
          self.GetStateInner() -= Tracked<V, ID, SHARED...> {};
          return self;
       }
    };
 }
-
-/*namespace Langulus::Anyness::State
-{
-   constexpr DefineState::Tracked<> Tracked = {};
-}*/

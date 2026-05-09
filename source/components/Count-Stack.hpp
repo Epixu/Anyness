@@ -17,10 +17,10 @@ namespace Langulus::Anyness::Component
    #define ThisCom self.CountStack<T, ID, SHARED...>
 
    ///                                                                        
-   /// Tracks count on the stack                                              
-   /// Count shows how many elements inside a container are initialized       
+   /// Tracks count on the stack.                                             
+   /// Count shows how many elements inside a container are initialized.      
    /// Stack-based counting increases the container size, but doesn't require 
-   /// indirections, making count lookup faster and more cache-friendly       
+   /// indirections, making count lookup faster and more cache-friendly.      
    ///   @tparam T the count type                                             
    ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
@@ -28,18 +28,17 @@ namespace Langulus::Anyness::Component
    struct CountStack {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
       using CountType      = T;
       using IndexType      = Index::At<T>;
       using StackRequest   = T;
+      using Dimensions     = Id;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
-
-      using Dimensions = Values<ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Count type must be an unsigned integer");

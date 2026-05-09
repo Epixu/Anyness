@@ -15,11 +15,6 @@
 #include <Langulus/MetaOf.hpp>
 
 
-/*namespace Langulus::Anyness
-{
-   struct Neat;
-}*/
-
 namespace Langulus::Anyness::Component
 {
    namespace Inner
@@ -52,8 +47,8 @@ namespace Langulus::Anyness::Component
    struct IterationForEach {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;
 
    private:

@@ -23,8 +23,8 @@ namespace Langulus::Anyness::Component
    struct IterationOperators {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;
 
       /// Offset first element to the right by the desired amount             

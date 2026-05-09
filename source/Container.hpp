@@ -197,7 +197,7 @@ namespace Langulus::Anyness
       static constexpr bool HasComponent
          = AkinAsOneOf<C, COMPONENTS..., DecideStateComponent<COMPONENTS...>>;
 
-      /// Get the number of heap providers                                    
+      /// Get the number of heap providers (all dimensions)                   
       static consteval size_t CountHeapProviders() {
          size_t count = 0;
          ComponentList::ForEach([&count]<class C> {
@@ -207,22 +207,23 @@ namespace Langulus::Anyness
          return count;
       }
 
-      /// Get the number of heap requests in the header                       
+      /// Get the number of heap requests in the footer for chosen heap ID    
+      template<Cid SID>
       static consteval size_t CountHeapFooterRequests() {
          size_t count = 0;
          ComponentList::ForEach([&count]<class C> {
-            if constexpr (requires { typename C::HeapRequest; }) {
+            if constexpr (requires { typename C::HeapRequest; typename C::Id; }) {
                if (requires { C::HeapRequest::AllocatedPerIndirection; }
-               or  requires { C::HeapRequest::AllocatedPerElement;     })
-                  ++count;
+               or  requires { C::HeapRequest::AllocatedPerElement;     }) {
+                  if constexpr (C::Id::template Contains<SID>)
+                     ++count;
+               }
             }
          });
          return count;
       }
 
    protected:
-      //template<CT::Handle, CT::Handle> friend struct THandlePair;
-
       LglsComIterationOperators(friend);
       LglsComTypedStack(friend);
       LglsComStack(friend);
@@ -277,11 +278,13 @@ namespace Langulus::Anyness
       constexpr auto* AccessHeap(this SELF&& self) noexcept {
          static_assert(requires { typename COM::HeapRequest; },
             "Component doesn't have data on the heap");
-         auto al = self.template GetAllocationInner<COM::Id>();
+
+         constexpr Cid id = COM::Id::First;
+         auto al = self.template GetAllocationInner<id>();
          LglsAssumeDevAndOptimize(al,
             "Heap requests are available only when container has ownership. "
             "Make sure you access them only then, and fallback to emergent "
-            "behavior otherwise, if possible.");
+            "behavior otherwise (if possible).");
          auto heap = al->GetBlockStart();
          using R = typename COM::HeapRequest;
 
@@ -290,13 +293,13 @@ namespace Langulus::Anyness
          ) {
             // Access footer heap                                       
             // Footer offset depends on the number of reserved elements 
-            const auto reserved = self.template GetReserved<COM::Id>();
-            const auto offset = self.template GetHeapHeaderSize<COM::Id>()
+            const auto reserved = self.template GetReserved<id>();
+            const auto offset = self.template GetHeapHeaderSize<id>()
                + Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
                     static_cast<size_t>(reserved),
-                    static_cast<size_t>(self.template GetIndirections<COM::Id>())
+                    static_cast<size_t>(self.template GetIndirections<id>())
                  );
-            heap += reserved * self.template GetStride<COM::Id>() + offset;
+            heap += reserved * self.template GetStride<id>() + offset;
 
             if constexpr (requires { R::AllocatedPerIndirection; }) {
                if constexpr (requires { R::Type::AllocatedPerElement; }) {
@@ -327,7 +330,7 @@ namespace Langulus::Anyness
          }
       }
       
-      /// Calculate the heap header size, aligned to the contained type       
+      /// Calculate the heap header size, aligned to the chosen type ID       
       template<Cid SID, CT::Container C>
       constexpr size_t GetHeapHeaderSize(this C const& self) assumptious {
          constexpr size_t header = Inner::DefineHeapHeader<SID, COMPONENTS...>();
@@ -339,7 +342,7 @@ namespace Langulus::Anyness
          else return Align(header, self.template GetAlignment<SID>());
       }
 
-      /// Calculate the heap footer size                                      
+      /// Calculate the footer size for the relevant heap                     
       template<Cid SID, CT::Container C>
       constexpr size_t GetHeapFooterSize(this C const& self, size_t reserve) noexcept {
          return Inner::DefineHeapFooter<COMPONENTS...>(

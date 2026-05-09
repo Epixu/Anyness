@@ -31,11 +31,12 @@ namespace Langulus::Anyness::Component
    ///      including support for packed pointers.                            
    template<uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::HeapEntry ENTRY0, CT::HeapEntry...ENTRYN>
    struct HeapMovable : HeapReference<ENTRY0, ENTRYN...> {
+      using Id = typename HeapReference<ENTRY0, ENTRYN...>::Id;
+
       static constexpr uint InitialSize  = INITIAL_SIZE;
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
-      static constexpr Cid  Id = ENTRY0::Id;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ENTRY0::Id, ENTRYN::Id...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
       LglsComIterationOperators(friend);
@@ -72,11 +73,11 @@ namespace Langulus::Anyness::Component
             // When copying, we're cloning just the first layer, so we  
             // guarantee that data is no longer static and constant at  
             // the first level of indirection.                          
-            auto type = from.template GetType<Id>().GetDecvq();
-            self.template SetType<Id>(type);
-            auto count = from.template GetCount<Id>();
+            auto type = from.template GetType<Id::First>().GetDecvq();
+            self.template SetType<Id::First>(type);
+            auto count = from.template GetCount<Id::First>();
             if (0 == count) {
-               self.template ResetAllocationInner<Id>();
+               self.template ResetAllocationInner<Id::First>();
                return;
             }
 
@@ -112,16 +113,16 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Contiguous<C>)
                ThisCom::AllocateFresh(ThisCom::RequestHeap(count));
             else
-               ThisCom::AllocateFresh(ThisCom::RequestHeap(from.template GetReserved<Id>()));
+               ThisCom::AllocateFresh(ThisCom::RequestHeap(from.template GetReserved<Id::First>()));
 
-            if_available(self.template SetCountInner<Id>(count));
+            if_available(self.template SetCountInner<Id::First>(count));
             auto dst = self.GetHandle().ForceMutable();
             try {
                from.template Apply<false>([&dst,&self,&from](auto const& src) {
                   (void) self; (void) from;
 
                   if constexpr (CT::Supported<decltype(src)>) {
-                     Values<ENTRY0::Id, ENTRYN::Id...>::ForEach([&]<Cid D>{
+                     Id::ForEach([&]<Cid D>{
                         if constexpr (CT::Copied<I>)
                            dst.template EmplaceWithIntent<D>(Refer(src));
                         else
@@ -131,7 +132,8 @@ namespace Langulus::Anyness::Component
                      if constexpr (not CT::Contiguous<C>) {
                         // Copy hash table entry as well                
                         const auto idx = dst - self.GetHandle();
-                        self.template GetHashTableInner<Id>()[idx] = from.template GetHashTableInner<Id>()[idx];
+                        self.template GetHashTableInner<Id::First>()[idx]
+                            = from.template GetHashTableInner<Id::First>()[idx];
                      }
                   }
                   ++dst;
@@ -140,7 +142,7 @@ namespace Langulus::Anyness::Component
             catch (...) {
                // Partial success                                       
                auto n = dst - self.GetHandle();
-               if constexpr (not requires { self.template SetCountInner<Id>(1); }) {
+               if constexpr (not requires { self.template SetCountInner<Id::First>(1); }) {
                   // Partial success is not allowed - we have to        
                   // destroy everything we initialized                  
                   while (n) {
@@ -155,25 +157,25 @@ namespace Langulus::Anyness::Component
             }
                      
             // Full success                                             
-            if constexpr (requires { from.template GetHashInner<Id>(); }) {
-                    if_available(self.template SetHashInner<Id>(from.template GetHashInner<Id>()))
-               else if_available(self.template ResetHash<Id>())
+            if constexpr (requires { from.template GetHashInner<Id::First>(); }) {
+                    if_available(self.template SetHashInner<Id::First>(from.template GetHashInner<Id::First>()))
+               else if_available(self.template ResetHash<Id::First>())
             }
          }
          else {
             // Move/Refer/Abandon/Disown other                          
             static_assert(I::IsShallow());
-            self.template SetType<Id>(from.template GetType<Id>());
+            self.template SetType<Id::First>(from.template GetType<Id::First>());
             //self.template SetHeapInner<ID>(from.template GetRaw<ID>());
-            ThisCom::SetHeapInner(from.template GetRaw<Id>());
+            ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
             if constexpr (I::IsKept()) {
                if constexpr (I::IsMoved()) {
                   // Move                                               
                   if constexpr (CT::StronglyOwned<I>) {
-                     from.template SetHeapInner<Id>(nullptr);
+                     from.template SetHeapInner<Id::First>(nullptr);
                      if_available(from.ResetState());
-                     if_available(from.template ResetType<Id>());
+                     if_available(from.template ResetType<Id::First>());
                   }
                }
                else static_assert(CT::Referred<I>);
@@ -217,7 +219,7 @@ namespace Langulus::Anyness::Component
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
-      template<Cid SID = Id, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       auto AllocateFresh(this C& self, const Request& request) -> Allocation* {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto al = Allocator::Allocate(self.template GetType<SID>(), request.mTotalBytes);
@@ -226,7 +228,6 @@ namespace Langulus::Anyness::Component
          #endif
          LglsAssert(al, "Out of memory");
          
-         //self.template SetHeapInner<SID>(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          ThisCom::SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          self.template SetAllocationInner<SID>(al);
          if_available(self.template SetReservedInner<SID>(request.mReserved));
@@ -237,7 +238,7 @@ namespace Langulus::Anyness::Component
       /// Allocate a number of elements, relying on the type of the container 
       ///   @attention assumes container is typed                             
       ///   @param elements number of elements to allocate                    
-      template<Cid SID = Id, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void AllocateMore(this C& self, Count<C> elements) {
          if constexpr (InitialSize and GrowthFactor) {
             // We override allocation size with predefined parameters,  
@@ -302,7 +303,7 @@ namespace Langulus::Anyness::Component
                         (void) self; (void) previous;
 
                         if constexpr (CT::Supported<decltype(from)>) {
-                           Values<ENTRY0::Id, ENTRYN::Id...>::ForEach([&]<Cid D>{
+                           Id::ForEach([&]<Cid D>{
                               to.template EmplaceWithIntent<D>(Abandon(from));
                            });
 
@@ -338,7 +339,7 @@ namespace Langulus::Anyness::Component
       /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
       /// allocations never move when shrinking.                              
       ///   @param desiredReserve number of elements to reserve               
-      template<Cid SID = Id, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
          static_assert(CT::ContainsMany<C>,
             "This makes sense to be called only by containers that support many elements");
@@ -354,7 +355,7 @@ namespace Langulus::Anyness::Component
             auto to = self.GetHandle();
             try {
                backup.Apply([&to](auto& from) {
-                  Values<ENTRY0::Id, ENTRYN::Id...>::ForEach([&]<Cid D>{
+                  Id::ForEach([&]<Cid D>{
                      to.template EmplaceWithIntent<D>(Refer(from)); //TODO won't work for maps/sets
                   });
                   ++to;
@@ -410,7 +411,7 @@ namespace Langulus::Anyness::Component
 
       /// Remap footer requests onto the new reserve                          
       ///   @param newReserved the newly reserved number of elements          
-      template<Cid SID = Id, CT::Container C>
+      template<Cid SID = Id::First, CT::Container C>
       requires (C::CountHeapFooterRequests() > 0 and Relevant<SID>) //TODO prolly don't require SID, used only locally?
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
          const auto size     = self.template GetStride<SID>();
@@ -424,7 +425,7 @@ namespace Langulus::Anyness::Component
          
          C::ComponentList::ForEach([&]<class COM>{
             if constexpr (requires { typename COM::HeapRequest; }) {
-               if constexpr (COM::Id == SID) {
+               if constexpr (COM::Id::template Contains<SID>) {
                   using R = typename COM::HeapRequest;
                   if constexpr (requires { R::AllocatedPerIndirection; }) {
                      if constexpr (requires { R::Type::AllocatedPerElement; }) {
@@ -486,12 +487,12 @@ namespace Langulus::Anyness::Component
 
       /// Invoked to remedy the situation when element constructors throw     
       ///   @param n the number of elements that were actually initialized    
-      template<Cid SID = Id, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void PartialSuccess(this C& self, Count<C> n) {
          if constexpr (requires { self.template SetCountInner<SID>(1); }) {
             // Partial success is supported                             
             self.template SetCountInner<SID>(n);
-            self.template ResetHash<SID>(); // If n == 0, hash is 1; 0 otherwise      
+            self.template ResetHash<SID>();
 
             if constexpr (not CT::Contiguous<C>) {
                // Partial success involving maps/sets might result in   
@@ -513,12 +514,11 @@ namespace Langulus::Anyness::Component
       /// from somewhere else (when GetUses() > 1)                            
       ///   @param newReserve usually branching is accompanied by a resize,   
       ///      so specify it here                                             
-      template<Cid SID = Id, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void BranchOut(this C& self, Count<C> newReserve) {
          if (self.template GetUses<SID>() > 1) {
             // We have to branch out                                    
             const C backup {Abandon{self}};
-            //self.AllocateFresh(self.RequestHeap(newReserve));
             ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
 
             // Reinsert the old items                                   
@@ -526,7 +526,7 @@ namespace Langulus::Anyness::Component
             try {
                backup.template Apply<false>([&to](auto const& from) {
                   if constexpr (CT::Supported<decltype(from)>) {
-                     Values<ENTRY0::Id, ENTRYN::Id...>::ForEach([&]<Cid D>{
+                     Id::ForEach([&]<Cid D>{
                         to.template EmplaceWithIntent<D>(Refer(from));
                      });
                   }
@@ -541,7 +541,6 @@ namespace Langulus::Anyness::Component
             self.template SetCountInner<SID>(backup.template GetCount<SID>()); //TODO apply to all shared counts? also, isn't this redundant? self already has the count?
          }
          else ThisCom::AllocateMore(newReserve);
-         //else self.AllocateMore(newReserve);
       }
    };
 

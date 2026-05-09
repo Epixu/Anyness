@@ -31,18 +31,17 @@ namespace Langulus::Anyness::Component
    struct CountHeap {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
       using CountType   = T;
       using IndexType   = Index::At<T>;
       using HeapRequest = T;
+      using Dimensions  = Id;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
-
-      using Dimensions = Values<ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Count type must be an unsigned integer");

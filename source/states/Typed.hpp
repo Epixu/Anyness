@@ -21,15 +21,14 @@ namespace Langulus::Anyness::Component::State
       using CTTI_Component = Yes<>;
       using CTTI_State     = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Static  = V != StateValue::Variable;
       static constexpr bool Dynamic = not Static;
       static constexpr bool Enable  = V == StateValue::Enabled;
-
       template<Cid SID>
-      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
+      static constexpr bool Relevant = Id::template Contains<SID>;
       
       using StateRequest = Tif<Dynamic, Typed, void>;
 
@@ -60,8 +59,3 @@ namespace Langulus::Anyness::Component::State
       }
    };
 }
-
-/*namespace Langulus::Anyness::State
-{
-   constexpr DefineState::Typed<> Typed = {};
-}*/

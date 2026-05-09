@@ -29,13 +29,15 @@ namespace Langulus::Anyness::Component
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
+      using Id = Values<ID, SHARED...>;
 
-      static constexpr Cid  Id = ID;
       static constexpr Cid  HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = true;
       static constexpr uint InitialSize = INITIAL_SIZE;
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
       using Byte = uint8_t;
