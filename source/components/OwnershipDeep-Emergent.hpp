@@ -241,7 +241,7 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C, SID>;
             static_assert(CT::Sparse<T>, "Sparseness mismatch");
 
-            auto ptr = self.template Get<void, SID>();
+            auto& ptr = *self.template Get<void, SID>();
             ForEachIndirection(ptr, [&](auto& i) {
                if constexpr (FIND_MISSING)
                   ThisCom::template FindEntry<true, C>(entries, i);

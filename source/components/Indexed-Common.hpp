@@ -49,7 +49,7 @@ namespace Langulus::Anyness::Component
             return *self.GetAt(LglsFwd(idx));
       }
 
-      /// Get pointer to Nth element.                                         
+      /// Get pointer to Nth element of a specific dimension.                 
       /// This is a lower-level routine that does only sparseness checking.   
       /// No conversion or copying occurs, only pointer arithmetic.           
       ///   @attention no type-safety                                         
@@ -57,13 +57,12 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes the container has valid memory                 
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
-      ///   @tparam SID can be used to access specific provider               
+      ///   @tparam SID can be used to access specific dimension              
       ///   @param idx the index                                              
       ///   @return pointer to the chosen element                             
       template<class AS = void, Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
-         static_assert(not CT::Pair<AS>,      "AS can't be a pair");
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          using TC   = LglsMutIf(C, TypeOf<C, SID>);
@@ -85,7 +84,7 @@ namespace Langulus::Anyness::Component
             };
 
             if constexpr (CT::Void<AS>) {
-               // Unknown type, just return the heap pointer reference  
+               // Unknown type, just return the heap pointer            
                offset_heap();
                return heap;
             }
@@ -154,7 +153,7 @@ namespace Langulus::Anyness::Component
       /// Conversion or copying may occur, depending on type.                 
       ///   @attention will throw if incompatible type is provided            
       ///   @tparam AS the type we're wrapping in                             
-      ///   @tparam SID can be used to access specific provider               
+      ///   @tparam SID can be used to access specific dimension              
       ///   @param idx the index                                              
       ///   @return the element, as a reference if possible                   
       template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires Relevant<SID>
@@ -253,7 +252,7 @@ namespace Langulus::Anyness::Component
                   // Wrap in a container                                
                   using H = DecideHandle<C>;
                   if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
-                     //TODO magic numbers here
+                     //TODO magic numbers here, use H::PickDimension?
                      if constexpr (SID == 0)
                         return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandle, 0>(LglsFwd(idx))};
                      else if constexpr (SID == 1)
@@ -286,7 +285,7 @@ namespace Langulus::Anyness::Component
                   // Wrap in a container                                
                   using H = DecideHandle<C>;
                   if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
-                     //TODO magic numbers here
+                     //TODO magic numbers here, use H::PickDimension?
                      if constexpr (SID == 0)
                         return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandle, 0>(LglsFwd(idx))};
                      else if constexpr (SID == 1)
@@ -299,7 +298,7 @@ namespace Langulus::Anyness::Component
                else static_assert(false, "Type mismatch");
             }
          }
-      }      
+      }
 
       /// Get Nth deep item using a deep index                                
       ///   @attention ignores sparseness                                     
@@ -347,29 +346,31 @@ namespace Langulus::Anyness::Component
 
       /// Get Nth element, removing 'count' indirections                      
       ///   @attention throws if type is incomplete and origin was reached    
+      ///   @tparam SID can be used to access specific dimension              
       ///   @tparam AS specify the type we wrap the result in.                
       ///      Using 'void' will default to C::DeepType.                      
       ///   @param idx the index                                              
       ///   @param count how many levels of indirection to remove?            
-      ///   @return the dense first element                                   
+      ///   @return the dense first element for chosen dimension              
       template<Cid SID = ID, class AS = void, CT::Container C>
-      auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1) {
+      auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1)
+      requires (Relevant<SID> and requires { typename Deref<C>::DeepType; }) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
-         LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
+         LglsAssert(not self.template IsEmpty<SID>(), "Can't GetDense from empty container");
 
          // Offset the heap                                             
          void* heap = DecvqAllCast(self.template GetRaw<SID>());
          const auto offset = self.SimplifyIndex(idx);
-         const auto byte_offset = self.GetStride() * offset;
+         const auto byte_offset = self.template GetStride<SID>() * offset;
          heap = reinterpret_cast<void*>(
             reinterpret_cast<uint8_t*>(heap) + byte_offset
          );
 
-         if (not self.IsSparse() or count <= 0) {
+         if (not self.template IsSparse<SID>() or count <= 0) {
             // Early return if nothing to do                            
             D temp;
-            temp.SetTypeInner(self.GetType());
+            temp.SetTypeInner(self.template GetType<SID>());
             temp.SetHeapInner(heap);
             if_available(temp.SetCountInner(1));
             return temp;
@@ -377,25 +378,25 @@ namespace Langulus::Anyness::Component
 
          // Check if origin type is complete before attempting anything 
          if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
+            const auto T = self.template GetType<SID>();
             if (count >= T.GetIndirections()) {
                LglsAssert(T.GetOrigin(),
-                  "Trying to interface incomplete data `", self.GetType(),
+                  "Trying to interface incomplete data `", T,
                   "` as dense"
                );
             }
          }
          else {
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             if (count >= IndirectsOf<T>) {
                LglsAssert(CT::Complete<Decay<T>>,
-                  "Trying to interface incomplete data `", self.GetType(),
+                  "Trying to interface incomplete data `", MetaDataOf<T>(),
                   "` as dense"
                );
             }
          }
 
-         auto     T = self.GetType();
+         auto     T = self.template GetType<SID>();
          auto nextT = T.GetDeptr();
 
          while (count and T.IsSparse()) {            

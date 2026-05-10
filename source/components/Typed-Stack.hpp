@@ -263,7 +263,7 @@ namespace Langulus::Anyness::Component
             else if (T.IsDeep()) {
                bool result = false;
                self.Apply([&result](auto const& item) noexcept {
-                  if (item.template Get<typename C::DeepType const, SID>().template IsExecutable<ID>()) {
+                  if (item.template Get<typename C::DeepType const, SID>()->template IsExecutable<ID>()) {
                      result = true;
                      return false;
                   }
@@ -293,7 +293,7 @@ namespace Langulus::Anyness::Component
             else if constexpr (CT::Deep<TYPE>) {
                bool result = false;
                self.Apply([&result](auto const& item) noexcept {
-                  if (item.template Get<Decay<TYPE>, SID>().template IsExecutable<ID>()) {
+                  if (item.template Get<Decay<TYPE>, SID>()->template IsExecutable<ID>()) {
                      result = true;
                      return false;
                   }

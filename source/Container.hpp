@@ -208,7 +208,7 @@ namespace Langulus::Anyness
       }
 
       /// Get the number of heap requests in the footer for chosen heap ID    
-      template<Cid SID>
+      template<Cid SID = 0>
       static consteval size_t CountHeapFooterRequests() {
          size_t count = 0;
          ComponentList::ForEach([&count]<class C> {
@@ -538,29 +538,24 @@ namespace Langulus::Anyness
                      " not same as ", MetaDataOf<HT>()
                   );
                }
-               /*else if constexpr (CT::Map<C>) {
-                  static_assert(Same<typename TypeOf<C>::template At<SID>, HT>,
-                     "Type mismatch"
-                  );
-               }*/
                else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
 
                if constexpr (CT::DeeplyOwned<H>) {
                   if constexpr (requires { H::Emergent; })
-                     return H {&self.template Get<void, SID>()};
+                     return H {self.template Get<void, SID>()};
                   else {
                      return H {
-                        &self.template Get<void, SID>(),
+                        self.template Get<void, SID>(),
                         self.template GetEntries<SID>()
                      };
                   }
                }
                else if constexpr (CT::Owned<H>) {
                   if constexpr (requires { H::Emergent; })
-                     return H {&self.template Get<void, SID>()};
+                     return H {self.template Get<void, SID>()};
                   else {
                      return H {
-                        &self.template Get<void, SID>(),
+                        self.template Get<void, SID>(),
                         self.template GetAllocation<SID>()
                      };
                   }
@@ -757,9 +752,9 @@ namespace Langulus::Anyness
       unify_getter_templated(IsExact);
 
       template<class AS = void, Cid ID = 0, class CON>
-      constexpr decltype(auto) Get(this CON&& self) assumptious
+      constexpr auto* Get(this CON&& self) assumptious
       if_inherits(template Get<AS, ID>()) {
-         return ComponentList::ForEachConstOr([&]<class C> assumptious -> decltype(auto) {
+         return ComponentList::ForEachConstOr([&]<class C> assumptious {
             if constexpr (requires { self.C::template Get<AS, ID>(); })
                return self.C::template Get<AS, ID>();
             else return No{};

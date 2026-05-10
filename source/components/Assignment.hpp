@@ -292,15 +292,16 @@ namespace Langulus::Anyness::Component
             "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
-         using IT = Decvq<Deref<TypeOf<I>>>;
-         LglsAssumeDev(self.template GetRaw<SID>(), "Invalid heap");
-         LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");
-         decltype(auto) rhs = LglsFwd(intent.what);
          static_assert(not CT::Cloned<I> and not CT::Copied<I>,
             "Since this function assumes container has been preallocated, "
             "it makes no sense to clone or copy here "
             "- it should be handled outside this call."
          );
+
+         using IT = Decvq<Deref<TypeOf<I>>>;
+         LglsAssumeDev(self.template GetRaw<SID>(), "Invalid heap");
+         LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");
+         decltype(auto) rhs = LglsFwd(intent.what);
          
          if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
@@ -441,8 +442,8 @@ namespace Langulus::Anyness::Component
          }
          else {
             using T = Tif<CT::TypeErased<C>, TypeOf<RHS>, TypeOf<C>>;
-            T& lhs_item = self.template Get<T>();
-            T& rhs_item = rhs.template Get<T>();
+            T& lhs_item = *self.template Get<T>();
+            T& rhs_item = *rhs.template Get<T>();
 
             if constexpr (CT::Sparse<T>) {
                ::std::swap(lhs_item, rhs_item);

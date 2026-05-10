@@ -200,8 +200,8 @@ namespace Langulus::Anyness::Component
             // Destroying a statically-typed element                    
             using T = TypeOf<C, SID>;
             if constexpr (CT::Destroyable<T>) {
-               auto& element = self.template Get<void, SID>();
-               element.~T();
+               auto* element = self.template Get<void, SID>();
+               element->~T();
             }
          }
       }

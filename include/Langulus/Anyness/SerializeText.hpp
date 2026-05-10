@@ -82,10 +82,10 @@ namespace Langulus::CTTI
                // the requirements: CT::Deep<T> and CT::ContainsOne<T>  
                // and having past/future state. Note: TAny is reflected 
                // as Any and is binary compatible as well.              
-               auto const& item = self.template Get<Anyness::Any, ID>();
-               if (item.IsPast())
+               auto* item = self.template Get<Anyness::Any, ID>();
+               if (item->IsPast())
                   out += Serial::Past;
-               else if (item.IsFuture())
+               else if (item->IsFuture())
                   out += Serial::Future;
             }
          }
@@ -93,9 +93,9 @@ namespace Langulus::CTTI
             //                                                          
             // Serialize a statically-typed container                   
             using T = Decay<TypeOf<C, ID>>;
-            auto const& item = self.template Get<T, ID>();
+            auto* item = self.template Get<T, ID>();
             try {
-               Langulus::Serialize(item, out, context);
+               Langulus::Serialize(*item, out, context);
             }
             catch (...) {
                // Catch everything so that we can close any scopes      
@@ -103,11 +103,11 @@ namespace Langulus::CTTI
                S::Error(MetaDataOf<T>(), ID, out, context);
             }
 
-            if constexpr (CT::Deep<T> and CT::ContainsOne<T> and requires { item.IsPast(); }) {
+            if constexpr (CT::Deep<T> and CT::ContainsOne<T> and requires { item->IsPast(); }) {
                static_assert(CT::NotHandle<T>);
-               if (item.IsPast())
+               if (item->IsPast())
                   out += Serial::Past;
-               else if (item.IsFuture())
+               else if (item->IsFuture())
                   out += Serial::Future;
             }
          }

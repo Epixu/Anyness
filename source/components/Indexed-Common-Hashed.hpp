@@ -249,8 +249,7 @@ namespace Langulus::Anyness::Component
       ///   @param swapper - a swapper to use while trying to insert          
       ///   @return the offset at which pair was inserted                     
       template<CT::Container C, CT::NoIntent H>
-      auto TableEmplace(this C& self, Count<C> const start, H& swapper)
-      -> Count<C> /*requires CT::NoIntent<H>*/ {
+      auto TableEmplace(this C& self, Count<C> const start, H& swapper) -> Count<C> {
          static_assert(not Shared or CT::Pair<H>,
             "Swapper handle must match the number of shared providers");
 

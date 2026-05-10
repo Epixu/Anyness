@@ -451,7 +451,7 @@ namespace Langulus::Anyness::Component
                   if (self.template IsSame<Text>()) {
                      // Implicitly make a text container                
                      if constexpr (CT::Contiguous<C>)
-                        return self.template Get<Text>() == Text {Disown(rhs)};
+                        return *self.template Get<Text>() == Text {Disown(rhs)};
                      else
                         return *self.template GetAt<Text>(0) == Text {Disown(rhs)};
                   }
@@ -461,7 +461,7 @@ namespace Langulus::Anyness::Component
                   // Non-deep element compare                           
                   if (self.template IsSame<RT>()) {
                      if constexpr (CT::Contiguous<C>)
-                        return self.template Get<RT>() == rhs;
+                        return *self.template Get<RT>() == rhs;
                      else
                         return *self.template GetAt<RT>(0) == rhs;
                   }
@@ -505,7 +505,7 @@ namespace Langulus::Anyness::Component
                if (self.template IsSame<Text>()) {
                   // Implicitly make a text container                   
                   if constexpr (CT::Contiguous<C>)
-                     return FromOrdering( self.template Get<Text>() <=> Text{Disown(rhs)});
+                     return FromOrdering(*self.template Get<Text>() <=> Text{Disown(rhs)});
                   else
                      return FromOrdering(*self.template GetAt<Text>(0) <=> Text{Disown(rhs)});
                }
@@ -523,7 +523,7 @@ namespace Langulus::Anyness::Component
                // Non-deep element compare                              
                if (self.template IsSame<RT>()) {
                   if constexpr (CT::Contiguous<C>)
-                     return FromOrdering( self.template Get<RT>() <=> rhs);
+                     return FromOrdering(*self.template Get<RT>() <=> rhs);
                   else
                      return FromOrdering(*self.template GetAt<RT>(0) <=> rhs);
                }
@@ -539,7 +539,7 @@ namespace Langulus::Anyness::Component
             
             if constexpr (CT::Comparable<TypeOf<C>, RT>) {
                if constexpr (CT::Contiguous<C>)
-                  return ToPartialOrdering( self.Get() <=> rhs);
+                  return ToPartialOrdering(*self.Get() <=> rhs);
                else
                   return ToPartialOrdering(*self.GetAt(0) <=> rhs);
             }

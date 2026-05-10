@@ -62,7 +62,7 @@ namespace Langulus::Anyness::Component
       ///   @attention no type-safety                                         
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the stack                                              
-      template<class AS = void, Cid SID = ID, CT::Container C> requires (SID == ID)
+      /*template<class AS = void, Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -90,13 +90,55 @@ namespace Langulus::Anyness::Component
                "Too many indirections");
             return *const_cast<THP>(reinterpret_cast<ConstAll<THP>>(&stack));
          }
+      }*/
+      
+      /// Get pointer to the first element for the given dimension.           
+      /// This is a lower-level routine that does only sparseness checking.   
+      /// No conversion or copying occurs, only pointer arithmetic.           
+      ///   @attention no type-safety                                         
+      ///   @attention assumes the container is typed                         
+      ///   @attention assumes the container has valid memory                 
+      ///   @tparam AS the type of data we're accessing - use void to use the 
+      ///      type of the container, if statically typed                     
+      ///   @tparam SID can be used to access specific dimension              
+      ///   @return pointer to the first element of the desired dimension     
+      template<class AS = void, Cid SID = ID, CT::Container C> requires (SID == ID)
+      auto* Get(this C&& self) assumptious {
+         static_assert(not CT::Handle<AS>,    "AS can't be a handle");
+         static_assert(not CT::Reference<AS>, "Strip references first");
+
+         using TC   = LglsMutIf(C, T);
+         using TCP  = LglsMutIf(C, TC*);
+         using TH   = Tif<CT::Void<AS>, TC, AS>;
+         using THP  = LglsMutIf(C, TH*);
+         auto* heap = DecvqAllCast(ThisCom::GetRaw());
+
+         // Casting to a desired static type                            
+         if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
+            // No difference in indirections                            
+            return static_cast<THP>(heap);
+         }
+         else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
+            // We need to dereference. Can be done without a            
+            // reinterpret_cast, and thus be constexpr-friendly.        
+            // Supports packed pointers as well.                        
+            return static_cast<THP>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(heap));
+         }
+         else {
+            // We are allowed to add one additional indirection         
+            static_assert(IndirectsOf<TCP> == IndirectsOf<TH>,
+               "Too many indirections");
+            static_assert(CT::Sparse<TH>,
+               "Casting to a dense shouldn't happen here");
+            return static_cast<LglsMutIf(C, TH)>(heap);
+         }
       }
 
       /// Get first element as a handle, or any desired wrapping type.        
       /// Conversion or copying may occur, depending on type.                 
       ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = ID, CT::Container C>
+      /*template<CT::NotVoid AS, Cid SID = ID, CT::Container C>
       requires (SID == ID and CT::Contiguous<C>)
       decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -117,13 +159,98 @@ namespace Langulus::Anyness::Component
             }
             else static_assert(false, "Type mismatch");
          }
+      }*/
+      
+      /// Get first element as a handle, or any desired wrapping type.        
+      /// Conversion or copying may occur, depending on type.                 
+      ///   @attention will throw if incompatible type is provided            
+      ///   @tparam AS the type we're wrapping in                             
+      ///   @tparam SID can be used to access specific dimension              
+      ///   @return the element, as a reference if possible                   
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires (SID == ID)
+      decltype(auto) As(this C&& self) {
+         static_assert(not CT::Reference<AS>, "Strip references first");
+
+         if constexpr (CT::Handle<AS>) {
+            static_assert(not CT::Pair<AS>,
+               "Stacks can't be represented with multidimensional handle");
+
+            if constexpr (CT::TypeErased<AS>) {
+               // Type-erased handle                                    
+               if constexpr (CT::DeeplyOwned<AS>) {
+                  return AS {
+                     ThisCom::Get(),
+                     self.template GetEntries<SID>(),
+                     self.template GetType<SID>()
+                  };
+               }
+               else if constexpr (CT::Owned<AS>) {
+                  return AS {
+                     ThisCom::Get(),
+                     nullptr /*self.template GetAllocation<SID>()*/, //TODO is this correct?
+                     self.template GetType<SID>()
+                  };
+               }
+               else {
+                  return AS {
+                     ThisCom::Get(),
+                     self.template GetType<SID>()
+                  };
+               }
+            }
+            else {
+               // Statically typed handle                               
+               using HT = Deref<TypeOf<AS>>;
+               static_assert(Same<T, HT>, "Type mismatch");
+
+               if constexpr (CT::DeeplyOwned<AS>) {
+                  return AS {
+                     ThisCom::Get(),
+                     self.template GetEntries<SID>()
+                  };
+               }
+               else if constexpr (CT::Owned<AS>) {
+                  return AS {
+                     ThisCom::Get(),
+                     nullptr /*self.template GetAllocation<SID>()*/ //TODO is this correct?
+                  };
+               }
+               else return AS {ThisCom::Get()};
+            }
+         }
+         else {
+            // Access directly or wrapped in a container                
+            if constexpr (Akin<T, AS>) {
+               // Access directly                                       
+               if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
+                  return *ThisCom::template Get<AS, SID>();
+               else
+                  return ThisCom::template Get<Deptr<AS>, SID>();
+            }
+            else if constexpr (CT::DeepDense<AS>) {
+               // Wrap in a container                                   
+               using H = DecideHandle<C>;
+
+               if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
+                  //TODO magic numbers here, use H::PickDimension?
+                  if constexpr (SID == 0)
+                     return Decvq<AS> {Absorb, ThisCom::template As<typename H::KeyHandle, 0>()};
+                  else if constexpr (SID == 1)
+                     return Decvq<AS> {Absorb, ThisCom::template As<typename H::ValHandle, 1>()};
+                  else
+                     static_assert(false, "Unsupported SID");
+               }
+               else return Decvq<AS> {Absorb, ThisCom::template As<H, SID>()};
+            }
+            else static_assert(false, "Type mismatch");
+         }
       }
 
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
       template<class AS = void, Cid SID = ID, CT::Container C>
-      requires (SID == ID and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
+      requires (SID == ID and requires { typename Deref<C>::DeepType; })
       auto GetResolved(this C&& self) {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -149,7 +276,7 @@ namespace Langulus::Anyness::Component
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
       template<class AS = void, Cid SID = ID, CT::Container C>
-      requires (SID == ID and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
+      requires (SID == ID and requires { typename Deref<C>::DeepType; })
       auto GetDense(this C&& self, size_t count = -1) {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");

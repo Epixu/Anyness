@@ -107,18 +107,18 @@ namespace Langulus::Anyness
       using Com::Comparison<0, true, 1>::operator <=>;
       using Com::Comparison<0, true, 1>::operator ==;
 
-      decltype(auto) GetKey(this auto&& self) noexcept {
-         return self.Com::template Stack<K, 0>::Get();
+      auto& GetKey(this auto&& self) noexcept {
+         return *self.Com::template Stack<K, 0>::Get();
       }
-      decltype(auto) GetVal(this auto&& self) noexcept {
-         return self.Com::template Stack<V, 1>::Get();
+      auto& GetVal(this auto&& self) noexcept {
+         return *self.Com::template Stack<V, 1>::Get();
       }
 
       decltype(auto) GetKeyHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetKey();
+         return self.GetHandle().GetKey(); //TODO use PickDimension instead?
       }
       decltype(auto) GetValHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetVal();
+         return self.GetHandle().GetVal(); //TODO use PickDimension instead?
       }
    };
 
