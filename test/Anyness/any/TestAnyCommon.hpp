@@ -330,7 +330,11 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == uses);
    REQUIRE(pack.GetReserved() >= (uses ? 1 : 0));
-   REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));
+
+   if constexpr (not CT::CustomPointer<E> or not CT::TypeErased<T>)
+      REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));
+   else
+      REQUIRE_THROWS(pack.template As<Decay<E>>() == DenseCast(*e));
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
       REQUIRE(pack.template As<E>() != *e);
