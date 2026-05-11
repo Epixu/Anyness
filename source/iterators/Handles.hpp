@@ -53,7 +53,8 @@ namespace Langulus::Anyness
       constexpr auto begin() const noexcept {
          if constexpr (CT::Contiguous<C>) {
             if (range.IsEmpty()) {
-               if constexpr (CT::TypeErased<H>) {
+               return IteratorContiguous{H {}, range};
+               /*if constexpr (CT::TypeErased<H>) {
                   if constexpr (CT::DeeplyOwned<H>)
                      return IteratorContiguous {H {range.Get(), nullptr, {}}, range};
                   else if constexpr (CT::Owned<H>)
@@ -68,7 +69,7 @@ namespace Langulus::Anyness
                      return IteratorContiguous {H {range.Get(), nullptr}, range};
                   else
                      return IteratorContiguous {H {range.Get()}, range};
-               }
+               }*/
             }
 
             if constexpr (REVERSE)
@@ -78,7 +79,9 @@ namespace Langulus::Anyness
          }
          else {
             if (range.IsEmpty()) {
-               if constexpr (CT::TypeErased<H>) {
+               IteratorDiscontiguous{range.GetHashTable(), range.GetHashTableEnd(), H {}};
+
+               /*if constexpr (CT::TypeErased<H>) {
                   if constexpr (CT::Owned<H> or CT::DeeplyOwned<H>)
                      return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), nullptr, {}}};
                   else
@@ -89,7 +92,7 @@ namespace Langulus::Anyness
                      return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {&range.Get(), nullptr}};
                   else
                      return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {&range.Get()}};
-               }
+               }*/
             }
 
             if constexpr (REVERSE)
@@ -102,7 +105,8 @@ namespace Langulus::Anyness
       constexpr auto end() const noexcept {
          if constexpr (CT::Contiguous<C>) {
             if (range.IsEmpty()) {
-               if constexpr (CT::TypeErased<H>) {
+               return IteratorContiguous{H {}, range};
+               /*if constexpr (CT::TypeErased<H>) {
                   if constexpr (CT::DeeplyOwned<H> or CT::Owned<H>)
                      return IteratorContiguous {H {range.Get(), nullptr, {}}, range};
                   else
@@ -113,7 +117,7 @@ namespace Langulus::Anyness
                      return IteratorContiguous {H {range.Get(), nullptr}, range};
                   else
                      return IteratorContiguous {H {range.Get()}, range};
-               }
+               }*/
             }
 
             if constexpr (REVERSE)
@@ -123,7 +127,8 @@ namespace Langulus::Anyness
          }
          else {
             if (range.IsEmpty()) {
-               if constexpr (CT::TypeErased<H>) {
+               return IteratorDiscontiguous{range.GetHashTable(), range.GetHashTableEnd(), H {}};
+               /*if constexpr (CT::TypeErased<H>) {
                   if constexpr (CT::DeeplyOwned<H> or CT::Owned<H>)
                      return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), nullptr, {}}};
                   else
@@ -134,7 +139,7 @@ namespace Langulus::Anyness
                      return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), nullptr}};
                   else
                      return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get()}};
-               }
+               }*/
             }
 
             if constexpr (REVERSE)

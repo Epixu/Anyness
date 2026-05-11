@@ -85,8 +85,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandlePair<HandleMut, HandleMut>& {
-         return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
+      decltype(auto) ForceMutable(this auto&& self) noexcept {
+         return reinterpret_cast<THandlePair<HandleMut, HandleMut>&&>(LglsFwd(self));
       }
 
       /// Pick a specific dimension                                           
@@ -174,8 +174,8 @@ namespace Langulus::Anyness
       }
 
       /// Already as mutable as it gets                                       
-      auto ForceMutable() noexcept -> THandlePair& {
-         return *this;
+      decltype(auto) ForceMutable(this auto&& self) noexcept {
+         return LglsFwd(self);
       }
 
       /// Pick a specific dimension                                           
@@ -264,8 +264,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandlePair<HandleMut, HandleMut>& {
-         return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
+      decltype(auto) ForceMutable(this auto&& self) noexcept {
+         return reinterpret_cast<THandlePair<HandleMut, HandleMut>&&>(LglsFwd(self));
       }
 
       /// Pick a specific dimension                                           
@@ -344,20 +344,18 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandlePair<THandleEmergent<Decvq<Deref<K>>&>,
-                                                  THandleEmergent<Decvq<Deref<V>>&>>&
-      {
-         return *reinterpret_cast<THandlePair<
+      decltype(auto) ForceMutable(this auto&& self) noexcept {
+         return reinterpret_cast<THandlePair<
             THandleEmergent<Decvq<Deref<K>>&>,
             THandleEmergent<Decvq<Deref<V>>&>
-         >*>(this);
+         >&&>(LglsFwd(self));
       }
 
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKey();
-         else if constexpr (SID == 1)  return self.GetVal();
+              if constexpr (SID == 0) return self.GetKey();
+         else if constexpr (SID == 1) return self.GetVal();
          else static_assert(false, "No such dimension");
       }
    };
@@ -467,14 +465,11 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept
-         -> THandlePair<THandle<Decvq<Deref<K>>&>,
-                        THandle<Decvq<Deref<V>>&>>&
-      {
-         return *reinterpret_cast<THandlePair<
+      decltype(auto) ForceMutable(this auto&& self) noexcept {
+         return reinterpret_cast<THandlePair<
             THandle<Decvq<Deref<K>>&>,
             THandle<Decvq<Deref<V>>&>
-         >*>(this);
+         >&&>(LglsFwd(self));
       }
 
       /// Pick a specific dimension                                           
@@ -556,7 +551,7 @@ namespace Langulus::Anyness
          if constexpr (CT::Sparse<K, V>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntriesInner<0>()
+               this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntries<0>()
             };
          }
          else if constexpr (CT::Sparse<K>) {
@@ -572,7 +567,7 @@ namespace Langulus::Anyness
          if constexpr (CT::Sparse<K, V>) {
             return THandle<V&> {
                this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntriesInner<1>()
+               this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntries<1>()
             };
          }
          else if constexpr (CT::Sparse<V>) {
@@ -586,10 +581,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept  -> THandlePair<THandle<Decvq<K>>, 
-                                                   THandle<Decvq<V>>>&
-      {
-         return *reinterpret_cast<THandlePair<THandle<Decvq<K>>, THandle<Decvq<V>>>*>(this);
+      decltype(auto) ForceMutable(this auto&& self) noexcept {
+         return reinterpret_cast<THandlePair<THandle<Decvq<K>>, THandle<Decvq<V>>>&&>(self);
       }
 
       /// Pick a specific dimension                                           

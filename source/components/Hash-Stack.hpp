@@ -11,6 +11,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.HashStack<ID, H, SHARED...>
+
    ///                                                                        
    /// Stores a precomputed hash on the stack.                                
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
@@ -29,15 +33,15 @@ namespace Langulus::Anyness::Component
       /// Reset the hash. It will be recomputed on next comparison.           
       template<Cid SID = ID> requires Relevant<SID>
       void ResetHash(this auto& self) noexcept {
-         self.template SetHashInner<SID>(self.template IsEmpty<SID>() ? 1 : 0);
+         ThisCom::SetHashInner(self.template IsEmpty<SID>() ? 1 : 0);
       }
 
       /// Get the hash, recompute it if uninitialized                         
       template<Cid SID = ID> requires Relevant<SID>
       H GetHash(this auto const& self) noexcept {
-         auto& cached = self.template GetHashInner<SID>();
+         auto& cached = ThisCom::GetHashInner();
          if (not cached)
-            const_cast<H&>(cached) = self.template HashRecompute<SID>();
+            const_cast<H&>(cached) = ThisCom::HashRecompute();
          return cached;
       }
 
@@ -54,14 +58,14 @@ namespace Langulus::Anyness::Component
       /// Set the hash (inner)                                                
       template<Cid SID = ID> requires Relevant<SID>
       constexpr void SetHashInner(this auto& self, H h) noexcept {
-         self.template GetHashInner<SID>() = h;
+         ThisCom::GetHashInner() = h;
       }
 
       /// Hash is default-initialized to 1, because that's a universal value  
       /// for an empty container. Prevents rehash until something is pushed.  
       template<Cid SID = ID> requires Relevant<SID>
       constexpr void ConstructDefault(this auto& self) noexcept {
-         self.template SetHashInner<SID>(1);
+         ThisCom::SetHashInner(1);
       }
       
       /// Transfer from any kind of container, respecting intents             
@@ -72,15 +76,17 @@ namespace Langulus::Anyness::Component
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>
-         and requires { intent.what.GetHashInner(); }) {
+         and requires { intent.what.template GetHashInner<ID>(); }) {
             decltype(auto) from = LglsFwd(intent.what);
             // Notice only the inner hash gets copied, to avoid         
             // precomputation if rhs doesn't cache it. It will be       
             // recomputed on demand on comparison either way.           
-            self.SetHashInner(from.GetHashInner());
+            ThisCom::SetHashInner(from.template GetHashInner<ID>());
             if constexpr (I::ResetsOnMove())
-               if_available(from.SetHashInner(1));
+               if_available(from.template SetHashInner<ID>(1));
          }
       }
    };
+
+   #undef ThisCom
 }

@@ -660,7 +660,7 @@ namespace Langulus::Anyness::Component
       ///      undefined behavior                                             
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       constexpr void* GetRawVoid(this C&& self) noexcept {
-         return const_cast<void*>(static_cast<const void*>(self.template GetRaw<SID>()));
+         return const_cast<void*>(static_cast<const void*>(ThisCom::template GetRaw<SID>()));
       }
 
       /// Set the heap pointer, any data pointer will do                      
@@ -695,7 +695,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) noexcept {
-         ThisCom::SetHeapInner(intent.what.GetHeapInner());
+         ThisCom::SetHeapInner(intent.what.template GetHeapInner<Id::First>());
       }
 
       /// A simple request for allocating memory, which includes heap         

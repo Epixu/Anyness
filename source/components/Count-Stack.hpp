@@ -99,9 +99,9 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
-            ThisCom::SetCountInner(from.GetCount());
+            ThisCom::SetCountInner(from.template GetCount<ID>());
             if constexpr (I::ResetsOnMove()) {
-               if_available(from.SetCountInner(0));
+               if_available(from.template SetCountInner<ID>(0));
             }
          }
       }

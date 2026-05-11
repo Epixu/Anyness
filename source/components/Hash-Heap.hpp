@@ -11,6 +11,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.HashHeap<ID, H, SHARED...>
+
    ///                                                                        
    /// Stores a precomputed hash inside the heap with the given ID.           
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
@@ -34,7 +38,7 @@ namespace Langulus::Anyness::Component
       /// Reset the hash. It will be recomputed on next comparison.           
       template<Cid SID = ID> requires Relevant<SID>
       void ResetHash(this auto& self) noexcept {
-         self.template SetHashInner<SID>(self.template IsEmpty<SID>() ? 1 : 0);
+         ThisCom::SetHashInner(self.template IsEmpty<SID>() ? 1 : 0);
       }
 
       /// Get the hash, recompute it if uninitialized or of we don't own it.  
@@ -43,12 +47,12 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>())
             return H {1};
          else if (self.template GetUses<SID>() == 0)
-            return self.template HashRecompute<SID>();
+            return ThisCom::HashRecompute();
 
          const auto heap = self.template AccessHeap<HashHeap>();
          LglsAssumeDevAndOptimize(heap, "Invalid heap");
          if (not *heap)
-            const_cast<H&>(*heap) = self.template HashRecompute<SID>();
+            const_cast<H&>(*heap) = ThisCom::HashRecompute();
          return *heap;
       }
 
@@ -94,10 +98,12 @@ namespace Langulus::Anyness::Component
          // Notice only the inner hash gets copied, to avoid            
          // precomputation if rhs doesn't cache it. It will be          
          // recomputed on comparison either way, so why do it now.      
-         self.SetHashInner(from.GetHashInner());
+         ThisCom::SetHashInner(from.template GetHashInner<ID>());
          if constexpr (I::ResetsOnMove()) {
-            if_available(from.SetHashInner(1));
+            if_available(from.template SetHashInner<ID>(1));
          }
       }
    };
+
+   #undef ThisCom
 }

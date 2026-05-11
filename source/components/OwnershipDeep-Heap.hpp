@@ -34,6 +34,8 @@ namespace Langulus::Anyness::Component
    ///      entire container is considered disowned.                          
    ///   @tparam ID which heap/stack are we keeping track of?                 
    ///   @tparam SHARED additional provider IDs that share the same behavior  
+   ///   @note this is used primarily for local handles and containers with   
+   ///      ownership in general. Shouldn't be used for embedded containers.  
    template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
    struct OwnershipDeepHeap : OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...> {
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
@@ -91,28 +93,25 @@ namespace Langulus::Anyness::Component
          return self.template AccessHeap<OwnershipDeepHeap>();
       }
 
-      /// This method is called upon allocation to nullify entries            
+      /// This method is called upon allocation to nullify all entries in all 
+      /// shared dimensions.                                                  
       template<CT::Container C>
       constexpr void ConstructHeapRequest(this C& self) noexcept {
-         //TODO do it for all IDs?
-         if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
-            if (T.IsSparse()) {
-               memset(
-                  ThisCom::GetEntriesInner(), 0,
-                  self.GetReserved() * T.GetIndirections() * sizeof(AllocationPtr)
-               );
+         auto count = 0;
+         Id::ForEach([&]<Cid SID> {
+            if constexpr (CT::TypeErased<C>) {
+               const auto T = self.template GetType<SID>();
+               if (T.IsSparse())
+                  count += self.template GetReserved<SID>() * T.GetIndirections();
             }
-         }
-         else {
-            using T = TypeOf<C>;
-            if constexpr (CT::Sparse<T>) {
-               memset(
-                  ThisCom::GetEntriesInner(), 0,
-                  self.GetReserved() * IndirectsOf<T> * sizeof(AllocationPtr)
-               );
+            else {
+               using T = TypeOf<C, SID>;
+               if constexpr (CT::Sparse<T>)
+                  count += self.template GetReserved<SID>() * IndirectsOf<T>;
             }
-         }
+         });
+
+         memset(ThisCom::GetEntriesInner(), 0, count * sizeof(AllocationPtr));
       }
    };
 

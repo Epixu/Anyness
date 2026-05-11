@@ -132,8 +132,8 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Referred<I>) {
                // Refer                                                 
-               if constexpr (requires { from.GetAllocationInner(); }) {
-                  ThisCom::SetAllocationInner(from.GetAllocationInner());
+               if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
+                  ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
                   if constexpr (STYLE & OnCreate)
                      ThisCom::Keep();
                }
@@ -141,10 +141,10 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
                // Abandon/Move                                          
-               if constexpr (requires { from.GetAllocationInner(); }) {
-                  ThisCom::SetAllocationInner(from.GetAllocationInner());
+               if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
+                  ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
 
-                  if_available(from.SetAllocationInner(nullptr))
+                  if_available(from.template SetAllocationInner<ID>(nullptr))
                   else if constexpr (STYLE & OnCreate and CT::StronglyOwned<I>) {
                      // We can't reset source allocation pointer, which 
                      // means that source destructor will dereference   

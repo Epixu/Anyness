@@ -11,6 +11,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.IndexedHashHeap<ID, HASH, SHARED...>
+
    ///                                                                        
    /// Provides random element access by hashing a value of the provided ID.  
    /// Uses a modified Robin Hood algorithm to reuse table space and minimize 
@@ -35,13 +39,13 @@ namespace Langulus::Anyness::Component
       /// Get the start of the hash table                                     
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
-         return self.template AccessHeap<IndexedHashHeap>();
+         return ThisCom::GetHashTableInner();
       }
 
       /// Get the end of the hash table                                       
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetHashTableEnd(this auto const& self) noexcept -> TableType const* {
-         return self.template GetHashTable<SID>() + self.template GetReserved<SID>();
+         return ThisCom::GetHashTableInner() + self.template GetReserved<SID>();
       }
 
    protected:
@@ -61,14 +65,16 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires Relevant<SID>
       constexpr void ResetHashTable(this auto& self) noexcept {
          memset(
-            self.template GetHashTableInner<SID>(), 0,
+            ThisCom::GetHashTableInner(), 0,
             self.template GetReserved<SID>() * sizeof(TableType)
          );
       }
 
       /// This method is called upon allocation to nullify table              
       constexpr void ConstructHeapRequest(this auto& self) noexcept {
-         self.ResetHashTable();
+         ThisCom::ResetHashTable();
       }
    };
+
+   #undef ThisCom
 }
