@@ -251,10 +251,12 @@ namespace Langulus::Anyness
       LglsComStateStack(friend);
       LglsComIndexedCommon(friend);
       LglsComIndexedCommonHashed(friend);
+      LglsComIndexedLinear(friend);
       LglsComRemoval(friend);
+      LglsComIterationOperators(friend);
 
       // Here lies the stack. It is an optimized tuple that is filled   
-      // with requests from components.                                 
+      // with StackRequest(s) from components.                          
       typename decltype(Inner::DefineStack<COMPONENTS..., DecideStateComponent<COMPONENTS...>>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
@@ -779,6 +781,7 @@ namespace Langulus::Anyness
       unify_getter(GetEntriesInner);
       unify_getter(GetRawVoid);
       unify_setter(SetReservedInner);
+      unify_setter(SetHeapInner);
 
       #undef if_inherits
       #undef unify_compose
