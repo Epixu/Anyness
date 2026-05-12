@@ -36,8 +36,9 @@ namespace Langulus::Anyness
       using KeyHandle = Handle;
       using ValHandle = Handle;
 
-      static constexpr bool TypeErased  = true;
-      static constexpr bool DeeplyOwned = true;
+      static constexpr bool TypeErased    = true;
+      static constexpr bool DeeplyOwned   = true;
+      static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -126,8 +127,9 @@ namespace Langulus::Anyness
       using KeyHandle = HandleMut;
       using ValHandle = HandleMut;
 
-      static constexpr bool TypeErased  = true;
-      static constexpr bool DeeplyOwned = true;
+      static constexpr bool TypeErased    = true;
+      static constexpr bool DeeplyOwned   = true;
+      static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -215,8 +217,9 @@ namespace Langulus::Anyness
       using KeyHandle = Handle;
       using ValHandle = HandleMut;
 
-      static constexpr bool TypeErased  = true;
-      static constexpr bool DeeplyOwned = true;
+      static constexpr bool TypeErased    = true;
+      static constexpr bool DeeplyOwned   = true;
+      static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -308,7 +311,8 @@ namespace Langulus::Anyness
       using KeyHandle = THandleEmergent<K>;
       using ValHandle = THandleEmergent<V>;
 
-      static constexpr bool Emergent = true;
+      static constexpr bool Emergent      = true;
+      static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -393,9 +397,10 @@ namespace Langulus::Anyness
       using KeyHandle = THandle<K>;
       using ValHandle = THandle<V>;
 
-      static constexpr bool TypeErased = false;
-      static constexpr bool DeeplyOwned = CT::Sparse<K> or CT::Sparse<V>;
+      static constexpr bool TypeErased        = false;
+      static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
+      static constexpr bool HeapCanBeNull     = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -519,9 +524,10 @@ namespace Langulus::Anyness
       using KeyHandle = Tif<CT::Sparse<K>, THandle<K&>, THandleEmergent<K&>>;
       using ValHandle = Tif<CT::Sparse<V>, THandle<V&>, THandleEmergent<V&>>;
 
-      static constexpr bool TypeErased = false;
-      static constexpr bool DeeplyOwned = CT::Sparse<K> or CT::Sparse<V>;
+      static constexpr bool TypeErased        = false;
+      static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
+      static constexpr bool HeapCanBeNull     = DeeplyOwned;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;

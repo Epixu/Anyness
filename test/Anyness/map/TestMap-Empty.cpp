@@ -10,6 +10,8 @@
 
 
 TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
+   , Types<Map, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Map, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
    , Types<Map, int,    ScopedElement<int>,     int,    ScopedElement<int>>
@@ -17,7 +19,6 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    , Types<Map, RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
    , Types<Map, char,   ScopedElement<char>,    char,   ScopedElement<char>>
 
-   , Types<Map, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
    , Types<Map, int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
    , Types<Map, Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
    , Types<Map, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
@@ -431,7 +432,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       }*/
       
       WHEN("Assigned cloned value") {
-         pack.Assign(Clone(*element1), Clone(*element1));
+         pack.Assign(Clone(*element1), Clone(*element2));
 
          Map_CheckState_OwnedFull<E1, E2>(pack);
          Map_CheckState_ContainsOne(pack, Clone(element1), Clone(element2));
@@ -732,7 +733,6 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          static_assert(     T{} == T{} );
          static_assert(not (T{} != T{}));
 
-         // Unfortunately, ::std::any aren't comparable when empty      
          [[maybe_unused]] volatile bool dont_optimize = false;
          BenchmarkMap("Empty/operator==(" + NameOf<E>() + ")", 30,
             (void) 0, dont_optimize |= (another_pack1 == another_pack2)

@@ -506,20 +506,20 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Cloned<I>) {
             // Clone a handle or element                                
-            if constexpr (CT::Handle<IT>) {
+            /*if constexpr (CT::Handle<IT>) {
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
                   ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
                #else
                   ThisCom::template EmplaceByCloningStandardPointers<SID>(rhs);
                #endif
             }
-            else {
+            else {*/
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  ThisCom::EmplaceByCloningCustomPointers(rhs);
+                  ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
                #else
-                  ThisCom::EmplaceByCloningStandardPointers(rhs);
+                  ThisCom::template EmplaceByCloningStandardPointers<SID>(rhs);
                #endif
-            }
+            //}
          }
          else if constexpr (CT::Handle<IT>) {
             //static_assert(DimensionMatch<C, IT>, "Dimension mismatch");

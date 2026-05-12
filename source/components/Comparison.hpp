@@ -773,26 +773,45 @@ namespace Langulus::Anyness::Component
    protected:      
       /// Find a single element's index inside container (inner)              
       ///   @tparam REVERSE true to perform search in reverse                 
-      ///   @tparam SID the data provider to search in                        
+      ///   @tparam SID chosen dimension                                      
       ///   @attention assumes container is not empty                         
       ///   @attention that container is of the same comparable type          
+      ///   @attention operates on a single dimension at a time               
       ///   @param item the item to search for                                
       ///   @param cookie resume search from a given index                    
       ///   @return handle of the found item                                  
       template<bool REVERSE = false, Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
-      auto FindInner(this C&& self, T const& item, size_t cookie) assumptious -> DecideHandle<C> {
-         LglsAssumeDev(not self.template IsEmpty<SID>(), "Container is assumed not emtpy");
+      auto FindInner(this C&& self, T const& item, size_t cookie) assumptious
+      -> DecideHandle<C> requires Relevant<SID> {
+         LglsAssumeDev(not self.template IsEmpty<SID>(),
+            "Container is assumed not emtpy");
+         
+         // Check type compatibility                                    
          [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer = nullptr;
          if constexpr (CT::TypeErased<C>) {
-            if constexpr (CT::Handle<T>)
-               LglsAssumeDev(self.template IsSame<SID>(item.GetType()), "Type mismatch");
-            else
-               LglsAssumeDev(self.template IsSame<SID>(MetaDataOf<T>()), "Type mismatch");
+            const auto type = self.template GetType<SID>();
+            if constexpr (CT::Handle<T>) {
+               LglsAssumeDev(type.IsSame(item.template GetType<SID>()),
+                  "Type mismatch");
+            }
+            else {
+               LglsAssumeDev(type.IsSame(MetaDataOf<T>()),
+                  "Type mismatch");
+            }
 
-            comparer = self.template GetType<SID>().GetComparerEqual();
+            comparer = type.GetComparerEqual();
             LglsAssumeDev(comparer, "Type-erased data not comparable");
          }
-         else static_assert(CT::Comparable<TypeOf<C, SID>, T>, "Type not comparable");
+         else {
+            if constexpr (CT::Handle<T>) {
+               static_assert(CT::Comparable<TypeOf<C, SID>, TypeOf<T, SID>>,
+                  "Type not comparable");
+            }
+            else {
+               static_assert(CT::Comparable<TypeOf<C, SID>, T>,
+                  "Type not comparable");
+            }
+         }
 
          DecideHandle<C> result;
          self.template Apply<false>([&](auto&& test) -> bool {
@@ -817,22 +836,22 @@ namespace Langulus::Anyness::Component
                
                if constexpr (CT::TypeErased<C>) {
                   if constexpr (CT::Handle<T>) {
-                     if (not comparer(test.GetRaw(), item.GetRaw()))
+                     if (not comparer(test.template GetRaw<SID>(), item.template GetRaw<SID>()))
                         return true;   // Continue searching            
                   }
                   else {
-                     if (not comparer(test.GetRaw(), &item))
+                     if (not comparer(test.template GetRaw<SID>(), &item))
                         return true;   // Continue searching            
                   }
 
                }
                else {
                   if constexpr (CT::Handle<T>) {
-                     if (*test.GetRaw() != *item.GetRaw())
+                     if (*test.template GetRaw<SID>() != *item.template GetRaw<SID>())
                         return true;   // Continue searching            
                   }
                   else {
-                     if (*test.GetRaw() != item)
+                     if (*test.template GetRaw<SID>() != item)
                         return true;   // Continue searching            
                   }
                }
