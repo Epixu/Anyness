@@ -231,7 +231,9 @@ namespace Langulus::Anyness
       LglsComHeapMovable(friend);
       LglsComOwnershipEmergent(friend);
       LglsComOwnershipStack(friend);
+      LglsComCountHeap(friend);
       LglsComCountStack(friend);
+      LglsComCountStatic(friend);
       LglsComReserveStack(friend);
       LglsComOwnershipDeepHeap(friend);
       LglsComOwnershipDeepReference(friend);

@@ -563,15 +563,15 @@ namespace Langulus::Anyness::Component
                // Both sides are statically-typed and we can benefit    
                // from a lot of compile-time optimizations.             
                if constexpr (CT::Typed<C, IT>)
-                  static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
+                  static_assert(Same<TypeOf<C, SID>, TypeOf<IT, SID>>, "Type mismatch");
                else
                   LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
 
-               using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
+               using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT, SID>>;
                if constexpr (CT::Mutable<T> or not I::IsMoved())
-                  IntentNew(dst, I::Nest(*rhs.template GetRawAs<T>()));
+                  IntentNew(dst, I::Nest(*rhs.template GetRawAs<T, SID>()));
                else
-                  IntentNew(dst, Refer(*rhs.template GetRawAs<T>()));
+                  IntentNew(dst, Refer(*rhs.template GetRawAs<T, SID>()));
             }
                
             if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
