@@ -349,7 +349,7 @@ namespace Langulus::Anyness
       /// Calculate the footer size for the relevant heap                     
       template<Cid SID, CT::Container C>
       constexpr size_t GetHeapFooterSize(this C const& self, size_t reserve) noexcept {
-         return Inner::DefineHeapFooter<COMPONENTS...>(
+         return Inner::DefineHeapFooter<SID, COMPONENTS...>(
             reserve, self.template GetIndirections<SID>()
          );
       }
@@ -815,6 +815,7 @@ namespace Langulus::Anyness
       unify_setter(SetReservedInner);
       unify_setter(SetHeapInner);
       unify_setter(SetAllocationInner);
+      unify_setter(EmplaceEntries);
       unify_setter(AllocateFresh);
       unify_setter(AllocateLess);
       unify_setter(AllocateMore);

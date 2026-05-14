@@ -558,13 +558,13 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair&& other) = delete;
 
       auto GetKey() noexcept -> KeyHandle {
-         if constexpr (CT::Sparse<K, V>) {
+         /*if constexpr (CT::Sparse<K, V>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
                this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntries<0>()
             };
          }
-         else if constexpr (CT::Sparse<K>) {
+         else*/ if constexpr (CT::Sparse<K>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
                this->Com::OwnershipDeepHeap<true, 0>::GetEntriesInner()
@@ -574,13 +574,13 @@ namespace Langulus::Anyness
       }
 
       auto GetVal() noexcept -> ValHandle {
-         if constexpr (CT::Sparse<K, V>) {
+         /*if constexpr (CT::Sparse<K, V>) {
             return THandle<V&> {
                this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
                this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntries<1>()
             };
          }
-         else if constexpr (CT::Sparse<V>) {
+         else*/ if constexpr (CT::Sparse<V>) {
             return THandle<V&> {
                this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
                this->Com::OwnershipDeepHeap<true, 1>::GetEntriesInner()

@@ -132,7 +132,7 @@ namespace Langulus::Anyness::Component
                if (subT.IsSparse()) {
                   // Pointer to pointer                                 
                   H temp {ptr, entries + 1, subT};
-                  temp.template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
+                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
                }
                else if constexpr (REF_INDIVIDUAL) {
                   if (const auto referencer = subT.GetReferencer()) {
@@ -166,7 +166,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer                                 
                   typename H::Denser temp {ptr, entries + 1};
-                  temp.template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
+                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
                }
                else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
                   // Pointer to dense                                   
@@ -310,7 +310,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      if (auto subEntry = entries + 1) {
                         DecideHandle<C> temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
+                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
                      }
                   }
                   else if (auto destructor = subT.GetDestructor()) {
@@ -332,7 +332,7 @@ namespace Langulus::Anyness::Component
                      // Dereference all indirection layers.             
                      if (auto subEntry = entries + 1) {
                         DecideHandle<C> temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
+                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
                      }
                   }
                   else if constexpr (REF_INDIVIDUAL) {
@@ -392,7 +392,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      using DenserH = typename DecideHandle<C>::Denser;
                      DenserH temp{ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
+                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       
@@ -410,7 +410,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      using DenserH = typename DecideHandle<C>::Denser;
                      DenserH temp {ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
+                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
                   }
                   else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
                      // This element occurs in more than one place.     
@@ -552,11 +552,12 @@ namespace Langulus::Anyness::Component
       }
 
       /// Emplace on top of the first element using an intent                 
-      ///   @attention this overwrites previous entries without dereferencing 
-      ///   @attention emplacing using a handle is faster due to carrying     
+      ///   @attention Works in one dimension at a time!                      
+      ///   @attention This overwrites previous entries without dereferencing 
+      ///   @attention Emplacing using a handle is faster due to carrying     
       ///      allocation data with itself when sparse, rather than searching 
       ///      for it on demand.                                              
-      ///   @attention items (not entries) are referenced even if disowned,   
+      ///   @attention Items (not entries) are referenced even if disowned,   
       ///      when REF_INDIVIDUAL is enabled and items are CT::Referenced.   
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
@@ -575,7 +576,8 @@ namespace Langulus::Anyness::Component
             "GetHandle() first?");*/
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
-            "because it will overwrite/reference new allocations");
+            "because it will overwrite/reference new allocations"
+         );
 
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.template GetIndirections<SID>();
@@ -583,8 +585,8 @@ namespace Langulus::Anyness::Component
          const auto entries = self.template GetEntriesInner<SID>();
 
          if constexpr (CT::Handle<I>) {
-            static_assert(not CT::Pair<I>,
-               "You have to emplace each dimension separately");
+            //static_assert(not CT::Pair<I>,
+            //   "You have to emplace each dimension separately");
 
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
@@ -616,7 +618,7 @@ namespace Langulus::Anyness::Component
             if constexpr (not I::IsMoved()) {
                // We are not moving, so we have to reference all        
                // elements.                                             
-               ThisCom::template KeepElementDeep<false>();
+               ThisCom::template KeepElementDeep<false, SID>();
             }
             else if constexpr (CT::StronglyOwned<H> and REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
@@ -646,11 +648,11 @@ namespace Langulus::Anyness::Component
             constexpr bool sought = not CT::Disowned<I>;
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (CT::CustomPointer<T>)
-                  ThisCom::template KeepElementDeepCustomPointers<sought>();
+                  ThisCom::template KeepElementDeepCustomPointers<sought, SID>();
                else
-                  ThisCom::template KeepElementDeepStandardPointers<sought>();
+                  ThisCom::template KeepElementDeepStandardPointers<sought, SID>();
             #else
-               ThisCom::template KeepElementDeepStandardPointers<sought>();
+               ThisCom::template KeepElementDeepStandardPointers<sought, SID>();
             #endif
          }
       }

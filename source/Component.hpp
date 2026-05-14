@@ -639,8 +639,8 @@ namespace Langulus::Anyness
          }
       }
       
-      /// Go through all components and accumulate their heap requests into   
-      /// a byte amount, used for header size when allocating                 
+      /// Go through all relevant components and accumulate their heap        
+      /// requests into a byte amount, used for header size when allocating.  
       ///   @return the size of the heap header in bytes                      
       template<Cid ID, class C1, class...CN>
       consteval size_t DefineHeapHeader() {
@@ -667,40 +667,42 @@ namespace Langulus::Anyness
          }
       }      
       
-      /// Go through all components and accumulate their heap requests into   
-      /// a byte amount, used for footer size when allocating                 
+      /// Go through all relevant components and accumulate their heap        
+      /// requests into a byte amount, used for footer size when allocating.  
       ///   @param count footer can depend on the amount of elements          
       ///   @param indirects footer can depend on the indirections            
       ///   @return the size of the heap footer in bytes                      
-      template<class C1, class...CN>
+      template<Cid ID, class C1, class...CN>
       constexpr size_t DefineHeapFooter(
          [[maybe_unused]] const size_t count,
          [[maybe_unused]] const size_t indirects
       ) noexcept {
          if constexpr (requires { typename C1::HeapRequest; }) {
             size_t offset = 0;
-            using R = typename C1::HeapRequest;
-            if constexpr (requires { R::AllocatedPerIndirection; }) {
-               if constexpr (requires { R::Type::AllocatedPerElement; })
-                  offset += sizeof(typename R::Type::Type) * count * indirects;
-               else
-                  offset += sizeof(typename R::Type) * indirects;
-            }
-            else if constexpr (requires { R::AllocatedPerElement; }) {
-               if constexpr (requires { R::Type::AllocatedPerIndirection; })
-                  offset += sizeof(typename R::Type::Type) * count * indirects;
-               else
-                  offset += sizeof(typename R::Type) * count;
+            if constexpr (C1::Id::template Contains<ID>) {
+               using R = typename C1::HeapRequest;
+               if constexpr (requires { R::AllocatedPerIndirection; }) {
+                  if constexpr (requires { R::Type::AllocatedPerElement; })
+                     offset += sizeof(typename R::Type::Type) * count * indirects;
+                  else
+                     offset += sizeof(typename R::Type) * indirects;
+               }
+               else if constexpr (requires { R::AllocatedPerElement; }) {
+                  if constexpr (requires { R::Type::AllocatedPerIndirection; })
+                     offset += sizeof(typename R::Type::Type) * count * indirects;
+                  else
+                     offset += sizeof(typename R::Type) * count;
+               }
             }
             
             if constexpr (sizeof...(CN))
-               return offset + DefineHeapFooter<CN...>(count, indirects);
+               return offset + DefineHeapFooter<ID, CN...>(count, indirects);
             else
                return offset;
          }
          else {
             if constexpr (sizeof...(CN))
-               return DefineHeapFooter<CN...>(count, indirects);
+               return DefineHeapFooter<ID, CN...>(count, indirects);
             else
                return 0;
          }

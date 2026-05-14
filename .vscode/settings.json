@@ -134,5 +134,6 @@
   "debug.console.fontSize": 10,
   "terminal.integrated.fontSize": 10,
   "diffEditor.renderGutterMenu": true,
-  "scm.diffDecorations": "none"
+  "scm.diffDecorations": "none",
+  "debug.console.fontFamily": "'Cascadia Code', Consolas, 'Courier New', monospace"
 }
