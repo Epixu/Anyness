@@ -122,7 +122,7 @@ namespace Langulus::Anyness::Component
                   (void) self; (void) from;
 
                   if constexpr (CT::Supported<decltype(src)>) {
-                     Id::ForEach([&]<Cid D>{
+                     Id::ForEach([&dst,&src]<Cid D>{
                         if constexpr (CT::Copied<I>)
                            dst.template EmplaceWithIntent<D>(Refer(src));
                         else
@@ -146,7 +146,9 @@ namespace Langulus::Anyness::Component
                   // Partial success is not allowed - we have to        
                   // destroy everything we initialized                  
                   while (n) {
-                     dst.DestroyElement();
+                     Id::ForEach([&dst]<Cid D>{
+                        dst.template DestroyElement<D>();
+                     });
                      --dst;
                      --n;
                   }
@@ -166,7 +168,6 @@ namespace Langulus::Anyness::Component
             // Move/Refer/Abandon/Disown other                          
             static_assert(I::IsShallow());
             self.template SetType<Id::First>(from.template GetType<Id::First>());
-            //self.template SetHeapInner<ID>(from.template GetRaw<ID>());
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
             if constexpr (I::IsKept()) {
@@ -220,7 +221,7 @@ namespace Langulus::Anyness::Component
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
-      auto AllocateFresh(this C& self, const Request& request) -> Allocation* {
+      void AllocateFresh(this C& self, const Request& request) {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto al = Allocator::Allocate(self.template GetType<SID>(), request.mTotalBytes);
          #else
@@ -231,8 +232,7 @@ namespace Langulus::Anyness::Component
          ThisCom::SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          self.template SetAllocationInner<SID>(al);
          if_available(self.template SetReservedInner<SID>(request.mReserved));
-         if_available(self.ConstructHeapRequest());
-         return al;
+         if_available(self.template ConstructHeapRequest<SID>());
       }
 
       /// Allocate a number of elements, relying on the type of the container 

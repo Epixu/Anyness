@@ -591,26 +591,26 @@ namespace Langulus::Anyness
       /// Go through all components and accumulate their stack requests into  
       /// a tuple                                                             
       template<class C1, class...CN>
-      consteval auto DefineStack() {
+      consteval auto DefineStack(Types<C1, CN...>&&) {
          if constexpr (requires { typename C1::StackRequest; }) {
             if constexpr (CT::NotVoid<typename C1::StackRequest>) {
                Types<StackVariable<typename C1::StackRequest>> first;
 
                if constexpr (sizeof...(CN))
-                  return first + DefineStack<CN...>();
+                  return first + DefineStack(Types<CN...>{});
                else
                   return first;
             }
             else {
                if constexpr (sizeof...(CN))
-                  return DefineStack<CN...>();
+                  return DefineStack(Types<CN...>{});
                else
                   return NoTypes{};
             }
          }
          else {
             if constexpr (sizeof...(CN))
-               return DefineStack<CN...>();
+               return DefineStack(Types<CN...>{});
             else
                return NoTypes {};
          }
@@ -619,7 +619,7 @@ namespace Langulus::Anyness
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the index in the stack tuple    
       template<class PICK, class C1, class...CN>
-      consteval size_t GetStackOffset() {
+      consteval size_t GetStackOffset(Types<C1, CN...>&&) {
          static_assert(requires { typename PICK::StackRequest; },
             "Component data is not on the stack");
           
@@ -633,7 +633,7 @@ namespace Langulus::Anyness
             }
          
             if constexpr (sizeof...(CN))
-               return offset + GetStackOffset<PICK, CN...>();
+               return offset + GetStackOffset<PICK>(Types<CN...>{});
             else
                return offset;
          }

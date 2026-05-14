@@ -14,7 +14,7 @@ namespace Langulus
    template<auto...> struct Values;
 
    ///                                                                        
-   /// Can be used to handle value sequences at compile-time                  
+   /// Empty compile-time value list                                          
    ///                                                                        
    template<>
    struct Values<> {
@@ -38,10 +38,17 @@ namespace Langulus
       static constexpr void ForEach(auto&&)    {}
       static constexpr bool ForEachAnd(auto&&) { return false; }
       static constexpr bool ForEachOr(auto&&)  { return false; }
+
+      template<auto...N>
+      consteval auto operator + (Values<N...>&&) const -> Values<N...> { return {}; }
+
+      template<class>
+      using Intersect = Values<>;
    };
 
+
    ///                                                                        
-   /// Can be used to handle value sequences at compile-time                  
+   /// Compile-time value list with a single value.                           
    ///                                                                        
    template<auto E1>
    struct Values<E1> {
@@ -57,12 +64,20 @@ namespace Langulus
          return E1;
       }
 
+      template<auto...EN>
+      static consteval bool IntersectInner(Values<EN...>&&) {
+         return ((E1 == EN) or ...);
+      }
+
    public:
       template<uint I>
       static constexpr auto At = AtInner<I>();
 
       template<auto E>
       static constexpr bool Contains = E == E1;
+
+      template<auto...N>
+      consteval auto operator + (Values<N...>&&) const -> Values<E1, N...> { return {}; }
 
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ lambda.template operator()<E1>(); },
@@ -81,10 +96,14 @@ namespace Langulus
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
          return lambda.template operator()<E1>();
       }
+
+      template<class OTHER>
+      using Intersect = Tif<IntersectInner(OTHER{}), Values<E1>, Values<>>;
    };
 
+
    ///                                                                        
-   /// Can be used to handle value sequences at compile-time                  
+   /// Compile-time value list with multiple values.                          
    ///                                                                        
    template<auto E1, auto E2, auto...EN>
    struct Values<E1, E2, EN...> {
@@ -104,12 +123,29 @@ namespace Langulus
          else return Values<EN...>::template AtInner<I - 2>();
       }
 
+      template<auto...INTERSECT>
+      static consteval auto IntersectInner(Values<INTERSECT...>&&) {
+         using other = Values<INTERSECT...>;
+         if constexpr (sizeof...(INTERSECT) == 0)
+            return Values<>{};
+         else if constexpr (sizeof...(INTERSECT) == 1)
+            return typename other::template Intersect<Values> {};
+         else {
+            return typename Values<E1>::template Intersect<other> {}
+                +  typename Values<E2>::template Intersect<other> {}
+                + (typename Values<EN>::template Intersect<other> {} + ...);
+         }
+      }
+
    public:
       template<uint I>
       static constexpr auto At = AtInner<I>();
 
       template<auto E>
       static constexpr bool Contains = E == E1 or E == E2 or ((E == EN) or ...);
+
+      template<auto...N>
+      consteval auto operator + (Values<N...>&&) const -> Values<E1, E2, EN..., N...> { return {}; }
 
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ lambda.template operator()<E1>(); },
@@ -134,5 +170,8 @@ namespace Langulus
              or lambda.template operator()<E2>()
              or (... or lambda.template operator()<EN>());
       }
+
+      template<class OTHER>
+      using Intersect = decltype(IntersectInner(OTHER{}));
    };
 }

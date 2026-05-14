@@ -22,7 +22,10 @@ namespace Langulus::Anyness::Component
    struct IndexedCommonHashed : IndexedCommon<ID, SHARED...> {
       using TableType        = uint8_t;
       using IteratorCategory = ::std::random_access_iterator_tag;
+      using Id               = typename IndexedCommon<ID, SHARED...>::Id;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
+      template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
       template<CT::Container C>
@@ -195,9 +198,9 @@ namespace Langulus::Anyness::Component
       }
    
       /// Shift elements left whereever possible                              
-      template<Cid SID = ID, CT::Container C>
+      ///   @attention works in all dimensions simultaneously!                
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void ShiftEntries(this C& self) {
-         static_assert(SID == ID or ((SID == SHARED) or ...));
          const auto reserved = self.template GetReserved<SID>();
          int moves_performed;
          do {
@@ -228,10 +231,10 @@ namespace Langulus::Anyness::Component
                      auto handle = self.GetHandle().ForceMutable();
                      auto from   = handle + oldIndex;
                      auto to     = handle + newIndex;
-                     Values<ID, SHARED...>::ForEach([&]<Cid D>{
+                     Id::ForEach([&to,&from]<Cid D>{
                         to.template EmplaceWithIntent<D>(Abandon(from));
+                        from.template DestroyElement<D>();
                      });
-                     from.DestroyElement();
 
                      tableBeg[newIndex] = attempt;
                      *table = 0;
@@ -245,17 +248,22 @@ namespace Langulus::Anyness::Component
       }
 
       /// Table insertion function                                            
-      ///   @param start - the starting index                                 
-      ///   @param swapper - a swapper to use while trying to insert          
+      ///   @param start the starting index                                   
+      ///   @param swapper swapper to use while trying to insert              
+      ///   @attention works in all dimensions simultaneously!                
+      ///   @attention assumes that reserved count is the same across all     
+      ///      relevant dimensions                                            
+      ///   @attention assumes that the same hash table is used across all    
+      ///      relevant dimensions                                            
       ///   @return the offset at which pair was inserted                     
-      template<CT::Container C, CT::NoIntent H>
-      auto TableEmplace(this C& self, Count<C> const start, H& swapper) -> Count<C> {
-         static_assert(not Shared or CT::Pair<H>,
-            "Swapper handle must match the number of shared providers");
+      template<Cid SID = ID, CT::NoIntent H> requires Relevant<SID>
+      size_t TableEmplace(this auto& self, size_t const start, H& swapper) /*-> Count<C>*/ {
+         /*static_assert(not Shared or CT::Pair<H>,
+            "Swapper handle must match the number of shared providers");*/
 
          // Get the starting index based on the key hash                
-         const auto reserved = self.GetReserved();
-         const auto tableBeg = self.GetHashTableInner();
+         const auto reserved = self.template GetReserved<SID>();
+         const auto tableBeg = self.template GetHashTableInner<SID>();
          const auto tableEnd = tableBeg + reserved;
 
          TableType attempts = 1;
@@ -266,7 +274,11 @@ namespace Langulus::Anyness::Component
             const auto index = table - tableBeg;
             if (attempts > *table) {
                // The value we're inserting is closer to bucket, so swap
-               (handle + index).SwapInner(swapper);
+               auto h = handle + index;
+               Id::ForEach([&h,&swapper]<Cid D>{
+                  h.template SwapInner<D>(swapper);
+               });
+
                ::std::swap(attempts, *table);
                if (insertedAt == reserved)
                   insertedAt = index;
@@ -282,8 +294,7 @@ namespace Langulus::Anyness::Component
          // If reached, then empty slot found, so put the value there   
          const auto index = table - tableBeg;
          handle += index;
-
-         Values<ID, SHARED...>::ForEach([&]<Cid D>{
+         Id::ForEach([&handle,&swapper]<Cid D>{
             handle.template EmplaceWithIntent<D>(Abandon(swapper));
          });
 

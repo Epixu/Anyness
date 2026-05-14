@@ -711,7 +711,7 @@ namespace Langulus::Anyness::Component
       /// across all dimensions used in this heap component.                  
       ///   @param reserve the number of elements to request                  
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
-      Request RequestHeap(this C const& self, size_t reserve) assumptious {
+      auto RequestHeap(this C const& self, size_t reserve) assumptious -> Request {
          Request result;
          result.mHeaderBytes = self.template GetHeapHeaderSize<Id::First>();
          size_t total = result.mHeaderBytes;
@@ -781,6 +781,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Destroys only the first element.                                    
+      ///   @attention destroys one dimension at a time!                      
       ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
@@ -803,6 +804,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Destroys all elements.                                              
+      ///   @attention destroys one dimension at a time!                      
       ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
@@ -813,7 +815,7 @@ namespace Langulus::Anyness::Component
                return;
 
             self.Apply([](auto&& item) {
-               item.template DestroyElement<FORCE_DESTROY>();
+               item.template DestroyElement<FORCE_DESTROY, SID>();
             });
          }
       }

@@ -198,38 +198,54 @@ namespace Langulus::Anyness::Component
 
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         
+      ///   @attention operates in all relevant dimensions simultaneously     
       template<CT::HeapAllocated C>
       void PrepareForReconstruction(this C& self) {
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
-         auto& a = self.GetAllocationInner();
-         if (not a) {
-            // Nothing was allocated                                    
-            self.AllocateFresh(self.RequestHeap(1));
-            return;
-         }
 
-         // If reached, then we have to free previous elements          
-         LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
-         if (a->GetUses() == 1) {
-            // We don't deallocate the memory - we can reuse it         
-            // But we have to destroy all elements                      
-            self.DestroyAllElements();
-            if constexpr (CT::ContainsMany<C>)
-               self.AllocateLess(1);
-            return;
-         }
+         C::ComponentList::ForEach([&]<class OWNER>{
+            if constexpr (requires { self.OWNER::GetAllocationInner(); }) {
+               using CommonIds = typename Id::template Intersect<OWNER::Id>;
+               if constexpr (not CommonIds::Empty) {
+                  using SID = FirstOf<CommonIds>;
+                  auto& com = self.OWNER;
+                  auto& a = com.GetAllocationInner();
+                  if (not a) {
+                     // Nothing was allocated                           
+                     self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
+                     return;
+                  }
 
-         // If reached we have a guarantee, that elements are           
-         // referenced from elsewhere as well, so we can't afford to    
-         // call any destructors. All we do is reset this container and 
-         // allocate a new block, which will be exclusively ours.       
-         self.Destroy();
-         self.AllocateFresh(self.RequestHeap(1));
+                  // If reached, then we have to free previous elements 
+                  LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+                  if (a->GetUses() == 1) {
+                     // We don't deallocate the memory. We can reuse it.
+                     // But we have to destroy all shared elements.     
+                     CommonIds::ForEach([&self]<Cid D> {
+                        self.template DestroyAllElements<D>();
+                     });
+
+                     if constexpr (CT::ContainsMany<C>)
+                        self.template AllocateLess<SID>(1);
+                     return;
+                  }
+
+                  // If reached we have a guarantee, that elements are  
+                  // referenced from elsewhere as well, so we can't     
+                  // afford to call any destructors. All we do is reset 
+                  // this container and allocate a new block, which     
+                  // will be exclusively ours.                          
+                  com.Free();
+                  self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
+               }
+            }
+         });
       }
 
       /// A helper for clearing and allocating memory before assignment.      
       /// Calls destructors on all elements, except the first one.            
+      ///   @attention operates in all relevant dimensions simultaneously     
       ///   @return true if first element is valid and can be assigned to     
       template<CT::HeapAllocated C>
       bool PrepareForReassignment(this C& self) {
@@ -282,7 +298,7 @@ namespace Langulus::Anyness::Component
       ///   @attention Does not modify any container state                    
       ///   @attention This overwrites previous entry without dereferencing   
       ///      it, and without destroying anything                            
-      ///   @attention Works at one dimension at a time!                      
+      ///   @attention Works in one dimension at a time!                      
       ///   @param intent assignment argument. If this container              
       ///      is statically typed, this can be any assignment argument,      
       ///      otherwise it has to be an instance of the contained type.      
@@ -382,49 +398,53 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Swap contents. Gracefully handling transitions between embedded     
-      /// and unembedded handles.                                             
+      /// Swap the first element. Gracefully handling transitions between     
+      /// embedded and unembedded handles.                                    
       ///   @param rhs - right hand side                                      
-      ///   @attention assumes types are the same                             
-      ///   @attention assumes both sides are allocated and initialized       
-      template<CT::Container C, CT::Container RHS>
-      void SwapInner(this C&& self, RHS& rhs) requires CT::ContainsOne<C, RHS> {
-         static_assert(CT::ContainsOne<C, RHS>,
-            "Swapping only first element in a container with many. GetHandle() first?");
+      ///   @attention Assumes types are the same                             
+      ///   @attention Assumes both sides are allocated and initialized       
+      ///   @attention Works in one dimension at a time!                      
+      template<Cid SID = ID, CT::ContainsOne C, CT::ContainsOne RHS> requires Relevant<SID>
+      void SwapInner(this C&& self, RHS& rhs) /*requires CT::ContainsOne<C, RHS> */{
+         /*static_assert(CT::ContainsOne<C, RHS>,
+            "Swapping only first element in a container with many. GetHandle() first?");*/
 
          if constexpr (CT::TypeErased<C, RHS>) {
-            auto T = self.GetType();
+            auto T = self.template GetType<SID>();
             auto S = T.GetSize();
 
             if (T.IsSparse()) {
                uintptr_t tmp;
-               memcpy(&tmp,       self.Get(), S);
-               memcpy(self.Get(), rhs.Get(),  S);
-               memcpy(rhs.Get(),  &tmp,       S);
+               memcpy(&tmp,                           self.template Get<void, SID>(),  S);
+               memcpy(self.template Get<void, SID>(),  rhs.template Get<void, SID>(),  S);
+               memcpy( rhs.template Get<void, SID>(), &tmp,                            S);
 
-               if constexpr (requires { self.GetEntriesInner(); rhs.GetEntriesInner(); }) {
+               if constexpr (requires {
+                  self.template GetEntriesInner<SID>();
+                   rhs.template GetEntriesInner<SID>();
+               }) {
                   // Both entry arrays are available, just swap them    
-                  auto lhs_entry = self.GetEntriesInner();
-                  auto rhs_entry = rhs.GetEntriesInner();
+                  auto lhs_entry = self.template GetEntriesInner<SID>();
+                  auto rhs_entry =  rhs.template GetEntriesInner<SID>();
                   for (int i = 0; i < T.GetIndirections(); ++i) {
                      ::std::swap(*lhs_entry, *rhs_entry);
                      ++lhs_entry;
                      ++rhs_entry;
                   }
                }
-               else if constexpr (requires { self.GetEntriesInner(); }) {
+               else if constexpr (requires { self.template GetEntriesInner<SID>(); }) {
                   // Left entry array is available, right is emergent   
                   // Find the entries and reference them if we have to  
-                  auto lhs_entry = self.GetEntriesInner();
+                  auto lhs_entry = self.template GetEntriesInner<SID>();
                   for (int i = 0; i < T.GetIndirections(); ++i) {
                      ++lhs_entry;
                      TODO();
                   }
                }
-               else if constexpr (requires { rhs.GetEntriesInner(); }) {
+               else if constexpr (requires { rhs.template GetEntriesInner<SID>(); }) {
                   // Right entry array is available, left is emergent   
                   // Find the entries and reference them if we have to  
-                  auto rhs_entry = rhs.GetEntriesInner();
+                  auto rhs_entry = rhs.template GetEntriesInner<SID>();
                   for (int i = 0; i < T.GetIndirections(); ++i) {
                      ++rhs_entry;
                      TODO();
@@ -441,36 +461,39 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            using T = Tif<CT::TypeErased<C>, TypeOf<RHS>, TypeOf<C>>;
-            T& lhs_item = *self.template Get<T>();
-            T& rhs_item = *rhs.template Get<T>();
+            using T = Tif<CT::TypeErased<C>, TypeOf<RHS, SID>, TypeOf<C, SID>>;
+            T& lhs_item = *self.template Get<T, SID>();
+            T& rhs_item =  *rhs.template Get<T, SID>();
 
             if constexpr (CT::Sparse<T>) {
                ::std::swap(lhs_item, rhs_item);
 
-               if constexpr (requires { self.GetEntriesInner(); rhs.GetEntriesInner(); }) {
+               if constexpr (requires {
+                  self.template GetEntriesInner<SID>();
+                   rhs.template GetEntriesInner<SID>();
+               }) {
                   // Both entry arrays are available, just swap them    
-                  auto lhs_entry = DecvqAllCast(self.GetEntriesInner());
-                  auto rhs_entry = DecvqAllCast(rhs.GetEntriesInner());
+                  auto lhs_entry = DecvqAllCast(self.template GetEntriesInner<SID>());
+                  auto rhs_entry = DecvqAllCast( rhs.template GetEntriesInner<SID>());
                   ForEachIndirection<T>([&lhs_entry, &rhs_entry] {
                      ::std::swap(*lhs_entry, *rhs_entry);
                      ++lhs_entry;
                      ++rhs_entry;
                   });
                }
-               else if constexpr (requires { self.GetEntriesInner(); }) {
+               else if constexpr (requires { self.template GetEntriesInner<SID>(); }) {
                   // Left entry array is available, right is emergent   
                   // Find the entries and reference them if we have to  
-                  auto lhs_entry = DecvqAllCast(self.GetEntriesInner());
+                  auto lhs_entry = DecvqAllCast(self.template GetEntriesInner<SID>());
                   ForEachIndirection<T>([&lhs_entry] {
                      ++lhs_entry;
                      TODO();
                   });
                }
-               else if constexpr (requires { rhs.GetEntriesInner(); }) {
+               else if constexpr (requires { rhs.template GetEntriesInner<SID>(); }) {
                   // Right entry array is available, left is emergent   
                   // Find the entries and reference them if we have to  
-                  auto rhs_entry = DecvqAllCast(rhs.GetEntriesInner());
+                  auto rhs_entry = DecvqAllCast(rhs.template GetEntriesInner<SID>());
                   ForEachIndirection<T>([&rhs_entry] {
                      ++rhs_entry;
                      TODO();
@@ -479,18 +502,25 @@ namespace Langulus::Anyness::Component
             }
             else {
                if constexpr (requires { T {Abandon(lhs_item)}; }) {
-                  T tmp{Abandon(lhs_item)};
-                  lhs_item.~T();
-                  new (&lhs_item) T{Abandon(rhs_item)};
-                  rhs_item.~T();
-                  new (&rhs_item) T{Abandon(tmp)};
+                  // Abandon semantics are most optimal                 
+                  T tmp {Abandon(lhs_item)};
+                  new (&lhs_item) T {Abandon(rhs_item)};
+                  new (&rhs_item) T {Abandon(tmp)};
+               }
+               else if constexpr (requires { lhs_item = LglsMov(rhs_item); }) {
+                  // Move-assignment is second best                     
+                  T tmp {LglsMov(lhs_item)};
+                  lhs_item = LglsMov(rhs_item);
+                  rhs_item = LglsMov(tmp);
                }
                else {
-                  T tmp{LglsMov(lhs_item)};
+                  // Fallback to move-construction: requires destroyng  
+                  // each item before reconstructing it in place.       
+                  T tmp {LglsMov(lhs_item)};
                   lhs_item.~T();
-                  new (&lhs_item) T{LglsMov(rhs_item)};
+                  new (&lhs_item) T {LglsMov(rhs_item)};
                   rhs_item.~T();
-                  new (&rhs_item) T{LglsMov(tmp)};
+                  new (&rhs_item) T {LglsMov(tmp)};
                }
             }
          }

@@ -119,7 +119,7 @@ namespace Langulus::Anyness::Component
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
-         self.Free();
+         self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
       }
 
       /// Reference the allocation once.                                      

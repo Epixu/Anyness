@@ -95,21 +95,19 @@ namespace Langulus::Anyness::Component
 
       /// This method is called upon allocation to nullify all entries in all 
       /// shared dimensions.                                                  
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr void ConstructHeapRequest(this C& self) noexcept {
          auto count = 0;
-         Id::ForEach([&]<Cid SID> {
-            if constexpr (CT::TypeErased<C>) {
-               const auto T = self.template GetType<SID>();
-               if (T.IsSparse())
-                  count += self.template GetReserved<SID>() * T.GetIndirections();
-            }
-            else {
-               using T = TypeOf<C, SID>;
-               if constexpr (CT::Sparse<T>)
-                  count += self.template GetReserved<SID>() * IndirectsOf<T>;
-            }
-         });
+         if constexpr (CT::TypeErased<C>) {
+            const auto T = self.template GetType<SID>();
+            if (T.IsSparse())
+               count += self.template GetReserved<SID>() * T.GetIndirections();
+         }
+         else {
+            using T = TypeOf<C, SID>;
+            if constexpr (CT::Sparse<T>)
+               count += self.template GetReserved<SID>() * IndirectsOf<T>;
+         }
 
          memset(ThisCom::GetEntriesInner(), 0, count * sizeof(AllocationPtr));
       }

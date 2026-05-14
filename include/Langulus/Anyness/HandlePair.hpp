@@ -502,12 +502,12 @@ namespace Langulus::Anyness
       EnableComponentIf<CT::Sparse<K, V>,                Com::ReserveEmergent<size_t, 0, 1>>,
       EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::ReserveEmergent<size_t, 0>>,
       EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::ReserveEmergent<size_t, 1>>,
-      EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipStack<Com::StrongOwnership, 0, 1>>,
-      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipStack<Com::StrongOwnership, 0>>,
-      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipStack<Com::StrongOwnership, 1>>,
-      EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipDeepHeap<true, 0, 1>>,
-      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::OwnershipDeepHeap<true, 0>>,
-      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::OwnershipDeepHeap<true, 1>>,
+      //EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipStack<Com::StrongOwnership, 0, 1>>,
+      EnableComponentIf<CT::Sparse<K> /*and CT::Dense<V>*/,  Com::OwnershipStack<Com::StrongOwnership, 0>>,
+      EnableComponentIf</*CT::Dense<K> and*/ CT::Sparse<V>,  Com::OwnershipStack<Com::StrongOwnership, 1>>,
+      //EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipDeepHeap<true, 0, 1>>,
+      EnableComponentIf<CT::Sparse<K> /*and CT::Dense<V>*/,  Com::OwnershipDeepHeap<true, 0>>,
+      EnableComponentIf</*CT::Dense<K> and*/ CT::Sparse<V>,  Com::OwnershipDeepHeap<true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
@@ -547,6 +547,10 @@ namespace Langulus::Anyness
       constexpr THandlePair(auto&& key, auto&& val) noexcept {
          this->Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(key));
          this->Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(val));
+      }
+
+      constexpr ~THandlePair() noexcept {
+         this->Destroy();
       }
 
       /// Assignment is disabled                                              

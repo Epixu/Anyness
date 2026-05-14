@@ -145,7 +145,7 @@ namespace Langulus::Anyness::Component
                // We're allowed to reuse the memory.                    
                // Need to destroy and overwrite only the first element. 
                auto item = self.GetHandle();
-               item.DestroyElement();
+               item.template DestroyElement<SID>();
                if_available(item.template ResetEntries<SID>());
                //TODO clear the correspnding hash table spot?
 
@@ -164,7 +164,7 @@ namespace Langulus::Anyness::Component
                      item += 1;
                      const auto itemsEnd = self.GetHandle() + self.template GetCount<SID>();
                      while (item.GetRaw() != itemsEnd.GetRaw()) {
-                        item.DestroyElement();
+                        item.template DestroyElement<SID>();
                         ++item;
                      }
                   }
@@ -190,7 +190,7 @@ namespace Langulus::Anyness::Component
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 
-      ///   @attention handles one dimension at a time!                       
+      ///   @attention Works in one dimension at a time!                      
       template<Cid SID = ID, CT::Container C, CT::NoIntent IT> requires Relevant<SID>
       void EmplaceByCloningStandardPointers(this C& self, IT const& rhs) {
          /*static_assert(CT::ContainsOne<C>,
@@ -391,7 +391,7 @@ namespace Langulus::Anyness::Component
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Clone the 'rhs'.                                                    
       /// This is a more generic approach that is considerably slower.        
-      ///   @attention handles one dimension at a time!                       
+      ///   @attention Works in one dimension at a time!                      
       //TODO could benefit from static optimization                          
       template<Cid SID = ID, CT::Container C, CT::NoIntent IT> requires Relevant<SID>
       void EmplaceByCloningCustomPointers(this C& self, IT const& rhs) {
@@ -484,7 +484,7 @@ namespace Langulus::Anyness::Component
       ///   @attention Does not modify any container state.                   
       ///   @attention This overwrites previous handle without dereferencing  
       ///      it and without destroying anything.                            
-      ///   @attention Works at one dimension at a time!                      
+      ///   @attention Works in one dimension at a time!                      
       ///   @param intent constructor argument. If this container             
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the contained type.      
@@ -506,25 +506,13 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Cloned<I>) {
             // Clone a handle or element                                
-            /*if constexpr (CT::Handle<IT>) {
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
-               #else
-                  ThisCom::template EmplaceByCloningStandardPointers<SID>(rhs);
-               #endif
-            }
-            else {*/
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
-               #else
-                  ThisCom::template EmplaceByCloningStandardPointers<SID>(rhs);
-               #endif
-            //}
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               ThisCom::template EmplaceByCloningCustomPointers<SID>(rhs);
+            #else
+               ThisCom::template EmplaceByCloningStandardPointers<SID>(rhs);
+            #endif
          }
          else if constexpr (CT::Handle<IT>) {
-            //static_assert(DimensionMatch<C, IT>, "Dimension mismatch");
-            //static_assert(CT::NotPair<IT>, "Each dimension should be emplaced separately");
-
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership.   
@@ -619,9 +607,10 @@ namespace Langulus::Anyness::Component
       };
       
       /// Emplace a new default-constructed item at the first position.       
-      ///   @attention this overwrites previous handle without dereferencing  
+      ///   @attention This overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      ///   @attention doesn't modify count                                   
+      ///   @attention Doesn't modify count                                   
+      ///   @attention Works in one dimension at a time!                      
       template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C>
       requires Relevant<SID>
       void EmplaceDefault(this C& self) {
@@ -724,6 +713,7 @@ namespace Langulus::Anyness::Component
       /// Supports describe-construction and handles.                         
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
+      ///   @attention Works in one dimension at a time!                      
       template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C, class...A>
       requires Relevant<SID>
       void EmplaceConstruct(this C& self, A&&...arguments) {

@@ -135,15 +135,7 @@ namespace Langulus
       static constexpr bool   Empty = true;
       static constexpr size_t Count = 0;
       using First = void;
-
-      /*template<class...N>
-      static consteval auto Concat(Types<N...>&&) -> Types<N...>;
-      template<class N>
-      static consteval auto Concat(N&&) -> Types<N>;
-
-      template<class N>
-      using Cat = decltype(Concat(Fake<N&&>()));*/
-
+      using Reverse = Types<>;
       using Tuple = ::std::tuple<>;
       using TupleOptimized = compact_tuple<>;
 
@@ -163,6 +155,7 @@ namespace Langulus
       static constexpr bool Empty = false;
       static constexpr size_t Count = 1;
       using First = T;
+      using Reverse = Types<T>;
 
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ lambda.template operator()<T>(); },
@@ -252,14 +245,6 @@ namespace Langulus
          return {lambda.template operator()<T>()};
       }
 
-      /*template<class...N>
-      static consteval auto Concat(Types<N...>&&) -> Types<T, N...>;
-      template<class N>
-      static consteval auto Concat(N&&) -> Types<T, N>;
-
-      template<class N>
-      using Cat = decltype(Concat(Fake<N&&>()));*/
-
       template<class...N>
       consteval auto operator + (Types<N...>&&) const -> Types<T, N...> { return {}; }
 
@@ -278,6 +263,7 @@ namespace Langulus
       static constexpr size_t Count = sizeof...(TN) + 2;
       using First = T1;
       using Second = T2;
+      using Reverse = decltype(Fake<typename Types<TN...>::Reverse>().operator + (Fake<Types<T2, T1>>()));
 
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ lambda.template operator()<T1>(); },
@@ -416,14 +402,6 @@ namespace Langulus
             lambda.template operator()<TN>()...
          };
       }
-
-      /*template<class...N>
-      static consteval auto Concat(Types<N...>&&) -> Types<T1, T2, TN..., N...>;
-      template<class N>
-      static consteval auto Concat(N&&) -> Types<T1, T2, TN..., N>;
-
-      template<class N>
-      using Cat = decltype(Concat(Fake<N&&>()));*/
 
       template<class...N>
       consteval auto operator + (Types<N...>&&) const -> Types<T1, T2, TN..., N...> { return {}; }

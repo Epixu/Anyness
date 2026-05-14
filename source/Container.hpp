@@ -259,13 +259,13 @@ namespace Langulus::Anyness
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with StackRequest(s) from components.                          
-      typename decltype(Inner::DefineStack<COMPONENTS..., DecideStateComponent<COMPONENTS...>>())::TupleOptimized mStack;
+      typename decltype(Inner::DefineStack(ComponentList{}))::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
       ///   @attention always returns a reference to valid memory             
       template<class COM, class SELF>
       constexpr auto& AccessStack(this SELF&& self) noexcept {
-         constexpr size_t IDX = Inner::GetStackOffset<COM, COMPONENTS..., DecideStateComponent<COMPONENTS...>>();
+         constexpr size_t IDX = Inner::GetStackOffset<COM>(ComponentList{});
          auto& result = ::Langulus::get<IDX>(self.mStack).value;
          using ConstOrNot = LglsMutIf(SELF, decltype(result));
          return const_cast<ConstOrNot>(result);
@@ -279,7 +279,7 @@ namespace Langulus::Anyness
       ///      are cached only when containers aren't disowned, thus fallback 
       ///      to emergent behavior - being recomputed on demand.             
       template<CT::Component COM, CT::Container SELF>
-      constexpr auto* AccessHeap(this SELF&& self) noexcept {
+      constexpr auto* AccessHeap(this SELF&& self) assumptious {
          static_assert(requires { typename COM::HeapRequest; },
             "Component doesn't have data on the heap");
 
@@ -424,9 +424,21 @@ namespace Langulus::Anyness
             }); \
          }
 
+      /// Propagates method, by calling it in all components where it exists, 
+      /// as long as the ID is satisfied.                                     
+      /// Entirely disables the method for the container, if not found.       
+      /// Macro is #undeffed at the end of this container to avoid pollution. 
+      #define unify_compose_relevant(name) \
+         template<Cid SID = 0> \
+         constexpr void name(this auto&& self) noexcept if_inherits(template name<SID>()) { \
+            ComponentList::ForEach([&]<class C>{ \
+               if_available(self.C::template name<SID>()); \
+            }); \
+         }
+
       unify_compose(ConstructDefault);
-      unify_compose(ConstructHeapRequest);
-      
+      unify_compose_relevant(ConstructHeapRequest);
+
       /// Call ConstructFrom in all components that implement it.             
       /// Fallback to ConstructDefault otherwise.                             
       template<CT::Container SELF, CT::Container FROM>
@@ -440,10 +452,11 @@ namespace Langulus::Anyness
          });
       }
 
-      /// Call Destroy in all components that implement it                    
+      /// Call Destroy in all components that implement it.                   
+      /// Always do it in reverse order!                                      
       constexpr void Destroy(this auto& self) {
          if not consteval {
-            ComponentList::ForEach([&]<class C> {
+            ComponentList::Reverse::ForEach([&]<class C> {
                if_available(self.C::Destroy());
             });
          }
@@ -464,7 +477,7 @@ namespace Langulus::Anyness
       template<bool FORCE_DESTROY = true, Cid ID = 0>
       void DestroyElementDeep(this auto&& self) noexcept
       if_inherits(template DestroyElementDeep<FORCE_DESTROY, ID>()) {
-         ComponentList::ForEachConstOr([&]<class C> {
+         ComponentList::Reverse::ForEachConstOr([&]<class C> {
             if constexpr (requires { self.C::template DestroyElementDeep<FORCE_DESTROY, ID>(); }) {
                self.C::template DestroyElementDeep<FORCE_DESTROY, ID>();
                return true;
@@ -472,12 +485,28 @@ namespace Langulus::Anyness
             else return No {};
          });
       }
-
-      template<bool FORCE_DESTROY = true>
-      void DestroyElement(this auto& self) noexcept
-      if_inherits(template DestroyElement<FORCE_DESTROY>()) {
-         ComponentList::ForEach([&]<class C> {
-            if_available(self.C::template DestroyElement<FORCE_DESTROY>());
+      
+      template<bool FORCE_DESTROY = true, Cid ID = 0>
+      void DestroyElement(this auto& self) assumptious
+      if_inherits(template DestroyElement<FORCE_DESTROY, ID>()) {
+         ComponentList::Reverse::ForEachConstOr([&]<class C> {
+            if constexpr (requires { self.C::template DestroyElement<FORCE_DESTROY, ID>(); }) {
+               self.C::template DestroyElement<FORCE_DESTROY, ID>();
+               return true;
+            }
+            else return No {};
+         });
+      }
+      
+      template<bool FORCE_DESTROY = true, Cid ID = 0>
+      void DestroyAllElements(this auto& self) assumptious
+      if_inherits(template DestroyAllElements<FORCE_DESTROY, ID>()) {
+         ComponentList::Reverse::ForEachConstOr([&]<class C> {
+            if constexpr (requires { self.C::template DestroyAllElements<FORCE_DESTROY, ID>(); }) {
+               self.C::template DestroyAllElements<FORCE_DESTROY, ID>();
+               return true;
+            }
+            else return No {};
          });
       }
       
@@ -780,13 +809,20 @@ namespace Langulus::Anyness
 
    protected:
       unify_getter(GetHeapInner);
+      unify_getter(GetAllocationInner);
       unify_getter(GetEntriesInner);
       unify_getter(GetRawVoid);
       unify_setter(SetReservedInner);
       unify_setter(SetHeapInner);
+      unify_setter(SetAllocationInner);
+      unify_setter(AllocateFresh);
+      unify_setter(AllocateLess);
+      unify_setter(AllocateMore);
+      unify_getter_argumented(RequestHeap);
 
       #undef if_inherits
       #undef unify_compose
+      #undef unify_compose_relevant
       #undef unify_getter
       #undef unify_getter_templated
       #undef unify_getter_argumented
