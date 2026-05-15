@@ -206,11 +206,10 @@ namespace Langulus::Anyness::Component
 
          C::ComponentList::ForEach([&]<class OWNER>{
             if constexpr (requires { self.OWNER::GetAllocationInner(); }) {
-               using CommonIds = typename Id::template Intersect<OWNER::Id>;
+               using CommonIds = typename Id::template Intersect<typename OWNER::Id>;
                if constexpr (not CommonIds::Empty) {
-                  using SID = FirstOf<CommonIds>;
-                  auto& com = self.OWNER;
-                  auto& a = com.GetAllocationInner();
+                  constexpr Cid SID = CommonIds::First;
+                  auto& a = self.OWNER::GetAllocationInner();
                   if (not a) {
                      // Nothing was allocated                           
                      self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
@@ -223,7 +222,7 @@ namespace Langulus::Anyness::Component
                      // We don't deallocate the memory. We can reuse it.
                      // But we have to destroy all shared elements.     
                      CommonIds::ForEach([&self]<Cid D> {
-                        self.template DestroyAllElements<D>();
+                        self.template DestroyAllElements<true, D>();
                      });
 
                      if constexpr (CT::ContainsMany<C>)
@@ -236,7 +235,7 @@ namespace Langulus::Anyness::Component
                   // afford to call any destructors. All we do is reset 
                   // this container and allocate a new block, which     
                   // will be exclusively ours.                          
-                  com.Free();
+                  self.OWNER::Free();
                   self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                }
             }

@@ -147,13 +147,12 @@ namespace Langulus::Anyness::Component
                   // destroy everything we initialized                  
                   while (n) {
                      Id::ForEach([&dst]<Cid D>{
-                        dst.template DestroyElement<D>();
+                        dst.template DestroyElement<true, D>();
                      });
                      --dst;
                      --n;
                   }
                }
-               //self.template PartialSuccess<ID>(n);
                ThisCom::PartialSuccess(n);
                throw;
             }
@@ -383,11 +382,10 @@ namespace Langulus::Anyness::Component
 
          if (self.template GetCount<SID>() > desiredReserve) {
             auto temp = self.SelectInner(desiredReserve);
-            temp.template DestroyAllElements<SID>();
+            temp.template DestroyAllElements<true, SID>();
             if_available(self.template SetCountInner<SID>(desiredReserve));
          }
 
-         //const auto request = self.template RequestHeap<SID>(desiredReserve);
          const auto request = ThisCom::RequestHeap(desiredReserve);
          if (request.mTotalBytes == al->GetSize())
             return;
