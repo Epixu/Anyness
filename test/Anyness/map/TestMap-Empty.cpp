@@ -258,6 +258,62 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
       static_assert(sizeof(T) <= sizeof(::std::unordered_map<E1, E2>));
    }
+   
+   GIVEN("Empty-constructed container, assigned (refer), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      T pack;
+      pack.Assign(*element1, *element2);
+   }
+
+   GIVEN("Empty-constructed container, assigned (refer using intent), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      T pack;
+      pack.Assign(Refer(*element1), Refer(*element2));
+   }
+
+   GIVEN("Empty-constructed container, assigned (copied), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      T pack;
+      pack.Assign(Copy(*element1), Copy(*element2));
+   }
+
+   GIVEN("Empty-constructed container, assigned (cloned), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      T pack;
+      pack.Assign(Clone(*element1), Clone(*element2));
+   }
+
+   GIVEN("Empty-constructed container, assigned (move), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      T pack;
+      pack.Assign(::std::move(*element1), ::std::move(*element2));
+   }
+
+   GIVEN("Empty-constructed container, assigned (move using intent), and then destroyed") {
+      ScopedE1 element1{555};
+      ScopedE2 element2{111};
+      T pack;
+      pack.Assign(Move(*element1), Move(*element2));
+   }
+
+   GIVEN("Empty-constructed container, assigned (abandon), and then destroyed") {
+      ScopedE1 element1{555};
+      ScopedE2 element2{111};
+      T pack;
+      pack.Assign(Abandon(*element1), Abandon(*element2));
+   }
+
+   GIVEN("Empty-constructed container, assigned (disown), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      T pack;
+      pack.Assign(Disown(*element1), Disown(*element2));
+   }
 
    GIVEN("Default-constructed container") {
       const ScopedE1 element1 {555};
