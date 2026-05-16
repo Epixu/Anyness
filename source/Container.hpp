@@ -768,12 +768,15 @@ namespace Langulus::Anyness
          });
       }*/
 
+      unify_getter(GetCount);
+      unify_getter(GetReserved);
       unify_getter(GetIndirections);
       unify_getter(GetStride);
       unify_getter(GetBytesize);
       unify_getter(GetAlignment);
       unify_getter(GetEntries);
       unify_getter(GetAllocation);
+      unify_getter(GetUses);
       unify_getter_argumented(Is);
       unify_getter_argumented(IsSame);
       unify_getter_argumented(IsExact);

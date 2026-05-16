@@ -64,14 +64,18 @@ namespace Langulus::Fractalloc
          return mReferences;
       }
       
-      /// Reference the entry 'c' times                                       
+      /// Reference the entry 'c' times. Use negative 'c' to dereference.     
       ///   @param c the number of references to add                          
-      void AddRef(int32_t c) noexcept {
+      void AddRef(int32_t c) assumptious {
+         LglsAssumeDev(c > 0 or mReferences >= -c,
+            "Removing too many references");
+         LglsAssumeDev(c < 0 or mReferences > 0,
+            "Resurrecting a disused allocation");
          mReferences += c;
       }
       
       /// Get the user bytes                                                  
-      ///   @return the byte size of usable memory region                     
+      ///   @return the byte size of the usable client memory region          
       auto GetSize() const assumptious -> pot_t {
          LglsAssumeDev(mReferences != 0,
             "Can't get size if entry isn't in use");

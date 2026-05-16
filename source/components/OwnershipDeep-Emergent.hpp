@@ -470,7 +470,7 @@ namespace Langulus::Anyness::Component
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
          if (T.IsSparse()) {
-            auto entries = self.template GetEntriesInner<SID>();
+            auto entries = self.template GetEntriesInner<SID>(); //TODO this needs to be GetEntries and it should account for entries for different types being in the same heap allocation
             if (not entries)
                return;
             
@@ -516,11 +516,14 @@ namespace Langulus::Anyness::Component
                // Deallocate or dereference                             
                if (*entries) {
                   auto& mutable_entries = DecvqAllCast(*entries);
-                  if (1 == (*entries)->GetUses())
+                  if (1 == (*entries)->GetUses()) {
                      Allocator::Deallocate(mutable_entries);
-                  else
+                     //mutable_entries = nullptr; //TODO allowed, but probably not necessary?
+                  }
+                  else {
                      mutable_entries->AddRef(-1);
-                  //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
+                     //mutable_entries = nullptr; //not allowed!
+                  }
                }
 
                // Move to next indirection                              
@@ -585,9 +588,6 @@ namespace Langulus::Anyness::Component
          const auto entries = self.template GetEntriesInner<SID>();
 
          if constexpr (CT::Handle<I>) {
-            //static_assert(not CT::Pair<I>,
-            //   "You have to emplace each dimension separately");
-
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
             using H = TypeOf<I>;

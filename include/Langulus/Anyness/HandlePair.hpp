@@ -313,6 +313,8 @@ namespace Langulus::Anyness
 
       static constexpr bool Emergent      = true;
       static constexpr bool HeapCanBeNull = true;
+      static constexpr uint Owned         = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
+      static constexpr bool DeeplyOwned   = CT::Sparse<K> or CT::Sparse<V>;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -398,6 +400,7 @@ namespace Langulus::Anyness
       using ValHandle = THandle<V>;
 
       static constexpr bool TypeErased        = false;
+      static constexpr uint Owned             = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
       static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
       static constexpr bool HeapCanBeNull     = true;
@@ -494,20 +497,17 @@ namespace Langulus::Anyness
    struct THandlePair<THandle<K>, THandle<V>> : Com::Container<
       Com::TypedStatic<DMeta, Deref<K>, 0>,
       Com::TypedStatic<DMeta, Deref<V>, 1>,
-      EnableComponentIf<CT::Dense<K>, Com::Stack<K, 0>>,
-      EnableComponentIf<CT::Dense<V>, Com::Stack<V, 1>>,
+      EnableComponentIf<CT::Dense<K>,  Com::Stack<K, 0>>,
+      EnableComponentIf<CT::Dense<V>,  Com::Stack<V, 1>>,
       EnableComponentIf<CT::Sparse<K>, Com::HeapMovable<0, 0, HeapEntry<0, K*>>>,
       EnableComponentIf<CT::Sparse<V>, Com::HeapMovable<0, 0, HeapEntry<1, V*>>>,
       Com::CountStatic<1u, 0, 1>,
-      EnableComponentIf<CT::Sparse<K, V>,                Com::ReserveEmergent<size_t, 0, 1>>,
-      EnableComponentIf<CT::Sparse<K> and CT::Dense<V>,  Com::ReserveEmergent<size_t, 0>>,
-      EnableComponentIf<CT::Dense<K> and CT::Sparse<V>,  Com::ReserveEmergent<size_t, 1>>,
-      //EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipStack<Com::StrongOwnership, 0, 1>>,
-      EnableComponentIf<CT::Sparse<K> /*and CT::Dense<V>*/,  Com::OwnershipStack<Com::StrongOwnership, 0>>,
-      EnableComponentIf</*CT::Dense<K> and*/ CT::Sparse<V>,  Com::OwnershipStack<Com::StrongOwnership, 1>>,
-      //EnableComponentIf<CT::Sparse<K, V>,                Com::OwnershipDeepHeap<true, 0, 1>>,
-      EnableComponentIf<CT::Sparse<K> /*and CT::Dense<V>*/,  Com::OwnershipDeepHeap<true, 0>>,
-      EnableComponentIf</*CT::Dense<K> and*/ CT::Sparse<V>,  Com::OwnershipDeepHeap<true, 1>>,
+      EnableComponentIf<CT::Sparse<K>, Com::ReserveEmergent<size_t, 0>>,
+      EnableComponentIf<CT::Sparse<V>, Com::ReserveEmergent<size_t, 1>>,
+      EnableComponentIf<CT::Sparse<K>, Com::OwnershipStack<Com::StrongOwnership, 0>>,
+      EnableComponentIf<CT::Sparse<V>, Com::OwnershipStack<Com::StrongOwnership, 1>>,
+      EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepHeap<true, 0>>,
+      EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepHeap<true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
@@ -525,6 +525,7 @@ namespace Langulus::Anyness
       using ValHandle = Tif<CT::Sparse<V>, THandle<V&>, THandleEmergent<V&>>;
 
       static constexpr bool TypeErased        = false;
+      static constexpr uint Owned             = CT::Sparse<K> or CT::Sparse<V> ? Com::StrongOwnership : 0;
       static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
       static constexpr bool HeapCanBeNull     = DeeplyOwned;
@@ -558,13 +559,7 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair&& other) = delete;
 
       auto GetKey() noexcept -> KeyHandle {
-         /*if constexpr (CT::Sparse<K, V>) {
-            return THandle<K&> {
-               this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntries<0>()
-            };
-         }
-         else*/ if constexpr (CT::Sparse<K>) {
+         if constexpr (CT::Sparse<K>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
                this->Com::OwnershipDeepHeap<true, 0>::GetEntriesInner()
@@ -574,13 +569,7 @@ namespace Langulus::Anyness
       }
 
       auto GetVal() noexcept -> ValHandle {
-         /*if constexpr (CT::Sparse<K, V>) {
-            return THandle<V&> {
-               this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<true, 0, 1>::template GetEntries<1>()
-            };
-         }
-         else*/ if constexpr (CT::Sparse<V>) {
+         if constexpr (CT::Sparse<V>) {
             return THandle<V&> {
                this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
                this->Com::OwnershipDeepHeap<true, 1>::GetEntriesInner()
