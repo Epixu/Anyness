@@ -922,9 +922,9 @@ TEST_CASE_TEMPLATE("Testing DecvqAllCast", TestType
    , IncompleteType const* const
 ) {
    if constexpr (::std::is_bounded_array_v<TestType>)
-      static_assert(::std::same_as<decltype(DecvqAllCast(Fake<TestType>())), Deext<DecvqAll<TestType>>*>);
+      static_assert(::std::same_as<decltype(DecvqAllCast(LglsFake(TestType))), Deext<DecvqAll<TestType>>*>);
    else
-      static_assert(::std::same_as<decltype(DecvqAllCast(Fake<TestType>())), DecvqAll<TestType>>);
+      static_assert(::std::same_as<decltype(DecvqAllCast(LglsFake(TestType))), DecvqAll<TestType>>);
 }
 
 ///                                                                           

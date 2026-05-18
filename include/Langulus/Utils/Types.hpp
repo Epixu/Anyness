@@ -9,6 +9,11 @@
 #include "../Literal.hpp"
 #include "Tuple.hpp"
 
+namespace std
+{
+   template<class T>
+   concept is_not_void = !is_void_v<T>;
+}
 
 namespace Langulus::CTTI
 {
@@ -27,12 +32,6 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Typelist = Yes<>/No<>;` in T               
    template<class T>
    struct Typelist;
-}
-
-namespace Langulus
-{
-   template<class...T>
-   struct compact_tuple;
 }
 
 namespace Langulus::CT
@@ -146,17 +145,9 @@ namespace Langulus
       template<uint>
       using At = void;
 
-      static consteval auto GenerateTypes(auto&&) {
-         return Types<> {};
-      }
-
-      static consteval auto GenerateData(auto&&) {
-         return Tuple {};
-      }
-
-      static consteval auto GenerateDataOptimized(auto&&) {
-         return TupleOptimized {};
-      }
+      static consteval auto GenerateTypes(auto&&) { return Types<> {}; }
+      static consteval auto GenerateData(auto&&) { return Tuple {}; }
+      static consteval auto GenerateDataOptimized(auto&&) { return TupleOptimized {}; }
 
       template<class...N>
       consteval auto operator + (Types<N...>&&) const -> Types<N...> { return {}; }
@@ -190,53 +181,55 @@ namespace Langulus
       using TupleOptimized = compact_tuple<T>;
 
       static constexpr void ForEach(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<T>(); },
+         static_assert(requires{ LglsLamb(lambda,T); },
             "Provided argument is not a lambda of the form []<class>");
-         lambda.template operator()<T>();
+         LglsLamb(lambda, T);
       }
 
       static constexpr bool ForEachAnd(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda,T)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
-         return lambda.template operator()<T>();
+         return LglsLamb(lambda, T);
       }
 
       static constexpr bool ForEachOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda,T)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
-         return lambda.template operator()<T>();
+         return LglsLamb(lambda, T);
       }
 
       template<uint IDX = 0>
       static constexpr void ForEachIndexed(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<T,0>(); },
+         static_assert(requires{ LglsLamb(lambda,T,0); },
             "Provided argument is not a lambda of the form []<class,index>");
-         lambda.template operator()<T, IDX>();
+         LglsLamb(lambda, T, IDX);
       }
 
       template<uint IDX = 0>
       static constexpr bool ForEachIndexedAnd(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T,0>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda,T,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
-         return lambda.template operator()<T, IDX>();
+         return LglsLamb(lambda, T, IDX);
       }
 
       template<uint IDX = 0>
       static constexpr bool ForEachIndexedOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T,0>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda,T,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
-         return lambda.template operator()<T, IDX>();
+         return LglsLamb(lambda, T, IDX);
       }
 
       /// Just executes lambda with the contained type and returns its result 
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
-         return lambda.template operator()<T>();
+         static_assert(requires{ {LglsLamb(lambda, T)} -> ::std::is_not_void; },
+            "Provided argument is not a lambda of the form []<class> -> nonvoid");
+         return LglsLamb(lambda, T);
       }
 
       static constexpr auto Expand(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<T>(); },
+         static_assert(requires{ LglsLamb(lambda, T); },
             "Provided argument is not a lambda of the form []<class...>");
-         return lambda.template operator()<T>();
+         return LglsLamb(lambda, T);
       }
 
       template<uint I>
@@ -248,21 +241,21 @@ namespace Langulus
       ///      concatenated along if so                                       
       ///   @return a type list, containing the generated types               
       static consteval auto GenerateTypes(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
+         static_assert(requires{ {LglsLamb(lambda, T)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
-         return Types<decltype(lambda.template operator()<T>())> {};
+         return Types<decltype(LglsLamb(lambda, T))> {};
       }
 
       static constexpr auto GenerateData(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
+         static_assert(requires{ {LglsLamb(lambda, T)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
-         return Tuple {lambda.template operator()<T>()};
+         return Tuple {LglsLamb(lambda, T)};
       }
 
       static constexpr auto GenerateDataOptimized(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
+         static_assert(requires{ {LglsLamb(lambda, T)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
-         return TupleOptimized {lambda.template operator()<T>()};
+         return TupleOptimized {LglsLamb(lambda, T)};
       }
 
       template<class...N>
@@ -290,42 +283,46 @@ namespace Langulus
 
       using First          = T1;
       using Second         = T2;
-      using Reverse        = decltype(Fake<typename Types<TN...>::Reverse>().operator + (Fake<Types<T2, T1>>()));
+      using Reverse        = decltype(LglsFake(typename Types<TN...>::Reverse).operator + (LglsFake(Types<T2, T1>)));
       using Tuple          = ::std::tuple<T1, T2, TN...>;
       using TupleOptimized = compact_tuple<T1, T2, TN...>;
 
       static constexpr void ForEach(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<T1>(); },
+         static_assert(requires{ LglsLamb(lambda, T1); },
             "Provided argument is not a lambda of the form []<class>");
-          lambda.template operator()<T1>();
-          lambda.template operator()<T2>();
-         (lambda.template operator()<TN>(), ...);
+          LglsLamb(lambda, T1);
+          LglsLamb(lambda, T2);
+         (LglsLamb(lambda, TN), ...);
       }
 
       static constexpr bool ForEachAnd(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
-         return lambda.template operator()<T1>()
-            and lambda.template operator()<T2>()
-            and (... and lambda.template operator()<TN>());
+         return LglsLamb(lambda, T1)
+            and LglsLamb(lambda, T2)
+            and (... and LglsLamb(lambda, TN));
       }
 
       static constexpr bool ForEachOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
-         return lambda.template operator()<T1>()
-             or lambda.template operator()<T2>()
-             or (... or lambda.template operator()<TN>());
+         return LglsLamb(lambda, T1)
+             or LglsLamb(lambda, T2)
+             or (... or LglsLamb(lambda, TN));
       }
 
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
-         decltype(auto) r1 = lambda.template operator()<T1>();
+         static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::is_not_void; },
+            "Lambda is not of the form []<class> -> nonvoid");
+         decltype(auto) r1 = LglsLamb(lambda, T1);
          if constexpr (not ::std::same_as<No, decltype(r1)>)
             return r1;
          else {
-            decltype(auto) r2 = lambda.template operator()<T2>();
+            static_assert(requires{ {LglsLamb(lambda, T2)} -> ::std::is_not_void; },
+               "Lambda is not of the form []<class> -> nonvoid");
+            decltype(auto) r2 = LglsLamb(lambda, T2);
             if constexpr (not ::std::same_as<No, decltype(r2)>)
                return r2;
             else
@@ -335,48 +332,48 @@ namespace Langulus
 
       template<uint IDX = 0>
       static constexpr void ForEachIndexed(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<T1,0>(); },
+         static_assert(requires{ LglsLamb(lambda,T1,0); },
             "Provided argument is not a lambda of the form []<class,index>");
-         lambda.template operator()<T1, IDX + 0>();
-         lambda.template operator()<T2, IDX + 1>();
+         LglsLamb(lambda, T1, IDX + 0);
+         LglsLamb(lambda, T2, IDX + 1);
          if constexpr (sizeof...(TN) > 0)
             Types<TN...>::template ForEachIndexed<IDX + 2>(LglsFwd(lambda));
       }
 
       template<uint IDX = 0>
       static constexpr bool ForEachIndexedAnd(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1,0>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda,T1,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
          if constexpr (sizeof...(TN) > 0) {
-            return lambda.template operator()<T1, IDX + 0>()
-               and lambda.template operator()<T2, IDX + 1>()
+            return LglsLamb(lambda, T1, IDX + 0)
+               and LglsLamb(lambda, T2, IDX + 1)
                and Types<TN...>::template ForEachIndexedAnd<IDX + 2>(LglsFwd(lambda));
          }
          else {
-            return lambda.template operator()<T1, IDX + 0>()
-               and lambda.template operator()<T2, IDX + 1>();
+            return LglsLamb(lambda, T1, IDX + 0)
+               and LglsLamb(lambda, T2, IDX + 1);
          }
       }
 
       template<uint IDX = 0>
       static constexpr bool ForEachIndexedOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1,0>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda,T1,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
          if constexpr (sizeof...(TN) > 0) {
-            return lambda.template operator()<T1, IDX + 0>()
-                or lambda.template operator()<T2, IDX + 1>()
+            return LglsLamb(lambda, T1, IDX + 0)
+                or LglsLamb(lambda, T2, IDX + 1)
                 or Types<TN...>::template ForEachIndexedOr<IDX + 2>(LglsFwd(lambda));
          }
          else {
-            return lambda.template operator()<T1, IDX + 0>()
-                or lambda.template operator()<T2, IDX + 1>();
+            return LglsLamb(lambda, T1, IDX + 0)
+                or LglsLamb(lambda, T2, IDX + 1);
          }
       }
       
       static constexpr auto Expand(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<T1, T2, TN...>(); },
+         static_assert(requires{ LglsLamb(lambda, T1, T2, TN...); },
             "Provided argument is not a lambda of the form []<class...>");
-         return lambda.template operator()<T1, T2, TN...>();
+         return LglsLamb(lambda, T1, T2, TN...);
       }
 
    private:
@@ -398,32 +395,32 @@ namespace Langulus
       ///          concatenated along if so.                                  
       ///   @return a type list, containing the generated types               
       static consteval auto GenerateTypes(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
+         static_assert(requires{ {LglsLamb(lambda,T1)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return Types<
-            decltype(lambda.template operator()<T1>()),
-            decltype(lambda.template operator()<T2>()),
-            decltype(lambda.template operator()<TN>())...
+            decltype(LglsLamb(lambda, T1)),
+            decltype(LglsLamb(lambda, T2)),
+            decltype(LglsLamb(lambda, TN))...
          > {};
       }
 
       static constexpr auto GenerateData(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
+         static_assert(requires{ {LglsLamb(lambda, T1)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return Tuple {
-            lambda.template operator()<T1>(),
-            lambda.template operator()<T2>(),
-            lambda.template operator()<TN>()...
+            LglsLamb(lambda, T1),
+            LglsLamb(lambda, T2),
+            LglsLamb(lambda, TN)...
          };
       }
 
       static constexpr auto GenerateDataOptimized(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
+         static_assert(requires{ {LglsLamb(lambda, T1)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return TupleOptimized {
-            lambda.template operator()<T1>(),
-            lambda.template operator()<T2>(),
-            lambda.template operator()<TN>()...
+            LglsLamb(lambda, T1),
+            LglsLamb(lambda, T2),
+            LglsLamb(lambda, TN)...
          };
       }
 

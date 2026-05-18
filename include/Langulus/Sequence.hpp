@@ -38,7 +38,7 @@ namespace Langulus
       ///   });                                                               
       static constexpr void ForEach(auto&& lambda) noexcept_if(lambda) {
          [&]<Type...IDX>(ExpandedSequence<IDX...>) noexcept_if(lambda) {
-            (lambda.template operator() <IDX> (), ...);
+            (LglsLamb(lambda, IDX), ...);
          }(Expand);
       }
    };

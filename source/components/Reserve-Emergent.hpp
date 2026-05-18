@@ -50,7 +50,7 @@ namespace Langulus::Anyness::Component
                   "reserved elements beforehand."
                );
 
-               const size_t header = self.template GetHeapHeaderSize<SID>();
+               const size_t header = self.template DefineHeapHeader<SID>();
                return (al->GetSize() - header) / self.template GetStride<SID>();
             }
          }

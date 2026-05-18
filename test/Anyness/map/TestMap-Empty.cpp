@@ -10,7 +10,7 @@
 
 
 TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
-   , Types<Map, Any*, ScopedElement<Any*>, Any*, ScopedElement<Any*>>
+   , Types<TMap<Text,   Text>,   Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Map, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
@@ -21,6 +21,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
 
    , Types<Map, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
    , Types<Map, int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
+   , Types<Map, Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
    , Types<Map, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
    , Types<Map, char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
 
@@ -30,7 +31,6 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    , Types<Map, RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
    , Types<Map, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
 
-   , Types<TMap<Text,   Text>,   Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
    , Types<TMap<int,    int>,    int,    ScopedElement<int>,     int,    ScopedElement<int>>
    , Types<TMap<Any,    Any>,    Any,    ScopedElement<Any>,     Any,    ScopedElement<Any>>
    , Types<TMap<RT,     RT>,     RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
@@ -166,8 +166,8 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       static_assert(    CT::Comparable<T, Pair>);
       static_assert(    CT::Comparable<T, TPair<E1, E2>>);
 
-      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().begin())>);
-      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().end())>);
+      static_assert(::std::input_or_output_iterator<decltype(LglsFake(T).begin())>);
+      static_assert(::std::input_or_output_iterator<decltype(LglsFake(T).end())>);
 
       static_assert(::std::ranges::range<T>);
 

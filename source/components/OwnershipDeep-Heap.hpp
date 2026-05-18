@@ -52,7 +52,7 @@ namespace Langulus::Anyness::Component
       -> Allocation const* const* {
          if (self.template IsSparse<SID>() and self.template GetRaw<SID>()
          and self.template GetAllocation<SID>())
-            return ThisCom::GetEntriesInner();
+            return ThisCom::template GetEntriesInner<SID>();
          return nullptr;
       }
 
@@ -90,7 +90,7 @@ namespace Langulus::Anyness::Component
       ///   @attention may be uninitialized                                   
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetEntriesInner(this auto&& self) noexcept {
-         return self.template AccessHeap<OwnershipDeepHeap>();
+         return self.template AccessHeap<OwnershipDeepHeap, SID>();
       }
 
       /// This method is called upon allocation to nullify all entries in all 

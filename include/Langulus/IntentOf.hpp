@@ -1129,7 +1129,7 @@ namespace Langulus
       template<template<class> class S, class...T>
       concept IntentAssignable = NotVoid<T...> and Mutable<T...>
           and Intent<S<Decvq<T>>...> and requires (S<Decvq<T>>&&...a) {
-            {(IntentAssign<true>(Fake<Decvq<T>&>(), LglsFwd(a)), ...)} -> Supported;
+            {(IntentAssign<true>(LglsFake(Decvq<T>&), LglsFwd(a)), ...)} -> Supported;
           };
 
       /// Check if all TypeOf<S> are intent-assignable by S.                  
@@ -1138,7 +1138,7 @@ namespace Langulus
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept IntentAssignableAlt = Intent<S...> and requires (S&&...a) {
-            {(IntentAssign<true>(Fake<Decq<Deref<TypeOf<S>>>&>(), LglsFwd(a)), ...)} -> Supported;
+            {(IntentAssign<true>(LglsFake(Decq<Deref<TypeOf<S>>>&), LglsFwd(a)), ...)} -> Supported;
           };
 
       /// Check if all T are disown-assignable.                               

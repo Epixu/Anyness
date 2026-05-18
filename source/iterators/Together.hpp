@@ -33,8 +33,8 @@ namespace Langulus::Anyness
          "IterateTogether needs at least two containers");
 
    protected:
-      using Hs = ::std::tuple<Tif<REVERSE, decltype(Fake<C>().rbegin()),
-                                           decltype(Fake<C>().begin())>...>;
+      using Hs = ::std::tuple<Tif<REVERSE, decltype(LglsFake(C).rbegin()),
+                                           decltype(LglsFake(C).begin())>...>;
       using Cs = ::std::tuple<C&...>;
 
       Cs ranges;

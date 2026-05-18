@@ -32,8 +32,8 @@ namespace Langulus::Anyness
 
    protected:
       using Count = typename Deref<C>::CountType;
-      using H = Tif<REVERSE, decltype(Fake<C>().rbegin()),
-                             decltype(Fake<C>().begin())>;
+      using H = Tif<REVERSE, decltype(LglsFake(C).rbegin()),
+                             decltype(LglsFake(C).begin())>;
 
       static_assert(CT::NotReference<H>,
          "Iterator can't be a reference");

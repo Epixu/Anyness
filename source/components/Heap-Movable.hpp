@@ -32,6 +32,7 @@ namespace Langulus::Anyness::Component
    template<uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::HeapEntry ENTRY0, CT::HeapEntry...ENTRYN>
    struct HeapMovable : HeapReference<ENTRY0, ENTRYN...> {
       using Id = typename HeapReference<ENTRY0, ENTRYN...>::Id;
+      using HeapProvider = Id;
 
       static constexpr uint InitialSize  = INITIAL_SIZE;
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
@@ -409,59 +410,69 @@ namespace Langulus::Anyness::Component
 
       /// Remap footer requests onto the new reserve                          
       ///   @param newReserved the newly reserved number of elements          
+      ///   @attention works on one dimension at a time!                      
       template<Cid SID = Id::First, CT::Container C>
-      requires (C::CountHeapFooterRequests() > 0 and Relevant<SID>) //TODO prolly don't require SID, used only locally?
+      requires (C::template CountHeapFooterRequests<SID>() > 0 and Relevant<SID>)
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
-         const auto size     = self.template GetStride<SID>();
          const auto reserved = self.template GetReserved<SID>();
+         [[maybe_unused]]
          const auto indirect = self.template GetIndirections<SID>();
 
-         size_t from[C::CountHeapFooterRequests() + 1];
-         size_t to  [C::CountHeapFooterRequests() + 1];
+         size_t from[C::template CountHeapFooterRequests<SID>() + 1];
+         size_t to  [C::template CountHeapFooterRequests<SID>() + 1];
          size_t idx = 1;
          from[0] = to[0] = 0;
          
-         C::ComponentList::ForEach([&]<class COM>{
+         C::ComponentList::ForEach([&]<class COM> {
             if constexpr (requires { typename COM::HeapRequest; }) {
-               if constexpr (COM::Id::template Contains<SID>) {
-                  using R = typename COM::HeapRequest;
-                  if constexpr (requires { R::AllocatedPerIndirection; }) {
-                     if constexpr (requires { R::Type::AllocatedPerElement; }) {
-                        const size_t shift = sizeof(typename R::Type::Type) * indirect;
-                        from[idx] = from[idx-1] + shift * reserved;
-                        to  [idx] = to  [idx-1] + shift * newReserved;
-                     }
-                     else {
-                        const size_t shift = sizeof(typename R::Type) * indirect;
-                        from[idx] = from[idx-1] + shift;
-                        to  [idx] = to  [idx-1] + shift;
-                     }
-                  
-                     ++idx;
-                  }
-                  else if constexpr (requires { R::AllocatedPerElement; }) {
-                     size_t shift;
-                     if constexpr (requires { R::Type::AllocatedPerIndirection; })
-                        shift = sizeof(typename R::Type::Type) * indirect;
-                     else
-                        shift = sizeof(typename R::Type);
-                  
+               using R = typename COM::HeapRequest;
+               if constexpr (IsRequestModifier<R>
+               and COM::Id::template Contains<SID>) {
+                  size_t shift = sizeof(TypeOf<R>);
+                  if constexpr (R::AllocatedPerIndirection)
+                     shift *= indirect;
+
+                  if constexpr (R::AllocatedPerElement) {
                      from[idx] = from[idx-1] + shift * reserved;
                      to  [idx] = to  [idx-1] + shift * newReserved;
-
-                     ++idx;
                   }
+                  else {
+                     from[idx] = from[idx-1] + shift;
+                     to  [idx] = to  [idx-1] + shift;
+                  }
+
+                  ++idx;
                }
             }            
          });
 
-         const auto footer = self.template GetAllocation<SID>()->GetBlockStart()
-                           + self.template GetHeapHeaderSize<SID>();
-         const auto to_footer = footer + newReserved * size;
-         const auto from_footer = footer + reserved * size;
+         // Calculate the new destination                               
+         auto to_footer = self.template GetRawAs<uint8_t, Id::First>();
+         Id::ForEachConstOr([&]<Cid i>{
+            if constexpr (CT::TypeErased<C>) {
+               const auto T = self.template GetType<i>();
+               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               to_footer = Align(to_footer, T.GetAlignment());
+               to_footer += newReserved * T.GetSize();
+            }
+            else {
+               using T = TypeOf<C, i>;
+               to_footer = Align(to_footer, alignof(T));
+               to_footer += newReserved * sizeof(T);
+            }
+
+            if constexpr (i == SID)
+               return true;
+            else {
+               to_footer += self.template DefineHeapFooter<i>(newReserved);
+               return No {};
+            }
+         });
+
+         const auto size = self.template GetStride<SID>();
+         const auto from_footer = self.template GetRawAs<uint8_t, SID>() + reserved * size;
 
          --idx;
-
          if (newReserved > reserved) {
             // When newReserved is larger than reserved, stuff has to   
             // move left to right, so it must be done in reverse so that

@@ -31,6 +31,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
    using TT = TypeOf<T>;
    using ScopedE = typename TestType::Second;
 
+   static_assert(T::CountHeapProviders() == 1);
    static_assert(    CT::HeapAllocated<T>);
    static_assert(not CT::Multiheap<T>);
    static_assert(    CT::StronglyOwned<T>);

@@ -87,7 +87,7 @@ namespace Langulus::Anyness::Component
             const auto heap     = ThisCom::template GetRawAs<uint8_t, SID - 1>();
             const auto reserved = self.template GetReserved<SID - 1>();
             const auto size     = self.template GetStride<SID - 1>();
-            const auto footer   = self.template GetHeapFooterSize<SID - 1>(reserved);
+            const auto footer   = self.template DefineHeapFooter<SID - 1>(reserved);
             const auto align    = self.template GetAlignment<SID>();
             return reinterpret_cast<Tcvq>(
                Align(heap + reserved * size + footer, align)
@@ -713,14 +713,14 @@ namespace Langulus::Anyness::Component
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       auto RequestHeap(this C const& self, size_t reserve) assumptious -> Request {
          Request result;
-         result.mHeaderBytes = self.template GetHeapHeaderSize<Id::First>();
+         result.mHeaderBytes = self.template DefineHeapHeader<Id::First>();
          size_t total = result.mHeaderBytes;
 
          if constexpr (C::template CountHeapFooterRequests<Id::First>()) {
             // When there are footer requests (heap requests that       
             // depend on count & indirections), we aren't allowed to    
             // change the requested reserve to avoid heap corruptions.  
-            total += self.template GetHeapFooterSize<Id::First>(reserve);
+            total += self.template DefineHeapFooter<Id::First>(reserve);
 
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime     
@@ -757,18 +757,16 @@ namespace Langulus::Anyness::Component
          }
 
          // Add space for any additional dimensions, with alignment     
-         Values<ENTRYN::Id...>::ForEach([&]<auto i>{
-            total += self.template GetHeapFooterSize<i>(reserve);
+         Values<ENTRYN::Id...>::ForEach([&]<Cid i>{
+            total += self.template DefineHeapFooter<i>(reserve);
 
             if constexpr (CT::TypeErased<C>) {
-               // Check for reflected minimal allocation at runtime     
                const auto T = self.template GetType<i>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                total = Align(total, T.GetAlignment());
                total += reserve * T.GetSize();
             }
             else {
-               // Check for reflected minimal allocation at compile-time
                using T = TypeOf<C, i>;
                total = Align(total, alignof(T));
                total += reserve * sizeof(T);

@@ -114,7 +114,7 @@ namespace Langulus::Anyness::Component
          /*if (self.template IsEmpty<SID>())
             return;*/
 
-         using H = Decay<decltype(Fake<DecideHandle<C>>().template PickDimension<SID>())>;
+         using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Referencing a type-erased element                        

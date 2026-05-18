@@ -49,7 +49,7 @@ namespace Langulus::Anyness::Component
          else if (self.template GetUses<SID>() == 0)
             return ThisCom::HashRecompute();
 
-         const auto heap = self.template AccessHeap<HashHeap>();
+         const auto heap = self.template AccessHeap<HashHeap, SID>();
          LglsAssumeDevAndOptimize(heap, "Invalid heap");
          if (not *heap)
             const_cast<H&>(*heap) = ThisCom::HashRecompute();
@@ -68,7 +68,7 @@ namespace Langulus::Anyness::Component
          else if (self.template GetUses<SID>() == 0)
             return H {0};
 
-         const auto heap = self.template AccessHeap<HashHeap>();
+         const auto heap = self.template AccessHeap<HashHeap, SID>();
          return heap ? *heap : H {0};
       }
       
@@ -79,7 +79,7 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>() or self.template GetUses<SID>() == 0)
             return;
 
-         const auto heap = self.template AccessHeap<HashHeap>();
+         const auto heap = self.template AccessHeap<HashHeap, SID>();
          LglsAssumeDev(heap, "Invalid heap");
          const_cast<H&>(*heap) = h;
       }

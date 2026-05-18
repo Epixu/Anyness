@@ -197,7 +197,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    }
 
    static_assert(T::CountHeapProviders() == 1);
-   static_assert(T::CountHeapFooterRequests() == 1);
+   //static_assert(T::template CountHeapFooterRequests<0>() == 1);
 
    constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
    

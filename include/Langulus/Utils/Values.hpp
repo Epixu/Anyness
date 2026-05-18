@@ -80,30 +80,27 @@ namespace Langulus
       consteval auto operator + (Values<N...>&&) const -> Values<E1, N...> { return {}; }
 
       static constexpr void ForEach(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<E1>(); },
+         static_assert(requires{ LglsLamb(lambda, E1); },
             "Provided argument is not a lambda of the form []<auto>");
-          lambda.template operator()<E1>();
+          LglsLamb(lambda, E1);
       }
 
       static constexpr bool ForEachAnd(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<E1>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
-         return lambda.template operator()<E1>();
+         return LglsLamb(lambda, E1);
       }
 
       static constexpr bool ForEachOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<E1>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
-         return lambda.template operator()<E1>();
+         return LglsLamb(lambda, E1);
       }
 
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
-         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<E1>())>)
-            return lambda.template operator()<E1>();
-         else
-            return No {};
+         return LglsLamb(lambda, E1);
       }
 
       template<class OTHER>
@@ -157,40 +154,42 @@ namespace Langulus
       consteval auto operator + (Values<N...>&&) const -> Values<E1, E2, EN..., N...> { return {}; }
 
       static constexpr void ForEach(auto&& lambda) {
-         static_assert(requires{ lambda.template operator()<E1>(); },
+         static_assert(requires{ LglsLamb(lambda, E1); },
             "Provided argument is not a lambda of the form []<auto>");
-          lambda.template operator()<E1>();
-          lambda.template operator()<E2>();
-         (lambda.template operator()<EN>(), ...);
+          LglsLamb(lambda, E1);
+          LglsLamb(lambda, E2);
+         (LglsLamb(lambda, EN), ...);
       }
 
       static constexpr bool ForEachAnd(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<E1>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
-         return lambda.template operator()<E1>()
-            and lambda.template operator()<E2>()
-            and (... and lambda.template operator()<EN>());
+         return LglsLamb(lambda, E1)
+            and LglsLamb(lambda, E2)
+            and (... and LglsLamb(lambda, EN));
       }
 
       static constexpr bool ForEachOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<E1>()} -> ::std::convertible_to<bool>; },
+         static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
-         return lambda.template operator()<E1>()
-             or lambda.template operator()<E2>()
-             or (... or lambda.template operator()<EN>());
+         return LglsLamb(lambda, E1)
+             or LglsLamb(lambda, E2)
+             or (... or LglsLamb(lambda, EN));
       }
 
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
-         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<E1>())>)
-            return lambda.template operator()<E1>();
-         else if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<E2>())>)
-            return lambda.template operator()<E2>();
-         else if constexpr (sizeof...(EN))
-            return Values<EN...>::ForEachConstOr(lambda);
-         else
-            return No {};
+         decltype(auto) r1 = LglsLamb(lambda, E1);
+         if constexpr (not ::std::same_as<No, decltype(r1)>)
+            return r1;
+         else {
+            decltype(auto) r2 = LglsLamb(lambda, E2);
+            if constexpr (not ::std::same_as<No, decltype(r2)>)
+               return r2;
+            else
+               return Values<EN...>::ForEachConstOr(LglsFwd(lambda));
+         }
       }
 
       template<class OTHER>

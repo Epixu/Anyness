@@ -156,8 +156,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(    CT::Comparable<T, T>);
       static_assert(    CT::Comparable<T, E>);
 
-      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().begin())>);
-      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().end())>);
+      static_assert(::std::input_or_output_iterator<decltype(LglsFake(T).begin())>);
+      static_assert(::std::input_or_output_iterator<decltype(LglsFake(T).end())>);
 
       static_assert(::std::ranges::range<T>);
 

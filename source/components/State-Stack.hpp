@@ -139,6 +139,7 @@ namespace Langulus::Anyness::Component
                   return No {};
                }
             }
+            else return No {};
          });
          return r;
       }

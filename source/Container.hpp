@@ -183,6 +183,17 @@ namespace Langulus::Anyness
       static constexpr bool HasComponent
          = AkinAsOneOf<C, COMPONENTS..., DecideStateComponent<COMPONENTS...>>;
 
+      /// Get the number of heap providers (all dimensions)                   
+      /// Needs to be public, because it's used in concept checks.            
+      static consteval size_t CountHeapProviders() {
+         size_t count = 0;
+         ComponentList::ForEach([&count]<class C> {
+            if constexpr (requires { typename C::HeapProvider; })
+               ++count;
+         });
+         return count;
+      }
+
    protected:
       LglsComIterationOperators(friend);
       LglsComTypedStack(friend);
@@ -235,18 +246,8 @@ namespace Langulus::Anyness
       /// the destructor relies on properly deducing 'this'.                  
       constexpr ~Container() noexcept = default;
       
-      /// Get the number of heap providers (all dimensions)                   
-      static consteval size_t CountHeapProviders() {
-         size_t count = 0;
-         ComponentList::ForEach([&count]<class C> {
-            if constexpr (requires { typename C::HeapProvider; })
-               ++count;
-         });
-         return count;
-      }
-
       /// Get the number of heap requests in the footer for chosen heap ID    
-      template<Cid SID = 0>
+      template<Cid SID>
       static consteval size_t CountHeapFooterRequests() {
          size_t count = 0;
          ComponentList::ForEach([&count]<class C> {
@@ -304,9 +305,10 @@ namespace Langulus::Anyness
 
       /// Go through all relevant components for the dimension 'SID' and      
       /// accumulate their header heap requests into a byte amount.           
-      ///   @return the size of the heap header for the dimension, in bytes   
-      ///   @attention the size includes alignment to the first relevant      
-      ///      contained type.                                                
+      ///   @return The size of the heap header for the dimension, in bytes.  
+      ///      The size includes alignment to the first relevant contained    
+      ///      type. The header bytes are located relative to:                
+      ///         GetAllocation<SID>()->GetBlockStart()                       
       template<Cid SID>
       constexpr size_t DefineHeapHeader(this auto const& self) assumptious {
          using PROVIDER = typename decltype(FindProvider<SID>())::First;
@@ -335,9 +337,8 @@ namespace Langulus::Anyness
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the byte offset in the header   
       /// for the particular dimension 'SID'.                                 
-      ///   @return the header offset, where PICK's data resides              
-      ///   @attention the returned offset is relative to                     
-      ///      GetAllocation<SID>()->GetBlockStart()                          
+      ///   @return The header offset, where PICK's data resides. The offset  
+      ///      is relative to GetAllocation<SID>()->GetBlockStart()           
       template<class PICK, Cid SID>
       static consteval size_t GetHeapHeaderOffset() {
          static_assert(requires { typename PICK::HeapRequest; },
@@ -354,7 +355,7 @@ namespace Langulus::Anyness
          }
          
          size_t offset = 0;
-         ComponentList::ForEachOr([&offset]<class C> {
+         ComponentList::ForEachConstOr([&offset]<class C> {
             if constexpr (CT::DerivedFrom<C, PICK>) {
                // Target component reached, but there might be          
                // dimensional offset to consider.                       
@@ -399,10 +400,13 @@ namespace Langulus::Anyness
       /// for additional footer size when allocating.                         
       ///   @attention assumes relevant type components have been initialized 
       ///      prior to calling this function.                                
-      ///   @param count footer can depend on the amount of elements          
-      ///   @return the size of the heap footer for chosen dimension, in bytes
+      ///   @param count footer can depend on a new reserved amount           
+      ///   @return The size of the heap footer for chosen dimension in bytes.
+      ///      The footer starts at GetRawReserveEnd<SID>().                  
       template<Cid SID>
-      constexpr size_t DefineHeapFooter(this auto const& self, [[maybe_unused]] const size_t count) noexcept {
+      constexpr size_t DefineHeapFooter(
+         this auto const& self, [[maybe_unused]] const size_t count
+      ) noexcept {
          size_t bytesize = 0;
          const size_t indirects = self.template GetIndirections<SID>();
          ComponentList::ForEach([&bytesize, &indirects, &count]<class C> {
@@ -411,11 +415,11 @@ namespace Langulus::Anyness
                if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
                   // Multiply only by the number of dimensions          
                   // that are shared with the relevant provider.        
-                  using PROVIDER  = typename decltype(FindProvider<SID>())::First;
-                  using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
-                  constexpr size_t intersects = INTERSECT::Count;
+                  //using PROVIDER  = typename decltype(FindProvider<SID>())::First;
+                  //using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
+                  //constexpr size_t intersects = INTERSECT::Count;
                   bytesize += sizeof(TypeOf<R>)
-                     * (R::AllocatedPerDimension   ? intersects : 1)
+                     //* (R::AllocatedPerDimension   ? intersects : 1)
                      * (R::AllocatedPerElement     ? count      : 1)
                      * (R::AllocatedPerIndirection ? indirects  : 1);
                }
@@ -429,27 +433,28 @@ namespace Langulus::Anyness
       /// for a particular dimension 'SID'.                                   
       ///   @param count heap requests can depend on the amount of elements   
       ///   @return the heap byte offset, where PICK's data resides           
-      ///   @attention the returned offset is relative to                     
-      ///      GetRawReserveEnd<SID>()                                        
+      ///   @attention the offset, relative to GetRawReserveEnd<SID>()        
       template<class PICK, Cid SID>
-      constexpr size_t GetHeapFooterOffset(this auto const& self, [[maybe_unused]] const size_t count) noexcept {
+      constexpr size_t GetHeapFooterOffset(
+         this auto const& self, [[maybe_unused]] const size_t count
+      ) noexcept {
          static_assert(requires { typename PICK::HeapRequest; },
             "Component data is not on the heap");
          static_assert(PICK::Id::template Contains<SID>,
             "The PICK must share the provided ID");
 
-         using PROVIDER = typename decltype(FindProvider<SID>())::First;
+         //using PROVIDER = typename decltype(FindProvider<SID>())::First;
          using PICK_R   = typename PICK::HeapRequest;
          static_assert(IsFooterRequest<PICK_R>,
             "Not a footer request, use GetHeapHeaderOffset instead");
 
          size_t offset = 0;
          const size_t indirects = self.template GetIndirections<SID>();
-         ComponentList::ForEachOr([&offset, &indirects, &count]<class C> {
+         ComponentList::ForEachConstOr([&offset, &indirects, &count]<class C> {
             if constexpr (CT::DerivedFrom<C, PICK>){
                // Target component reached, but there might be          
                // dimensional offset to consider.                       
-               using R = typename C::HeapRequest;
+               /*using R = typename C::HeapRequest;
                if constexpr (IsRequestModifier<R>) {
                   if constexpr(R::AllocatedPerDimension) {
                      using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
@@ -464,7 +469,7 @@ namespace Langulus::Anyness
                         }
                      });
                   }
-               }
+               }*/
                return true;
             }
             else if constexpr (requires { typename C::HeapRequest; }) {
@@ -472,10 +477,10 @@ namespace Langulus::Anyness
                if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
                   // Multiply only by the number of dimensions          
                   // that are shared with the relevant provider.        
-                  using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
-                  constexpr size_t intersects = INTERSECT::Count;
+                  //using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
+                  //constexpr size_t intersects = INTERSECT::Count;
                   offset += sizeof(TypeOf<R>)
-                     * (R::AllocatedPerDimension   ? intersects : 1)
+                     //* (R::AllocatedPerDimension   ? intersects : 1)
                      * (R::AllocatedPerElement     ? count      : 1)
                      * (R::AllocatedPerIndirection ? indirects  : 1);
                }
@@ -937,11 +942,10 @@ namespace Langulus::Anyness
          template<Cid ID = 0> \
          constexpr decltype(auto) name(this auto& self, auto&&...arguments) \
          if_inherits(template name<ID>(LglsFwd(arguments)...)) { \
-            ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
+            ComponentList::ForEachConstOr([&]<class C> { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
                   self.C::template name<ID>(LglsFwd(arguments)...); return 1; \
-               } \
-               else return No{}; \
+               } else return No{}; \
             }); \
          }
 
@@ -949,11 +953,10 @@ namespace Langulus::Anyness
          template<class ARG, Cid ID = 0> \
          constexpr decltype(auto) name(this auto& self) \
          if_inherits(template name<ARG, ID>()) { \
-            ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
+            ComponentList::ForEachConstOr([&]<class C> { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
                   self.C::template name<ARG, ID>(); return 1; \
-               } \
-               else return No{}; \
+               } else return No{}; \
             }); \
          }
 

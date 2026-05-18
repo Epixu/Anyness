@@ -77,7 +77,7 @@ namespace Langulus
    /// Or by specializing CTTI::DefineMembers<T>                              
    template<auto...M>
    struct Members : Types<
-      decltype(CT::Inner::MemberReflector(Fake<CT::Inner::Emballage<M>>(), M))...
+      decltype(CT::Inner::MemberReflector(LglsFake(CT::Inner::Emballage<M>), M))...
    > {};
 
    /// Get the reflected named members                                        

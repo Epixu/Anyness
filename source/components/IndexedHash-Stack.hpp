@@ -83,7 +83,7 @@ namespace Langulus::Anyness::Component
       /// This method is called upon allocation to nullify table              
       template<Cid SID = ID> requires Relevant<SID>
       constexpr void ConstructHeapRequest(this auto& self) noexcept {
-         ThisCom::SetHashTableInner(self.template AccessHeap<IndexedHashStack>());
+         ThisCom::SetHashTableInner(self.template AccessHeap<IndexedHashStack, SID>());
          ThisCom::ResetHashTable();
       }
 

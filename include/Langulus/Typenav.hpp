@@ -266,7 +266,7 @@ namespace Langulus
                   static_assert(requires(T t) { *t; },
                      "Custom pointer doesn't have unary operator*");
                   
-                  using deptr_once = Deref<decltype(*Fake<T>())>;
+                  using deptr_once = Deref<decltype(*LglsFake(T))>;
                   if constexpr (TIMES == 1)
                      return Types<deptr_once> {};
                   else
