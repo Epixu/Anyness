@@ -171,54 +171,118 @@ namespace Langulus::CT
 
 namespace Langulus::Anyness
 {
-   /// Used for requesting dynamic data from the heap in container components.
-   /// @important Requests with this modifier are positioned after elements   
-   ///   in order to avoid moving elements as header gets resized.            
-   template<class T>
-   struct PerElement {
-      static constexpr bool AllocatedPerElement = true;
-      using Type = T;
-   };
-
-   /// Used for requesting dynamic data from the heap in container components 
-   /// @important Requests with this modifier are positioned after elements   
-   ///   in order to avoid moving elements as header gets resized.            
-   template<class T>
-   struct PerIndirection {
-      static constexpr bool AllocatedPerIndirection = true;
-      using Type = T;
-   };
-
-   /// A helper structure for pairing heap components with type components    
-   ///   @tparam ID - the type component ID                                   
-   ///   @tparam POINTER_TYPE - associated heap pointer type - mainly a       
-   ///      customization point for packed pointer use.                       
-   template<Cid ID = 0, CT::Sparse POINTER_TYPE = void*>
-   struct HeapEntry {
-      static constexpr Cid Id = ID;
-      using T = POINTER_TYPE;
-   };
-
    enum class StateValue {
       Variable = 0,
       Enabled  = 1,
       Disabled = 2
    };
 
-   enum class StateUid {
-      Invalid,
-      Compressed,
-      Encrypted,
-      Future,
-      Past,
-      Or,
-      Sorted,
-      Tracked,
-      Typed
+   /// A helper structure for pairing heap components with type components    
+   ///   @tparam ID the type component ID                                     
+   ///   @tparam POINTER_TYPE associated heap pointer type - mainly a         
+   ///      customization point for packed pointer use.                       
+   template<Cid ID = 0, CT::Sparse POINTER_TYPE = void*>
+   struct HeapEntry {
+      using CTTI_ReflectAs = void;
+      static constexpr Cid Id = ID;
+      using T = POINTER_TYPE;
    };
 
    namespace Component
    {
+      enum class StateUid {
+         Invalid,
+         Compressed,
+         Encrypted,
+         Future,
+         Past,
+         Or,
+         Sorted,
+         Tracked,
+         Typed
+      };
+
+      template<class T>
+      concept IsRequestModifier = requires { T::AllocatedPerDimension;
+                                             T::AllocatedPerElement;
+                                             T::AllocatedPerIndirection; };
+      template<class T>
+      concept IsFooterRequest = IsRequestModifier<T>
+          and (T::AllocatedPerElement or T::AllocatedPerIndirection);
+
+      #define propagate_modifier(a) \
+         static constexpr bool a = [] { \
+            if constexpr (IsRequestModifier<T>) return T::a; \
+            else return false; \
+         }()
+
+      /// Makes requests take up more space, based on dimension count.        
+      ///   @attention Requests with this modifier are positioned after       
+      ///      elements __of the specific dimension__ in order to avoid moving
+      ///      elements when heap is resized. Data remains relative to the    
+      ///      heap origin for the particular dimension.                      
+      ///   @attention If there are no PerElement or PerIndirection modifiers,
+      ///      the data will be kept in the header, as number if dimensions   
+      ///      is known at compile-time.                                      
+      template<class T>
+      struct PerDimension {
+         using CTTI_ReflectAs = void;
+         using CTTI_Typed     = Tif<IsRequestModifier<T>, TypeOf<T>, T>;
+
+         static constexpr bool AllocatedPerDimension = true;
+         propagate_modifier(AllocatedPerElement);
+         propagate_modifier(AllocatedPerIndirection);
+      };
+
+      /// Makes requests take up more space, based on element count.          
+      ///   @attention Requests with this modifier are positioned after       
+      ///      elements __of the specific dimension__ in order to avoid moving
+      ///      elements when heap is resized. Data remains relative to the    
+      ///      heap origin for the particular dimension.                      
+      template<class T>
+      struct PerElement {
+         using CTTI_ReflectAs = void;
+         using CTTI_Typed     = Tif<IsRequestModifier<T>, TypeOf<T>, T>;
+
+         static_assert(not [] {
+            if constexpr (IsRequestModifier<T>) return T::AllocatedPerDimension;
+            else return false; } (),
+            "The proper order of these modifiers is: "
+            "PerDimension<PerElement<PerIndirection>>"
+         );
+
+         static constexpr bool AllocatedPerDimension = false;
+         static constexpr bool AllocatedPerElement   = true;
+         propagate_modifier(AllocatedPerIndirection);
+      };
+
+      /// Makes requests take up more space, based on type indirections.      
+      ///   @attention Requests with this modifier are positioned after       
+      ///      elements __of the specific dimension__ in order to avoid moving
+      ///      elements when heap is resized. Data remains relative to the    
+      ///      heap origin for the particular dimension.                      
+      template<class T>
+      struct PerIndirection {
+         using CTTI_ReflectAs = void;
+         using CTTI_Typed     = Tif<IsRequestModifier<T>, TypeOf<T>, T>;
+
+         static_assert(not [] {
+            if constexpr (IsRequestModifier<T>) return T::AllocatedPerDimension
+                                                    or T::AllocatedPerElement;
+            else return false; } (),
+            "The proper order of these modifiers is: "
+            "PerDimension<PerElement<PerIndirection>>"
+         );
+
+         static constexpr bool AllocatedPerDimension   = false;
+         static constexpr bool AllocatedPerElement     = false;
+         static constexpr bool AllocatedPerIndirection = true;
+      };
+
+      #undef propagate_modifier
+
+
+
       ///                                                                     
       ///   COMPONENT CATALOGUE                                               
       ///                                                                     
@@ -492,7 +556,6 @@ namespace Langulus::Anyness
 
    namespace Inner
    {
-      
       /// Validate all used components in a container are properly ordered,   
       /// of standard layout, and containing proper sequential provider IDs.  
       ///   @tparam ACC accumulated stack/heap provider IDs                   
@@ -515,7 +578,7 @@ namespace Langulus::Anyness
             if constexpr (requires { C1::StackProvider; }) {
                static_assert(C1::StackProvider == ACC,
                   "Invalid stack provider ID");
-               static_assert(not requires { C1::HeapProvider; },
+               static_assert(not requires { typename C1::HeapProvider; },
                   "Component can't be both a stack and a heap provider");
 
                if constexpr (sizeof...(CN) > 0)
@@ -523,14 +586,14 @@ namespace Langulus::Anyness
                else
                   return true;
             }
-            else if constexpr (requires { C1::HeapProvider; }) {
-               static_assert(C1::HeapProvider == ACC,
+            else if constexpr (requires { typename C1::HeapProvider; }) {
+               static_assert(C1::HeapProvider::First == ACC,
                   "Invalid heap provider ID");
                static_assert(not requires { C1::StackProvider; },
                   "Component can't be both a stack and a heap provider");
 
                if constexpr (sizeof...(CN) > 0)
-                  return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
+                  return ValidateComponentOrderNested<ACC + C1::HeapProvider::Count, C1::ComponentPrecedence, CN...>();
                else
                   return true;
             }
@@ -589,13 +652,16 @@ namespace Langulus::Anyness
       };
       
       /// Go through all components and accumulate their stack requests into  
-      /// a tuple                                                             
+      /// a type list                                                         
       template<class C1, class...CN>
       consteval auto DefineStack(Types<C1, CN...>&&) {
          if constexpr (requires { typename C1::StackRequest; }) {
-            if constexpr (CT::NotVoid<typename C1::StackRequest>) {
-               Types<StackVariable<typename C1::StackRequest>> first;
+            using R = typename C1::StackRequest;
+            if constexpr (CT::NotVoid<R>) {
+               static_assert(not Com::IsRequestModifier<R>,
+                  "Stack requests can't have modifiers");
 
+               Types<StackVariable<R>> first;
                if constexpr (sizeof...(CN))
                   return first + DefineStack(Types<CN...>{});
                else
@@ -613,176 +679,6 @@ namespace Langulus::Anyness
                return DefineStack(Types<CN...>{});
             else
                return NoTypes {};
-         }
-      }
-      
-      /// Go through all components until PICK is reached, and accumulate     
-      /// the offset up to that point, to get the index in the stack tuple    
-      template<class PICK, class C1, class...CN>
-      consteval size_t GetStackOffset(Types<C1, CN...>&&) {
-         static_assert(requires { typename PICK::StackRequest; },
-            "Component data is not on the stack");
-          
-         if constexpr (CT::DerivedFrom<C1, PICK>)
-            return 0;
-         else {
-            size_t offset = 0;
-            if constexpr (requires { typename C1::StackRequest; }) {
-               if constexpr (CT::NotVoid<typename C1::StackRequest>)
-                  ++offset;
-            }
-         
-            if constexpr (sizeof...(CN))
-               return offset + GetStackOffset<PICK>(Types<CN...>{});
-            else
-               return offset;
-         }
-      }
-      
-      /// Go through all relevant components and accumulate their heap        
-      /// requests into a byte amount, used for header size when allocating.  
-      ///   @return the size of the heap header in bytes                      
-      template<Cid ID, class C1, class...CN>
-      consteval size_t DefineHeapHeader() {
-         if constexpr (requires { typename C1::HeapRequest; }) {
-            size_t offset = 0;
-            using R = typename C1::HeapRequest;
-            if constexpr (requires { R::AllocatedPerIndirection; })
-               ;
-            else if constexpr (requires { R::AllocatedPerElement; })
-               ;
-            else if constexpr (C1::Id::template Contains<ID>)
-               offset += sizeof(R);
-            
-            if constexpr (sizeof...(CN))
-               return offset + DefineHeapHeader<ID, CN...>();
-            else
-               return offset;
-         }
-         else {
-            if constexpr (sizeof...(CN))
-               return DefineHeapHeader<ID, CN...>();
-            else
-               return 0;
-         }
-      }      
-      
-      /// Go through all relevant components and accumulate their heap        
-      /// requests into a byte amount, used for footer size when allocating.  
-      ///   @param count footer can depend on the amount of elements          
-      ///   @param indirects footer can depend on the indirections            
-      ///   @return the size of the heap footer in bytes                      
-      template<Cid ID, class C1, class...CN>
-      constexpr size_t DefineHeapFooter(
-         [[maybe_unused]] const size_t count,
-         [[maybe_unused]] const size_t indirects
-      ) noexcept {
-         if constexpr (requires { typename C1::HeapRequest; }) {
-            size_t offset = 0;
-            if constexpr (C1::Id::template Contains<ID>) {
-               using R = typename C1::HeapRequest;
-               if constexpr (requires { R::AllocatedPerIndirection; }) {
-                  if constexpr (requires { R::Type::AllocatedPerElement; })
-                     offset += sizeof(typename R::Type::Type) * count * indirects;
-                  else
-                     offset += sizeof(typename R::Type) * indirects;
-               }
-               else if constexpr (requires { R::AllocatedPerElement; }) {
-                  if constexpr (requires { R::Type::AllocatedPerIndirection; })
-                     offset += sizeof(typename R::Type::Type) * count * indirects;
-                  else
-                     offset += sizeof(typename R::Type) * count;
-               }
-            }
-            
-            if constexpr (sizeof...(CN))
-               return offset + DefineHeapFooter<ID, CN...>(count, indirects);
-            else
-               return offset;
-         }
-         else {
-            if constexpr (sizeof...(CN))
-               return DefineHeapFooter<ID, CN...>(count, indirects);
-            else
-               return 0;
-         }
-      }
-      
-      /// Go through all components until PICK is reached, and accumulate     
-      /// the offset up to that point, to get the byte offset in the header   
-      ///   @return the header offset, where PICK's data resides              
-      template<class PICK, class C1, class...CN>
-      consteval size_t GetHeapHeaderOffset() {
-         static_assert(requires { typename PICK::HeapRequest; },
-            "Component data is not on the heap");
-         static_assert(
-                not requires { PICK::HeapRequest::AllocatedPerIndirection; }
-            and not requires { PICK::HeapRequest::AllocatedPerElement; },
-            "Component data doesn't reside in header, use GetHeapFooterOffset instead"
-         );
-          
-         if constexpr (CT::DerivedFrom<C1, PICK>)
-            return 0;
-         else {
-            size_t offset = 0;
-            if constexpr (requires { typename C1::HeapRequest; }) {
-               using R = typename C1::HeapRequest;
-               if constexpr (requires { R::AllocatedPerIndirection; })
-                  ;
-               else if constexpr (requires { R::AllocatedPerElement; })
-                  ;
-               else offset += sizeof(R);
-            }
-         
-            if constexpr (sizeof...(CN))
-               return offset + GetHeapHeaderOffset<PICK, CN...>();
-            else
-               return offset;
-         }
-      }
-      
-      /// Go through all components until PICK is reached, and accumulate     
-      /// the offset up to that point, to get the byte offset in the heap     
-      ///   @param count heap requests can depend on the amount of elements   
-      ///   @param indirects heap requests can depend on the indirections     
-      ///   @return the heap byte offset, where PICK's data resides           
-      template<class PICK, class C1, class...CN>
-      constexpr size_t GetHeapFooterOffset(
-         [[maybe_unused]] const size_t count,
-         [[maybe_unused]] const size_t indirects
-      ) noexcept {
-         static_assert(requires { typename PICK::HeapRequest; },
-            "Component data is not on the heap");
-         static_assert(
-               requires { PICK::HeapRequest::AllocatedPerIndirection; }
-            or requires { PICK::HeapRequest::AllocatedPerElement; },
-            "Component data doesn't reside in footer, use GetHeapHeaderOffset instead"
-         );
-
-         if constexpr (CT::DerivedFrom<C1, PICK>)
-            return 0;
-         else {
-            size_t offset = 0;
-            if constexpr (requires { typename C1::HeapRequest; }) {
-               using R = typename C1::HeapRequest;
-               if constexpr (requires { R::AllocatedPerIndirection; }) {
-                  if constexpr (requires { R::Type::AllocatedPerElement; })
-                     offset += sizeof(typename R::Type::Type) * count * indirects;
-                  else
-                     offset += sizeof(typename R::Type) * indirects;
-               }
-               else if constexpr (requires { R::AllocatedPerElement; }) {
-                  if constexpr (requires { R::Type::AllocatedPerIndirection; })
-                     offset += sizeof(typename R::Type::Type) * count * indirects;
-                  else
-                     offset += sizeof(typename R::Type) * count;
-               }
-            }
-         
-            if constexpr (sizeof...(CN))
-               return offset + GetHeapFooterOffset<PICK, CN...>(count, indirects);
-            else
-               return offset;
          }
       }
    }

@@ -18,8 +18,8 @@ namespace Langulus::Anyness
    struct THandlePair<Handle, Handle> : Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,
       Com::TypedStack<DMeta, void, false, 1>,
-      Com::HeapReference<HeapEntry<0, void*>>,
-      Com::HeapReference<HeapEntry<1, void*>>,
+      Com::HeapReference<HeapEntry<0>>,
+      Com::HeapReference<HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,
       Com::OwnershipDeepReference<true, 0>,
       Com::OwnershipDeepReference<true, 1>,
@@ -56,8 +56,8 @@ namespace Langulus::Anyness
       }
 
       constexpr THandlePair(Handle&& key, Handle&& val) noexcept {
-         this->Com::HeapReference<HeapEntry<0, void*>>::SetHeapInner(key.GetHeapInner());
-         this->Com::HeapReference<HeapEntry<1, void*>>::SetHeapInner(val.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
@@ -70,7 +70,7 @@ namespace Langulus::Anyness
 
       Handle GetKey() noexcept {
          return {
-            this->Com::HeapReference<HeapEntry<0, void*>>::GetHeapInner(),
+            this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
@@ -78,7 +78,7 @@ namespace Langulus::Anyness
 
       Handle GetVal() noexcept {
          return {
-            this->Com::HeapReference<HeapEntry<1, void*>>::GetHeapInner(),
+            this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
@@ -107,8 +107,8 @@ namespace Langulus::Anyness
    struct THandlePair<HandleMut, HandleMut> : Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,
       Com::TypedStack<DMeta, void, false, 1>,
-      Com::HeapReference<HeapEntry<0, void*>>,
-      Com::HeapReference<HeapEntry<1, void*>>,
+      Com::HeapReference<HeapEntry<0>>,
+      Com::HeapReference<HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,
       Com::OwnershipDeepReference<true, 0>,
       Com::OwnershipDeepReference<true, 1>,
@@ -147,8 +147,8 @@ namespace Langulus::Anyness
       }
 
       constexpr THandlePair(HandleMut&& key, HandleMut&& val) noexcept {
-         this->Com::HeapReference<HeapEntry<0, void*>>::SetHeapInner(key.GetHeapInner());
-         this->Com::HeapReference<HeapEntry<1, void*>>::SetHeapInner(val.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
@@ -161,7 +161,7 @@ namespace Langulus::Anyness
 
       HandleMut GetKey() noexcept {
          return {
-            this->Com::HeapReference<HeapEntry<0, void*>>::GetHeapInner(),
+            this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
@@ -169,7 +169,7 @@ namespace Langulus::Anyness
 
       HandleMut GetVal() noexcept {
          return {
-            this->Com::HeapReference<HeapEntry<1, void*>>::GetHeapInner(),
+            this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
@@ -197,8 +197,8 @@ namespace Langulus::Anyness
    struct THandlePair<Handle, HandleMut> : Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,
       Com::TypedStack<DMeta, void, false, 1>,
-      Com::HeapReference<HeapEntry<0, void*>>,
-      Com::HeapReference<HeapEntry<1, void*>>,
+      Com::HeapReference<HeapEntry<0>>,
+      Com::HeapReference<HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,
       Com::OwnershipDeepReference<true, 0>,
       Com::OwnershipDeepReference<true, 1>,
@@ -237,8 +237,8 @@ namespace Langulus::Anyness
       }
 
       constexpr THandlePair(Handle&& key, HandleMut&& val) noexcept {
-         this->Com::HeapReference<HeapEntry<0, void*>>::SetHeapInner(key.GetHeapInner());
-         this->Com::HeapReference<HeapEntry<1, void*>>::SetHeapInner(val.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
@@ -251,7 +251,7 @@ namespace Langulus::Anyness
 
       Handle GetKey() noexcept {
          return {
-            this->Com::HeapReference<HeapEntry<0, void*>>::GetHeapInner(),
+            this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
@@ -259,7 +259,7 @@ namespace Langulus::Anyness
 
       HandleMut GetVal() noexcept {
          return {
-            this->Com::HeapReference<HeapEntry<1, void*>>::GetHeapInner(),
+            this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };

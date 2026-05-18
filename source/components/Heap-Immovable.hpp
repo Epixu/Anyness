@@ -29,9 +29,9 @@ namespace Langulus::Anyness::Component
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
+      using HeapProvider   = Id;
 
-      static constexpr Cid  HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = true;
       static constexpr uint InitialSize = INITIAL_SIZE;

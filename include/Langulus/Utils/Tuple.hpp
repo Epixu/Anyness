@@ -74,7 +74,7 @@ namespace Langulus::Inner
    struct unwrap_reference<std::reference_wrapper<T>> : std::type_identity<T&>  {};
 
    template<class T>
-   struct decay_reference : unwrap_reference<Decay<T>> {};
+   struct decay_reference : unwrap_reference<std::decay_t<T>> {};
    
    template<class T>
    using DecayReference = typename decay_reference<T>::type;
@@ -134,7 +134,7 @@ namespace Langulus::Inner
    
    template<class...T>
    struct max_alignment<std::tuple<T...>>
-      : index<max<alignof_indexed<T>::value...>()> {};
+      : index<max<0, alignof_indexed<T>::value...>()> {};
 
    /// Cons all the types with a given alignment into an accumulator          
    template<size_t Align, class Acc, class List>
@@ -190,7 +190,8 @@ namespace Langulus::Inner
    using find_index = decltype(find_index_impl<N>(inherit_all<List>{}));
 
    template<class List, class Indices = IndicesFor<List>>
-   struct map_to_storage {};
+   struct map_to_storage 
+      : std::type_identity<Indices> {};
    
    template<class List, std::size_t... I>
    struct map_to_storage<List, indices<I...>>
@@ -215,7 +216,7 @@ namespace Langulus::Inner
    using MapToStorage   = typename optimal_order<std::tuple<T...>>::to_storage;
 
    template<class Tuple, size_t...I>
-   using ShuffleTuple   = std::tuple<std::tuple_element_t<I, Decay<Tuple>>...>;
+   using ShuffleTuple   = std::tuple<std::tuple_element_t<I, std::decay_t<Tuple>>...>;
 
    template<size_t...I, class Tuple>
    constexpr auto forward_shuffled_tuple(indices<I...>, Tuple&& t)
@@ -261,7 +262,7 @@ namespace Langulus
 
       constexpr compact_tuple() = default;
 
-      explicit constexpr compact_tuple(T const&...t)
+      explicit constexpr compact_tuple(T const&...t) requires (sizeof...(T) > 0)
          //: storage_type {::std::_Unpack_tuple_t{}, forward_shuffled(to_interface{}, t...)} {
          : storage_type {::std::make_from_tuple<storage_type>(forward_shuffled(to_interface{}, t...))} {
          static_assert((std::is_copy_constructible_v<T> and ...),
@@ -319,7 +320,7 @@ namespace Langulus
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a)
          : storage_type {tag, a} {}
 
-      template<class Alloc>
+      template<class Alloc> requires (sizeof...(T) > 0)
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, T const&... t)
          : storage_type {tag, a, forward_shuffled(to_interface{}, t...)} {
          static_assert((std::is_copy_constructible_v<T> and ...),

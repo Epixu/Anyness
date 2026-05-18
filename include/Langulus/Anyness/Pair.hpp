@@ -33,10 +33,7 @@ namespace Langulus::Anyness::Inner
    using PairBase = Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,  // Type-erased key       
       Com::TypedStack<DMeta, void, false, 1>,  // Type-erased value     
-      Com::HeapMovable<0, 0,
-         HeapEntry<0, void*>,             // Key heap data              
-         HeapEntry<1, void*>              // Value heap data            
-      >,
+      Com::HeapMovable<0, 0, HeapEntry<0>, HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,

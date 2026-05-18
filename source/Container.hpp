@@ -166,20 +166,6 @@ namespace Langulus::Anyness
       template<CT::Component...MORE_COMPONENTS>
       using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
-      /// Default constructor doesn't initialize anything.                    
-      /// Your container needs to call ConstructDefault manually.             
-      constexpr Container() noexcept = default;
-
-      /// A tag-dispatch constructor that forwards arguments to mStack.       
-      /// Used in some niche container cases, like TOwn.                      
-      constexpr Container(Inner::Stackwise, auto&&...arguments)
-         : mStack({LglsFwd(arguments)}...) {}
-
-      /// Default destructor does nothing. Each container has to implement    
-      /// it, most likely by calling this->Destroy(). This is needed, because 
-      /// the destructor relies on properly deducing 'this'.                  
-      constexpr ~Container() noexcept = default;
-      
       /// Check if container is valid                                         
       constexpr bool IsValid() const noexcept {
          if (this->GetCount() > 0)
@@ -196,32 +182,6 @@ namespace Langulus::Anyness
       template<class C>
       static constexpr bool HasComponent
          = AkinAsOneOf<C, COMPONENTS..., DecideStateComponent<COMPONENTS...>>;
-
-      /// Get the number of heap providers (all dimensions)                   
-      static consteval size_t CountHeapProviders() {
-         size_t count = 0;
-         ComponentList::ForEach([&count]<class C> {
-            if constexpr (requires { C::HeapProvider; })
-               ++count;
-         });
-         return count;
-      }
-
-      /// Get the number of heap requests in the footer for chosen heap ID    
-      template<Cid SID = 0>
-      static consteval size_t CountHeapFooterRequests() {
-         size_t count = 0;
-         ComponentList::ForEach([&count]<class C> {
-            if constexpr (requires { typename C::HeapRequest; typename C::Id; }) {
-               if (requires { C::HeapRequest::AllocatedPerIndirection; }
-               or  requires { C::HeapRequest::AllocatedPerElement;     }) {
-                  if constexpr (C::Id::template Contains<SID>)
-                     ++count;
-               }
-            }
-         });
-         return count;
-      }
 
    protected:
       LglsComIterationOperators(friend);
@@ -260,82 +220,330 @@ namespace Langulus::Anyness
       // Here lies the stack. It is an optimized tuple that is filled   
       // with StackRequest(s) from components.                          
       typename decltype(Inner::DefineStack(ComponentList{}))::TupleOptimized mStack;
+      
+      /// Default constructor doesn't initialize anything.                    
+      /// Your container needs to call ConstructDefault manually.             
+      constexpr Container() noexcept = default;
+
+      /// A tag-dispatch constructor that forwards arguments to mStack.       
+      /// Used in some niche container cases, like TOwn.                      
+      constexpr Container(Inner::Stackwise, auto&&...arguments)
+         : mStack({LglsFwd(arguments)}...) {}
+
+      /// Default destructor does nothing. Each container has to implement    
+      /// it, most likely by calling this->Destroy(). This is needed, because 
+      /// the destructor relies on properly deducing 'this'.                  
+      constexpr ~Container() noexcept = default;
+      
+      /// Get the number of heap providers (all dimensions)                   
+      static consteval size_t CountHeapProviders() {
+         size_t count = 0;
+         ComponentList::ForEach([&count]<class C> {
+            if constexpr (requires { typename C::HeapProvider; })
+               ++count;
+         });
+         return count;
+      }
+
+      /// Get the number of heap requests in the footer for chosen heap ID    
+      template<Cid SID = 0>
+      static consteval size_t CountHeapFooterRequests() {
+         size_t count = 0;
+         ComponentList::ForEach([&count]<class C> {
+            if constexpr (requires { typename C::HeapRequest; }) {
+               if constexpr (C::Id::template Contains<SID>
+               and IsFooterRequest<typename C::HeapRequest>)
+                  ++count;
+            }
+         });
+         return count;
+      }
+
+      /// Go through all components until PICK is reached, and accumulate     
+      /// the offset up to that point, to get the index in the stack tuple.   
+      template<class PICK>
+      static consteval size_t GetStackOffset() {
+         static_assert(requires { typename PICK::StackRequest; },
+            "Component data is not on the stack");
+          
+         size_t offset = 0;
+         ComponentList::ForEachConstOr([&offset]<class C> {
+            if constexpr (CT::DerivedFrom<C, PICK>)
+               return true;
+            else if constexpr (requires { typename C::StackRequest; }) {
+               if constexpr (CT::NotVoid<typename C::StackRequest>)
+                  ++offset;
+               return No {};
+            }
+            else return No {};
+         });
+         return offset;
+      }
+      
+      /// Get a reference to a heap/stack provider's data                     
+      ///   @tparam ID provider ID                                            
+      ///   @return return a reference to the provider's data                 
+      template<Cid SID>
+      static consteval auto FindProvider() {
+         return ComponentList::ForEachConstOr([]<class C> {
+            if constexpr (requires { C::StackProvider; }) {
+               if constexpr (C::StackProvider == SID)
+                  return Types<C> {};
+               else
+                  return No {};
+            }
+            else if constexpr (requires { typename C::HeapProvider; }) {
+               if constexpr (C::HeapProvider::template Contains<SID>)
+                  return Types<C> {};
+               else
+                  return No {};
+            }
+            else return No {};
+         });
+      }
+
+      /// Go through all relevant components for the dimension 'SID' and      
+      /// accumulate their header heap requests into a byte amount.           
+      ///   @return the size of the heap header for the dimension, in bytes   
+      ///   @attention the size includes alignment to the first relevant      
+      ///      contained type.                                                
+      template<Cid SID>
+      constexpr size_t DefineHeapHeader(this auto const& self) assumptious {
+         using PROVIDER = typename decltype(FindProvider<SID>())::First;
+         size_t bytesize = 0;
+         ComponentList::ForEach([&bytesize]<class C> {
+            if constexpr (requires { typename C::HeapRequest; }) {
+               if constexpr (C::Id::template Contains<SID>) {
+                  using R = typename C::HeapRequest;
+                  if constexpr (IsRequestModifier<R>) {
+                     if constexpr (R::AllocatedPerDimension and not IsFooterRequest<R>) {
+                        // Multiply only by the number of dimensions    
+                        // that are shared with the relevant provider.  
+                        using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
+                        bytesize += sizeof(TypeOf<R>) * INTERSECT::Count;
+                     }
+                  }
+                  else bytesize += sizeof(R);
+               }
+            }
+         });
+
+         const auto alignment = self.template GetAlignment<PROVIDER::Id::First>();
+         return Align(bytesize, alignment);
+      }      
+      
+      /// Go through all components until PICK is reached, and accumulate     
+      /// the offset up to that point, to get the byte offset in the header   
+      /// for the particular dimension 'SID'.                                 
+      ///   @return the header offset, where PICK's data resides              
+      ///   @attention the returned offset is relative to                     
+      ///      GetAllocation<SID>()->GetBlockStart()                          
+      template<class PICK, Cid SID>
+      static consteval size_t GetHeapHeaderOffset() {
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+         static_assert(PICK::Id::template Contains<SID>,
+            "The PICK must share the provided ID");
+
+         using PROVIDER = typename decltype(FindProvider<SID>())::First;
+         using PICK_R   = typename PICK::HeapRequest;
+         if constexpr (IsRequestModifier<PICK_R>) {
+            static_assert(not IsFooterRequest<PICK_R>,
+               "Not a header request, use GetHeapFooterOffset instead"
+            );
+         }
+         
+         size_t offset = 0;
+         ComponentList::ForEachOr([&offset]<class C> {
+            if constexpr (CT::DerivedFrom<C, PICK>) {
+               // Target component reached, but there might be          
+               // dimensional offset to consider.                       
+               using R = typename C::HeapRequest;
+               if constexpr (IsRequestModifier<R>) {
+                  if constexpr(R::AllocatedPerDimension) {
+                     using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
+                     INTERSECT::ForEachConstOr([&offset]<Cid D> {
+                        if constexpr (D == SID)
+                           return true;
+                        else {
+                           offset += sizeof(TypeOf<R>);
+                           return No {};
+                        }
+                     });
+                  }
+               }
+               return true;
+            }
+            else if constexpr (requires { typename C::HeapRequest; }) {
+               if constexpr (C::Id::template Contains<SID>) {
+                  using R = typename C::HeapRequest;
+                  if constexpr (IsRequestModifier<R>) {
+                     if constexpr (R::AllocatedPerDimension and not IsFooterRequest<R>) {
+                        // Multiply only by the number of dimensions    
+                        // that are shared with the relevant provider.  
+                        using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
+                        offset += sizeof(TypeOf<R>) * INTERSECT::Count;
+                     }
+                  }
+                  else offset += sizeof(R);
+               }
+               return No {};
+            }
+            else return No {};
+         });
+         return offset;
+      }
+
+      /// Go through all components relevant to the provided dimension SID    
+      /// and accumulate their heap footer requests into a byte amount, used  
+      /// for additional footer size when allocating.                         
+      ///   @attention assumes relevant type components have been initialized 
+      ///      prior to calling this function.                                
+      ///   @param count footer can depend on the amount of elements          
+      ///   @return the size of the heap footer for chosen dimension, in bytes
+      template<Cid SID>
+      constexpr size_t DefineHeapFooter(this auto const& self, [[maybe_unused]] const size_t count) noexcept {
+         size_t bytesize = 0;
+         const size_t indirects = self.template GetIndirections<SID>();
+         ComponentList::ForEach([&bytesize, &indirects, &count]<class C> {
+            if constexpr (requires { typename C::HeapRequest; }) {
+               using R = typename C::HeapRequest;
+               if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
+                  // Multiply only by the number of dimensions          
+                  // that are shared with the relevant provider.        
+                  using PROVIDER  = typename decltype(FindProvider<SID>())::First;
+                  using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
+                  constexpr size_t intersects = INTERSECT::Count;
+                  bytesize += sizeof(TypeOf<R>)
+                     * (R::AllocatedPerDimension   ? intersects : 1)
+                     * (R::AllocatedPerElement     ? count      : 1)
+                     * (R::AllocatedPerIndirection ? indirects  : 1);
+               }
+            }
+         });
+         return bytesize;
+      }
+
+      /// Go through all components until PICK is reached, and accumulate     
+      /// the offset up to that point, to get the byte offset in the heap     
+      /// for a particular dimension 'SID'.                                   
+      ///   @param count heap requests can depend on the amount of elements   
+      ///   @return the heap byte offset, where PICK's data resides           
+      ///   @attention the returned offset is relative to                     
+      ///      GetRawReserveEnd<SID>()                                        
+      template<class PICK, Cid SID>
+      constexpr size_t GetHeapFooterOffset(this auto const& self, [[maybe_unused]] const size_t count) noexcept {
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+         static_assert(PICK::Id::template Contains<SID>,
+            "The PICK must share the provided ID");
+
+         using PROVIDER = typename decltype(FindProvider<SID>())::First;
+         using PICK_R   = typename PICK::HeapRequest;
+         static_assert(IsFooterRequest<PICK_R>,
+            "Not a footer request, use GetHeapHeaderOffset instead");
+
+         size_t offset = 0;
+         const size_t indirects = self.template GetIndirections<SID>();
+         ComponentList::ForEachOr([&offset, &indirects, &count]<class C> {
+            if constexpr (CT::DerivedFrom<C, PICK>){
+               // Target component reached, but there might be          
+               // dimensional offset to consider.                       
+               using R = typename C::HeapRequest;
+               if constexpr (IsRequestModifier<R>) {
+                  if constexpr(R::AllocatedPerDimension) {
+                     using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
+                     INTERSECT::ForEachConstOr([&offset, &indirects, &count]<Cid D> {
+                        if constexpr (D == SID)
+                           return true;
+                        else {
+                           offset += sizeof(TypeOf<R>)
+                              * (R::AllocatedPerElement     ? count     : 1)
+                              * (R::AllocatedPerIndirection ? indirects : 1);
+                           return No {};
+                        }
+                     });
+                  }
+               }
+               return true;
+            }
+            else if constexpr (requires { typename C::HeapRequest; }) {
+               using R = typename C::HeapRequest;
+               if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
+                  // Multiply only by the number of dimensions          
+                  // that are shared with the relevant provider.        
+                  using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
+                  constexpr size_t intersects = INTERSECT::Count;
+                  offset += sizeof(TypeOf<R>)
+                     * (R::AllocatedPerDimension   ? intersects : 1)
+                     * (R::AllocatedPerElement     ? count      : 1)
+                     * (R::AllocatedPerIndirection ? indirects  : 1);
+               }
+               return No {};
+            }
+            else return No {};
+         });
+         return offset;
+      }
 
       /// Access a variable on the stack associated with a component          
       ///   @attention always returns a reference to valid memory             
-      template<class COM, class SELF>
+      template<class PICK, class SELF>
       constexpr auto& AccessStack(this SELF&& self) noexcept {
-         constexpr size_t IDX = Inner::GetStackOffset<COM>(ComponentList{});
+         constexpr size_t IDX = GetStackOffset<PICK>();
          auto& result = ::Langulus::get<IDX>(self.mStack).value;
-         using ConstOrNot = LglsMutIf(SELF, decltype(result));
-         return const_cast<ConstOrNot>(result);
+         using RC = LglsMutIf(SELF, decltype(result));
+         return const_cast<RC>(result);
       }
 
-      /// Access a variable on the heap associated with a component           
+      /// Access a variable on the heap of a specified dimension, associated  
+      /// with a component.                                                   
       ///   @attention always returns a pointer which may be null if container
       ///      is disowned, or hasn't been heap-allocated yet. This is the    
       ///      price you pay for keeping stuff on the heap - repeated safety  
       ///      checks. Another drawback is when cached variables, like hashes,
       ///      are cached only when containers aren't disowned, thus fallback 
-      ///      to emergent behavior - being recomputed on demand.             
-      template<CT::Component COM, CT::Container SELF>
+      ///      to emergent behavior may occur, like hashes being recomputed   
+      ///      on every demand.                                               
+      ///   @attention if ownership is provided, this call assumes that type  
+      ///      information and reserved count have been initialized for the   
+      ///      relevant dimension 'SID'                                       
+      template<CT::Component PICK, Cid SID, CT::Container SELF>
       constexpr auto* AccessHeap(this SELF&& self) assumptious {
-         static_assert(requires { typename COM::HeapRequest; },
-            "Component doesn't have data on the heap");
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+         static_assert(PICK::Id::template Contains<SID>,
+            "The PICK must share the provided ID");
 
-         constexpr Cid id = COM::Id::First;
-         auto al = self.template GetAllocationInner<id>();
-         LglsAssumeDevAndOptimize(al,
+         LglsAssumeDev(self.template GetAllocationInner<SID>(),
             "Heap requests are available only when container has ownership. "
             "Make sure you access them only then, and fallback to emergent "
-            "behavior otherwise (if possible).");
-         auto heap = al->GetBlockStart();
-         using R = typename COM::HeapRequest;
+            "behavior otherwise, if that's possible."
+         );
 
-         if constexpr (requires { R::AllocatedPerIndirection; }
-                    or requires { R::AllocatedPerElement;     }
-         ) {
+         using R = typename PICK::HeapRequest;
+         if constexpr (IsFooterRequest<R>) {
             // Access footer heap                                       
-            // Footer offset depends on the number of reserved elements 
-            const auto reserved = self.template GetReserved<id>();
-            const auto offset = self.template GetHeapHeaderSize<id>()
-               + Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
-                    static_cast<size_t>(reserved),
-                    static_cast<size_t>(self.template GetIndirections<id>())
-                 );
-            heap += reserved * self.template GetStride<id>() + offset;
-
-            if constexpr (requires { R::AllocatedPerIndirection; }) {
-               if constexpr (requires { R::Type::AllocatedPerElement; }) {
-                  using RC = LglsMutIf(SELF, typename R::Type::Type*);
-                  return reinterpret_cast<RC>(heap);
-               }
-               else {
-                  using RC = LglsMutIf(SELF, typename R::Type*);
-                  return reinterpret_cast<RC>(heap);
-               }
-            }
-            else if constexpr (requires { R::AllocatedPerElement; }) {
-               if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
-                  using RC = LglsMutIf(SELF, typename R::Type::Type*);
-                  return reinterpret_cast<RC>(heap);
-               }
-               else {
-                  using RC = LglsMutIf(SELF, typename R::Type*);
-                  return reinterpret_cast<RC>(heap);
-               }
-            }
+            // Footer offsets depend on the number of reserved elements 
+            const size_t reserved = self.template GetReserved<SID>();
+            const size_t stride   = self.template GetStride<SID>();
+            const size_t offset   = self.template GetHeapFooterOffset<PICK, SID>(reserved);
+            const auto heap = self.template GetRawAs<uint8_t, SID>();
+            using RC = LglsMutIf(SELF, TypeOf<R>*);
+            return reinterpret_cast<RC>(heap + reserved * stride + offset);
          }
          else {
             // Access header heap                                       
-            auto offset = Inner::GetHeapHeaderOffset<COM, COMPONENTS...>();
+            constexpr size_t offset = GetHeapHeaderOffset<PICK, SID>();
+            const auto al   = self.template GetAllocationInner<SID>();
+            const auto heap = al->GetBlockStart();
             using RC = LglsMutIf(SELF, R*);
             return reinterpret_cast<RC>(heap + offset);
          }
       }
       
       /// Calculate the heap header size, aligned to the chosen type ID       
-      template<Cid SID, CT::Container C>
+      /*template<Cid SID, CT::Container C>
       constexpr size_t GetHeapHeaderSize(this C const& self) assumptious {
          constexpr size_t header = Inner::DefineHeapHeader<SID, COMPONENTS...>();
          if constexpr (CT::TypeErased<C>) {
@@ -352,12 +560,12 @@ namespace Langulus::Anyness
          return Inner::DefineHeapFooter<SID, COMPONENTS...>(
             reserve, self.template GetIndirections<SID>()
          );
-      }
+      }*/
 
       /// Get a reference to a heap/stack provider's data                     
       ///   @tparam ID provider ID                                            
       ///   @return return a reference to the provider's data                 
-      template<Cid ID>
+      /*template<Cid ID>
       constexpr auto& AccessProvider(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::StackProvider; }) {
@@ -366,20 +574,20 @@ namespace Langulus::Anyness
                else
                   return No{};
             }
-            else if constexpr (requires { C::HeapProvider; }) {
-               if constexpr (C::HeapProvider == ID)
+            else if constexpr (requires { typename C::HeapProvider; }) {
+               if constexpr (C::HeapProvider::template Contains<ID>)
                   return (self.template AccessStack<C>());
                else
                   return No{};
             }
             else return No{};
          });
-      }
+      }*/
 
       /// Get a reference to the stack component with the given ID            
       ///   @tparam ID stack provider ID                                      
       ///   @return return a reference to the provider component              
-      template<Cid ID>
+      /*template<Cid ID>
       constexpr auto& AccessStackProvider(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::StackProvider; }) {
@@ -390,23 +598,23 @@ namespace Langulus::Anyness
             }
             else return No{};
          });
-      }
+      }*/
 
       /// Get a reference to the heap component with the given ID             
       ///   @tparam ID heap provider ID                                       
       ///   @return return a reference to the provider component              
-      template<Cid ID>
+      /*template<Cid ID>
       constexpr auto& AccessHeapProvider(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
-            if constexpr (requires { C::HeapProvider; }) {
-               if constexpr (C::HeapProvider == ID)
+            if constexpr (requires { typename C::HeapProvider; }) {
+               if constexpr (C::HeapProvider::template Contains<ID>)
                   return (self.template AccessStack<C>());
                else
                   return No {};
             }
             else return No {};
          });
-      }
+      }*/
 
       /// Checks whether at least one of the components has a method with the 
       /// given name and signature. Undefined at the end of this container.   

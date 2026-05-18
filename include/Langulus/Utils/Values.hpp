@@ -97,6 +97,15 @@ namespace Langulus
          return lambda.template operator()<E1>();
       }
 
+      /// Doesn't generate code for further loops if lambda returns anything  
+      /// but a No (utilizes a compile-time short-circuit)                    
+      static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
+         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<E1>())>)
+            return lambda.template operator()<E1>();
+         else
+            return No {};
+      }
+
       template<class OTHER>
       using Intersect = Tif<IntersectInner(OTHER{}), Values<E1>, Values<>>;
    };
@@ -169,6 +178,19 @@ namespace Langulus
          return lambda.template operator()<E1>()
              or lambda.template operator()<E2>()
              or (... or lambda.template operator()<EN>());
+      }
+
+      /// Doesn't generate code for further loops if lambda returns anything  
+      /// but a No (utilizes a compile-time short-circuit)                    
+      static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
+         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<E1>())>)
+            return lambda.template operator()<E1>();
+         else if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<E2>())>)
+            return lambda.template operator()<E2>();
+         else if constexpr (sizeof...(EN))
+            return Values<EN...>::ForEachConstOr(lambda);
+         else
+            return No {};
       }
 
       template<class OTHER>

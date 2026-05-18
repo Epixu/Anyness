@@ -37,10 +37,10 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
       using Id             = Values<ENTRY0::Id, ENTRYN::Id...>;
+      using HeapProvider   = Id;
       using StackRequest   = typename ENTRY0::T;
 
       static constexpr bool Shared = sizeof...(ENTRYN) > 0;
-      static constexpr Cid  HeapProvider = ENTRY0::Id;
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = true;
       template<Cid SID>

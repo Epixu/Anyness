@@ -1,6 +1,7 @@
 #pragma once
 #include <Langulus/Typenav.hpp>
 #include <Langulus/Tag.hpp>
+#include <string>
 
 using namespace Langulus;
 using RTTI::DMeta;
