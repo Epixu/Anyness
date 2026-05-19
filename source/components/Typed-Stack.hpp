@@ -438,15 +438,23 @@ namespace Langulus::Anyness::Component
       }
 
       /// Transfer from any kind of container, respecting intents             
-      ///   @attention this is noop when constructing from deep intents,      
-      ///      since element constructors might throw and stuff be partially  
-      ///      inserted. In those cases, type is set by the heap components.  
+         ///   @attention this is noop when constructing from deep intents,      
+         ///      since element constructors might throw and stuff be partially  
+         ///      inserted. In those cases, type is set by the heap components.  
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I>
-      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I>)
+      requires (CT::Container<I> /*and not CT::Copied<I> and not CT::Cloned<I>*/)
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (ThisCom::TypeErased) {
-            ThisCom::SetType(intent->template GetType<ID>());
+            META type = intent->template GetType<ID>();
+            if constexpr (CT::Copied<I> or CT::Cloned<I>) {
+               // When copying, we're cloning just the first layer, so  
+               // we guarantee that data is no longer static or constant
+               // at the first level of indirection.                    
+               //type = type.GetDecvq();
+            }
+
+            ThisCom::SetType(type);
 
             // While we are interfacing external memory, we have to     
             // keep the type-constrained state, otherwise we risk       
@@ -462,10 +470,23 @@ namespace Langulus::Anyness::Component
          }
          else {
             // These are called just to do compile-time type safety     
-            if constexpr (CT::TypeErased<I>)
-               ThisCom::SetType(intent->template GetType<ID>());
-            else
-               ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
+            if constexpr (CT::TypeErased<I>) {
+               META type = intent->template GetType<ID>();
+               if constexpr (CT::Copied<I> or CT::Cloned<I>) {
+                  // When copying, we're cloning just the first layer,  
+                  // so we guarantee that data is no longer static or   
+                  // constant at the first level of indirection.        
+                  //type = type.GetDecvq();
+               }
+
+               ThisCom::SetType(type);
+            }
+            else {
+               //if constexpr (CT::Copied<I> or CT::Cloned<I>)
+               //   ThisCom::template SetType<Decvq<TypeOf<Deint<I>, ID>>>();
+               //else
+                  ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
+            }
          }
       }
    };

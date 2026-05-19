@@ -340,12 +340,20 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      THandleEmergent<K> GetKey() noexcept {
-         return {this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()};
+      decltype(auto) GetKey() noexcept {
+         if constexpr (CT::Constant<K>)
+            return *this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::Get();
+         else return THandleEmergent<K> {
+            this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
+         };
       }
 
-      THandleEmergent<V> GetVal() noexcept {
-         return {this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()};
+      decltype(auto) GetVal() noexcept {
+         if constexpr (CT::Constant<V>)
+            return *this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::Get();
+         else return THandleEmergent<V> {
+            this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()
+         };
       }
 
       /// Force the handle to become mutable, so that we have methods like    
@@ -429,42 +437,46 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      auto GetKey() noexcept -> KeyHandle {
-         if constexpr (CT::Dense<K, V>) {
-            return {
+      decltype(auto) GetKey() noexcept {
+         if constexpr (CT::Constant<K>)
+            return *this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::Get();
+         else if constexpr (CT::Dense<K, V>) {
+            return KeyHandle {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
             };
          }
          else if constexpr (CT::Dense<K>) {
-            return {
+            return KeyHandle {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0>::GetAllocation()
             };
          }
          else {
-            return {
+            return KeyHandle {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
                this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner()
             };
          }
       }
 
-      auto GetVal() noexcept -> ValHandle {
-         if constexpr (CT::Dense<K, V>) {
-            return {
+      decltype(auto) GetVal() noexcept {
+         if constexpr (CT::Constant<V>)
+            return *this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::Get();
+         else if constexpr (CT::Dense<K, V>) {
+            return ValHandle {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
             };
          }
          else if constexpr (CT::Dense<V>) {
-            return {
+            return ValHandle {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 1>::GetAllocation()
             };
          }
          else {
-            return {
+            return ValHandle {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
                this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner()
             };

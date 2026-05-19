@@ -74,47 +74,68 @@ namespace Langulus::Anyness::Component
             // When copying, we're cloning just the first layer, so we  
             // guarantee that data is no longer static and constant at  
             // the first level of indirection.                          
-            auto type = from.template GetType<Id::First>().GetDecvq();
-            self.template SetType<Id::First>(type);
-            auto count = from.template GetCount<Id::First>();
+            //self.template SetType<Id::First>(type);
+            size_t count, reserve;
+
+            // Verify that all dimensions are copiable/clonable, and    
+            // make sure that 'count' and 'reserve' are consistent      
+            // across all dimensions.                                   
+            Id::ForEach([&]<Cid D> {
+               #if LANGULUS(SAFE)
+                  count = from.template GetCount<D>();
+                  LglsAssert(count == from.template GetCount<Id::First>(),
+                     "Inconsistent count across dimensions");
+
+                  reserve = from.template GetReserved<D>();
+                  LglsAssert(reserve == from.template GetReserved<Id::First>(),
+                     "Inconsistent reserve across dimensions");
+               #endif
+
+               if constexpr (CT::TypeErased<IT>) {
+                  auto type = self.template GetType<D>();
+                  if constexpr (CT::Copied<I>) {
+                     LglsAssert(type.GetReferConstructor(),
+                        "Can't refer-construct elements"
+                        " - no refer-constructor was reflected for type ",
+                        type
+                     );
+                  }
+                  else {
+                     LglsAssert(type.GetCloneConstructor(),
+                        "Can't clone-construct elements"
+                        " - no clone-constructor was reflected for type ",
+                        type
+                     );
+                  }
+               }
+               else {
+                  if constexpr (CT::Copied<I>) {
+                     static_assert(CT::ReferConstructible<TypeOf<C, D>>,
+                        "Contained type is not refer-constructible");
+                  }
+                  else {
+                     static_assert(CT::CloneConstructible<TypeOf<C, D>>,
+                        "Contained type is not clone-constructible");
+                  }
+               }
+            });
+
             if (0 == count) {
                self.template ResetAllocationInner<Id::First>();
                return;
             }
 
-            // Pick a preferably typed block to optimize                
-            if constexpr (CT::TypeErased<IT>) {
-               // A runtime check is required before allocating         
-               if constexpr (CT::Copied<I>) {
-                  LglsAssert(type.GetReferConstructor(),
-                     "Can't refer-construct elements"
-                     " - no refer-constructor was reflected for type ",
-                     type
-                  );
-               }
-               else {
-                  LglsAssert(type.GetCloneConstructor(),
-                     "Can't clone-construct elements"
-                     " - no clone-constructor was reflected for type ",
-                     type
-                  );
-               }
-            }
-            else if constexpr (CT::Copied<I>) {
-               static_assert(CT::ReferConstructible<TypeOf<IT>>,
-                  "Contained type is not refer-constructible");
-            }
-            else {
-               static_assert(CT::CloneConstructible<TypeOf<IT>>,
-                  "Contained type is not clone-constructible");
-            }
+            #if not LANGULUS(SAFE)
+               count = from.template GetCount<Id::First>();
+               reserve = from.template GetReserved<Id::First>();
+            #endif
 
             // Allocate new memory and set count, so that handle        
             // iteration is valid                                       
             if constexpr (CT::Contiguous<C>)
                ThisCom::AllocateFresh(ThisCom::RequestHeap(count));
             else
-               ThisCom::AllocateFresh(ThisCom::RequestHeap(from.template GetReserved<Id::First>()));
+               ThisCom::AllocateFresh(ThisCom::RequestHeap(reserve));
 
             if_available(self.template SetCountInner<Id::First>(count));
             auto dst = self.GetHandle().ForceMutable();
@@ -166,8 +187,8 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Move/Refer/Abandon/Disown other                          
-            static_assert(I::IsShallow());
-            self.template SetType<Id::First>(from.template GetType<Id::First>());
+            //static_assert(I::IsShallow());
+            //self.template SetType<Id::First>(from.template GetType<Id::First>());
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
             if constexpr (I::IsKept()) {
