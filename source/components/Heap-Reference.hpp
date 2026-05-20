@@ -712,6 +712,24 @@ namespace Langulus::Anyness::Component
       ///   @param reserve the number of elements to request                  
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       auto RequestHeap(this C const& self, size_t reserve) assumptious -> Request {
+         if constexpr (CT::ContainsOne<C>) {
+            LglsAssumeDev(reserve == 1,
+               "Container allows only one allocated element");
+         }
+         else if constexpr (C::InitialSize and C::GrowthFactor) {
+            // We override allocation size with predefined parameters,  
+            // if such are defined                                      
+            if (reserve <= C::InitialSize)
+               reserve = C::InitialSize;
+            else {
+               Count<C> growth = C::InitialSize;
+               while (reserve > C::InitialSize + growth)
+                  growth *= C::GrowthFactor;
+               reserve = C::InitialSize + growth;
+               //TODO when pagefile size is reached, start growing linearly by pagefile-sized intervals. this way we minimize cache misses in huge hash tables
+            }
+         }
+
          Request result;
          result.mHeaderBytes = self.template DefineHeapHeader<Id::First>();
          size_t total = result.mHeaderBytes;
@@ -720,8 +738,6 @@ namespace Langulus::Anyness::Component
             // When there are footer requests (heap requests that       
             // depend on count & indirections), we aren't allowed to    
             // change the requested reserve to avoid heap corruptions.  
-            total += self.template DefineHeapFooter<Id::First>(reserve);
-
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime     
                const auto T = self.template GetType<Id::First>();
@@ -733,6 +749,8 @@ namespace Langulus::Anyness::Component
                using T = TypeOf<C, Id::First>;
                total += reserve * sizeof(T);
             }
+
+            total += self.template DefineHeapFooter<Id::First>(reserve);
          }
          else {
             // When there are no footer requests, we are allowed to     
@@ -758,8 +776,6 @@ namespace Langulus::Anyness::Component
 
          // Add space for any additional dimensions, with alignment     
          Values<ENTRYN::Id...>::ForEach([&]<Cid i>{
-            total += self.template DefineHeapFooter<i>(reserve);
-
             if constexpr (CT::TypeErased<C>) {
                const auto T = self.template GetType<i>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
@@ -771,6 +787,8 @@ namespace Langulus::Anyness::Component
                total = Align(total, alignof(T));
                total += reserve * sizeof(T);
             }
+            
+            total += self.template DefineHeapFooter<i>(reserve);
          });
 
          result.mTotalBytes = Roof2(total);

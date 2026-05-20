@@ -63,9 +63,12 @@ namespace Langulus::Anyness::Component
       }
       
       /// Transfer from any kind of container, respecting intents             
-      ///   @param intent the intent and container to transfer from           
+      ///   @param intent The intent and container to transfer from.          
+      ///   @param reserve Optional reserve override, which is taken into     
+      ///      account only when we're cloning or copying, as only then       
+      ///      a new allocation occurs.                                       
       template<CT::Container C, CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this C& self, I&& intent) {
+      void ConstructFrom(this C& self, I&& intent, size_t reserve = 0) {
          using IT = Deint<I>;
          IT from = LglsFwd(intent.what);
 
@@ -124,9 +127,11 @@ namespace Langulus::Anyness::Component
             // Allocate new memory and set count, so that handle        
             // iteration is valid                                       
             if constexpr (CT::Contiguous<C>)
-               ThisCom::AllocateFresh(ThisCom::RequestHeap(count));
-            else
-               ThisCom::AllocateFresh(ThisCom::RequestHeap(from.template GetReserved<Id::First>()));
+               ThisCom::AllocateFresh(ThisCom::RequestHeap(count > reserve ? count : reserve));
+            else {
+               const auto rhs_reserve = from.template GetReserved<Id::First>();
+               ThisCom::AllocateFresh(ThisCom::RequestHeap(rhs_reserve > reserve ? rhs_reserve : reserve));
+            }
 
             if_available(self.template SetCountInner<Id::First>(count));
             auto dst = self.GetHandle().ForceMutable();
@@ -252,23 +257,7 @@ namespace Langulus::Anyness::Component
       ///   @param elements number of elements to allocate                    
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void AllocateMore(this C& self, Count<C> elements) {
-         if constexpr (InitialSize and GrowthFactor) {
-            // We override allocation size with predefined parameters,  
-            // if such are defined                                      
-            if (elements <= InitialSize)
-               elements = InitialSize;
-            else {
-               Count<C> growth = InitialSize;
-               while (elements > InitialSize + growth)
-                  growth *= GrowthFactor;
-               elements = InitialSize + growth;
-               //TODO when pagefile size is reached, start growing linearly by pagefile-sized intervals. this way we minimize cache misses in huge hash tables
-            }
-         }
-
          LglsAssumeDev(elements > self.template GetCount<SID>(), "Bad element count");
-         if constexpr (CT::ContainsOne<C>)
-            LglsAssumeDev(elements == 1, "Container allows only one allocated element");
          const auto al = DecvqAllCast(self.template GetAllocation<SID>());
          const auto request = ThisCom::RequestHeap(elements);
 
@@ -532,36 +521,22 @@ namespace Langulus::Anyness::Component
 
       /// Branch out the current container by doing a shallow copy.           
       /// Happens when you try to modify a container with strong ownership    
-      /// from somewhere else (when GetUses() > 1)                            
+      /// from somewhere else (when GetUses() > 1). Allocates a fresh         
+      /// allocation in the case we haven't allocated anything yet.           
       ///   @param newReserve usually branching is accompanied by a resize,   
       ///      so specify it here                                             
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void BranchOut(this C& self, Count<C> newReserve) {
-         if (self.template GetUses<SID>() > 1) {
-            // We have to branch out                                    
-            const C backup {Abandon{self}};
-            ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
-
-            // Reinsert the old items                                   
-            auto to = self.GetHandle().ForceMutable();
-            try {
-               backup.template Apply<false>([&to](auto const& from) {
-                  if constexpr (CT::Supported<decltype(from)>) {
-                     Id::ForEach([&]<Cid D>{
-                        to.template EmplaceWithIntent<D>(Refer(from));
-                     });
-                  }
-                  ++to;
-               });
-            }
-            catch (...) {
-               self.template SetCountInner<SID>(to - self.GetHandle()); //TODO apply to all shared counts?
-               throw;
-            }
-
-            self.template SetCountInner<SID>(backup.template GetCount<SID>()); //TODO apply to all shared counts? also, isn't this redundant? self already has the count?
+         if (self.template GetUses<SID>() == 1) {
+            ThisCom::AllocateMore(newReserve);
+            return;
          }
-         else ThisCom::AllocateMore(newReserve);
+
+         const C backup {Abandon{self}};
+         if (self.template IsEmpty<SID>())
+            ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
+         else
+            ThisCom::ConstructFrom(Copy(backup), newReserve);
       }
    };
 

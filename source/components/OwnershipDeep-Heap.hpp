@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
    ///      ownership in general. Shouldn't be used for embedded containers.  
    template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
    struct OwnershipDeepHeap : OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...> {
-      using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
+      using HeapRequest = PerDimension<PerElement<PerIndirection<AllocationPtr>>>;
       using Id = typename OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...>::Id;
 
       template<Cid SID>

@@ -346,7 +346,6 @@ namespace Langulus::Anyness
          static_assert(PICK::Id::template Contains<SID>,
             "The PICK must share the provided ID");
 
-         using PROVIDER = typename decltype(FindProvider<SID>())::First;
          using PICK_R   = typename PICK::HeapRequest;
          if constexpr (IsRequestModifier<PICK_R>) {
             static_assert(not IsFooterRequest<PICK_R>,
@@ -362,6 +361,7 @@ namespace Langulus::Anyness
                using R = typename C::HeapRequest;
                if constexpr (IsRequestModifier<R>) {
                   if constexpr(R::AllocatedPerDimension) {
+                     using PROVIDER = typename decltype(FindProvider<SID>())::First;
                      using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
                      INTERSECT::ForEachConstOr([&offset]<Cid D> {
                         if constexpr (D == SID)
@@ -382,6 +382,7 @@ namespace Langulus::Anyness
                      if constexpr (R::AllocatedPerDimension and not IsFooterRequest<R>) {
                         // Multiply only by the number of dimensions    
                         // that are shared with the relevant provider.  
+                        using PROVIDER = typename decltype(FindProvider<SID>())::First;
                         using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
                         offset += sizeof(TypeOf<R>) * INTERSECT::Count;
                      }
@@ -396,11 +397,9 @@ namespace Langulus::Anyness
       }
 
       /// Go through all components relevant to the provided dimension SID    
-      /// and accumulate their heap footer requests into a byte amount, used  
-      /// for additional footer size when allocating.                         
-      ///   @attention assumes relevant type components have been initialized 
-      ///      prior to calling this function.                                
-      ///   @param count footer can depend on a new reserved amount           
+      /// that have PerDimension modifier, and accumulate their heap          
+      /// requests into a byte amount.                                        
+      ///   @param count Footer can depend on a new reserved amount           
       ///   @return The size of the heap footer for chosen dimension in bytes.
       ///      The footer starts at GetRawReserveEnd<SID>().                  
       template<Cid SID>
@@ -413,27 +412,23 @@ namespace Langulus::Anyness
             if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
                if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
-                  // Multiply only by the number of dimensions          
-                  // that are shared with the relevant provider.        
-                  //using PROVIDER  = typename decltype(FindProvider<SID>())::First;
-                  //using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
-                  //constexpr size_t intersects = INTERSECT::Count;
-                  bytesize += sizeof(TypeOf<R>)
-                     //* (R::AllocatedPerDimension   ? intersects : 1)
-                     * (R::AllocatedPerElement     ? count      : 1)
-                     * (R::AllocatedPerIndirection ? indirects  : 1);
+                  if constexpr (R::AllocatedPerDimension) {
+                     bytesize += sizeof(TypeOf<R>)
+                        * (R::AllocatedPerElement     ? count      : 1)
+                        * (R::AllocatedPerIndirection ? indirects  : 1);
+                  }
                }
             }
          });
          return bytesize;
       }
 
-      /// Go through all components until PICK is reached, and accumulate     
-      /// the offset up to that point, to get the byte offset in the heap     
-      /// for a particular dimension 'SID'.                                   
-      ///   @param count heap requests can depend on the amount of elements   
-      ///   @return the heap byte offset, where PICK's data resides           
-      ///   @attention the offset, relative to GetRawReserveEnd<SID>()        
+      /// Go through all components with PerDimension modifier until PICK is  
+      /// reached, and accumulate the offset up to that point, to get the byte
+      /// offset in the heap for the particular dimension 'SID'.              
+      ///   @param count Heap requests can depend on the amount of elements.  
+      ///   @return The heap byte offset, where PICK's data resides. Relative 
+      ///      to GetRawReserveEnd<SID>().                                    
       template<class PICK, Cid SID>
       constexpr size_t GetHeapFooterOffset(
          this auto const& self, [[maybe_unused]] const size_t count
@@ -443,46 +438,103 @@ namespace Langulus::Anyness
          static_assert(PICK::Id::template Contains<SID>,
             "The PICK must share the provided ID");
 
-         //using PROVIDER = typename decltype(FindProvider<SID>())::First;
-         using PICK_R   = typename PICK::HeapRequest;
+         using PICK_R = typename PICK::HeapRequest;
          static_assert(IsFooterRequest<PICK_R>,
             "Not a footer request, use GetHeapHeaderOffset instead");
+         static_assert(PICK_R::AllocatedPerDimension,
+            "Not a PerDimension request, use GetHeapFooterOffsetGlobal instead");
 
          size_t offset = 0;
          const size_t indirects = self.template GetIndirections<SID>();
          ComponentList::ForEachConstOr([&offset, &indirects, &count]<class C> {
-            if constexpr (CT::DerivedFrom<C, PICK>){
-               // Target component reached, but there might be          
-               // dimensional offset to consider.                       
-               /*using R = typename C::HeapRequest;
-               if constexpr (IsRequestModifier<R>) {
-                  if constexpr(R::AllocatedPerDimension) {
-                     using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
-                     INTERSECT::ForEachConstOr([&offset, &indirects, &count]<Cid D> {
-                        if constexpr (D == SID)
-                           return true;
-                        else {
-                           offset += sizeof(TypeOf<R>)
-                              * (R::AllocatedPerElement     ? count     : 1)
-                              * (R::AllocatedPerIndirection ? indirects : 1);
-                           return No {};
-                        }
-                     });
-                  }
-               }*/
+            if constexpr (CT::DerivedFrom<C, PICK>)
                return true;
-            }
             else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
                if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
-                  // Multiply only by the number of dimensions          
-                  // that are shared with the relevant provider.        
-                  //using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
-                  //constexpr size_t intersects = INTERSECT::Count;
-                  offset += sizeof(TypeOf<R>)
-                     //* (R::AllocatedPerDimension   ? intersects : 1)
-                     * (R::AllocatedPerElement     ? count      : 1)
-                     * (R::AllocatedPerIndirection ? indirects  : 1);
+                  if constexpr (R::AllocatedPerDimension) {
+                     offset += sizeof(TypeOf<R>)
+                        * (R::AllocatedPerElement     ? count     : 1)
+                        * (R::AllocatedPerIndirection ? indirects : 1);
+                  }
+               }
+               return No {};
+            }
+            else return No {};
+         });
+         return offset;
+      }
+
+      /// Go through all components relevant to the provider associated with  
+      /// dimension SID that have no PerDimension modifier, and accumulate    
+      /// their heap requests into a byte amount.                             
+      ///   @param count Footer can depend on a new reserved amount.          
+      ///   @return The size of the global heap footer for the provider       
+      ///      associated with the dimension 'SID'. Given 'D' is the last     
+      ///      dimension for that provider, the offset is relative to:        
+      ///      GetRawReserveEnd<D>() + DefineHeapFooter<D>                    
+      template<Cid SID>
+      constexpr size_t DefineHeapFooterGlobal(
+         this auto const& self, [[maybe_unused]] const size_t count
+      ) noexcept {
+         size_t bytesize = 0;
+         const size_t indirects = self.template GetIndirections<SID>();
+         ComponentList::ForEach([&bytesize, &indirects, &count]<class C> {
+            if constexpr (requires { typename C::HeapRequest; }) {
+               using R = typename C::HeapRequest;
+               if constexpr (IsFooterRequest<R>) {
+                  if constexpr (not R::AllocatedPerDimension) {
+                     using PROVIDER  = typename decltype(FindProvider<SID>())::First;
+                     using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
+                     if constexpr (not INTERSECT::Empty) {
+                        bytesize += sizeof(TypeOf<R>)
+                           * (R::AllocatedPerElement     ? count     : 1)
+                           * (R::AllocatedPerIndirection ? indirects : 1);
+                     }
+                  }
+               }
+            }
+         });
+         return bytesize;
+      }
+
+      /// Go through all components relevant to the provider associated with  
+      /// dimension SID that have no PerDimension modifier, and accumulate    
+      ///   @param count Footer can depend on a new reserved amount.          
+      ///   @return The size of the global heap footer for the provider       
+      ///      associated with the dimension 'SID'. Given 'D' is the last     
+      ///      dimension for that provider, the offset is relative to:        
+      ///      GetRawReserveEnd<D>() + DefineHeapFooter<D>                    
+      template<class PICK, Cid SID>
+      constexpr size_t GetHeapFooterOffsetGlobal(
+         this auto const& self, [[maybe_unused]] const size_t count
+      ) noexcept {
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+
+         using PICK_R = typename PICK::HeapRequest;
+         static_assert(IsFooterRequest<PICK_R>,
+            "Not a footer request, use GetHeapHeaderOffset instead");
+         static_assert(not PICK_R::AllocatedPerDimension,
+            "PerDimension request, use GetHeapFooterOffset instead");
+
+         size_t offset = 0;
+         const size_t indirects = self.template GetIndirections<SID>();
+         ComponentList::ForEachConstOr([&offset, &indirects, &count]<class C> {
+            if constexpr (CT::DerivedFrom<C, PICK>)
+               return true;
+            else if constexpr (requires { typename C::HeapRequest; }) {
+               using R = typename C::HeapRequest;
+               if constexpr (IsFooterRequest<R>) {
+                  if constexpr (not R::AllocatedPerDimension) {
+                     using PROVIDER  = typename decltype(FindProvider<SID>())::First;
+                     using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
+                     if constexpr (not INTERSECT::Empty) {
+                        offset += sizeof(TypeOf<R>)
+                           * (R::AllocatedPerElement     ? count     : 1)
+                           * (R::AllocatedPerIndirection ? indirects : 1);
+                     }
+                  }
                }
                return No {};
             }
