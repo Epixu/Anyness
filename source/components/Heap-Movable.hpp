@@ -69,27 +69,28 @@ namespace Langulus::Anyness::Component
          using IT = Deint<I>;
          IT from = LglsFwd(intent.what);
 
+         size_t count = from.template GetCount<Id::First>();
+         if (0 == count) {
+            self.template ResetAllocationInner<Id::First>();
+            return;
+         }
+
          if constexpr (CT::Copied<I> or CT::Cloned<I>) {
             // Do a copy or clone.                                      
             // When copying, we're cloning just the first layer, so we  
             // guarantee that data is no longer static and constant at  
             // the first level of indirection.                          
             //self.template SetType<Id::First>(type);
-            size_t count, reserve;
+            //size_t count, reserve;
 
             // Verify that all dimensions are copiable/clonable, and    
             // make sure that 'count' and 'reserve' are consistent      
             // across all dimensions.                                   
             Id::ForEach([&]<Cid D> {
-               #if LANGULUS(SAFE)
-                  count = from.template GetCount<D>();
-                  LglsAssert(count == from.template GetCount<Id::First>(),
-                     "Inconsistent count across dimensions");
-
-                  reserve = from.template GetReserved<D>();
-                  LglsAssert(reserve == from.template GetReserved<Id::First>(),
-                     "Inconsistent reserve across dimensions");
-               #endif
+               LglsAssumeDev(from.template GetCount<D>() == from.template GetCount<Id::First>(),
+                  "Inconsistent count across dimensions");
+               LglsAssumeDev(from.template GetReserved<D>() == from.template GetReserved<Id::First>(),
+                  "Inconsistent reserve across dimensions");
 
                if constexpr (CT::TypeErased<IT>) {
                   auto type = self.template GetType<D>();
@@ -120,22 +121,12 @@ namespace Langulus::Anyness::Component
                }
             });
 
-            if (0 == count) {
-               self.template ResetAllocationInner<Id::First>();
-               return;
-            }
-
-            #if not LANGULUS(SAFE)
-               count = from.template GetCount<Id::First>();
-               reserve = from.template GetReserved<Id::First>();
-            #endif
-
             // Allocate new memory and set count, so that handle        
             // iteration is valid                                       
             if constexpr (CT::Contiguous<C>)
                ThisCom::AllocateFresh(ThisCom::RequestHeap(count));
             else
-               ThisCom::AllocateFresh(ThisCom::RequestHeap(reserve));
+               ThisCom::AllocateFresh(ThisCom::RequestHeap(from.template GetReserved<Id::First>()));
 
             if_available(self.template SetCountInner<Id::First>(count));
             auto dst = self.GetHandle().ForceMutable();
