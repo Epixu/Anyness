@@ -19,7 +19,6 @@ namespace Langulus
    template<>
    struct Values<> {
       using FirstType = void;
-      static constexpr auto First = 0;
       static constexpr bool Empty = true;
       static constexpr size_t Count = 0;
 
@@ -53,8 +52,9 @@ namespace Langulus
    template<auto E1>
    struct Values<E1> {
       using FirstType = decltype(E1);
-      static constexpr auto First = E1;
-      static constexpr bool Empty = false;
+      static constexpr auto First   = E1;
+      static constexpr auto Last    = E1;
+      static constexpr bool Empty   = false;
       static constexpr size_t Count = 1;
 
    protected:
@@ -114,9 +114,13 @@ namespace Langulus
    template<auto E1, auto E2, auto...EN>
    struct Values<E1, E2, EN...> {
       using FirstType = decltype(E1);
-      static constexpr auto First = E1;
-      static constexpr auto Second = E2;
-      static constexpr bool Empty = false;
+      static constexpr auto First   = E1;
+      static constexpr auto Second  = E2;
+      static constexpr auto Last    = []<class V = Values<EN...>> {
+         if constexpr (sizeof...(EN)) return V::Last;
+         else return E2;
+      }();
+      static constexpr bool Empty   = false;
       static constexpr size_t Count = sizeof...(EN) + 2;
 
    protected:
@@ -136,6 +140,10 @@ namespace Langulus
             return Values<>{};
          else if constexpr (sizeof...(INTERSECT) == 1)
             return typename other::template Intersect<Values> {};
+         else if constexpr (sizeof...(EN) == 0) {
+            return typename Values<E1>::template Intersect<other> {}
+                +  typename Values<E2>::template Intersect<other> {};
+         }
          else {
             return typename Values<E1>::template Intersect<other> {}
                 +  typename Values<E2>::template Intersect<other> {}

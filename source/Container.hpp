@@ -581,13 +581,27 @@ namespace Langulus::Anyness
          using R = typename PICK::HeapRequest;
          if constexpr (IsFooterRequest<R>) {
             // Access footer heap                                       
-            // Footer offsets depend on the number of reserved elements 
-            const size_t reserved = self.template GetReserved<SID>();
-            const size_t stride   = self.template GetStride<SID>();
-            const size_t offset   = self.template GetHeapFooterOffset<PICK, SID>(reserved);
-            const auto heap = self.template GetRawAs<uint8_t, SID>();
-            using RC = LglsMutIf(SELF, TypeOf<R>*);
-            return reinterpret_cast<RC>(heap + reserved * stride + offset);
+            if constexpr (R::AllocatedPerDimension) {
+               // Positioned after each dimension data                  
+               const size_t reserved = self.template GetReserved<SID>();
+               const size_t stride = self.template GetStride<SID>();
+               const size_t offset = self.template GetHeapFooterOffset<PICK, SID>(reserved);
+               const auto heap = self.template GetRawAs<uint8_t, SID>();
+               using RC = LglsMutIf(SELF, TypeOf<R>*);
+               return reinterpret_cast<RC>(heap + reserved * stride + offset);
+            }
+            else {
+               // Global footer, positioned after the last dimension    
+               using PROVIDER = typename decltype(FindProvider<SID>())::First;
+               constexpr Cid LAST_ID = PROVIDER::Id::Last;
+               const size_t reserved = self.template GetReserved<LAST_ID>();
+               const size_t stride = self.template GetStride<LAST_ID>();
+               const size_t offset_local = self.template DefineHeapFooter<LAST_ID>(reserved);
+               const size_t offset_global = self.template GetHeapFooterOffsetGlobal<PICK, SID>(reserved);
+               const auto heap = self.template GetRawAs<uint8_t, LAST_ID>();
+               using RC = LglsMutIf(SELF, TypeOf<R>*);
+               return reinterpret_cast<RC>(heap + reserved * stride + offset_local + offset_global);
+            }
          }
          else {
             // Access header heap                                       
