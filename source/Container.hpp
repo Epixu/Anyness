@@ -689,9 +689,12 @@ namespace Langulus::Anyness
 
       /// Checks whether at least one of the components has a method with the 
       /// given name and signature. Undefined at the end of this container.   
-      #define if_inherits(...) requires ( \
+      #define if_inherits(...) requires (ComponentList::ForEachOr([]<class C>{ \
+            return requires (SELF s) { s.C::__VA_ARGS__; }; \
+         }))
+      /*#define if_inherits(...) requires ([]<> \
          (requires (SELF c, COMPONENTS t) { c.COMPONENTS:: __VA_ARGS__; }) or ... \
-      )
+      )*/
 
       /// Propagates method, by calling it in all components where it exists. 
       /// Entirely disables the method for the container, if not found.       
