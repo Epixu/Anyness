@@ -54,7 +54,7 @@ namespace Langulus::Anyness
       using CTTI_Map       = Yes<>;
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
-      using CTTI_Typed     = Types<K, V>;
+      //using CTTI_Typed     = Types<K, V>;
 
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;

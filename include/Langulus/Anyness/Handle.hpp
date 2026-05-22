@@ -406,7 +406,7 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleEmbeddedDense<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      using CTTI_Typed     = Deref<T>;
+      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle;
       using DeepType       = HandleDisowned; //TODO why disowned??
@@ -460,7 +460,7 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleEmbeddedSparse<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      using CTTI_Typed     = Deref<T>;
+      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned; //TODO why disowned??
@@ -520,7 +520,7 @@ namespace Langulus::Anyness
    struct THandleEmergent<T> : Inner::THandleEmbeddedDenseEmergent<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      using CTTI_Typed     = Deref<T>;
+      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandleEmergent;
       using DeepType       = HandleDisowned; //TODO why disowned??
@@ -576,7 +576,7 @@ namespace Langulus::Anyness
    struct THandleEmergent<T> : Inner::THandleEmbeddedSparseEmergent<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      using CTTI_Typed     = Deref<T>;
+      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandleEmergent<Deptr<T>&>;
       using DeepType       = HandleDisowned; //TODO why disowned??
@@ -636,7 +636,7 @@ namespace Langulus::Anyness
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      using CTTI_Typed     = Deref<T>;
+      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;

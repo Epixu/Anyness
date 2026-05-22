@@ -44,7 +44,7 @@ namespace Langulus::Anyness
       using CTTI_Deep      = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_MapsTo    = Text;
-      using CTTI_Typed     = Types<K, V>;
+      //using CTTI_Typed     = Types<K, V>;
 
       static constexpr bool TypeErased = false;
 

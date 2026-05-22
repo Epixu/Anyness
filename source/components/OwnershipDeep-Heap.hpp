@@ -85,6 +85,7 @@ namespace Langulus::Anyness::Component
       LglsComRemoval(friend);
       LglsComOwnershipDeepEmergent(friend);
       LglsComEmplacement(friend);
+      LglsComIterationOperators(friend);
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   

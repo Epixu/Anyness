@@ -312,7 +312,7 @@ namespace Langulus::Anyness::Component
          return ThisCom::GetStride() * self.template GetCount<ID>();
       }
 
-      template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
+      /*template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
       bool CastsToMeta(META) const;
       template<bool BINARY_COMPATIBLE = false>
       bool CastsToMeta(META, size_t) const;
@@ -320,7 +320,7 @@ namespace Langulus::Anyness::Component
       template<CT::NotVoid, bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
       bool CastsTo() const;
       template<CT::NotVoid, bool BINARY_COMPATIBLE = false>
-      bool CastsTo(size_t) const;
+      bool CastsTo(size_t) const;*/
 
       /// Dereference the first element inside the container                  
       constexpr auto& operator * (this auto&& self) assumptious

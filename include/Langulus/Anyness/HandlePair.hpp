@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Handle.hpp"
+#include <source/components/Multitype.hpp>
 
 
 namespace Langulus::Anyness
@@ -16,8 +17,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<>
    struct THandlePair<Handle, Handle> : Com::Container<
-      Com::TypedStack<DMeta, void, false, 0>,
-      Com::TypedStack<DMeta, void, false, 1>,
+      Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
+                     Com::TypedStack<DMeta, void, false, 1>>,
       Com::HeapReference<HeapEntry<0>>,
       Com::HeapReference<HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,
@@ -105,8 +106,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<>
    struct THandlePair<HandleMut, HandleMut> : Com::Container<
-      Com::TypedStack<DMeta, void, false, 0>,
-      Com::TypedStack<DMeta, void, false, 1>,
+      Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
+                     Com::TypedStack<DMeta, void, false, 1>>,
       Com::HeapReference<HeapEntry<0>>,
       Com::HeapReference<HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,
@@ -195,8 +196,8 @@ namespace Langulus::Anyness
    /// Often used for mutable access in maps, where keys can't be modified.   
    template<>
    struct THandlePair<Handle, HandleMut> : Com::Container<
-      Com::TypedStack<DMeta, void, false, 0>,
-      Com::TypedStack<DMeta, void, false, 1>,
+      Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
+                     Com::TypedStack<DMeta, void, false, 1>>,
       Com::HeapReference<HeapEntry<0>>,
       Com::HeapReference<HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,
@@ -286,8 +287,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::Reference K, CT::Reference V> requires CT::NotSheddable<K, V>
    struct THandlePair<THandleEmergent<K>, THandleEmergent<V>> : Com::Container<
-      Com::TypedStatic<DMeta, Deref<K>, 0>,
-      Com::TypedStatic<DMeta, Deref<V>, 1>,
+      Com::Multitype<Com::TypedStatic<DMeta, Deref<K>, 0>,
+                     Com::TypedStatic<DMeta, Deref<V>, 1>>,
       Com::HeapReference<HeapEntry<0, Deref<K>*>>,
       Com::HeapReference<HeapEntry<1, Deref<V>*>>,
       Com::CountStatic<1u, 0, 1>,
@@ -303,7 +304,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
-      using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
+      //using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
 
       using Denser    = THandlePair<typename THandleEmergent<K>::Denser, typename THandleEmergent<V>::Denser>;
       using DeepType  = HandleDisowned; // TODO why disowned?
@@ -379,8 +380,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::Reference K, CT::Reference V> requires CT::NotSheddable<K, V>
    struct THandlePair<THandle<K>, THandle<V>> : Com::Container<
-      Com::TypedStatic<DMeta, Deref<K>, 0>,
-      Com::TypedStatic<DMeta, Deref<V>, 1>,
+      Com::Multitype<Com::TypedStatic<DMeta, Deref<K>, 0>,
+                     Com::TypedStatic<DMeta, Deref<V>, 1>>,
       Com::HeapReference<HeapEntry<0, Deref<K>*>>,
       Com::HeapReference<HeapEntry<1, Deref<V>*>>,
       Com::CountStatic<1u, 0, 1>,
@@ -398,7 +399,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
-      using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
+      //using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
 
       using Denser    = THandlePair<typename THandle<K>::Denser, typename THandle<V>::Denser>;
       using DeepType  = HandleDisowned; // TODO why disowned?
@@ -515,8 +516,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotReference K, CT::NotReference V> requires (CT::NotSheddable<K, V> and CT::NotHandle<K, V>)
    struct THandlePair<THandle<K>, THandle<V>> : Com::Container<
-      Com::TypedStatic<DMeta, Deref<K>, 0>,
-      Com::TypedStatic<DMeta, Deref<V>, 1>,
+      Com::Multitype<Com::TypedStatic<DMeta, Deref<K>, 0>,
+                     Com::TypedStatic<DMeta, Deref<V>, 1>>,
       EnableComponentIf<CT::Dense<K>,  Com::Stack<K, 0>>,
       EnableComponentIf<CT::Dense<V>,  Com::Stack<V, 1>>,
       EnableComponentIf<CT::Sparse<K>, Com::HeapMovable<0, 0, HeapEntry<0, K*>>>,
@@ -537,7 +538,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
-      using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
+      //using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
 
       using Denser    = THandlePair<typename THandle<K>::Denser, typename THandle<V>::Denser>;
       using DeepType  = HandleDisowned; // TODO why disowned?

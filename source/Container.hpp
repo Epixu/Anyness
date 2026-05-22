@@ -613,111 +613,51 @@ namespace Langulus::Anyness
          }
       }
       
-      /// Calculate the heap header size, aligned to the chosen type ID       
-      /*template<Cid SID, CT::Container C>
-      constexpr size_t GetHeapHeaderSize(this C const& self) assumptious {
-         constexpr size_t header = Inner::DefineHeapHeader<SID, COMPONENTS...>();
-         if constexpr (CT::TypeErased<C>) {
-            const auto type = self.template GetType<SID>();
-            LglsAssumeDev(type, "Requesting header size for an untyped container");
-            return Align(header, type.GetAlignment());
-         }
-         else return Align(header, self.template GetAlignment<SID>());
-      }
-
-      /// Calculate the footer size for the relevant heap                     
-      template<Cid SID, CT::Container C>
-      constexpr size_t GetHeapFooterSize(this C const& self, size_t reserve) noexcept {
-         return Inner::DefineHeapFooter<SID, COMPONENTS...>(
-            reserve, self.template GetIndirections<SID>()
-         );
-      }*/
-
-      /// Get a reference to a heap/stack provider's data                     
-      ///   @tparam ID provider ID                                            
-      ///   @return return a reference to the provider's data                 
-      /*template<Cid ID>
-      constexpr auto& AccessProvider(this auto&& self) noexcept {
-         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
-            if constexpr (requires { C::StackProvider; }) {
-               if constexpr (C::StackProvider == ID)
-                  return (self.template AccessStack<C>());
-               else
-                  return No{};
-            }
-            else if constexpr (requires { typename C::HeapProvider; }) {
-               if constexpr (C::HeapProvider::template Contains<ID>)
-                  return (self.template AccessStack<C>());
-               else
-                  return No{};
-            }
-            else return No{};
-         });
-      }*/
-
-      /// Get a reference to the stack component with the given ID            
-      ///   @tparam ID stack provider ID                                      
-      ///   @return return a reference to the provider component              
-      /*template<Cid ID>
-      constexpr auto& AccessStackProvider(this auto&& self) noexcept {
-         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
-            if constexpr (requires { C::StackProvider; }) {
-               if constexpr (C::StackProvider == ID)
-                  return (self.template AccessStack<C>());
-               else
-                  return No{};
-            }
-            else return No{};
-         });
-      }*/
-
-      /// Get a reference to the heap component with the given ID             
-      ///   @tparam ID heap provider ID                                       
-      ///   @return return a reference to the provider component              
-      /*template<Cid ID>
-      constexpr auto& AccessHeapProvider(this auto&& self) noexcept {
-         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
-            if constexpr (requires { typename C::HeapProvider; }) {
-               if constexpr (C::HeapProvider::template Contains<ID>)
-                  return (self.template AccessStack<C>());
-               else
-                  return No {};
-            }
-            else return No {};
-         });
-      }*/
-
       /// Checks whether at least one of the components has a method with the 
       /// given name and signature. Undefined at the end of this container.   
-      #define if_inherits(...) requires ( \
-         (requires (SELF c, COMPONENTS t) { {c.COMPONENTS:: __VA_ARGS__}; }) or ... \
-      )
+      /*#define if_inherits(...) requires ( \
+         (requires (COMPONENTS t) { {t.__VA_ARGS__}; }) or ... \
+      )*/
 
       /// Propagates method, by calling it in all components where it exists. 
       /// Entirely disables the method for the container, if not found.       
       /// Macro is #undeffed at the end of this container to avoid pollution. 
-      #define unify_compose(name) \
+      /*#define unify_compose(name) \
          template<class SELF> \
          constexpr void name(this SELF&& self) noexcept if_inherits(name()) { \
             ComponentList::ForEach([&]<class C>{ \
                if_available(self.C::name()); \
             }); \
-         }
+         }*/
 
       /// Propagates method, by calling it in all components where it exists, 
       /// as long as the ID is satisfied.                                     
       /// Entirely disables the method for the container, if not found.       
       /// Macro is #undeffed at the end of this container to avoid pollution. 
-      #define unify_compose_relevant(name) \
+      /*#define unify_compose_relevant(name) \
          template<Cid SID = 0, class SELF> \
          constexpr void name(this SELF&& self) noexcept if_inherits(template name<SID>()) { \
             ComponentList::ForEach([&]<class C>{ \
                if_available(self.C::template name<SID>()); \
             }); \
-         }
+         }*/
 
-      unify_compose(ConstructDefault);
-      unify_compose_relevant(ConstructHeapRequest);
+      template<class SELF>
+      constexpr void ConstructDefault(this SELF&& self) noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if_available(self.C::ConstructDefault());
+         });
+      }
+
+      template<Cid SID = 0, class SELF>
+      constexpr void ConstructHeapRequest(this SELF&& self) noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if_available(self.C::template ConstructHeapRequest<SID>());
+         });
+      }
+
+      //unify_compose(ConstructDefault);
+      //unify_compose_relevant(ConstructHeapRequest);
 
       /// Call ConstructFrom in all components that implement it.             
       /// Fallback to ConstructDefault otherwise.                             
@@ -742,7 +682,7 @@ namespace Langulus::Anyness
          }
       }
 
-      template<bool FIND_MISSING = true, Cid ID = 0, class SELF>
+      /*template<bool FIND_MISSING = true, Cid ID = 0, class SELF>
       void KeepElementDeep(this SELF&& self) noexcept
       if_inherits(template KeepElementDeep<FIND_MISSING, ID>()) {
          ComponentList::ForEachConstOr([&]<class C> {
@@ -800,7 +740,7 @@ namespace Langulus::Anyness
             }
             else return No {};
          });
-      }
+      }*/
 
       /// Get a handle to the first element(s). Very useful for internal use. 
       /// No-op if C is already a handle, even if AS is specified.            
@@ -897,7 +837,7 @@ namespace Langulus::Anyness
          return LglsFwd(self);
       }
       
-   public:
+   //public:
       /// Visit all element's handles and perform a function on them.         
       /// Handles both linear and non-linear containers gracefully.           
       ///   @tparam SKIP_EMPTY whether or not to skip empty elements inside   
@@ -984,7 +924,7 @@ namespace Langulus::Anyness
          return self;
       }
    
-      #define unify_getter(name) \
+      /*#define unify_getter(name) \
          template<Cid ID = 0, class SELF> \
          constexpr decltype(auto) name(this SELF&& self) \
          if_inherits(template name<ID>()) { \
@@ -1046,7 +986,7 @@ namespace Langulus::Anyness
       unify_getter(IsDeep);
       unify_getter(IsConstant);
       unify_getter(IsExecutable);
-      unify_getter(IsTypeConstrained);
+      unify_getter(IsTypeConstrained);*/
 
       /*template<Cid ID = 0>
       constexpr bool IsExecutable(this auto const& self) noexcept
@@ -1058,7 +998,7 @@ namespace Langulus::Anyness
          });
       }*/
 
-      unify_getter(GetCount);
+      /*unify_getter(GetCount);
       unify_getter(GetReserved);
       unify_getter(GetIndirections);
       unify_getter(GetStride);
@@ -1098,10 +1038,10 @@ namespace Langulus::Anyness
       }
 
       unify_setter(SetType);
-      unify_setter_templated(SetType);
+      unify_setter_templated(SetType);*/
 
    protected:
-      unify_getter(GetHeapInner);
+      /*unify_getter(GetHeapInner);
       unify_getter(GetAllocationInner);
       unify_getter(GetEntriesInner);
       unify_getter(GetRawVoid);
@@ -1121,7 +1061,7 @@ namespace Langulus::Anyness
       #undef unify_getter_templated
       #undef unify_getter_argumented
       #undef unify_setter
-      #undef unify_setter_templated
+      #undef unify_setter_templated*/
    };
    }
 }

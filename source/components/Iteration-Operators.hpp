@@ -66,10 +66,12 @@ namespace Langulus::Anyness::Component
             else {
                using T = TypeOf<C, D>;
                data += offset;
-               if constexpr (CT::Sparse<T> and requires { self.template GetEntriesInner<D>(); }) {
-                  auto& entries = self.template GetEntriesInner<D>();
-                  if (entries)
-                     entries += IndirectsOf<T> * offset;
+               if constexpr (CT::Sparse<T>) {
+                  if constexpr (requires { self.template GetEntriesInner<D>(); }) {
+                     auto& entries = self.template GetEntriesInner<D>();
+                     if (entries)
+                        entries += IndirectsOf<T> * offset;
+                  }
                }
             }
 

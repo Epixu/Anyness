@@ -63,6 +63,7 @@ namespace Langulus::Anyness::Component
    protected:
       LglsComOwnershipDeepEmergent(friend);
       LglsComEmplacement(friend);
+      LglsComIterationOperators(friend);
 
       /// Get the entry array (inner, unsafe)                                 
       template<Cid SID = ID> requires Relevant<SID>
