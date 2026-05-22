@@ -690,14 +690,15 @@ namespace Langulus::Anyness
       /// Checks whether at least one of the components has a method with the 
       /// given name and signature. Undefined at the end of this container.   
       #define if_inherits(...) requires ( \
-         requires (COMPONENTS t) { self.decltype(t):: __VA_ARGS__; } or ... \
+         requires (SELF c, COMPONENTS t) { c.COMPONENTS:: __VA_ARGS__; } or ... \
       )
 
       /// Propagates method, by calling it in all components where it exists. 
       /// Entirely disables the method for the container, if not found.       
       /// Macro is #undeffed at the end of this container to avoid pollution. 
       #define unify_compose(name) \
-         constexpr void name(this auto&& self) noexcept if_inherits(name()) { \
+         template<class SELF> \
+         constexpr void name(this SELF&& self) noexcept if_inherits(name()) { \
             ComponentList::ForEach([&]<class C>{ \
                if_available(self.C::name()); \
             }); \
@@ -708,8 +709,8 @@ namespace Langulus::Anyness
       /// Entirely disables the method for the container, if not found.       
       /// Macro is #undeffed at the end of this container to avoid pollution. 
       #define unify_compose_relevant(name) \
-         template<Cid SID = 0> \
-         constexpr void name(this auto&& self) noexcept if_inherits(template name<SID>()) { \
+         template<Cid SID = 0, class SELF> \
+         constexpr void name(this SELF&& self) noexcept if_inherits(template name<SID>()) { \
             ComponentList::ForEach([&]<class C>{ \
                if_available(self.C::template name<SID>()); \
             }); \
@@ -741,8 +742,8 @@ namespace Langulus::Anyness
          }
       }
 
-      template<bool FIND_MISSING = true, Cid ID = 0>
-      void KeepElementDeep(this auto&& self) noexcept
+      template<bool FIND_MISSING = true, Cid ID = 0, class SELF>
+      void KeepElementDeep(this SELF&& self) noexcept
       if_inherits(template KeepElementDeep<FIND_MISSING, ID>()) {
          ComponentList::ForEachConstOr([&]<class C> {
             if constexpr (requires { self.C::template KeepElementDeep<FIND_MISSING, ID>(); }) {
@@ -753,8 +754,8 @@ namespace Langulus::Anyness
          });
       }
 
-      template<bool FORCE_DESTROY = true, Cid ID = 0>
-      void DestroyElementDeep(this auto&& self) noexcept
+      template<bool FORCE_DESTROY = true, Cid ID = 0, class SELF>
+      void DestroyElementDeep(this SELF&& self) noexcept
       if_inherits(template DestroyElementDeep<FORCE_DESTROY, ID>()) {
          ComponentList::Reverse::ForEachConstOr([&]<class C> {
             if constexpr (requires { self.C::template DestroyElementDeep<FORCE_DESTROY, ID>(); }) {
@@ -765,8 +766,8 @@ namespace Langulus::Anyness
          });
       }
       
-      template<bool FORCE_DESTROY = true, Cid ID = 0>
-      void DestroyElement(this auto& self) assumptious
+      template<bool FORCE_DESTROY = true, Cid ID = 0, class SELF>
+      void DestroyElement(this SELF& self) assumptious
       if_inherits(template DestroyElement<FORCE_DESTROY, ID>()) {
          ComponentList::Reverse::ForEachConstOr([&]<class C> {
             if constexpr (requires { self.C::template DestroyElement<FORCE_DESTROY, ID>(); }) {
@@ -777,8 +778,8 @@ namespace Langulus::Anyness
          });
       }
       
-      template<bool FORCE_DESTROY = true, Cid ID = 0>
-      void DestroyAllElements(this auto& self) assumptious
+      template<bool FORCE_DESTROY = true, Cid ID = 0, class SELF>
+      void DestroyAllElements(this SELF& self) assumptious
       if_inherits(template DestroyAllElements<FORCE_DESTROY, ID>()) {
          ComponentList::Reverse::ForEachConstOr([&]<class C> {
             if constexpr (requires { self.C::template DestroyAllElements<FORCE_DESTROY, ID>(); }) {
@@ -789,8 +790,8 @@ namespace Langulus::Anyness
          });
       }
 
-      template<Cid ID = 0>
-      void DestroyElementShallow(this auto& self) noexcept 
+      template<Cid ID = 0, class SELF>
+      void DestroyElementShallow(this SELF& self) noexcept 
       if_inherits(template DestroyElementShallow<ID>()) {
          ComponentList::Reverse::ForEachConstOr([&]<class C> {
             if constexpr (requires { self.C::template DestroyElementShallow<ID>(); }) {
@@ -984,8 +985,8 @@ namespace Langulus::Anyness
       }
    
       #define unify_getter(name) \
-         template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto&& self) \
+         template<Cid ID = 0, class SELF> \
+         constexpr decltype(auto) name(this SELF&& self) \
          if_inherits(template name<ID>()) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(); }) \
@@ -995,8 +996,8 @@ namespace Langulus::Anyness
          }
 
       #define unify_getter_argumented(name) \
-         template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto&& self, auto&&...arguments) \
+         template<Cid ID = 0, class SELF> \
+         constexpr decltype(auto) name(this SELF&& self, auto&&...arguments) \
          if_inherits(template name<ID>(LglsFwd(arguments)...)) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
@@ -1006,8 +1007,8 @@ namespace Langulus::Anyness
          }
 
       #define unify_getter_templated(name) \
-         template<class ARG, Cid ID = 0> \
-         constexpr decltype(auto) name(this auto&& self) \
+         template<class ARG, Cid ID = 0, class SELF> \
+         constexpr decltype(auto) name(this SELF&& self) \
          if_inherits(template name<ARG, ID>()) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) \
@@ -1017,8 +1018,8 @@ namespace Langulus::Anyness
          }
 
       #define unify_setter(name) \
-         template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto& self, auto&&...arguments) \
+         template<Cid ID = 0, class SELF> \
+         constexpr decltype(auto) name(this SELF& self, auto&&...arguments) \
          if_inherits(template name<ID>(LglsFwd(arguments)...)) { \
             ComponentList::ForEachConstOr([&]<class C> { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
@@ -1028,8 +1029,8 @@ namespace Langulus::Anyness
          }
 
       #define unify_setter_templated(name) \
-         template<class ARG, Cid ID = 0> \
-         constexpr decltype(auto) name(this auto& self) \
+         template<class ARG, Cid ID = 0, class SELF> \
+         constexpr decltype(auto) name(this SELF& self) \
          if_inherits(template name<ARG, ID>()) { \
             ComponentList::ForEachConstOr([&]<class C> { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
@@ -1076,8 +1077,8 @@ namespace Langulus::Anyness
       unify_getter_templated(IsSame);
       unify_getter_templated(IsExact);
 
-      template<class AS = void, Cid ID = 0, class CON>
-      constexpr auto* Get(this CON&& self) assumptious
+      template<class AS = void, Cid ID = 0, class SELF>
+      constexpr auto* Get(this SELF&& self) assumptious
       if_inherits(template Get<AS, ID>()) {
          return ComponentList::ForEachConstOr([&]<class C> assumptious {
             if constexpr (requires { self.C::template Get<AS, ID>(); })
@@ -1086,8 +1087,8 @@ namespace Langulus::Anyness
          });
       }
 
-      template<Cid ID = 0, class AS = void, class CON>
-      constexpr auto GetDense(this CON&& self, size_t count = -1) assumptious
+      template<Cid ID = 0, class AS = void, class SELF>
+      constexpr auto GetDense(this SELF&& self, size_t count = -1) assumptious
       if_inherits(template GetDense<ID, AS>(count)) {
          return ComponentList::ForEachConstOr([&]<class C> assumptious {
             if constexpr (requires { self.C::template GetDense<ID, AS>(count); })

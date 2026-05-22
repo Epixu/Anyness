@@ -165,7 +165,7 @@ namespace Langulus::CT
    template<class T>
    concept HeapEntry = requires {
       {T::Id} -> Same<uint>;
-      CT::Sparse<typename T::T>;
+      requires Sparse<typename T::T>;
    };
 }
 
