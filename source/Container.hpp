@@ -788,7 +788,19 @@ namespace Langulus::Anyness
             else return No {};
          });
       }
-      
+
+      template<Cid ID = 0>
+      void DestroyElementShallow(this auto& self) noexcept 
+      if_inherits(template DestroyElementShallow<ID>()) {
+         ComponentList::Reverse::ForEachConstOr([&]<class C> {
+            if constexpr (requires { self.C::template DestroyElementShallow<ID>(); }) {
+               self.C::template DestroyElementShallow<ID>();
+               return true;
+            }
+            else return No {};
+         });
+      }
+
       /// Get a handle to the first element(s). Very useful for internal use. 
       /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   

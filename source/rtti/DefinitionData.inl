@@ -169,10 +169,29 @@ namespace Langulus::RTTI
          "Can't reflect this function signature - "
          "make sure you're using a pointer to it instead");
 
+      constexpr auto cppname = CppNameOf<T>();
+
+      #if LANGULUS_COMPILER(MSVC)
+         static_assert(not cppname.starts_with("`anonymous-namespace'"),
+            "Reflecting types inside anonymous namespaces is disallowed. "
+            "You would expect that the C++ standard demands, "
+            "that these namespaces have unique names generated, however that's not the case. "
+            "Instead, they will all end up in the same `anonymous-namespace', and result in very "
+            "subtle and infuriating bugs when types with the same name are reflected from multiple translation units."
+         );
+      #elif LANGULUS_COMPILER(CLANG)
+         static_assert(not cppname.starts_with("(anonymous namespace)"),
+            "Reflecting types inside anonymous namespaces is disallowed. "
+            "You would expect that the C++ standard demands, "
+            "that these namespaces have unique names generated, however that's not the case. "
+            "Instead, they will all end up in the same (anonymous namespace), and result in very "
+            "subtle and infuriating bugs when types with the same name are reflected from multiple translation units."
+         );
+      #endif
+
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
-         const auto cppname = CppNameOf<T>();
          DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
@@ -190,9 +209,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname = CppNameOf<T>();
          DefinitionData& definition = s_definition.emplace(cppname);
-
          definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<T, false>());
          LglsAssert(not definition.mNameOf.empty(),
             "Invalid data token is not allowed - "
@@ -994,7 +1011,7 @@ namespace Langulus::RTTI
             deptr->mAddPtr = definition.mDecvqOnce;*/
 
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if (deptr->mDedicatedID and not CT::CustomPointer<T>) {
+            if (not CT::CustomPointer<T> and not CT::Sparse<DenserT> and deptr->mDedicatedID) {
                // We can define ID relatively to deptr to save up on    
                // IDs.                                                  
                //LglsAssumeDev(not deptr->mConst,

@@ -559,3 +559,300 @@ namespace Langulus::CTTI
       }
    };
 }
+
+
+struct EmptyType {};
+static_assert(CT::POD<EmptyType>);
+static_assert(::std::is_copy_constructible_v<EmptyType>);
+static_assert(::std::is_move_constructible_v<EmptyType>);
+static_assert(::std::is_copy_assignable_v<EmptyType>);
+static_assert(::std::is_move_assignable_v<EmptyType>);
+
+struct AggregateType {
+   int i;
+   float f;
+};
+static_assert(CT::POD<AggregateType>);
+static_assert(::std::is_copy_constructible_v<AggregateType>);
+static_assert(::std::is_move_constructible_v<AggregateType>);
+static_assert(::std::is_copy_assignable_v<AggregateType>);
+static_assert(::std::is_move_assignable_v<AggregateType>);
+
+/// Explicitly deleted destructor                                          
+/// @attention this hits a nasty compiler bug on MSVC v143 when intents    
+///   are implicitly cast to built-in move/copy semantics                  
+///   They are disabled because of this, as well as other compiler bugs    
+///   https://stackoverflow.com/questions/79665049                         
+struct NonDestructible {
+   ~NonDestructible() = delete;
+};
+static_assert(::std::is_standard_layout_v<NonDestructible>);
+static_assert(not CT::POD<NonDestructible>);
+static_assert(not ::std::is_copy_constructible_v<NonDestructible>);
+static_assert(not ::std::is_move_constructible_v<NonDestructible>);
+static_assert(    ::std::is_copy_assignable_v<NonDestructible>);
+static_assert(    ::std::is_move_assignable_v<NonDestructible>);
+
+struct DestructibleType {
+   char* p {};
+
+   ~DestructibleType() { if (p) delete p; }
+};
+static_assert(not CT::POD<DestructibleType>);
+static_assert(::std::is_copy_constructible_v<DestructibleType>);
+static_assert(::std::is_move_constructible_v<DestructibleType>);
+static_assert(::std::is_copy_assignable_v<DestructibleType>);
+static_assert(::std::is_move_assignable_v<DestructibleType>);
+
+/// Has no explicit intent constructors and assigners                      
+struct NonIntentConstructible {
+   NonIntentConstructible(CT::NoIntent auto&&) {}
+};
+static_assert(not CT::POD<NonIntentConstructible>);
+static_assert(::std::is_copy_constructible_v<NonIntentConstructible>);
+static_assert(::std::is_move_constructible_v<NonIntentConstructible>);
+static_assert(::std::is_copy_assignable_v<NonIntentConstructible>);
+static_assert(::std::is_move_assignable_v<NonIntentConstructible>);
+
+/// Default-constructible, but only privately                              
+class PrivatelyConstructible {
+   PrivatelyConstructible() = default;
+   PrivatelyConstructible(PrivatelyConstructible const&) = default;
+   PrivatelyConstructible(PrivatelyConstructible&&) = default;
+};
+static_assert(CT::POD<PrivatelyConstructible>);
+static_assert(not ::std::is_copy_constructible_v<PrivatelyConstructible>);
+static_assert(not ::std::is_move_constructible_v<PrivatelyConstructible>);
+static_assert(not ::std::is_copy_assignable_v<PrivatelyConstructible>);
+static_assert(not ::std::is_move_assignable_v<PrivatelyConstructible>);
+
+/// Has explicit copy, move, refer, clone, abandon, disown constructors    
+/// Because they're explicit, there are no implicit intent-assigners       
+struct PartiallyIntentConstructible {
+   template<template<class> class S, class T>
+   explicit PartiallyIntentConstructible(S<T>&&) requires CT::Intent<S<T>> {}
+};
+static_assert(not CT::POD<PartiallyIntentConstructible>);
+static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructible>);
+static_assert(::std::is_move_constructible_v<PartiallyIntentConstructible>);
+static_assert(::std::is_copy_assignable_v<PartiallyIntentConstructible>);
+static_assert(::std::is_move_assignable_v<PartiallyIntentConstructible>);
+
+/// Has implicit copy, move, refer, clone, abandon, disown constructors    
+/// Because they're implicit, the type should also have all intent-assigs  
+///   @attention this hits a lot of compiler bugs on different compilers:  
+///   - it causes ambiguity on Clang 19.1 for refer intents, because       
+///     the compiler can't decide whether to implicit-cast to && or        
+///     const&
+///   - it causes ambiguity on GCC 14.2 for move/abandon intents, because  
+///     the compiler can't decide how to implicit-cast to && or            
+///     const&
+///   @note implicit coversion of intents has been disabled to cope        
+struct PartiallyIntentConstructibleButImplicitly {
+   template<template<class> class S, class T>
+   PartiallyIntentConstructibleButImplicitly(S<T>&&) requires CT::Intent<S<T>> {}
+};
+static_assert(not CT::POD<PartiallyIntentConstructibleButImplicitly>);
+static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructibleButImplicitly>);
+static_assert(::std::is_move_constructible_v<PartiallyIntentConstructibleButImplicitly>);
+static_assert(::std::is_copy_assignable_v<PartiallyIntentConstructibleButImplicitly>);
+static_assert(::std::is_move_assignable_v<PartiallyIntentConstructibleButImplicitly>);
+
+/// Has all intent constructors                                            
+/// Making constructor explicit makes sure, that no implicit intent assign 
+/// happens                                                                
+struct AllIntentConstructible {
+   explicit AllIntentConstructible(CT::Intent auto&&) {}
+};
+   
+/// Has all intent constructors                                            
+/// Making constructor implicit also allows for implicit intent assignments
+struct AllIntentConstructibleImplicit {
+   AllIntentConstructibleImplicit(CT::Intent auto&&) {}
+};
+
+/// Has all intent constructors and assigners                              
+struct AllIntentConstructibleAndAssignable {
+   AllIntentConstructibleAndAssignable(CT::Intent auto&&) {}
+   AllIntentConstructibleAndAssignable& operator = (CT::Intent auto&&) { return *this; }
+};
+
+/*template<class T>
+struct SheddableType {
+   using CTTI_Sheddable = T;
+   using CTTI_Typed = T;
+
+   T instance;
+
+   SheddableType(T t) : instance {LglsFwd(t)} {}
+};*/
+   
+/// Implicit assignment is disabled due to custom copy/move constructors   
+struct alignas(128) Complex {
+   int  member;
+   bool anotherMember {};
+   int  anotherMemberArray [12] {};
+   int* sparseMember {};
+
+   Complex(const Complex& s) : member(s.member) {}
+   Complex(Complex&& s) : member(s.member) {}
+   Complex(int stuff) : member(stuff) {}
+
+   ~Complex() {
+      if (sparseMember) delete sparseMember;
+   }
+};
+static_assert(not CT::POD<Complex>);
+static_assert(    ::std::is_copy_constructible_v<Complex>);
+static_assert(    ::std::is_move_constructible_v<Complex>);
+static_assert(not ::std::is_copy_assignable_v<Complex>);
+static_assert(not ::std::is_move_assignable_v<Complex>);
+
+class ContainsComplex {
+   Complex mData;
+};
+
+/// A complex aggregate type                                               
+struct AggregateTypeComplex {
+   int m1, m2, m3, m4;
+   bool m5;
+   Complex mData;
+};
+   
+/// Constructible but not assignable                                       
+struct ReferConstructibleButNotAssignable {
+   int m;
+   explicit ReferConstructibleButNotAssignable(const ReferConstructibleButNotAssignable& a) : m {a.m} {}
+   ReferConstructibleButNotAssignable(Refer<ReferConstructibleButNotAssignable>&& a) : m {a->m} {}
+   ReferConstructibleButNotAssignable& operator = (ReferConstructibleButNotAssignable const&) = delete;
+   ReferConstructibleButNotAssignable& operator = (ReferConstructibleButNotAssignable&&) = delete;
+};
+static_assert(not ::std::is_trivially_copy_constructible_v<ReferConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_constructible_v<ReferConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_copy_assignable_v<ReferConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_assignable_v<ReferConstructibleButNotAssignable>);
+
+struct CopyConstructibleButNotAssignable {
+   int m;
+   CopyConstructibleButNotAssignable(Copy<CopyConstructibleButNotAssignable>&& a) : m {a->m} {}
+   CopyConstructibleButNotAssignable& operator = (CopyConstructibleButNotAssignable const&) = delete;
+   CopyConstructibleButNotAssignable& operator = (CopyConstructibleButNotAssignable&&) = delete;
+};
+static_assert(not ::std::is_trivially_copy_constructible_v<CopyConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_constructible_v<CopyConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_copy_assignable_v<CopyConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_assignable_v<CopyConstructibleButNotAssignable>);
+
+struct MoveConstructibleButNotAssignable {
+   int m;
+   explicit MoveConstructibleButNotAssignable(MoveConstructibleButNotAssignable&& a) : m {a.m} {}
+   MoveConstructibleButNotAssignable(Move<MoveConstructibleButNotAssignable>&& a) : m {a->m} {}
+   MoveConstructibleButNotAssignable& operator = (MoveConstructibleButNotAssignable const&) = delete;
+   MoveConstructibleButNotAssignable& operator = (MoveConstructibleButNotAssignable&&) = delete;
+};
+static_assert(not ::std::is_trivially_copy_constructible_v<MoveConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_constructible_v<MoveConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_copy_assignable_v<MoveConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_assignable_v<MoveConstructibleButNotAssignable>);
+
+struct AbandonConstructibleButNotAssignable {
+   int m;
+   AbandonConstructibleButNotAssignable(Abandon<AbandonConstructibleButNotAssignable>&& a) : m {a->m} {}
+   AbandonConstructibleButNotAssignable& operator = (AbandonConstructibleButNotAssignable const&) = delete;
+   AbandonConstructibleButNotAssignable& operator = (AbandonConstructibleButNotAssignable&&) = delete;
+};
+static_assert(not ::std::is_trivially_copy_constructible_v<AbandonConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_constructible_v<AbandonConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_copy_assignable_v<AbandonConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_assignable_v<AbandonConstructibleButNotAssignable>);
+
+struct DisownConstructibleButNotAssignable {
+   int m;
+   DisownConstructibleButNotAssignable(Disown<DisownConstructibleButNotAssignable>&& a) : m {a->m} {}
+   DisownConstructibleButNotAssignable& operator = (DisownConstructibleButNotAssignable const&) = delete;
+   DisownConstructibleButNotAssignable& operator = (DisownConstructibleButNotAssignable&&) = delete;
+};
+static_assert(not ::std::is_trivially_copy_constructible_v<DisownConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_constructible_v<DisownConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_copy_assignable_v<DisownConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_assignable_v<DisownConstructibleButNotAssignable>);
+
+struct CloneConstructibleButNotAssignable {
+   int m;
+   CloneConstructibleButNotAssignable(Clone<CloneConstructibleButNotAssignable>&& a) : m {a->m} {}
+   CloneConstructibleButNotAssignable& operator = (CloneConstructibleButNotAssignable const&) = delete;
+   CloneConstructibleButNotAssignable& operator = (CloneConstructibleButNotAssignable&&) = delete;
+};
+static_assert(not ::std::is_trivially_copy_constructible_v<CloneConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_constructible_v<CloneConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_copy_assignable_v<CloneConstructibleButNotAssignable>);
+static_assert(not ::std::is_trivially_move_assignable_v<CloneConstructibleButNotAssignable>);
+
+/// Assignable but not constructible                                       
+struct ReferAssignableButNotConstructible {
+   int m;
+   ReferAssignableButNotConstructible& operator = (Refer<ReferAssignableButNotConstructible>&& a) {
+      m = a->m;
+      return *this;
+   }
+};
+static_assert(::std::is_assignable_v<ReferAssignableButNotConstructible, Refer<ReferAssignableButNotConstructible>>);
+
+struct CopyAssignableButNotConstructible {
+   int m;
+   CopyAssignableButNotConstructible& operator = (Copy<CopyAssignableButNotConstructible>&& a) {
+      m = a->m;
+      return *this;
+   }
+};
+static_assert(::std::is_assignable_v<CopyAssignableButNotConstructible, Copy<CopyAssignableButNotConstructible>>);
+
+struct MoveAssignableButNotConstructible {
+   int m;
+   MoveAssignableButNotConstructible& operator = (Move<MoveAssignableButNotConstructible>&& a) {
+      m = a->m;
+      return *this;
+   }
+};
+static_assert(::std::is_assignable_v<MoveAssignableButNotConstructible, Move<MoveAssignableButNotConstructible>>);
+
+struct AbandonAssignableButNotConstructible {
+   int m;
+   AbandonAssignableButNotConstructible& operator = (Abandon<AbandonAssignableButNotConstructible>&& a) {
+      m = a->m;
+      return *this;
+   }
+};
+static_assert(::std::is_assignable_v<AbandonAssignableButNotConstructible, Abandon<AbandonAssignableButNotConstructible>>);
+
+struct DisownAssignableButNotConstructible {
+   int m;
+   DisownAssignableButNotConstructible& operator = (Disown<DisownAssignableButNotConstructible>&& a) {
+      m = a->m;
+      return *this;
+   }
+};
+static_assert(::std::is_assignable_v<DisownAssignableButNotConstructible, Disown<DisownAssignableButNotConstructible>>);
+
+struct CloneAssignableButNotConstructible {
+   int m;
+   CloneAssignableButNotConstructible& operator = (Clone<CloneAssignableButNotConstructible>&& a) {
+      m = a->m;
+      return *this;
+   }
+};
+static_assert(::std::is_assignable_v<CloneAssignableButNotConstructible, Clone<CloneAssignableButNotConstructible>>);
+
+/// Custom POD type                                                        
+struct ForcefullyPod {
+   using CTTI_POD = Yes<>;
+   Complex mData;
+};
+static_assert(CT::POD<ForcefullyPod>);
+static_assert(    ::std::is_copy_constructible_v<ForcefullyPod>);
+static_assert(    ::std::is_move_constructible_v<ForcefullyPod>);
+static_assert(not ::std::is_copy_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
+static_assert(not ::std::is_move_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
+
+enum TypedEnum : int64_t {one1, two2};
+enum class TypedEnumClass : int64_t {one1, two2};

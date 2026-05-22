@@ -475,7 +475,10 @@ SCENARIO("NameOf") {
 
    DEFINE_NAMEOF_TYPE_TEST(IncompleteType, "IncompleteType")
    DEFINE_NAMEOF_TYPE_TEST(IncompleteType*, "IncompleteType*")
+   DEFINE_NAMEOF_TYPE_TEST(IncompleteType**, "IncompleteType**")
    DEFINE_NAMEOF_TYPE_TEST(const IncompleteType*, "IncompleteType const*")
+   DEFINE_NAMEOF_TYPE_TEST(const IncompleteType**, "IncompleteType const**")
+   DEFINE_NAMEOF_TYPE_TEST(const IncompleteType* const*, "IncompleteType const* const*")
    DEFINE_NAMEOF_TYPE_TEST(const IncompleteType, "IncompleteType const")
 
    DEFINE_NAMEOF_TYPE_TEST(
@@ -656,7 +659,10 @@ SCENARIO("CppNameOf") {
 
    DEFINE_CPPNAMEOF_TYPE_TEST(IncompleteType, "IncompleteType")
    DEFINE_CPPNAMEOF_TYPE_TEST(IncompleteType*, "IncompleteType*")
+   DEFINE_CPPNAMEOF_TYPE_TEST(IncompleteType**, "IncompleteType**")
    DEFINE_CPPNAMEOF_TYPE_TEST(const IncompleteType*, "IncompleteType const*")
+   DEFINE_CPPNAMEOF_TYPE_TEST(const IncompleteType**, "IncompleteType const**")
+   DEFINE_CPPNAMEOF_TYPE_TEST(const IncompleteType* const*, "IncompleteType const* const*")
    DEFINE_CPPNAMEOF_TYPE_TEST(const IncompleteType, "IncompleteType const")
 
    DEFINE_CPPNAMEOF_TYPE_TEST(

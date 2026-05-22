@@ -64,7 +64,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::TypeErased<C>) {
             auto T = self.template GetType<SID>();
             if (T.IsSparse() and self.template GetRaw<SID>() and self.template GetAllocation<SID>()) {
-               return ThisCom::GetEntriesInner()
+               return ThisCom::template GetEntriesInner<SID>()
                     + self.SimplifyIndex(LglsFwd(idx)) * T.GetIndirections();
             }
          }
@@ -72,7 +72,7 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C, SID>;
             if constexpr (CT::Sparse<T>) {
                if (self.template GetRaw<SID>() and self.template GetAllocation<SID>()) {
-                  return ThisCom::GetEntriesInner()
+                  return ThisCom::template GetEntriesInner<SID>()
                        + self.SimplifyIndex(LglsFwd(idx)) * IndirectsOf<T>;
                }
             }
@@ -109,7 +109,7 @@ namespace Langulus::Anyness::Component
                count += self.template GetReserved<SID>() * IndirectsOf<T>;
          }
 
-         memset(ThisCom::GetEntriesInner(), 0, count * sizeof(AllocationPtr));
+         memset(ThisCom::template GetEntriesInner<SID>(), 0, count * sizeof(AllocationPtr));
       }
    };
 

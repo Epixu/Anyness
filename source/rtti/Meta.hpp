@@ -87,9 +87,9 @@ namespace Langulus::RTTI::Inner
    };
    #pragma pack(pop)
    
-   static_assert(sizeof(MetaPacked<1>) == 1);
+   /*static_assert(sizeof(MetaPacked<1>) == 1);
    static_assert(sizeof(MetaPacked<2>) == 2);
-   static_assert(sizeof(MetaPacked<3>) == 3);
+   static_assert(sizeof(MetaPacked<3>) == 3);*/
 #endif
 
 

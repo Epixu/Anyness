@@ -233,6 +233,11 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.GetNamedValues().size() == 0);
 }
 
+namespace {
+   struct InUnnamedNamespace {
+   };
+}
+
 ///                                                                           
 /// Reflecting names                                                          
 ///                                                                           
@@ -291,61 +296,37 @@ SCENARIO("Testing reflection of names") {
    {
       const DMeta meta = MetaDataOf<IncompleteType*>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "{anonymous}::IncompleteType*");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType*");
-      #endif
+      REQUIRE(meta.GetCppName() == "IncompleteType*");
       REQUIRE(meta.GetName() == "IncompleteType*");
    }
    {
       const DMeta meta = MetaDataOf<const IncompleteType**>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "{anonymous}::IncompleteType const**");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType const**");
-      #endif
+      REQUIRE(meta.GetCppName() == "IncompleteType const**");
       REQUIRE(meta.GetName() == "IncompleteType const**");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits");
-      #endif
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits");
       REQUIRE(meta.GetName() == "MyType");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits*>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits*");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits*");
-      #endif
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits*");
       REQUIRE(meta.GetName() == "MyType*");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits const*>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits const*");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits const*");
-      #endif
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits const*");
       REQUIRE(meta.GetName() == "MyType const*");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits* const*>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits* const*");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits* const*");
-      #endif
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits* const*");
       REQUIRE(meta.GetName() == "MyType* const*");
    }
    {
@@ -372,11 +353,7 @@ SCENARIO("Testing reflection of names") {
    {
       const CMeta meta = MetaConstOf<Pi::Number>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "<unnamed>::Pi::Number");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::Pi::Number");
-      #endif
+      REQUIRE(meta.GetCppName() == "Pi::Number");
       REQUIRE(meta.GetName() == "Pi::Number");
    }
 
@@ -427,6 +404,13 @@ SCENARIO("Testing reflection of names") {
    //REQUIRE_THROWS(MetaDataOf<ReservedName4>()); // shouldn't compile
    //REQUIRE_THROWS(MetaDataOf<ReservedName5>()); // shouldn't compile
    //REQUIRE_THROWS(MetaDataOf<ReservedName6>()); // shouldn't compile
+   
+   //REQUIRE_THROWS(MetaDataOf<InUnnamedNamespace>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InUnnamedNamespace*>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InUnnamedNamespace**>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InUnnamedNamespace const>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InUnnamedNamespace const*>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InUnnamedNamespace const* const* const>()); // shouldn't compile
 }
 
 ///                                                                           
@@ -730,11 +714,7 @@ SCENARIO("Reflecting a value") {
    {
       const CMeta meta = MetaConstOf<Pi::Number>();
       REQUIRE(meta);
-      #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "<unnamed>::Pi::Number");
-      #else
-         REQUIRE(meta.GetCppName() == "(anonymous namespace)::Pi::Number");
-      #endif
+      REQUIRE(meta.GetCppName() == "Pi::Number");
       REQUIRE(meta.GetName() == "Pi::Number");
       REQUIRE(meta.GetVersionMajor() == 1);
       REQUIRE(meta.GetVersionMinor() == 0);

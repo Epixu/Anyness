@@ -179,7 +179,7 @@ namespace Langulus::RTTI::Inner
       return {};
    }
 
-   /// Get the name of the type as it appearch in C++                         
+   /// Get the name of the type as it appears in C++                          
    TEMPLATE()
    auto ME()::GetCppName() const noexcept -> Token {
       const auto id = Base::GetID();
