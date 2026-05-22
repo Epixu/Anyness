@@ -24,26 +24,23 @@ namespace doctest
    };
 }
 
-namespace
-{
-   /// A type that is reflected, as convertible to Text                       
-   ///    @attention this causes MSVC to ICE since 19.40.33811.0 :(           
-   ///      good thing we don't support MSVC any longer :)                    
-   struct Stringifiable {
-      using CTTI_MapsTo = Text;
-      explicit operator Text() {
-         return "Stringifiable converted to Text";
-      }
-   };
+/// A type that is reflected, as convertible to Text                          
+///    @attention this causes MSVC to ICE since 19.40.33811.0 :(              
+///      good thing we don't support MSVC any longer :)                       
+struct Stringifiable {
+   using CTTI_MapsTo = Text;
+   explicit operator Text() {
+      return "Stringifiable converted to Text";
+   }
+};
 
-   /// A type that is reflected as convertible to Text                        
-   struct StringifiableConst {
-      using CTTI_MapsTo = Text;
-      explicit operator Text() const { 
-         return "StringifiableConst converted to Text";
-      }
-   };
-}
+/// A type that is reflected as convertible to Text                           
+struct StringifiableConst {
+   using CTTI_MapsTo = Text;
+   explicit operator Text() const { 
+      return "StringifiableConst converted to Text";
+   }
+};
 
 /// Possible states:                                                          
 void Text_CheckState_Default(const CT::Container auto& text) {
