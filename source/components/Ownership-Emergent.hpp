@@ -118,6 +118,7 @@ namespace Langulus::Anyness::Component
 
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
+      ///   @attention operates on all relevant dimensions at once!           
       void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
          self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
       }
@@ -125,6 +126,7 @@ namespace Langulus::Anyness::Component
       /// Reference the allocation once.                                      
       /// If container has DeepOwnership component, all entries will be       
       /// individually referenced as well.                                    
+      ///   @attention operates on all relevant dimensions at once!           
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void Keep(this C& self) noexcept {
          auto a = self.template GetAllocation<SID>();
@@ -138,13 +140,17 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>) {
                if (self.template IsSparse<SID>()) {
                   self.Apply([](auto&& item) {
-                     item.KeepElementDeep();
+                     Id::ForEach([&item]<Cid D> {
+                        item.template KeepElementDeep<false, D>();
+                     });
                   });
                }
             }
             else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
                self.Apply([](auto&& item) {
-                  item.KeepElementDeep();
+                  Id::ForEach([&item]<Cid D> {
+                     item.template KeepElementDeep<false, D>();
+                  });
                });
             }
          }
@@ -153,11 +159,12 @@ namespace Langulus::Anyness::Component
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced                                                  
       ///   @attention this never modifies any state                          
+      ///   @attention operates on all relevant dimensions at once!           
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void Free(this C& self) noexcept {
          auto a = self.template GetAllocation<SID>();
          if (not a)
-            return;
+            return; // Container is disowned, and nothing gets аеreffed 
 
          LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
          if (a->GetUses() == 1) {

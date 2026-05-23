@@ -13,34 +13,53 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Combines multiple type components into a unified interface to combat   
-   /// C++ base method ambiguities.                                           
-   ///   @tparam TC... all the type components to unify                       
-   template<CT::Component...TC> requires (sizeof...(TC) > 1)
-   struct LANGULUS_EBCO Multitype : TC... {
+   /// C++ base method ambiguities, and to add a bit more convenience.        
+   ///   @tparam TC0, TC1, TCN... all the type components to unify            
+   template<CT::Component TC0, CT::Component TC1, CT::Component...TCN>
+   struct LANGULUS_EBCO Multitype : TC0, TC1, TCN... {
       using CTTI_Component = Yes<>;
-      using CTTI_Typed     = Types<TypeOf<TC>...>;
+      using CTTI_Typed     = Types<TypeOf<TC0>, TypeOf<TC1>, TypeOf<TCN>...>;
       using CTTI_ReflectAs = void;
-      using Id             = decltype(((typename TC::Id{}) + ...));
-      using Subcomponents  = Types<TC...>;
+      using Subcomponents  = Types<TC0, TC1, TCN...>;
+      using Id             = ConcatenateValueLists<typename TC0::Id,
+                                                   typename TC1::Id,
+                                                   typename TCN::Id...>;
+      static_assert(TC0::Id::Count == 1
+              and   TC1::Id::Count == 1
+              and ((TCN::Id::Count == 1) and ...),
+              "Each subcomponent needs to be dedicated to their single dimension");
 
       static constexpr int ComponentPrecedence = -3000;
-      static_assert(((TC::ComponentPrecedence == -3000) and ...),
-       "All precedences should match");
+      static constexpr bool TypeErased = TC0::TypeErased
+                                     or  TC1::TypeErased
+                                     or (TCN::TypeErased or ...);
 
-      static constexpr bool TypeErased = (TC::TypeErased or ...);
-      static_assert(((TC::TypeErased == TypeErased) and ...),
-         "Currently all types must either be type-erased or not");
+      static_assert(TC0::ComponentPrecedence == -3000
+              and   TC1::ComponentPrecedence == -3000
+              and ((TCN::ComponentPrecedence == -3000) and ...),
+              "All precedences should match");
+
+      static_assert(TC0::TypeErased == TypeErased 
+              and   TC1::TypeErased == TypeErased
+              and ((TCN::TypeErased == TypeErased) and ...),
+              "Currently all types must either be type-erased or not");
 
       /// Get the contained type                                              
       ///   @tparam SID - type selector                                       
       template<Cid SID>
       constexpr auto GetType(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::GetType();
             else
                return No {};
          });
+      }
+      constexpr auto GetKeyType(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::GetType();
+      }
+      constexpr auto GetValType(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::GetType();
       }
 
       /// Get the size of a single element in bytes                           
@@ -48,11 +67,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr size_t GetStride(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::GetStride();
             else
                return No {};
          });
+      }
+      constexpr size_t GetKeyStride(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::GetStride();
+      }
+      constexpr size_t GetValStride(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::GetStride();
       }
 
       /// Get the alignment of a single element in bytes                      
@@ -60,11 +85,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr pot_t GetAlignment(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::GetAlignment();
             else
                return No {};
          });
+      }
+      constexpr pot_t GetKeyAlignment(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::GetAlignment();
+      }
+      constexpr pot_t GetValAlignment(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::GetAlignment();
       }
 
       /// Get the reflected type name                                         
@@ -72,11 +103,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr auto GetName(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::GetName();
             else
                return No {};
          });
+      }
+      constexpr auto GetKeyName(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::GetName();
+      }
+      constexpr auto GetValName(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::GetName();
       }
 
       /// Check if block has a data type                                      
@@ -85,11 +122,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr bool IsTyped(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsTyped();
             else
                return No {};
          });
+      }
+      constexpr bool IsKeyTyped(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::IsTyped();
+      }
+      constexpr bool IsValTyped(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsTyped();
       }
 
       /// Check if type is akin to the provided type (can run at compile-time 
@@ -100,11 +143,19 @@ namespace Langulus::Anyness::Component
       template<CT::NotVoid T, Cid SID>
       constexpr bool Is(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::template Is<T>();
             else
                return No {};
          });
+      }
+      template<CT::NotVoid T>
+      constexpr bool IsKey(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::template Is<T>();
+      }
+      template<CT::NotVoid T>
+      constexpr bool IsVal(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::template Is<T>();
       }
 
       /// Check if type origin is the same as another (always at runtime)     
@@ -112,13 +163,19 @@ namespace Langulus::Anyness::Component
       ///   @param type the type to check for                                 
       ///   @return true if this container's type is akin to 'type'           
       template<Cid SID>
-      bool Is(this auto const& self, auto&& type) noexcept {
+      bool Is(this auto const& self, auto const& type) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::Is(type);
             else
                return No {};
          });
+      }
+      constexpr bool IsKey(this auto const& self, auto const& type) noexcept requires (Id::First == 0) {
+         return self.TC0::Is(type);
+      }
+      constexpr bool IsVal(this auto const& self, auto const& type) noexcept requires (Id::Second == 1) {
+         return self.TC1::Is(type);
       }
 
       /// Check if type origin is the same as another container's type        
@@ -128,11 +185,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr bool Is(this auto const& self, CT::Container auto const& other) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::Is(other);
             else
                return No {};
          });
+      }
+      constexpr bool IsKey(this auto const& self, CT::Container auto const& other) noexcept requires (Id::First == 0) {
+         return self.TC0::Is(other);
+      }
+      constexpr bool IsVal(this auto const& self, CT::Container auto const& other) noexcept requires (Id::Second == 1) {
+         return self.TC1::Is(other);
       }
 
       /// Check if unqualified type is the same as provided one               
@@ -142,11 +205,19 @@ namespace Langulus::Anyness::Component
       template<CT::NotVoid T, Cid SID>
       constexpr bool IsSame(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::template IsSame<T>();
             else
                return No {};
          });
+      }
+      template<CT::NotVoid T>
+      constexpr bool IsKeySame(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::template IsSame<T>();
+      }
+      template<CT::NotVoid T>
+      constexpr bool IsValSame(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::template IsSame<T>();
       }
 
       /// Check if unqualified type is the same as another                    
@@ -154,13 +225,19 @@ namespace Langulus::Anyness::Component
       ///   @param type the type to check for                                 
       ///   @return true if this block contains similar data                  
       template<Cid SID>
-      bool IsSame(this auto const& self, auto&& type) noexcept {
+      bool IsSame(this auto const& self, auto const& type) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsSame(type);
             else
                return No {};
          });
+      }
+      constexpr bool IsKeySame(this auto const& self, auto const& type) noexcept requires (Id::First == 0) {
+         return self.TC0::IsSame(type);
+      }
+      constexpr bool IsValSame(this auto const& self, auto const& type) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsSame(type);
       }
 
       /// Check if unqualified type is the same as another container's type   
@@ -170,11 +247,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr bool IsSame(this auto const& self, CT::Container auto const& other) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsSame(other);
             else
                return No {};
          });
+      }
+      constexpr bool IsKeySame(this auto const& self, CT::Container auto const& type) noexcept requires (Id::First == 0) {
+         return self.TC0::IsSame(type);
+      }
+      constexpr bool IsValSame(this auto const& self, CT::Container auto const& type) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsSame(type);
       }
 
       /// Check if this type is exactly T (references are ignored)            
@@ -183,11 +266,19 @@ namespace Langulus::Anyness::Component
       template<CT::NotVoid T, Cid SID>
       constexpr bool IsExact(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::template IsExact<T>();
             else
                return No {};
          });
+      }
+      template<CT::NotVoid T>
+      constexpr bool IsKeyExact(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::template IsExact<T>();
+      }
+      template<CT::NotVoid T>
+      constexpr bool IsValExact(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::template IsExact<T>();
       }
 
       /// Check if this type is exactly another                               
@@ -196,11 +287,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       bool IsExact(this auto const& self, auto&& type) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsExact(type);
             else
                return No {};
          });
+      }
+      constexpr bool IsKeyExact(this auto const& self, auto const& type) noexcept requires (Id::First == 0) {
+         return self.TC0::IsExact(type);
+      }
+      constexpr bool IsValExact(this auto const& self, auto const& type) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsExact(type);
       }
 
       /// Check if this type is exactly another container's type              
@@ -209,48 +306,72 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr bool IsExact(this auto const& self, CT::Container auto const& other) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsExact(other);
             else
                return No {};
          });
       }
-      
+      constexpr bool IsKeyExact(this auto const& self, CT::Container auto const& type) noexcept requires (Id::First == 0) {
+         return self.TC0::IsExact(type);
+      }
+      constexpr bool IsValExact(this auto const& self, CT::Container auto const& type) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsExact(type);
+      }
+
       /// Check if container contains pointers                                
       ///   @return true if the block contains pointers                       
       template<Cid SID>
       constexpr bool IsSparse(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsSparse();
             else
                return No {};
          });
       }
-      
+      constexpr bool IsKeySparse(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::IsSparse();
+      }
+      constexpr bool IsValSparse(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsSparse();
+      }
+
       /// Get the number of indirections                                      
       /// int**** will result in 4; int* will result in 1, int results in 0.  
       template<Cid SID>
       constexpr size_t GetIndirections(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::GetIndirections();
             else
                return No {};
          });
       }
-      
+      constexpr size_t GetKeyIndirections(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::GetIndirections();
+      }
+      constexpr size_t GetValIndirections(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::GetIndirections();
+      }
+
       /// Check if block is constant                                          
       ///   @attention disowned containers are always constant                
       ///   @return true if the contents are constant                         
       template<Cid SID>
       constexpr bool IsConstant(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsConstant();
             else
                return No {};
          });
+      }
+      constexpr bool IsKeyConstant(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::IsConstant();
+      }
+      constexpr bool IsValConstant(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsConstant();
       }
 
       /// Check if container is made of other containers                      
@@ -258,11 +379,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr bool IsDeep(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsDeep();
             else
                return No {};
          });
+      }
+      constexpr bool IsKeyDeep(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::IsDeep();
+      }
+      constexpr bool IsValDeep(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsDeep();
       }
 
       /// Check if container contains executable items                        
@@ -270,11 +397,17 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr bool IsExecutable(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsExecutable();
             else
                return No {};
          });
+      }
+      constexpr bool IsKeyExecutable(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::IsExecutable();
+      }
+      constexpr bool IsValExecutable(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsExecutable();
       }
 
       /// Get the size of the type times the contained elements               
@@ -282,13 +415,19 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr size_t GetBytesize(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::GetBytesize();
             else
                return No {};
          });
       }
-      
+      constexpr size_t GetKeyBytesize(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::GetBytesize();
+      }
+      constexpr size_t GetValBytesize(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::GetBytesize();
+      }
+
       /// Set the contained data type if possible.                            
       /// This is still used if statically typed - checks if types are        
       /// compatible in constructors and assigners.                           
@@ -296,12 +435,20 @@ namespace Langulus::Anyness::Component
       template<CT::NotVoid T, Cid SID>
       void SetType(this auto& self) {
          Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::template Contains<SID>) {
+            if constexpr (C::Id::First == SID) {
                self.C::template SetType<T>();
                return true;
             }
             else return No {};
          });
+      }
+      template<CT::NotVoid T>
+      constexpr void SetKeyType(this auto const& self) requires (Id::First == 0) {
+         self.TC0::template SetType<T>();
+      }
+      template<CT::NotVoid T>
+      constexpr void SetValType(this auto const& self) requires (Id::Second == 1) {
+         self.TC1::template SetType<T>();
       }
 
       /// Set the contained data type if possible.                            
@@ -310,28 +457,39 @@ namespace Langulus::Anyness::Component
       /// This particular override doesn't benefit from compile-time checks.  
       ///   @param type the new type                                          
       template<Cid SID>
-      void SetType(this auto& self, auto&& type) {
+      void SetType(this auto& self, auto const& type) {
          Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::template Contains<SID>) {
+            if constexpr (C::Id::First == SID) {
                self.C::SetType(type);
                return true;
             }
             else return No {};
          });
       }
+      constexpr void SetKeyType(this auto const& self, auto const& type) requires (Id::First == 0) {
+         self.TC0::SetType(type);
+      }
+      constexpr void SetValType(this auto const& self, auto const& type) requires (Id::Second == 1) {
+         self.TC1::SetType(type);
+      }
 
       /// Check if type is mutable when the container is empty                
       template<Cid SID>
       constexpr bool IsTypeConstrained(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::IsTypeConstrained();
             else
                return No {};
          });
       }
+      constexpr bool IsKeyTypeConstrained(this auto const& self) noexcept requires (Id::First == 0) {
+         return self.TC0::IsTypeConstrained();
+      }
+      constexpr bool IsValTypeConstrained(this auto const& self) noexcept requires (Id::Second == 1) {
+         return self.TC1::IsTypeConstrained();
+      }
 
-      
    protected:
       LglsComRemoval(friend);
       LglsComHeapMovable(friend);
@@ -345,7 +503,7 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr void ResetType(this auto& self) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>) {
+            if constexpr (C::Id::First == SID) {
                self.C::ResetType();
                return true;
             }
@@ -357,7 +515,7 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr auto& GetTypeInner(this auto&& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept -> auto& {
-            if constexpr (C::Id::template Contains<SID>)
+            if constexpr (C::Id::First == SID)
                return self.C::GetTypeInner();
             else
                return No {};
@@ -368,7 +526,7 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       constexpr void SetTypeInner(this auto& self, auto&& type) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::template Contains<SID>) {
+            if constexpr (C::Id::First == SID) {
                self.C::SetTypeInner(type);
                return true;
             }

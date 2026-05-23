@@ -87,7 +87,8 @@ namespace Langulus::Anyness::Component
             const auto heap     = ThisCom::template GetRawAs<uint8_t, SID - 1>();
             const auto reserved = self.template GetReserved<SID - 1>();
             const auto size     = self.template GetStride<SID - 1>();
-            const auto footer   = self.template DefineHeapFooter<SID - 1>(reserved);
+            const auto indirect = self.template GetIndirections<SID - 1>();
+            const auto footer   = Deref<C>::template DefineHeapFooter<SID - 1>(reserved, indirect);
             const auto align    = self.template GetAlignment<SID>();
             return reinterpret_cast<Tcvq>(
                Align(heap + reserved * size + footer, align)
@@ -503,17 +504,9 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this auto& self, I&& intent) noexcept {
+      void ConstructFrom(this auto& self, I&& intent, size_t) noexcept {
          ThisCom::SetHeapInner(intent.what.template GetHeapInner<Id::First>());
       }
-
-      /// A simple request for allocating memory, which includes heap         
-      /// byte size, number of reserved elements, and header/footer offsets.  
-      struct Request {
-         pot_t  mTotalBytes;
-         size_t mHeaderBytes;
-         size_t mReserved;
-      };
       
       /// Get a size based on reflected allocation page and count.            
       /// This will allocate memory for relevant headers, footers, and types  
@@ -553,14 +546,14 @@ namespace Langulus::Anyness::Component
                const auto T = self.template GetType<Id::First>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                total += reserve * T.GetSize();
+               total += C::template DefineHeapFooter<Id::First>(reserve, T.GetIndirections());
             }
             else {
                // Check for reflected minimal allocation at compile-time
                using T = TypeOf<C, Id::First>;
                total += reserve * sizeof(T);
+               total += C::template DefineHeapFooter<Id::First>(reserve, IndirectsOf<T>);
             }
-
-            total += self.template DefineHeapFooter<Id::First>(reserve);
          }
          else {
             // When there are no footer requests, we are allowed to     
@@ -591,14 +584,14 @@ namespace Langulus::Anyness::Component
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                total = Align(total, T.GetAlignment());
                total += reserve * T.GetSize();
+               total += C::template DefineHeapFooter<i>(reserve, T.GetIndirections());
             }
             else {
                using T = TypeOf<C, i>;
                total = Align(total, alignof(T));
                total += reserve * sizeof(T);
+               total += C::template DefineHeapFooter<i>(reserve, IndirectsOf<T>);
             }
-            
-            total += self.template DefineHeapFooter<i>(reserve);
          });
 
          total += C::template DefineHeapFooterGlobal<Id::First>(reserve);

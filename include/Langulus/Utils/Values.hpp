@@ -203,4 +203,7 @@ namespace Langulus
       template<class OTHER>
       using Intersect = decltype(IntersectInner(OTHER{}));
    };
+
+   template<class...V>
+   using ConcatenateValueLists = decltype((LglsFake(V) + ...));
 }

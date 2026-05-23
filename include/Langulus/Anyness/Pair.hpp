@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <source/components/Typed-Stack.hpp>
+#include <source/components/Multitype.hpp>
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Count-Static.hpp>
 #include <source/components/Reserve-Static.hpp>
@@ -31,14 +32,13 @@
 namespace Langulus::Anyness::Inner
 {
    using PairBase = Com::Container<
-      Com::TypedStack<DMeta, void, false, 0>,  // Type-erased key       
-      Com::TypedStack<DMeta, void, false, 1>,  // Type-erased value     
+      Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,  // Type-erased key       
+                     Com::TypedStack<DMeta, void, false, 1>>,  // Type-erased value     
       Com::HeapMovable<0, 0, HeapEntry<0>, HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
-      Com::OwnershipDeepHeap<true, 0>,    // Separate key deep ownership
-      Com::OwnershipDeepHeap<true, 1>,    // Separate val deep onwership
+      Com::OwnershipDeepHeap<true, 0, 1>, // Deep ownership             
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         
       Com::Assignment<0, 1>,              // Allows assignment          

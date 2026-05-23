@@ -221,8 +221,8 @@ namespace Langulus
 
       /// Just executes lambda with the contained type and returns its result 
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
-         static_assert(requires{ {LglsLamb(lambda, T)} -> ::std::is_not_void; },
-            "Provided argument is not a lambda of the form []<class> -> nonvoid");
+         static_assert(requires{ LglsLamb(lambda, T); },
+            "Provided argument is not a lambda of the form []<class>");
          return LglsLamb(lambda, T);
       }
 
@@ -314,17 +314,16 @@ namespace Langulus
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
-         static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::is_not_void; },
-            "Lambda is not of the form []<class> -> nonvoid");
-         decltype(auto) r1 = LglsLamb(lambda, T1);
-         if constexpr (not ::std::same_as<No, decltype(r1)>)
-            return r1;
+         static_assert(requires{ LglsLamb(lambda, T1); },
+            "Lambda is not of the form []<class>");
+         if constexpr (not ::std::same_as<No, decltype(LglsLamb(lambda, T1))>)
+            return LglsLamb(lambda, T1);
          else {
-            static_assert(requires{ {LglsLamb(lambda, T2)} -> ::std::is_not_void; },
-               "Lambda is not of the form []<class> -> nonvoid");
-            decltype(auto) r2 = LglsLamb(lambda, T2);
-            if constexpr (not ::std::same_as<No, decltype(r2)>)
-               return r2;
+            LglsLamb(lambda, T1);
+            static_assert(requires{ LglsLamb(lambda, T2); },
+               "Lambda is not of the form []<class>");
+            if constexpr (not ::std::same_as<No, decltype(LglsLamb(lambda, T2))>)
+               return LglsLamb(lambda, T2);
             else
                return Types<TN...>::ForEachConstOr(LglsFwd(lambda));
          }
@@ -446,4 +445,7 @@ namespace Langulus
    /// Retrieve the second type from a type list                              
    template<class...T>
    using SecondOf = typename Types<T...>::Second;
+
+   template<CT::Typelist...L>
+   using ConcatenateTypeLists = decltype((LglsFake(L) + ...));
 }

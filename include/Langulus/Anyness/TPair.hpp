@@ -15,10 +15,10 @@ namespace Langulus::Anyness::Inner
    template<CT::NotVoid K, CT::NotVoid V>
    requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TPairBase = Com::Container<
-      Com::TypedStatic<DMeta, K, 0>,
-      Com::TypedStatic<DMeta, V, 1>,
-      Com::Stack<K, 0>,
-      Com::Stack<V, 1>,
+      Com::Multitype<Com::TypedStatic<DMeta, K, 0>,
+                     Com::TypedStatic<DMeta, V, 1>>,
+      Com::Multiprovider<Com::Stack<K, 0>,
+                         Com::Stack<V, 1>>,
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
       Com::OwnershipEmergent<Com::NoOwnership, 0, 1>,

@@ -266,9 +266,6 @@ namespace Langulus::Anyness
       /// the offset up to that point, to get the index in the stack tuple.   
       template<class PICK, CT::Typelist L>
       static constexpr auto GetStackOffsetInner(size_t& offset) {
-         static_assert(requires { typename PICK::StackRequest; },
-            "Component data is not on the stack");
-          
          return L::ForEachConstOr([&offset]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                return GetStackOffsetInner<PICK, typename C::Subcomponents>(offset);
@@ -433,7 +430,7 @@ namespace Langulus::Anyness
          size_t bytesize = 0;
          L::ForEach([&bytesize, &indirects, &count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
-               bytesize += DefineHeapFooter<SID, typename C::Subcomponents>();
+               bytesize += DefineHeapFooter<SID, typename C::Subcomponents>(count, indirects);
             else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
                if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
@@ -665,35 +662,6 @@ namespace Langulus::Anyness
             return reinterpret_cast<RC>(heap + offset);
          }
       }
-      
-      /// Checks whether at least one of the components has a method with the 
-      /// given name and signature. Undefined at the end of this container.   
-      /*#define if_inherits(...) requires ( \
-         (requires (COMPONENTS t) { {t.__VA_ARGS__}; }) or ... \
-      )*/
-
-      /// Propagates method, by calling it in all components where it exists. 
-      /// Entirely disables the method for the container, if not found.       
-      /// Macro is #undeffed at the end of this container to avoid pollution. 
-      /*#define unify_compose(name) \
-         template<class SELF> \
-         constexpr void name(this SELF&& self) noexcept if_inherits(name()) { \
-            ComponentList::ForEach([&]<class C>{ \
-               if_available(self.C::name()); \
-            }); \
-         }*/
-
-      /// Propagates method, by calling it in all components where it exists, 
-      /// as long as the ID is satisfied.                                     
-      /// Entirely disables the method for the container, if not found.       
-      /// Macro is #undeffed at the end of this container to avoid pollution. 
-      /*#define unify_compose_relevant(name) \
-         template<Cid SID = 0, class SELF> \
-         constexpr void name(this SELF&& self) noexcept if_inherits(template name<SID>()) { \
-            ComponentList::ForEach([&]<class C>{ \
-               if_available(self.C::template name<SID>()); \
-            }); \
-         }*/
 
       template<class SELF>
       constexpr void ConstructDefault(this SELF&& self) noexcept {
@@ -708,9 +676,6 @@ namespace Langulus::Anyness
             if_available(self.C::template ConstructHeapRequest<SID>());
          });
       }
-
-      //unify_compose(ConstructDefault);
-      //unify_compose_relevant(ConstructHeapRequest);
 
       /// Call ConstructFrom in all components that implement it.             
       /// Fallback to ConstructDefault otherwise.                             
@@ -734,66 +699,6 @@ namespace Langulus::Anyness
             });
          }
       }
-
-      /*template<bool FIND_MISSING = true, Cid ID = 0, class SELF>
-      void KeepElementDeep(this SELF&& self) noexcept
-      if_inherits(template KeepElementDeep<FIND_MISSING, ID>()) {
-         ComponentList::ForEachConstOr([&]<class C> {
-            if constexpr (requires { self.C::template KeepElementDeep<FIND_MISSING, ID>(); }) {
-               self.C::template KeepElementDeep<FIND_MISSING, ID>();
-               return true;
-            }
-            else return No {};
-         });
-      }
-
-      template<bool FORCE_DESTROY = true, Cid ID = 0, class SELF>
-      void DestroyElementDeep(this SELF&& self) noexcept
-      if_inherits(template DestroyElementDeep<FORCE_DESTROY, ID>()) {
-         ComponentList::Reverse::ForEachConstOr([&]<class C> {
-            if constexpr (requires { self.C::template DestroyElementDeep<FORCE_DESTROY, ID>(); }) {
-               self.C::template DestroyElementDeep<FORCE_DESTROY, ID>();
-               return true;
-            }
-            else return No {};
-         });
-      }
-      
-      template<bool FORCE_DESTROY = true, Cid ID = 0, class SELF>
-      void DestroyElement(this SELF& self) assumptious
-      if_inherits(template DestroyElement<FORCE_DESTROY, ID>()) {
-         ComponentList::Reverse::ForEachConstOr([&]<class C> {
-            if constexpr (requires { self.C::template DestroyElement<FORCE_DESTROY, ID>(); }) {
-               self.C::template DestroyElement<FORCE_DESTROY, ID>();
-               return true;
-            }
-            else return No {};
-         });
-      }
-      
-      template<bool FORCE_DESTROY = true, Cid ID = 0, class SELF>
-      void DestroyAllElements(this SELF& self) assumptious
-      if_inherits(template DestroyAllElements<FORCE_DESTROY, ID>()) {
-         ComponentList::Reverse::ForEachConstOr([&]<class C> {
-            if constexpr (requires { self.C::template DestroyAllElements<FORCE_DESTROY, ID>(); }) {
-               self.C::template DestroyAllElements<FORCE_DESTROY, ID>();
-               return true;
-            }
-            else return No {};
-         });
-      }
-
-      template<Cid ID = 0, class SELF>
-      void DestroyElementShallow(this SELF& self) noexcept 
-      if_inherits(template DestroyElementShallow<ID>()) {
-         ComponentList::Reverse::ForEachConstOr([&]<class C> {
-            if constexpr (requires { self.C::template DestroyElementShallow<ID>(); }) {
-               self.C::template DestroyElementShallow<ID>();
-               return true;
-            }
-            else return No {};
-         });
-      }*/
 
       /// Get a handle to the first element(s). Very useful for internal use. 
       /// No-op if C is already a handle, even if AS is specified.            
@@ -890,7 +795,7 @@ namespace Langulus::Anyness
          return LglsFwd(self);
       }
       
-   //public:
+   public: // public because it is used from serialization routines
       /// Visit all element's handles and perform a function on them.         
       /// Handles both linear and non-linear containers gracefully.           
       ///   @tparam SKIP_EMPTY whether or not to skip empty elements inside   
@@ -971,150 +876,10 @@ namespace Langulus::Anyness
             "You can't assign-absorb from containers with different contiguousness");
 
          ComponentList::ForEach([&]<class C>{
-            if_available(self.C::AssignFrom(FWDIntent(rhs)))
-            //else if_available(self.C::AssignDefault())
+            if_available(self.C::AssignFrom(FWDIntent(rhs)));
          });
          return self;
       }
-   
-      /*#define unify_getter(name) \
-         template<Cid ID = 0, class SELF> \
-         constexpr decltype(auto) name(this SELF&& self) \
-         if_inherits(template name<ID>()) { \
-            return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
-               if constexpr (requires { self.C::template name<ID>(); }) \
-                  return self.C::template name<ID>(); \
-               else return No{}; \
-            }); \
-         }
-
-      #define unify_getter_argumented(name) \
-         template<Cid ID = 0, class SELF> \
-         constexpr decltype(auto) name(this SELF&& self, auto&&...arguments) \
-         if_inherits(template name<ID>(LglsFwd(arguments)...)) { \
-            return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
-               if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
-                  return self.C::template name<ID>(LglsFwd(arguments)...); \
-               else return No{}; \
-            }); \
-         }
-
-      #define unify_getter_templated(name) \
-         template<class ARG, Cid ID = 0, class SELF> \
-         constexpr decltype(auto) name(this SELF&& self) \
-         if_inherits(template name<ARG, ID>()) { \
-            return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
-               if constexpr (requires { self.C::template name<ARG, ID>(); }) \
-                  return self.C::template name<ARG, ID>(); \
-               else return No{}; \
-            }); \
-         }
-
-      #define unify_setter(name) \
-         template<Cid ID = 0, class SELF> \
-         constexpr decltype(auto) name(this SELF& self, auto&&...arguments) \
-         if_inherits(template name<ID>(LglsFwd(arguments)...)) { \
-            ComponentList::ForEachConstOr([&]<class C> { \
-               if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
-                  self.C::template name<ID>(LglsFwd(arguments)...); return 1; \
-               } else return No{}; \
-            }); \
-         }
-
-      #define unify_setter_templated(name) \
-         template<class ARG, Cid ID = 0, class SELF> \
-         constexpr decltype(auto) name(this SELF& self) \
-         if_inherits(template name<ARG, ID>()) { \
-            ComponentList::ForEachConstOr([&]<class C> { \
-               if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
-                  self.C::template name<ARG, ID>(); return 1; \
-               } else return No{}; \
-            }); \
-         }
-
-      unify_getter(GetRaw);
-      unify_getter(GetType);
-      unify_getter(IsTyped);
-      unify_getter(IsSparse);
-      unify_getter(IsDeep);
-      unify_getter(IsConstant);
-      unify_getter(IsExecutable);
-      unify_getter(IsTypeConstrained);*/
-
-      /*template<Cid ID = 0>
-      constexpr bool IsExecutable(this auto const& self) noexcept
-      if_inherits(template IsExecutable<ID>()) {
-         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
-            if constexpr (requires { self.C::template IsExecutable<ID>(); })
-               return self.C::template IsExecutable<ID>();
-            else return No{};
-         });
-      }*/
-
-      /*unify_getter(GetCount);
-      unify_getter(GetReserved);
-      unify_getter(GetIndirections);
-      unify_getter(GetStride);
-      unify_getter(GetBytesize);
-      unify_getter(GetAlignment);
-      unify_getter(GetEntries);
-      unify_getter(GetAllocation);
-      unify_getter(GetUses);
-      unify_getter_argumented(Is);
-      unify_getter_argumented(IsSame);
-      unify_getter_argumented(IsExact);
-      unify_getter_argumented(GetEntriesAt);
-      unify_getter_templated(As);
-      unify_getter_templated(GetRawAs);
-      unify_getter_templated(Is);
-      unify_getter_templated(IsSame);
-      unify_getter_templated(IsExact);
-
-      template<class AS = void, Cid ID = 0, class SELF>
-      constexpr auto* Get(this SELF&& self) assumptious
-      if_inherits(template Get<AS, ID>()) {
-         return ComponentList::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (requires { self.C::template Get<AS, ID>(); })
-               return self.C::template Get<AS, ID>();
-            else return No{};
-         });
-      }
-
-      template<Cid ID = 0, class AS = void, class SELF>
-      constexpr auto GetDense(this SELF&& self, size_t count = -1) assumptious
-      if_inherits(template GetDense<ID, AS>(count)) {
-         return ComponentList::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (requires { self.C::template GetDense<ID, AS>(count); })
-               return self.C::template GetDense<ID, AS>(count);
-            else return No{};
-         });
-      }
-
-      unify_setter(SetType);
-      unify_setter_templated(SetType);*/
-
-   protected:
-      /*unify_getter(GetHeapInner);
-      unify_getter(GetAllocationInner);
-      unify_getter(GetEntriesInner);
-      unify_getter(GetRawVoid);
-      unify_setter(SetReservedInner);
-      unify_setter(SetHeapInner);
-      unify_setter(SetAllocationInner);
-      unify_setter(EmplaceEntries);
-      unify_setter(AllocateFresh);
-      unify_setter(AllocateLess);
-      unify_setter(AllocateMore);
-      unify_getter_argumented(RequestHeap);
-
-      #undef if_inherits
-      #undef unify_compose
-      #undef unify_compose_relevant
-      #undef unify_getter
-      #undef unify_getter_templated
-      #undef unify_getter_argumented
-      #undef unify_setter
-      #undef unify_setter_templated*/
    };
    }
 }

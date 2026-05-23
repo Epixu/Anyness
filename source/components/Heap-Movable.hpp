@@ -55,7 +55,6 @@ namespace Langulus::Anyness::Component
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
       using Base = HeapReference<ENTRY0, ENTRYN...>;
-      using typename Base::Request;
       
       /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {
@@ -204,7 +203,7 @@ namespace Langulus::Anyness::Component
       /// Free this container and absorb from any other, respecting intents   
       ///   @param intent the intent and container to assign from             
       template<class C, CT::Intent I> requires CT::Container<I>
-      auto AssignFrom(this C& self, I&& intent) -> C& {
+      void AssignFrom(this C& self, I&& intent) {
          using IT = Deint<I>;
          IT from = LglsFwd(intent.what);
 
@@ -213,7 +212,7 @@ namespace Langulus::Anyness::Component
             // otherwise we lose rhs if we free lhs, and we have to     
             // free lhs in order to overwrite it with rhs.              
             if (&self == &from)
-               return self;
+               return;
          }
 
          // Never modify containers if type-incompatible                
@@ -231,7 +230,6 @@ namespace Langulus::Anyness::Component
          self.Free();
          self.ResetCount();
          self.Absorb(LglsFwd(intent));
-         return self;
       }
       
       /// Allocate a fresh allocation                                         
