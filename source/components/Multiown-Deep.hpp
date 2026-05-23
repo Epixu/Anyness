@@ -129,5 +129,15 @@ namespace Langulus::Anyness::Component
                return No{};
          });
       }
+
+      template<bool DESTROY, Cid SID>
+      constexpr void DestroyElementDeep(this auto& self) assumptious {
+         Subcomponents::ForEachConstOr([&]<class C> assumptious {
+            if constexpr (C::Id::First == SID)
+               return self.C::template DestroyElementDeep<DESTROY>();
+            else
+               return No{};
+         });
+      }
    };
 }

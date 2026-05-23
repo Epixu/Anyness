@@ -324,8 +324,10 @@ namespace Langulus
                "Lambda is not of the form []<class>");
             if constexpr (not ::std::same_as<No, decltype(LglsLamb(lambda, T2))>)
                return LglsLamb(lambda, T2);
-            else
+            else {
+               LglsLamb(lambda, T2);
                return Types<TN...>::ForEachConstOr(LglsFwd(lambda));
+            }
          }
       }
 

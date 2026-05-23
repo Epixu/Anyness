@@ -30,10 +30,10 @@ namespace Langulus::Anyness::Component
       using CTTI_ReflectAs = void;
       using Id = Values<ID, SHARED...>;
 
-      using CountType      = T;
-      using IndexType      = Index::At<T>;
-      using StackRequest   = T;
-      using Dimensions     = Id;
+      using CountType    = T;
+      using IndexType    = Index::At<T>;
+      using StackRequest = T;
+      using Dimensions   = Id;
 
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
