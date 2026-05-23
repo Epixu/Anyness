@@ -540,7 +540,8 @@ namespace Langulus::Anyness::Component
          }
 
          Request result;
-         result.mHeaderBytes = self.template DefineHeapHeader<Id::First>();
+         result.mHeaderBytes = C::template DefineHeapHeader<Id::First>();
+         result.mHeaderBytes = Align(result.mHeaderBytes, self.template GetAlignment<Id::First>());
          size_t total = result.mHeaderBytes;
 
          if constexpr (C::template CountHeapFooterRequests<Id::First>()) {
@@ -600,7 +601,7 @@ namespace Langulus::Anyness::Component
             total += self.template DefineHeapFooter<i>(reserve);
          });
 
-         total += self.template DefineHeapFooterGlobal<Id::First>(reserve);
+         total += C::template DefineHeapFooterGlobal<Id::First>(reserve);
          result.mTotalBytes = Roof2(total);
          result.mReserved = reserve;
          return result;

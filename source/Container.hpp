@@ -247,11 +247,13 @@ namespace Langulus::Anyness
       constexpr ~Container() noexcept = default;
       
       /// Get the number of heap requests in the footer for chosen heap ID    
-      template<Cid SID>
+      template<Cid SID, CT::Typelist L = ComponentList>
       static consteval size_t CountHeapFooterRequests() {
          size_t count = 0;
-         ComponentList::ForEach([&count]<class C> {
-            if constexpr (requires { typename C::HeapRequest; }) {
+         L::ForEach([&count]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               count += CountHeapFooterRequests<SID, typename C::Subcomponents>();
+            else if constexpr (requires { typename C::HeapRequest; }) {
                if constexpr (C::Id::template Contains<SID>
                and IsFooterRequest<typename C::HeapRequest>)
                   ++count;
@@ -262,14 +264,15 @@ namespace Langulus::Anyness
 
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the index in the stack tuple.   
-      template<class PICK>
-      static consteval size_t GetStackOffset() {
+      template<class PICK, CT::Typelist L>
+      static constexpr auto GetStackOffsetInner(size_t& offset) {
          static_assert(requires { typename PICK::StackRequest; },
             "Component data is not on the stack");
           
-         size_t offset = 0;
-         ComponentList::ForEachConstOr([&offset]<class C> {
-            if constexpr (CT::DerivedFrom<C, PICK>)
+         return L::ForEachConstOr([&offset]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               return GetStackOffsetInner<PICK, typename C::Subcomponents>(offset);
+            else if constexpr (CT::DerivedFrom<C, PICK>)
                return true;
             else if constexpr (requires { typename C::StackRequest; }) {
                if constexpr (CT::NotVoid<typename C::StackRequest>)
@@ -278,16 +281,27 @@ namespace Langulus::Anyness
             }
             else return No {};
          });
+      }
+
+      template<class PICK>
+      static consteval size_t GetStackOffset() {
+         static_assert(requires { typename PICK::StackRequest; },
+            "Component data is not on the stack");
+
+         size_t offset = 0;
+         GetStackOffsetInner<PICK, ComponentList>(offset);
          return offset;
       }
       
       /// Get a reference to a heap/stack provider's data                     
       ///   @tparam ID provider ID                                            
       ///   @return return a reference to the provider's data                 
-      template<Cid SID>
+      template<Cid SID, CT::Typelist L = ComponentList>
       static consteval auto FindProvider() {
-         return ComponentList::ForEachConstOr([]<class C> {
-            if constexpr (requires { C::StackProvider; }) {
+         return L::ForEachConstOr([]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               return FindProvider<SID, typename C::Subcomponents>();
+            else if constexpr (requires { C::StackProvider; }) {
                if constexpr (C::StackProvider == SID)
                   return Types<C> {};
                else
@@ -306,15 +320,18 @@ namespace Langulus::Anyness
       /// Go through all relevant components for the dimension 'SID' and      
       /// accumulate their header heap requests into a byte amount.           
       ///   @return The size of the heap header for the dimension, in bytes.  
-      ///      The size includes alignment to the first relevant contained    
-      ///      type. The header bytes are located relative to:                
+      ///      The header bytes are located relative to:                      
       ///         GetAllocation<SID>()->GetBlockStart()                       
-      template<Cid SID>
-      constexpr size_t DefineHeapHeader(this auto const& self) assumptious {
+      ///   @attention the resulting bytesize needs to be aligned to the      
+      ///      alignment of the first type of the provider!                   
+      template<Cid SID, CT::Typelist L = ComponentList>
+      static consteval size_t DefineHeapHeader() {
          using PROVIDER = typename decltype(FindProvider<SID>())::First;
          size_t bytesize = 0;
-         ComponentList::ForEach([&bytesize]<class C> {
-            if constexpr (requires { typename C::HeapRequest; }) {
+         L::ForEach([&bytesize]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               bytesize += DefineHeapHeader<SID, typename C::Subcomponents>();
+            else if constexpr (requires { typename C::HeapRequest; }) {
                if constexpr (C::Id::template Contains<SID>) {
                   using R = typename C::HeapRequest;
                   if constexpr (IsRequestModifier<R>) {
@@ -329,9 +346,7 @@ namespace Langulus::Anyness
                }
             }
          });
-
-         const auto alignment = self.template GetAlignment<PROVIDER::Id::First>();
-         return Align(bytesize, alignment);
+         return bytesize;
       }      
       
       /// Go through all components until PICK is reached, and accumulate     
@@ -339,23 +354,12 @@ namespace Langulus::Anyness
       /// for the particular dimension 'SID'.                                 
       ///   @return The header offset, where PICK's data resides. The offset  
       ///      is relative to GetAllocation<SID>()->GetBlockStart()           
-      template<class PICK, Cid SID>
-      static consteval size_t GetHeapHeaderOffset() {
-         static_assert(requires { typename PICK::HeapRequest; },
-            "Component data is not on the heap");
-         static_assert(PICK::Id::template Contains<SID>,
-            "The PICK must share the provided ID");
-
-         using PICK_R   = typename PICK::HeapRequest;
-         if constexpr (IsRequestModifier<PICK_R>) {
-            static_assert(not IsFooterRequest<PICK_R>,
-               "Not a header request, use GetHeapFooterOffset instead"
-            );
-         }
-         
-         size_t offset = 0;
-         ComponentList::ForEachConstOr([&offset]<class C> {
-            if constexpr (CT::DerivedFrom<C, PICK>) {
+      template<class PICK, Cid SID, CT::Typelist L>
+      static consteval auto GetHeapHeaderOffsetInner(size_t& offset) {
+         return L::ForEachConstOr([&offset]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               return GetHeapHeaderOffsetInner<PICK, SID, typename C::Subcomponents>(offset);
+            else if constexpr (CT::DerivedFrom<C, PICK>) {
                // Target component reached, but there might be          
                // dimensional offset to consider.                       
                using R = typename C::HeapRequest;
@@ -393,6 +397,24 @@ namespace Langulus::Anyness
             }
             else return No {};
          });
+      }
+
+      template<class PICK, Cid SID>
+      static consteval size_t GetHeapHeaderOffset() {
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+         static_assert(PICK::Id::template Contains<SID>,
+            "The PICK must share the provided ID");
+
+         using PICK_R = typename PICK::HeapRequest;
+         if constexpr (IsRequestModifier<PICK_R>) {
+            static_assert(not IsFooterRequest<PICK_R>,
+               "Not a header request, use GetHeapFooterOffset instead"
+            );
+         }
+         
+         size_t offset = 0;
+         GetHeapHeaderOffsetInner<PICK, SID, ComponentList>(offset);
          return offset;
       }
 
@@ -400,16 +422,19 @@ namespace Langulus::Anyness
       /// that have PerDimension modifier, and accumulate their heap          
       /// requests into a byte amount.                                        
       ///   @param count Footer can depend on a new reserved amount           
+      ///   @param indirects Footer can depend on number of indirections      
       ///   @return The size of the heap footer for chosen dimension in bytes.
       ///      The footer starts at GetRawReserveEnd<SID>().                  
-      template<Cid SID>
-      constexpr size_t DefineHeapFooter(
-         this auto const& self, [[maybe_unused]] const size_t count
+      template<Cid SID, CT::Typelist L = ComponentList>
+      static constexpr size_t DefineHeapFooter(
+         [[maybe_unused]] const size_t count,
+         [[maybe_unused]] const size_t indirects
       ) noexcept {
          size_t bytesize = 0;
-         const size_t indirects = self.template GetIndirections<SID>();
-         ComponentList::ForEach([&bytesize, &indirects, &count]<class C> {
-            if constexpr (requires { typename C::HeapRequest; }) {
+         L::ForEach([&bytesize, &indirects, &count]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               bytesize += DefineHeapFooter<SID, typename C::Subcomponents>();
+            else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
                if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
                   if constexpr (R::AllocatedPerDimension) {
@@ -426,28 +451,20 @@ namespace Langulus::Anyness
       /// Go through all components with PerDimension modifier until PICK is  
       /// reached, and accumulate the offset up to that point, to get the byte
       /// offset in the heap for the particular dimension 'SID'.              
-      ///   @param count Heap requests can depend on the amount of elements.  
+      ///   @param count Footer can depend on a new reserved amount           
+      ///   @param indirects Footer can depend on number of indirections      
       ///   @return The heap byte offset, where PICK's data resides. Relative 
       ///      to GetRawReserveEnd<SID>().                                    
-      template<class PICK, Cid SID>
-      constexpr size_t GetHeapFooterOffset(
-         this auto const& self, [[maybe_unused]] const size_t count
+      template<class PICK, Cid SID, CT::Typelist L>
+      static constexpr auto GetHeapFooterOffsetInner(
+         [[maybe_unused]] const size_t count,
+         [[maybe_unused]] const size_t indirects,
+         size_t& offset
       ) noexcept {
-         static_assert(requires { typename PICK::HeapRequest; },
-            "Component data is not on the heap");
-         static_assert(PICK::Id::template Contains<SID>,
-            "The PICK must share the provided ID");
-
-         using PICK_R = typename PICK::HeapRequest;
-         static_assert(IsFooterRequest<PICK_R>,
-            "Not a footer request, use GetHeapHeaderOffset instead");
-         static_assert(PICK_R::AllocatedPerDimension,
-            "Not a PerDimension request, use GetHeapFooterOffsetGlobal instead");
-
-         size_t offset = 0;
-         const size_t indirects = self.template GetIndirections<SID>();
-         ComponentList::ForEachConstOr([&offset, &indirects, &count]<class C> {
-            if constexpr (CT::DerivedFrom<C, PICK>)
+         return L::ForEachConstOr([&offset, &indirects, &count]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               return GetHeapFooterOffsetInner<PICK, SID, typename C::Subcomponents>(count, indirects, offset);
+            else if constexpr (CT::DerivedFrom<C, PICK>)
                return true;
             else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
@@ -462,35 +479,57 @@ namespace Langulus::Anyness
             }
             else return No {};
          });
+      }
+
+      template<class PICK, Cid SID>
+      static constexpr size_t GetHeapFooterOffset(
+         [[maybe_unused]] const size_t count,
+         [[maybe_unused]] const size_t indirects
+      ) noexcept {
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+         static_assert(PICK::Id::template Contains<SID>,
+            "The PICK must share the provided ID");
+
+         using PICK_R = typename PICK::HeapRequest;
+         static_assert(IsFooterRequest<PICK_R>,
+            "Not a footer request, use GetHeapHeaderOffset instead");
+         static_assert(PICK_R::AllocatedPerDimension,
+            "Not a PerDimension request, use GetHeapFooterOffsetGlobal instead");
+
+         size_t offset = 0;
+         GetHeapFooterOffsetInner<PICK, SID, ComponentList>(count, indirects, offset);
          return offset;
       }
 
       /// Go through all components relevant to the provider associated with  
       /// dimension SID that have no PerDimension modifier, and accumulate    
       /// their heap requests into a byte amount.                             
-      ///   @param count Footer can depend on a new reserved amount.          
+      ///   @param count Footer can depend on a new reserved amount           
       ///   @return The size of the global heap footer for the provider       
       ///      associated with the dimension 'SID'. Given 'D' is the last     
       ///      dimension for that provider, the offset is relative to:        
       ///      GetRawReserveEnd<D>() + DefineHeapFooter<D>                    
-      template<Cid SID>
-      constexpr size_t DefineHeapFooterGlobal(
-         this auto const& self, [[maybe_unused]] const size_t count
+      template<Cid SID, CT::Typelist L = ComponentList>
+      static constexpr size_t DefineHeapFooterGlobal(
+         [[maybe_unused]] const size_t count
       ) noexcept {
          size_t bytesize = 0;
-         const size_t indirects = self.template GetIndirections<SID>();
-         ComponentList::ForEach([&bytesize, &indirects, &count]<class C> {
-            if constexpr (requires { typename C::HeapRequest; }) {
+         L::ForEach([&bytesize, &count]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               bytesize += DefineHeapFooterGlobal<SID, typename C::Subcomponents>(count);
+            else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
                if constexpr (IsFooterRequest<R>) {
                   if constexpr (not R::AllocatedPerDimension) {
+                     static_assert(not R::AllocatedPerIndirection,
+                        "Can't have a PerIndirection modifier without PerDimension modifier, "
+                        "because indirections are individual to each dimension"
+                     );
                      using PROVIDER  = typename decltype(FindProvider<SID>())::First;
                      using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
-                     if constexpr (not INTERSECT::Empty) {
-                        bytesize += sizeof(TypeOf<R>)
-                           * (R::AllocatedPerElement     ? count     : 1)
-                           * (R::AllocatedPerIndirection ? indirects : 1);
-                     }
+                     if constexpr (not INTERSECT::Empty)
+                        bytesize += sizeof(TypeOf<R>) * (R::AllocatedPerElement ? count : 1);
                   }
                }
             }
@@ -500,14 +539,43 @@ namespace Langulus::Anyness
 
       /// Go through all components relevant to the provider associated with  
       /// dimension SID that have no PerDimension modifier, and accumulate    
-      ///   @param count Footer can depend on a new reserved amount.          
+      ///   @param count Footer can depend on a new reserved amount           
       ///   @return The size of the global heap footer for the provider       
       ///      associated with the dimension 'SID'. Given 'D' is the last     
       ///      dimension for that provider, the offset is relative to:        
       ///      GetRawReserveEnd<D>() + DefineHeapFooter<D>                    
+      template<class PICK, Cid SID, CT::Typelist L>
+      static constexpr auto GetHeapFooterOffsetGlobalInner(
+         [[maybe_unused]] const size_t count, size_t& offset
+      ) noexcept {
+         return L::ForEachConstOr([&offset, &count]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               return GetHeapFooterOffsetGlobalInner<PICK, SID, typename C::Subcomponents>(count, offset);
+            else if constexpr (CT::DerivedFrom<C, PICK>)
+               return true;
+            else if constexpr (requires { typename C::HeapRequest; }) {
+               using R = typename C::HeapRequest;
+               if constexpr (IsFooterRequest<R>) {
+                  if constexpr (not R::AllocatedPerDimension) {
+                     static_assert(not R::AllocatedPerIndirection,
+                        "Can't have a PerIndirection modifier without PerDimension modifier, "
+                        "because indirections are individual to each dimension"
+                     );
+                     using PROVIDER  = typename decltype(FindProvider<SID>())::First;
+                     using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
+                     if constexpr (not INTERSECT::Empty)
+                        offset += sizeof(TypeOf<R>) * (R::AllocatedPerElement ? count : 1);
+                  }
+               }
+               return No {};
+            }
+            else return No {};
+         });
+      }
+
       template<class PICK, Cid SID>
-      constexpr size_t GetHeapFooterOffsetGlobal(
-         this auto const& self, [[maybe_unused]] const size_t count
+      static constexpr size_t GetHeapFooterOffsetGlobal(
+         [[maybe_unused]] const size_t count
       ) noexcept {
          static_assert(requires { typename PICK::HeapRequest; },
             "Component data is not on the heap");
@@ -517,29 +585,13 @@ namespace Langulus::Anyness
             "Not a footer request, use GetHeapHeaderOffset instead");
          static_assert(not PICK_R::AllocatedPerDimension,
             "PerDimension request, use GetHeapFooterOffset instead");
+         static_assert(not PICK_R::AllocatedPerIndirection,
+            "Can't have a PerIndirection modifier without PerDimension modifier, "
+            "because indirections are individual to each dimension"
+         );
 
          size_t offset = 0;
-         const size_t indirects = self.template GetIndirections<SID>();
-         ComponentList::ForEachConstOr([&offset, &indirects, &count]<class C> {
-            if constexpr (CT::DerivedFrom<C, PICK>)
-               return true;
-            else if constexpr (requires { typename C::HeapRequest; }) {
-               using R = typename C::HeapRequest;
-               if constexpr (IsFooterRequest<R>) {
-                  if constexpr (not R::AllocatedPerDimension) {
-                     using PROVIDER  = typename decltype(FindProvider<SID>())::First;
-                     using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
-                     if constexpr (not INTERSECT::Empty) {
-                        offset += sizeof(TypeOf<R>)
-                           * (R::AllocatedPerElement     ? count     : 1)
-                           * (R::AllocatedPerIndirection ? indirects : 1);
-                     }
-                  }
-               }
-               return No {};
-            }
-            else return No {};
-         });
+         GetHeapFooterOffsetGlobalInner<PICK, SID, ComponentList>(count, offset);
          return offset;
       }
 
@@ -584,8 +636,9 @@ namespace Langulus::Anyness
             if constexpr (R::AllocatedPerDimension) {
                // Positioned after each dimension data                  
                const size_t reserved = self.template GetReserved<SID>();
+               const size_t indirects = self.template GetIndirections<SID>();
                const size_t stride = self.template GetStride<SID>();
-               const size_t offset = self.template GetHeapFooterOffset<PICK, SID>(reserved);
+               const size_t offset = GetHeapFooterOffset<PICK, SID>(reserved, indirects);
                const auto heap = self.template GetRawAs<uint8_t, SID>();
                using RC = LglsMutIf(SELF, TypeOf<R>*);
                return reinterpret_cast<RC>(heap + reserved * stride + offset);

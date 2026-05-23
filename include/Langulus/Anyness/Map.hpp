@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <source/components/Typed-Stack.hpp>
+#include <source/components/Multitype.hpp>
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Count-Stack.hpp>
 #include <source/components/Reserve-Stack.hpp>
@@ -35,8 +36,8 @@ namespace Langulus::Anyness::Inner
 {
    template<StateValue SORT>
    using MapBase = Com::Container<
-      Com::TypedStack<DMeta, void, false, 0>,  // Type-erased keys      
-      Com::TypedStack<DMeta, void, false, 1>,  // Type-erased values    
+      Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
+                     Com::TypedStack<DMeta, void, false, 1>>,
       Com::HeapMovable<8, 2, HeapEntry<0>, HeapEntry<1>>,
       Com::CountStack<size_t, 0, 1>,      // Dynamically sized          
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     

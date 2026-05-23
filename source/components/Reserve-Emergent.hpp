@@ -50,7 +50,9 @@ namespace Langulus::Anyness::Component
                   "reserved elements beforehand."
                );
 
-               const size_t header = self.template DefineHeapHeader<SID>();
+               size_t header = C::template DefineHeapHeader<SID>();
+               using PROVIDER = typename decltype(C::template FindProvider<SID>())::First;
+               header = Align(header, self.template GetAlignment<PROVIDER::Id::First>());
                return (al->GetSize() - header) / self.template GetStride<SID>();
             }
          }

@@ -438,12 +438,8 @@ namespace Langulus::Anyness::Component
       }
 
       /// Transfer from any kind of container, respecting intents             
-         ///   @attention this is noop when constructing from deep intents,      
-         ///      since element constructors might throw and stuff be partially  
-         ///      inserted. In those cases, type is set by the heap components.  
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I>
-      requires (CT::Container<I> /*and not CT::Copied<I> and not CT::Cloned<I>*/)
+      template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (ThisCom::TypeErased) {
             META type = intent->template GetType<ID>();
@@ -463,7 +459,7 @@ namespace Langulus::Anyness::Component
                if constexpr (not CT::TypeErased<I>)
                   // From statically-typed to dynamically-typed         
                   ThisCom::EnableTypeConstrained();
-               else if (intent->IsTypeConstrained())
+               else if (intent->template IsTypeConstrained<ID>())
                   // From dynamically-typed to dynamically-typed        
                   ThisCom::EnableTypeConstrained();
             }

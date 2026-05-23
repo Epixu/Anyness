@@ -460,7 +460,13 @@ namespace Langulus::Anyness
          /// into a StateStack component                                      
          template<CT::Component C1, CT::Component...CN>
          consteval auto DefineStates() {
-            if constexpr (requires { typename C1::StateRequest; }) {
+            if constexpr (requires { typename C1::Subcomponents; }) {
+               constexpr auto first = C1::Subcomponents::Expand([]<class...InnerC1> {
+                  return DefineStates<InnerC1...>();
+               });
+               return first + DefineStates<CN...>();
+            }
+            else if constexpr (requires { typename C1::StateRequest; }) {
                if constexpr (CT::NotVoid<typename C1::StateRequest>) {
                   static_assert(CT::State<typename C1::StateRequest>);
                   Types<typename C1::StateRequest> first;
@@ -559,17 +565,25 @@ namespace Langulus::Anyness
       /// Validate all used components in a container are properly ordered,   
       /// of standard layout, and containing proper sequential provider IDs.  
       ///   @tparam ACC accumulated stack/heap provider IDs                   
+      ///   @tparam PRECEDENCE last valid precedence                          
+      ///   @tparam INNER whether we're currently going through subcomponents 
       ///   @tparam C1, CN... components                                      
-      template<int ACC, int PRECEDENCE, class C1, class...CN>
+      template<int ACC, int PRECEDENCE, bool INNER, class C1, class...CN>
       consteval bool ValidateComponentOrderNested() {
          if constexpr (requires { C1::SkipThisComponent; }) {
             if constexpr (sizeof...(CN) > 0)
-               return ValidateComponentOrderNested<ACC, PRECEDENCE, CN...>();
+               return ValidateComponentOrderNested<ACC, PRECEDENCE, INNER, CN...>();
             else {
                static_assert(ACC > 0,
                   "Container must have at least one heap or stack provider");
                return true;
             }
+         }
+         else if constexpr (requires { typename C1::Subcomponents; }) {
+            constexpr bool inner = C1::Subcomponents::Expand([]<class...InnerC1> {
+               return ValidateComponentOrderNested<ACC, PRECEDENCE, true, InnerC1...>();
+            });
+            return inner and ValidateComponentOrderNested<ACC, PRECEDENCE, INNER, CN...>();
          }
          else {
             static_assert(C1::ComponentPrecedence >= PRECEDENCE,
@@ -582,7 +596,7 @@ namespace Langulus::Anyness
                   "Component can't be both a stack and a heap provider");
 
                if constexpr (sizeof...(CN) > 0)
-                  return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
+                  return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, INNER, CN...>();
                else
                   return true;
             }
@@ -593,15 +607,15 @@ namespace Langulus::Anyness
                   "Component can't be both a stack and a heap provider");
 
                if constexpr (sizeof...(CN) > 0)
-                  return ValidateComponentOrderNested<ACC + C1::HeapProvider::Count, C1::ComponentPrecedence, CN...>();
+                  return ValidateComponentOrderNested<ACC + C1::HeapProvider::Count, C1::ComponentPrecedence, INNER, CN...>();
                else
                   return true;
             }
             else {
                if constexpr (sizeof...(CN) > 0)
-                  return ValidateComponentOrderNested<ACC, C1::ComponentPrecedence, CN...>();
+                  return ValidateComponentOrderNested<ACC, C1::ComponentPrecedence, INNER, CN...>();
                else {
-                  static_assert(ACC > 0,
+                  static_assert(ACC > 0 or INNER,
                      "Container must have at least one heap or stack provider");
                   return true;
                }
@@ -626,7 +640,7 @@ namespace Langulus::Anyness
          static_assert(sizeof...(CN) > 0,
             "Composed container must posses at least one heap/stack provider");
          if constexpr (sizeof...(CN) > 0)
-            return ValidateComponentOrderNested<0, -1000000, CN...>();
+            return ValidateComponentOrderNested<0, -1000000, false, CN...>();
          else
             return false;
       }
@@ -655,7 +669,9 @@ namespace Langulus::Anyness
       /// a type list                                                         
       template<class C1, class...CN>
       consteval auto DefineStack(Types<C1, CN...>&&) {
-         if constexpr (requires { typename C1::StackRequest; }) {
+         if constexpr (requires { typename C1::Subcomponents; })
+            return DefineStack(typename C1::Subcomponents{}) + DefineStack(Types<CN...>{});
+         else if constexpr (requires { typename C1::StackRequest; }) {
             using R = typename C1::StackRequest;
             if constexpr (CT::NotVoid<R>) {
                static_assert(not Com::IsRequestModifier<R>,

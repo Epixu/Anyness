@@ -319,6 +319,18 @@ namespace Langulus::Anyness::Component
             else return No {};
          });
       }
+
+      /// Check if type is mutable when the container is empty                
+      template<Cid SID>
+      constexpr bool IsTypeConstrained(this auto const& self) noexcept {
+         return Subcomponents::ForEachConstOr([&]<class C> noexcept {
+            if constexpr (C::Id::template Contains<SID>)
+               return self.C::IsTypeConstrained();
+            else
+               return No {};
+         });
+      }
+
       
    protected:
       LglsComRemoval(friend);

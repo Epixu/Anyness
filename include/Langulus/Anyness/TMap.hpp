@@ -14,8 +14,8 @@ namespace Langulus::Anyness::Inner
    template<CT::NotVoid K, CT::NotVoid V, StateValue SORT>
    requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TMapBase = Com::Container<
-      Com::TypedStack<DMeta, K, true, 0>, // Type-constrained keys      
-      Com::TypedStack<DMeta, V, true, 1>, // Type-constrained values    
+      Com::Multitype<Com::TypedStack<DMeta, K, true, 0>,
+                     Com::TypedStack<DMeta, V, true, 1>>,
       Com::HeapMovable<8, 2,
          HeapEntry<0, K*>,                // Key heap data              
          HeapEntry<1, V*>                 // Value heap data            
