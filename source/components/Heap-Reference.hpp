@@ -60,7 +60,6 @@ namespace Langulus::Anyness::Component
       LglsComOwnershipEmergent(friend);
       LglsComOwnershipDeepEmergent(friend);
       LglsComHashEmergent(friend);
-      template<class...> friend struct Multiprovider;
 
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;

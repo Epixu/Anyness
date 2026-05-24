@@ -47,7 +47,6 @@ namespace Langulus::Anyness::Component
       LglsComEmplacement(friend);
       LglsComConversion(friend);
       LglsComOwnershipEmergent(friend);
-      template<class...> friend struct Multiprovider;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
