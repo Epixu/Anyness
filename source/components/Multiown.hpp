@@ -33,8 +33,8 @@ namespace Langulus::Anyness::Component
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Id::Count == 1; }),
          "Each subcomponent needs to be dedicated to their single dimension");
 
-      static constexpr int ComponentPrecedence = 2000;
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 2000; }),
+      static constexpr int ComponentPrecedence = 1000;
+      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 1000; }),
          "All precedences should match");
       
       /// Get the allocation                                                  

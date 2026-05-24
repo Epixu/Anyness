@@ -37,6 +37,9 @@ namespace Langulus::Anyness::Component
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == -2000; }),
          "All precedences should match");
 
+      #define if_inherits(...) requires (Subcomponents::ForEachOr([&]<class C> { \
+         return requires { self.C::__VA_ARGS__; }; }))
+
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
@@ -212,7 +215,8 @@ namespace Langulus::Anyness::Component
       /// across all dimensions used in this heap component.                  
       ///   @param reserve the number of elements to request                  
       template<Cid SID = Id::First>
-      constexpr auto RequestHeap(this auto const& self, size_t reserve) assumptious -> Request {
+      constexpr auto RequestHeap(this auto const& self, size_t reserve) assumptious
+      -> Request if_inherits(RequestHeap(reserve)) {
          return Subcomponents::ForEachConstOr([&]<class C> assumptious {
             if constexpr (C::Id::First == SID)
                return self.C::RequestHeap(reserve);
@@ -359,5 +363,7 @@ namespace Langulus::Anyness::Component
                return No{};
          });
       }
+
+      #undef if_inherits
    };
 }

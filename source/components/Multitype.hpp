@@ -42,6 +42,9 @@ namespace Langulus::Anyness::Component
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::TypeErased == TypeErased; }),
          "Currently all types must either be type-erased or not");
 
+      #define if_inherits(...) requires (Subcomponents::ForEachOr([&]<class C> { \
+         return requires { self.C::__VA_ARGS__; }; }))
+
       /// Get the contained type                                              
       ///   @tparam SID - type selector                                       
       template<Cid SID = Id::First>
@@ -54,10 +57,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr auto GetKeyType(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::GetType();
+         return self.Subcomponents::First::GetType();
       }
       constexpr auto GetValType(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::GetType();
+         return self.Subcomponents::Second::GetType();
       }
 
       /// Get the size of a single element in bytes                           
@@ -72,10 +75,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr size_t GetKeyStride(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::GetStride();
+         return self.Subcomponents::First::GetStride();
       }
       constexpr size_t GetValStride(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::GetStride();
+         return self.Subcomponents::Second::GetStride();
       }
 
       /// Get the alignment of a single element in bytes                      
@@ -90,10 +93,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr pot_t GetKeyAlignment(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::GetAlignment();
+         return self.Subcomponents::First::GetAlignment();
       }
       constexpr pot_t GetValAlignment(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::GetAlignment();
+         return self.Subcomponents::Second::GetAlignment();
       }
 
       /// Get the reflected type name                                         
@@ -108,10 +111,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr auto GetKeyName(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::GetName();
+         return self.Subcomponents::First::GetName();
       }
       constexpr auto GetValName(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::GetName();
+         return self.Subcomponents::Second::GetName();
       }
 
       /// Check if block has a data type                                      
@@ -127,10 +130,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeyTyped(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::IsTyped();
+         return self.Subcomponents::First::IsTyped();
       }
       constexpr bool IsValTyped(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsTyped();
+         return self.Subcomponents::Second::IsTyped();
       }
 
       /// Check if type is akin to the provided type (can run at compile-time 
@@ -149,11 +152,11 @@ namespace Langulus::Anyness::Component
       }
       template<CT::NotVoid T>
       constexpr bool IsKey(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::template Is<T>();
+         return self.Subcomponents::First::template Is<T>();
       }
       template<CT::NotVoid T>
       constexpr bool IsVal(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::template Is<T>();
+         return self.Subcomponents::Second::template Is<T>();
       }
 
       /// Check if type origin is the same as another (always at runtime)     
@@ -170,10 +173,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKey(this auto const& self, auto const& type) noexcept requires (Id::First == 0) {
-         return self.TC0::Is(type);
+         return self.Subcomponents::First::Is(type);
       }
       constexpr bool IsVal(this auto const& self, auto const& type) noexcept requires (Id::Second == 1) {
-         return self.TC1::Is(type);
+         return self.Subcomponents::Second::Is(type);
       }
 
       /// Check if type origin is the same as another container's type        
@@ -190,10 +193,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKey(this auto const& self, CT::Container auto const& other) noexcept requires (Id::First == 0) {
-         return self.TC0::Is(other);
+         return self.Subcomponents::First::Is(other);
       }
       constexpr bool IsVal(this auto const& self, CT::Container auto const& other) noexcept requires (Id::Second == 1) {
-         return self.TC1::Is(other);
+         return self.Subcomponents::Second::Is(other);
       }
 
       /// Check if unqualified type is the same as provided one               
@@ -211,11 +214,11 @@ namespace Langulus::Anyness::Component
       }
       template<CT::NotVoid T>
       constexpr bool IsKeySame(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::template IsSame<T>();
+         return self.Subcomponents::First::template IsSame<T>();
       }
       template<CT::NotVoid T>
       constexpr bool IsValSame(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::template IsSame<T>();
+         return self.Subcomponents::Second::template IsSame<T>();
       }
 
       /// Check if unqualified type is the same as another                    
@@ -232,10 +235,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeySame(this auto const& self, auto const& type) noexcept requires (Id::First == 0) {
-         return self.TC0::IsSame(type);
+         return self.Subcomponents::First::IsSame(type);
       }
       constexpr bool IsValSame(this auto const& self, auto const& type) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsSame(type);
+         return self.Subcomponents::Second::IsSame(type);
       }
 
       /// Check if unqualified type is the same as another container's type   
@@ -252,10 +255,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeySame(this auto const& self, CT::Container auto const& type) noexcept requires (Id::First == 0) {
-         return self.TC0::IsSame(type);
+         return self.Subcomponents::First::IsSame(type);
       }
       constexpr bool IsValSame(this auto const& self, CT::Container auto const& type) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsSame(type);
+         return self.Subcomponents::Second::IsSame(type);
       }
 
       /// Check if this type is exactly T (references are ignored)            
@@ -272,11 +275,11 @@ namespace Langulus::Anyness::Component
       }
       template<CT::NotVoid T>
       constexpr bool IsKeyExact(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::template IsExact<T>();
+         return self.Subcomponents::First::template IsExact<T>();
       }
       template<CT::NotVoid T>
       constexpr bool IsValExact(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::template IsExact<T>();
+         return self.Subcomponents::Second::template IsExact<T>();
       }
 
       /// Check if this type is exactly another                               
@@ -292,10 +295,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeyExact(this auto const& self, auto const& type) noexcept requires (Id::First == 0) {
-         return self.TC0::IsExact(type);
+         return self.Subcomponents::First::IsExact(type);
       }
       constexpr bool IsValExact(this auto const& self, auto const& type) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsExact(type);
+         return self.Subcomponents::Second::IsExact(type);
       }
 
       /// Check if this type is exactly another container's type              
@@ -311,10 +314,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeyExact(this auto const& self, CT::Container auto const& type) noexcept requires (Id::First == 0) {
-         return self.TC0::IsExact(type);
+         return self.Subcomponents::First::IsExact(type);
       }
       constexpr bool IsValExact(this auto const& self, CT::Container auto const& type) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsExact(type);
+         return self.Subcomponents::Second::IsExact(type);
       }
 
       /// Check if container contains pointers                                
@@ -329,10 +332,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeySparse(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::IsSparse();
+         return self.Subcomponents::First::IsSparse();
       }
       constexpr bool IsValSparse(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsSparse();
+         return self.Subcomponents::Second::IsSparse();
       }
 
       /// Get the number of indirections                                      
@@ -347,10 +350,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr size_t GetKeyIndirections(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::GetIndirections();
+         return self.Subcomponents::First::GetIndirections();
       }
       constexpr size_t GetValIndirections(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::GetIndirections();
+         return self.Subcomponents::Second::GetIndirections();
       }
 
       /// Check if block is constant                                          
@@ -366,10 +369,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeyConstant(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::IsConstant();
+         return self.Subcomponents::First::IsConstant();
       }
       constexpr bool IsValConstant(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsConstant();
+         return self.Subcomponents::Second::IsConstant();
       }
 
       /// Check if container is made of other containers                      
@@ -384,10 +387,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeyDeep(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::IsDeep();
+         return self.Subcomponents::First::IsDeep();
       }
       constexpr bool IsValDeep(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsDeep();
+         return self.Subcomponents::Second::IsDeep();
       }
 
       /// Check if container contains executable items                        
@@ -402,10 +405,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeyExecutable(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::IsExecutable();
+         return self.Subcomponents::First::IsExecutable();
       }
       constexpr bool IsValExecutable(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsExecutable();
+         return self.Subcomponents::Second::IsExecutable();
       }
 
       /// Get the size of the type times the contained elements               
@@ -420,10 +423,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr size_t GetKeyBytesize(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::GetBytesize();
+         return self.Subcomponents::First::GetBytesize();
       }
       constexpr size_t GetValBytesize(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::GetBytesize();
+         return self.Subcomponents::Second::GetBytesize();
       }
 
       /// Set the contained data type if possible.                            
@@ -442,11 +445,11 @@ namespace Langulus::Anyness::Component
       }
       template<CT::NotVoid T>
       constexpr void SetKeyType(this auto const& self) requires (Id::First == 0) {
-         self.TC0::template SetType<T>();
+         self.Subcomponents::First::template SetType<T>();
       }
       template<CT::NotVoid T>
       constexpr void SetValType(this auto const& self) requires (Id::Second == 1) {
-         self.TC1::template SetType<T>();
+         self.Subcomponents::Second::template SetType<T>();
       }
 
       /// Set the contained data type if possible.                            
@@ -465,10 +468,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr void SetKeyType(this auto const& self, auto const& type) requires (Id::First == 0) {
-         self.TC0::SetType(type);
+         self.Subcomponents::First::SetType(type);
       }
       constexpr void SetValType(this auto const& self, auto const& type) requires (Id::Second == 1) {
-         self.TC1::SetType(type);
+         self.Subcomponents::Second::SetType(type);
       }
 
       /// Check if type is mutable when the container is empty                
@@ -482,10 +485,10 @@ namespace Langulus::Anyness::Component
          });
       }
       constexpr bool IsKeyTypeConstrained(this auto const& self) noexcept requires (Id::First == 0) {
-         return self.TC0::IsTypeConstrained();
+         return self.Subcomponents::First::IsTypeConstrained();
       }
       constexpr bool IsValTypeConstrained(this auto const& self) noexcept requires (Id::Second == 1) {
-         return self.TC1::IsTypeConstrained();
+         return self.Subcomponents::Second::IsTypeConstrained();
       }
 
    protected:
@@ -535,9 +538,9 @@ namespace Langulus::Anyness::Component
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this auto& self, I&& intent) {
+      void ConstructFrom(this auto& self, I&& intent) if_inherits(ConstructFrom(LglsFwd(intent))) {
          Subcomponents::ForEach([&]<class C> {
-            self.C::ConstructFrom(LglsFwd(intent));
+            if_available(self.C::ConstructFrom(LglsFwd(intent)));
          });
       }
    };
