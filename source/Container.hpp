@@ -682,11 +682,11 @@ namespace Langulus::Anyness
 
       /// Often used to clear local heap footers upon allocation              
       ///   @attention works in one dimension at a time!                      
-      template<Cid SID>
-      constexpr void ConstructHeapRequestPerDimension(this auto&& self) noexcept {
+      template<Cid SID, class CC>
+      constexpr void ConstructHeapRequestPerDimension(this CC&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             //if_available(self.C::template ConstructHeapRequestPerDimension<SID>());
-            if constexpr (requires { requires requires { self.C::template ConstructHeapRequestPerDimension<SID>(); }; })
+            if constexpr (requires (CC cc) { cc.C::template ConstructHeapRequestPerDimension<SID>(); })
                self.C::template ConstructHeapRequestPerDimension<SID>();
          });
       }
