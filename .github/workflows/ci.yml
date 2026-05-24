@@ -12,7 +12,7 @@ jobs:
         managed: [ON, OFF]
         os: [ubuntu-24.04, windows-latest]
         build: [debug, release]
-        cxx: [g++-16, clang++-19, clangcl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
+        cxx: [g++-14, clang++-19, clangcl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
         arch: [x86, x64]
 
         exclude:
@@ -21,13 +21,13 @@ jobs:
           - os: ubuntu-24.04
             cxx: clangcl
           - os: windows-latest
-            cxx: g++-16
+            cxx: g++-14
           - os: windows-latest
             cxx: clang++-19
 
         include:
-          - cxx: g++-16
-            c: gcc-16
+          - cxx: g++-14
+            c: gcc-14
           - cxx: clang++-19
             c: clang-19
           - os: ubuntu-24.04
@@ -58,9 +58,8 @@ jobs:
       - if: matrix.os == 'ubuntu-24.04' && matrix.arch == 'x86'
         name: Prepare Linux for cross-compilation
         run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
-          sudo apt install g++-16-multilib
+          sudo apt install g++-14-multilib
 
       - if: matrix.cxx == 'clang++-19'
         name: Installing Clang 19
