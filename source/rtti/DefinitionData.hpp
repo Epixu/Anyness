@@ -52,10 +52,12 @@ namespace Langulus::RTTI
       // The pointer specification of a sparse type.                    
       PointerSpecification mPointerSpecification;
       
-      // This is required in some corner cases involving multiple       
-      // layers of indirection, or incomplete types.                    
-      bool mPtrIncludedInID = false;
-      bool mDedicatedID = false;
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // This is required in some corner cases involving multiple    
+         // layers of indirection, or incomplete types.                 
+         bool mPtrIncludedInID = false;
+         bool mDedicatedID = false;
+      #endif
 
       // The type, when all qualifiers are removed down to the origin.  
       DefinitionData const* mDecvqAll IF_SAFE(= nullptr);
