@@ -686,8 +686,8 @@ namespace Langulus::Anyness
       constexpr void ConstructHeapRequestPerDimension(this auto&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             //if_available(self.C::template ConstructHeapRequestPerDimension<SID>());
-            if constexpr (requires { self.C::template ConstructHeapRequestPerDimension<SID>(); })
-               self.C::template ConstructHeapRequestPerDimension<SID>();
+            if constexpr (requires { static_cast<C&&>(self).template ConstructHeapRequestPerDimension<SID>(); })
+               static_cast<C&&>(self).template ConstructHeapRequestPerDimension<SID>();
          });
       }
 

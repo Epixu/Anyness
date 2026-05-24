@@ -149,7 +149,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
     target_compile_options(LangulusAnyness PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
 endif()
 
-target_compile_features(LangulusAnyness PUBLIC cxx_std_26)
+target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
 target_include_directories(LangulusAnyness PUBLIC include)
 target_include_directories(LangulusAnyness PUBLIC .)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
