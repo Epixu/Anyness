@@ -44,8 +44,7 @@ namespace Langulus::Anyness::Component
 
       static constexpr bool HeapCanBeNull = Subcomponents::ForEachOr([]<class C> { return C::HeapCanBeNull; });
 
-      #define if_inherits(...) requires (Subcomponents::ForEachOr([&]<class C> { \
-         return requires { self.C::__VA_ARGS__; }; }))
+      #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
 
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
@@ -173,10 +172,9 @@ namespace Langulus::Anyness::Component
       /// This will allocate memory for relevant headers, footers, and types  
       /// across all dimensions used in this heap component.                  
       ///   @param reserve the number of elements to request                  
-      template<Cid SID = 0>
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
       constexpr auto RequestHeap(this auto const& self, size_t reserve) assumptious
       -> Request if_inherits(RequestHeap(reserve)) {
-         using C = typename Subcomponents::template At<SID>;
          return self.C::RequestHeap(reserve);
       }
 

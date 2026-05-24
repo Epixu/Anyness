@@ -106,7 +106,6 @@ namespace Langulus::Anyness::Component
       template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
       constexpr void ConstructHeapRequestPerDimension(this auto& self) noexcept 
       if_inherits(ConstructHeapRequestPerDimension()) {
-         //using C = typename Subcomponents::template At<SID>;
          if_available(self.C::ConstructHeapRequestPerDimension());
       }
 
