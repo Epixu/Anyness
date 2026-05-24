@@ -152,9 +152,9 @@ namespace Langulus::Anyness::Component
 
       /// Check if container is in the default state                          
       ///   @return true if either contains state, or has stuff inserted      
-      bool IsDefaultState(this auto const& self) noexcept {
+      constexpr bool IsDefaultState(this auto const& self) noexcept {
          if constexpr (HasStates)
-            return self.GetState().mState == self.GetDefaultState();
+            return self.GetState().mState == GetDefaultState();
          else
             return true;
       }
@@ -227,7 +227,7 @@ namespace Langulus::Anyness::Component
             if constexpr (I::ResetsOnMove())
                from.ResetState();
          }
-         else self.SetStateInner(C::GetDefaultState());
+         else self.SetStateInner(GetDefaultState());
       }
    };
 }
