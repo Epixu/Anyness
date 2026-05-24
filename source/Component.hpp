@@ -99,7 +99,7 @@ namespace Langulus::Anyness::Component
    };
 
    template<CT::Component...CN>
-   constexpr size_t CountEnabled = decltype(Types<CN...>::Discard([]<class C>{
+   constexpr size_t CountEnabled = decltype(Types<CN...>::Discard([]<class C> static {
       return requires { C::SkipThisComponent; }; })
    )::Count;
 }

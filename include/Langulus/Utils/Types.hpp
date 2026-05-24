@@ -150,10 +150,10 @@ namespace Langulus
       static consteval auto GenerateDataOptimized(auto&&) { return TupleOptimized {}; }
       static constexpr auto Discard(auto&&) { return Types<>{}; }
       static constexpr auto Extract(auto&& lambda) {
-         static_assert(requires{ LglsLamb(lambda, void); },
-            "Provided argument is not a lambda of the form []<class T> where T can be 'void'"
+         static_assert(requires{ LglsLambStatic(lambda, void); },
+            "Provided argument is not a lambda of the form []<class T> static where T can be 'void'"
             " - consider this case if you want to Extract from empty type lists");
-         return decltype(LglsLamb(lambda, void)) {};
+         return decltype(LglsLambStatic(lambda, void)) {};
       }
 
       template<class...N>
@@ -267,9 +267,9 @@ namespace Langulus
 
       /// Discard elements for which lambda returns true                      
       static constexpr auto Discard(auto&& lambda) {
-         static_assert(requires{ {LglsLamb(lambda, T)} -> ::std::convertible_to<bool>; },
-            "Provided argument is not a lambda of the form []<class> -> convertible to bool");
-         if constexpr (LglsLamb(lambda, T))
+         static_assert(requires{ {LglsLambStatic(lambda, T)} -> ::std::convertible_to<bool>; },
+            "Provided argument is not a lambda of the form []<class> static -> convertible to bool");
+         if constexpr (LglsLambStatic(lambda, T))
             return Types<>{};
          else
             return Types<T>{};
@@ -277,9 +277,9 @@ namespace Langulus
 
       /// Collects stuff inside the types into a new value/type list          
       static constexpr auto Extract(auto&& lambda) {
-         static_assert(requires{ LglsLamb(lambda, T); },
-            "Provided argument is not a lambda of the form []<class>");
-         return LglsLamb(lambda, T);
+         static_assert(requires{ LglsLambStatic(lambda, T); },
+            "Provided argument is not a lambda of the form []<class> static");
+         return LglsLambStatic(lambda, T);
       }
 
       template<class...N>
@@ -452,10 +452,10 @@ namespace Langulus
 
       /// Discard elements for which lambda returns true                      
       static constexpr auto Discard(auto&& lambda) {
-         static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::convertible_to<bool>; },
-            "Provided argument is not a lambda of the form []<class> -> convertible to bool");
-         if constexpr (LglsLamb(lambda, T1)) {
-            if constexpr (LglsLamb(lambda, T2)) {
+         static_assert(requires{ {LglsLambStatic(lambda, T1)} -> ::std::convertible_to<bool>; },
+            "Provided argument is not a lambda of the form []<class> static -> convertible to bool");
+         if constexpr (LglsLambStatic(lambda, T1)) {
+            if constexpr (LglsLambStatic(lambda, T2)) {
                if constexpr (sizeof...(TN) > 0)
                   return Types<TN...>::Discard(LglsFwd(lambda));
                else
@@ -469,7 +469,7 @@ namespace Langulus
             }
          }
          else {
-            if constexpr (LglsLamb(lambda, T2)) {
+            if constexpr (LglsLambStatic(lambda, T2)) {
                if constexpr (sizeof...(TN) > 0)
                   return Types<T1>{} + Types<TN...>::Discard(LglsFwd(lambda));
                else
@@ -486,14 +486,14 @@ namespace Langulus
 
       /// Collects stuff inside the types into a new value/type list          
       static constexpr auto Extract(auto&& lambda) {
-         static_assert(requires{ LglsLamb(lambda, T1); },
-            "Provided argument is not a lambda of the form []<class>");
+         static_assert(requires{ LglsLambStatic(lambda, T1); },
+            "Provided argument is not a lambda of the form []<class> static");
          if constexpr (sizeof...(TN) > 0) {
-            return LglsLamb(lambda, T1)
-                +  LglsLamb(lambda, T2)
-                + (LglsLamb(lambda, TN) + ...);
+            return LglsLambStatic(lambda, T1)
+                +  LglsLambStatic(lambda, T2)
+                + (LglsLambStatic(lambda, TN) + ...);
          }
-         else return LglsLamb(lambda, T1) + LglsLamb(lambda, T2);
+         else return LglsLambStatic(lambda, T1) + LglsLambStatic(lambda, T2);
       }
 
       template<class...N>

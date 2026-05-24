@@ -577,6 +577,7 @@ namespace Langulus
 
    /// Syntax sugar for calling pesky templated lambdas                       
    #define LglsLamb(a, ...) a.template operator()<__VA_ARGS__>()
+   #define LglsLambStatic(a, ...) ::std::decay_t<decltype(a)>::template operator()<__VA_ARGS__>()
    
    /// I don't like how long ::std::conditional_t is to write.                
    /// Also, std::conditional_t must instantiate both paths, which is a big   

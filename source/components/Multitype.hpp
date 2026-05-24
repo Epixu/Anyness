@@ -29,9 +29,9 @@ namespace Langulus::Anyness::Component
    struct LANGULUS_EBCO Multitype<TN...> : TN... {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Subcomponents  = decltype( Types<TN...>::Discard([]<class C>{ return requires { C::SkipThisComponent; }; }));
-      using Id             = decltype(Subcomponents::Extract([]<class C>{ return typename C::Id{}; }));
-      using CTTI_Typed     = decltype(Subcomponents::Extract([]<class C>{ return Types<TypeOf<C>>{}; }));
+      using Subcomponents  = decltype( Types<TN...>::Discard([]<class C> static { return requires { C::SkipThisComponent; }; }));
+      using Id             = decltype(Subcomponents::Extract([]<class C> static { return typename C::Id{}; }));
+      using CTTI_Typed     = decltype(Subcomponents::Extract([]<class C> static { return Types<TypeOf<C>>{}; }));
 
       static_assert(Subcomponents::ForEachIndexedAnd([]<class C, size_t I> {
          return C::Id::Count == 1 and C::Id::First == I; }),
