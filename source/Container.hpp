@@ -685,7 +685,7 @@ namespace Langulus::Anyness
       template<Cid SID, class SELF>
       constexpr void ConstructHeapRequestPerDimension(this SELF&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
-            if_available(self.C::template ConstructHeapRequestPerDimension<SID>());
+            if_available(self.C::ConstructHeapRequestPerDimension());
          });
       }
 
