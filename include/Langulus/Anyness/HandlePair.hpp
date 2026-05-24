@@ -608,8 +608,9 @@ namespace Langulus::Anyness
       }
 
       constexpr THandlePair(auto&& key, auto&& val) noexcept {
-         this->Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(key));
-         this->Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(val));
+         using C = Com::Emplacement<0, 1>;
+         this->C::template EmplaceConstruct<0>(LglsFwd(key));
+         this->C::template EmplaceConstruct<1>(LglsFwd(val));
       }
 
       constexpr ~THandlePair() noexcept {
