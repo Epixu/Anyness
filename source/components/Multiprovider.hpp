@@ -183,8 +183,7 @@ namespace Langulus::Anyness::Component
       /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
-            using T = Decay<C>;
-            self.T::ConstructDefault();
+            self.C::ConstructDefault();
          });
       }
       
