@@ -104,8 +104,8 @@ namespace Langulus::Anyness::Component
 
       /// This method is called upon allocation to nullify all entries        
       /// for a specific dimension.                                           
-      template<Cid SID = 0>
-      constexpr void ConstructHeapRequestPerDimension(this auto& self) noexcept 
+      template<Cid SID = 0, class SELF>
+      constexpr void ConstructHeapRequestPerDimension(this SELF& self) noexcept
       if_inherits(ConstructHeapRequestPerDimension()) {
          using C = typename Subcomponents::template At<SID>;
          if_available(self.C::ConstructHeapRequestPerDimension());
