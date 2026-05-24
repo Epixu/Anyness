@@ -543,5 +543,7 @@ namespace Langulus::Anyness::Component
             if_available(self.C::ConstructFrom(LglsFwd(intent)));
          });
       }
+
+      #undef if_inherits
    };
 }
