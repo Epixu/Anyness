@@ -115,10 +115,10 @@ namespace Langulus::Anyness
       }
 
       decltype(auto) GetKeyHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetKey(); //TODO use PickDimension instead?
+         return self.GetHandle().GetKeyHandle(); //TODO use PickDimension instead?
       }
       decltype(auto) GetValHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetVal(); //TODO use PickDimension instead?
+         return self.GetHandle().GetValHandle(); //TODO use PickDimension instead?
       }
    };
 

@@ -79,6 +79,9 @@ namespace Langulus::Anyness
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
       }
+      Handle GetKeyHandle() noexcept {
+         return GetKey();
+      }
 
       Handle GetVal() noexcept {
          return {
@@ -86,6 +89,9 @@ namespace Langulus::Anyness
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
+      }
+      Handle GetValHandle() noexcept {
+         return GetVal();
       }
 
       /// Force the handle to become mutable, so that we have methods like    
@@ -97,8 +103,8 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKey();
-         else if constexpr (SID == 1)  return self.GetVal();
+              if constexpr (SID == 0)  return self.GetKeyHandle();
+         else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
    };
@@ -171,12 +177,19 @@ namespace Langulus::Anyness
          };
       }
 
+      HandleMut GetKeyHandle() noexcept {
+         return GetKey();
+      }
+
       HandleMut GetVal() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
+      }
+      HandleMut GetValHandle() noexcept {
+         return GetVal();
       }
 
       /// Already as mutable as it gets                                       
@@ -187,8 +200,8 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKey();
-         else if constexpr (SID == 1)  return self.GetVal();
+              if constexpr (SID == 0)  return self.GetKeyHandle();
+         else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
    };
@@ -260,6 +273,9 @@ namespace Langulus::Anyness
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
       }
+      Handle GetKeyHandle() noexcept {
+         return GetKey();
+      }
 
       HandleMut GetVal() noexcept {
          return {
@@ -267,6 +283,9 @@ namespace Langulus::Anyness
             this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
+      }
+      HandleMut GetValHandle() noexcept {
+         return GetVal();
       }
 
       /// Force the handle to become mutable, so that we have methods like    
@@ -278,8 +297,8 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKey();
-         else if constexpr (SID == 1)  return self.GetVal();
+              if constexpr (SID == 0)  return self.GetKeyHandle();
+         else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
    };
@@ -346,7 +365,11 @@ namespace Langulus::Anyness
       decltype(auto) GetKey() noexcept {
          if constexpr (CT::Constant<K>)
             return *this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::Get();
-         else return THandleEmergent<K> {
+         else
+            return GetKeyHandle();
+      }
+      KeyHandle GetKeyHandle() noexcept {
+         return THandleEmergent<K> {
             this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
          };
       }
@@ -354,7 +377,11 @@ namespace Langulus::Anyness
       decltype(auto) GetVal() noexcept {
          if constexpr (CT::Constant<V>)
             return *this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::Get();
-         else return THandleEmergent<V> {
+         else
+            return GetValHandle();
+      }
+      ValHandle GetValHandle() noexcept {
+         return THandleEmergent<V> {
             this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()
          };
       }
@@ -371,8 +398,8 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0) return self.GetKey();
-         else if constexpr (SID == 1) return self.GetVal();
+              if constexpr (SID == 0) return self.GetKeyHandle();
+         else if constexpr (SID == 1) return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
    };
@@ -452,7 +479,12 @@ namespace Langulus::Anyness
       decltype(auto) GetKey() noexcept {
          if constexpr (CT::Constant<K>)
             return *this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::Get();
-         else if constexpr (CT::Dense<K, V>) {
+         else
+            return GetKeyHandle();
+      }
+
+      KeyHandle GetKeyHandle() noexcept {
+         if constexpr (CT::Dense<K, V>) {
             return KeyHandle {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
@@ -475,7 +507,12 @@ namespace Langulus::Anyness
       decltype(auto) GetVal() noexcept {
          if constexpr (CT::Constant<V>)
             return *this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::Get();
-         else if constexpr (CT::Dense<K, V>) {
+         else
+            return GetValHandle();
+      }
+
+      ValHandle GetValHandle() noexcept {
+         if constexpr (CT::Dense<K, V>) {
             return ValHandle {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
@@ -507,8 +544,8 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKey();
-         else if constexpr (SID == 1)  return self.GetVal();
+              if constexpr (SID == 0)  return self.GetKeyHandle();
+         else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
    };
@@ -593,6 +630,10 @@ namespace Langulus::Anyness
          else return THandleEmergent<K&> {this->Com::Stack<K, 0>::GetRaw()};
       }
 
+      auto GetKeyHandle() noexcept -> KeyHandle {
+         return GetKey();
+      }
+
       auto GetVal() noexcept -> ValHandle {
          if constexpr (CT::Sparse<V>) {
             return THandle<V&> {
@@ -601,6 +642,10 @@ namespace Langulus::Anyness
             };
          }
          else return THandleEmergent<V&> {this->Com::Stack<V, 1>::GetRaw()};
+      }
+
+      auto GetValHandle() noexcept -> ValHandle {
+         return GetVal();
       }
 
       /// Force the handle to become mutable, so that we have methods like    
@@ -612,8 +657,8 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKey();
-         else if constexpr (SID == 1)  return self.GetVal();
+              if constexpr (SID == 0)  return self.GetKeyHandle();
+         else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
    };

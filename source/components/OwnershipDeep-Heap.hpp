@@ -30,7 +30,7 @@ namespace Langulus::Anyness::Component
    ///      reflected as CT::Referenced get referenced. Elements will get     
    ///      referenced even if no entry for the element exist, but you can    
    ///      avoid referencing altogether if you use the Disown intent.        
-   ///      To be more specific - when GetReference() is nullptr and the      
+   ///      To be more specific - when GetAllocation() is nullptr and the     
    ///      entire container is considered disowned.                          
    ///   @tparam ID which heap/stack are we keeping track of?                 
    ///   @tparam SHARED additional provider IDs that share the same behavior  

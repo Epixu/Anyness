@@ -32,7 +32,7 @@ namespace Langulus::Anyness::Component
    ///      reflected as CT::Referenced get referenced. Elements will get     
    ///      referenced even if no entry for the element exist, but you can    
    ///      avoid referencing altogether if you use the Disown intent.        
-   ///      To be more specific - when GetReference() is nullptr and the      
+   ///      To be more specific - when GetAllocation() is nullptr and the     
    ///      entire container is considered disowned.                          
    ///   @tparam ID which heap/stack are we keeping track of?                 
    ///   @tparam SHARED additional provider IDs that share the same behavior  
@@ -58,6 +58,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Find and populate an indirection entry                              
       template<bool CUSTOM_POINTERS, CT::Container C>
       static void FindEntry(
@@ -93,6 +94,7 @@ namespace Langulus::Anyness::Component
          }
          else entry = DecvqAllCast(Allocator::Find(ptr));
       }
+   #endif
 
       /// Nests through all indirection layers of the first contained element 
       ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
@@ -141,8 +143,10 @@ namespace Langulus::Anyness::Component
                   }
                }
 
-               if constexpr (FIND_MISSING and LANGULUS_FEATURE(MANAGED_MEMORY))
-                  ThisCom::template FindEntry<false, C>(entries, ptr);
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  if constexpr (FIND_MISSING)
+                     ThisCom::template FindEntry<false, C>(entries, ptr);
+               #endif
 
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
@@ -173,8 +177,10 @@ namespace Langulus::Anyness::Component
                   ptr->Reference(1);
                }
             
-               if constexpr (FIND_MISSING and LANGULUS_FEATURE(MANAGED_MEMORY))
-                  ThisCom::template FindEntry<false, C>(entries, ptr);
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  if constexpr (FIND_MISSING)
+                     ThisCom::template FindEntry<false, C>(entries, ptr);
+               #endif
 
                if (*entries)
                   DecvqAllCast(*entries)->AddRef(1);
@@ -289,6 +295,7 @@ namespace Langulus::Anyness::Component
                return;
          }
 
+         using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Destroying a type-erased element                         
@@ -309,7 +316,7 @@ namespace Langulus::Anyness::Component
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
                      if (auto subEntry = entries + 1) {
-                        DecideHandle<C> temp {ptr, subEntry, subT};
+                        H temp {ptr, subEntry, subT};
                         temp.template DestroyElementDeepStandardPointers<DESTROY>();
                      }
                   }
@@ -331,7 +338,7 @@ namespace Langulus::Anyness::Component
                      // Pointer to pointer.                             
                      // Dereference all indirection layers.             
                      if (auto subEntry = entries + 1) {
-                        DecideHandle<C> temp {ptr, subEntry, subT};
+                        H temp {ptr, subEntry, subT};
                         temp.template DestroyElementDeepStandardPointers<DESTROY>();
                      }
                   }
@@ -390,8 +397,7 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     using DenserH = typename DecideHandle<C>::Denser;
-                     DenserH temp{ptr, entries + 1};
+                     typename H::Denser temp{ptr, entries + 1};
                      temp.template DestroyElementDeepStandardPointers<DESTROY>();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
@@ -408,8 +414,7 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     using DenserH = typename DecideHandle<C>::Denser;
-                     DenserH temp {ptr, entries + 1};
+                     typename H::Denser temp {ptr, entries + 1};
                      temp.template DestroyElementDeepStandardPointers<DESTROY>();
                   }
                   else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
