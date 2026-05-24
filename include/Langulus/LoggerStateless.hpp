@@ -13,7 +13,7 @@
 #include <fmt/color.h>
 #include <fmt/chrono.h>
 #include <array>
-
+#include <iomanip>
 
 namespace Langulus::CT
 {
