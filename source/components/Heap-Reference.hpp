@@ -136,7 +136,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID can be used to access specific dimension              
       ///   @return pointer to the first element of the desired dimension     
       template<class AS = void, Cid SID = Id::First, CT::Container C> requires Relevant<SID>
-      auto* Get(this C&& self) assumptious {
+      auto* Get(this C&& self) /*assumptious*/ {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
 
