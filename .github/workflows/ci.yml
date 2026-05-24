@@ -58,6 +58,7 @@ jobs:
       - if: matrix.os == 'ubuntu-24.04' && matrix.arch == 'x86'
         name: Prepare Linux for cross-compilation
         run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
           sudo apt install g++-15-multilib
 
