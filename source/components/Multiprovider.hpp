@@ -42,6 +42,8 @@ namespace Langulus::Anyness::Component
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == -2000; }),
          "All precedences should match");
 
+      static constexpr bool HeapCanBeNull = Subcomponents::ForEachOr([]<class C> { return C::HeapCanBeNull; });
+
       #define if_inherits(...) requires (Subcomponents::ForEachOr([&]<class C> { \
          return requires { self.C::__VA_ARGS__; }; }))
 

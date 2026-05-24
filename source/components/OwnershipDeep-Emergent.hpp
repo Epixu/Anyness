@@ -661,7 +661,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this overwrites previous entries without dereferencing 
       template<Cid SID = ID, CT::Container C>
       requires(Relevant<SID> and (CT::TypeErased<C> or CT::Sparse<TypeOf<C, SID>>))
-      void ResetEntries(this C&& self) {
+      void ResetEntries(this C& self) {
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
             // sparsity check for an early exit.                        

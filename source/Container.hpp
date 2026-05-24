@@ -185,10 +185,13 @@ namespace Langulus::Anyness
 
       /// Get the number of heap providers (all dimensions)                   
       /// Needs to be public, because it's used in concept checks.            
+      template<CT::Typelist L = ComponentList>
       static consteval size_t CountHeapProviders() {
          size_t count = 0;
-         ComponentList::ForEach([&count]<class C> {
-            if constexpr (requires { typename C::HeapProvider; })
+         L::ForEach([&count]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               count += CountHeapProviders<typename C::Subcomponents>();
+            else if constexpr (requires { typename C::HeapProvider; })
                ++count;
          });
          return count;
@@ -664,17 +667,25 @@ namespace Langulus::Anyness
          }
       }
 
-      template<class SELF>
-      constexpr void ConstructDefault(this SELF&& self) noexcept {
+      constexpr void ConstructDefault(this auto&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             if_available(self.C::ConstructDefault());
          });
       }
 
-      template<Cid SID = 0, class SELF>
-      constexpr void ConstructHeapRequest(this SELF&& self) noexcept {
+      /// Often used to clear global heap footers upon allocation             
+      constexpr void ConstructHeapRequestGlobal(this auto&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
-            if_available(self.C::template ConstructHeapRequest<SID>());
+            if_available(self.C::ConstructHeapRequestGlobal());
+         });
+      }
+
+      /// Often used to clear local heap footers upon allocation              
+      ///   @attention works in one dimension at a time!                      
+      template<Cid SID>
+      constexpr void ConstructHeapRequestPerDimension(this auto&& self) noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if_available(self.C::template ConstructHeapRequestPerDimension<SID>());
          });
       }
 

@@ -105,15 +105,15 @@ namespace Langulus::Anyness::Component
       /// This method is called upon allocation to nullify all entries        
       /// for a specific dimension.                                           
       template<Cid SID = 0>
-      constexpr void ConstructHeapRequest(this auto& self) noexcept 
-      if_inherits(ConstructHeapRequest()) {
+      constexpr void ConstructHeapRequestPerDimension(this auto& self) noexcept 
+      if_inherits(ConstructHeapRequestPerDimension()) {
          using C = typename Subcomponents::template At<SID>;
-         if_available(self.C::ConstructHeapRequest());
+         if_available(self.C::ConstructHeapRequestPerDimension());
       }
 
       /// Deep-reference an element                                           
       ///   @attention works on one dimension at a time!                      
-      template<bool FIND_MISSING = false, Cid SID = Id::First>
+      template<bool FIND_MISSING = false, Cid SID = 0>
       constexpr void KeepElementDeep(this auto& self) assumptious {
          using C = typename Subcomponents::template At<SID>;
          self.C::template KeepElementDeep<FIND_MISSING>();
@@ -121,10 +121,22 @@ namespace Langulus::Anyness::Component
 
       /// Deep-dereference (and eventually destroy) an element                
       ///   @attention works on one dimension at a time!                      
-      template<bool DESTROY = true, Cid SID = Id::First>
+      template<bool DESTROY = true, Cid SID = 0>
       constexpr void DestroyElementDeep(this auto& self) assumptious {
          using C = typename Subcomponents::template At<SID>;
          self.C::template DestroyElementDeep<DESTROY>();
+      }
+
+      template<Cid SID = 0>
+      void EmplaceEntries(this auto& self, auto&& intent) {
+         using C = typename Subcomponents::template At<SID>;
+         self.C::EmplaceEntries(LglsFwd(intent));
+      }
+
+      template<Cid SID = 0>
+      void ResetEntries(this auto& self) {
+         using C = typename Subcomponents::template At<SID>;
+         self.C::ResetEntries();
       }
 
       #undef if_inherits

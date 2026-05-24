@@ -10,6 +10,8 @@
 
 
 TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
+   , Types<Map, Text*, ScopedElement<Text*>, Text*, ScopedElement<Text*>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Map, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
    , Types<Map, int,    ScopedElement<int>,     int,    ScopedElement<int>>
@@ -17,7 +19,6 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    , Types<Map, RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
    , Types<Map, char,   ScopedElement<char>,    char,   ScopedElement<char>>
 
-   , Types<Map, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
    , Types<Map, int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
    , Types<Map, Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
    , Types<Map, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>

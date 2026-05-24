@@ -42,7 +42,7 @@ namespace Langulus::Anyness
 
       static constexpr bool TypeErased    = true;
       static constexpr bool DeeplyOwned   = true;
-      static constexpr bool HeapCanBeNull = true;
+      //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -133,7 +133,7 @@ namespace Langulus::Anyness
 
       static constexpr bool TypeErased    = true;
       static constexpr bool DeeplyOwned   = true;
-      static constexpr bool HeapCanBeNull = true;
+      //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -223,7 +223,7 @@ namespace Langulus::Anyness
 
       static constexpr bool TypeErased    = true;
       static constexpr bool DeeplyOwned   = true;
-      static constexpr bool HeapCanBeNull = true;
+      //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -315,7 +315,7 @@ namespace Langulus::Anyness
       using ValHandle = THandleEmergent<V>;
 
       static constexpr bool Emergent      = true;
-      static constexpr bool HeapCanBeNull = true;
+      //static constexpr bool HeapCanBeNull = true;
       static constexpr uint Owned         = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
       static constexpr bool DeeplyOwned   = CT::Sparse<K> or CT::Sparse<V>;
 
@@ -413,7 +413,7 @@ namespace Langulus::Anyness
       static constexpr uint Owned             = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
       static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
-      static constexpr bool HeapCanBeNull     = true;
+      //static constexpr bool HeapCanBeNull     = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -553,7 +553,7 @@ namespace Langulus::Anyness
       static constexpr uint Owned             = CT::Sparse<K> or CT::Sparse<V> ? Com::StrongOwnership : 0;
       static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
-      static constexpr bool HeapCanBeNull     = DeeplyOwned;
+      //static constexpr bool HeapCanBeNull     = DeeplyOwned;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;

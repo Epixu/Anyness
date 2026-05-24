@@ -247,7 +247,10 @@ namespace Langulus::Anyness::Component
          ThisCom::SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          self.template SetAllocationInner<SID>(al);
          if_available(self.template SetReservedInner<SID>(request.mReserved));
-         if_available(self.template ConstructHeapRequest<SID>());
+         Id::ForEach([&self]<Cid D>{
+            self.template ConstructHeapRequestPerDimension<D>();
+         });
+         if_available(self.ConstructHeapRequestGlobal());
       }
 
       /// Allocate a number of elements, relying on the type of the container 

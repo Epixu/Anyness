@@ -94,10 +94,11 @@ namespace Langulus::Anyness::Component
          return self.template AccessHeap<OwnershipDeepHeap, SID>();
       }
 
-      /// This method is called upon allocation to nullify all entries in all 
-      /// shared dimensions.                                                  
+      /// This method is called upon allocation to nullify all entries for    
+      /// a particular dimension.                                             
+      ///   @attention works in one dimension at a time!                      
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
-      constexpr void ConstructHeapRequest(this C& self) noexcept {
+      constexpr void ConstructHeapRequestPerDimension(this C& self) noexcept {
          auto count = 0;
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
