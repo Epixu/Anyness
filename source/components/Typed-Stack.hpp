@@ -54,7 +54,7 @@ namespace Langulus::Anyness::Component
          if consteval { return META {}; }
          else {
             META const& meta = ThisCom::GetTypeInner();
-            if constexpr (not ThisCom::TypeErased)
+            if constexpr (not TypeErased)
                const_cast<META&>(meta) = MetaDataOf<TYPE>();
             return meta;
          }
@@ -64,7 +64,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID - type selector                                       
       template<Cid SID = ID> requires (SID == ID)
       constexpr size_t GetStride(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().GetSize();
          else
             return sizeof(TYPE);
@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID - type selector                                       
       template<Cid SID = ID> requires (SID == ID)
       constexpr pot_t GetAlignment(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().GetAlignment();
          else
             return pot_t(alignof(TYPE));
@@ -84,7 +84,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID - type selector                                       
       template<Cid SID = ID> requires (SID == ID)
       constexpr auto GetName(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().GetName();
          else
             return NameOf<TYPE>();
@@ -95,7 +95,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if data contained in this pack is specified          
       template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsTyped(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return static_cast<bool>(ThisCom::GetTypeInner());
          else
             return true;
@@ -108,7 +108,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if origin types match                                
       template<CT::NotVoid T, Cid SID = ID> requires (SID == ID)
       constexpr bool Is(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().Is(MetaDataOf<T>());
          else
             return Akin<TYPE, T>;
@@ -129,7 +129,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if this container's type is akin to other's          
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool Is(this auto const& self, C const& other) noexcept {
-         if constexpr (ThisCom::TypeErased or CT::TypeErased<C>)
+         if constexpr (TypeErased or CT::TypeErased<C>)
             return ThisCom::GetTypeInner().Is(other.template GetType<ID>());
          else
             return Akin<TYPE, TypeOf<C>>;
@@ -141,7 +141,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if contained type is same as T                       
       template<CT::NotVoid T, Cid SID = ID> requires (SID == ID)
       constexpr bool IsSame(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().IsSame(MetaDataOf<T>());
          else
             return Same<TYPE, T>;
@@ -162,7 +162,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if this container has similar data                   
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool IsSame(this auto const& self, C const& other) noexcept {
-         if constexpr (ThisCom::TypeErased or CT::TypeErased<C>)
+         if constexpr (TypeErased or CT::TypeErased<C>)
             return ThisCom::GetTypeInner().IsSame(other.template GetType<ID>());
          else
             return Same<TYPE, TypeOf<C>>;
@@ -173,7 +173,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if data type matches T                               
       template<CT::NotVoid T, Cid SID = ID> requires (SID == ID)
       constexpr bool IsExact(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().IsExact(MetaDataOf<T>());
          else
             return Exact<TYPE, T>;
@@ -192,7 +192,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if data type matches type exactly                    
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool IsExact(this auto const& self, C const& other) noexcept {
-         if constexpr (ThisCom::TypeErased or CT::TypeErased<C>)
+         if constexpr (TypeErased or CT::TypeErased<C>)
             return ThisCom::GetTypeInner().IsExact(other.template GetType<ID>());
          else
             return Exact<TYPE, TypeOf<C>>;
@@ -202,7 +202,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if the block contains pointers                       
       template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsSparse(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().IsSparse();
          else
             return CT::Sparse<TYPE>;
@@ -212,7 +212,7 @@ namespace Langulus::Anyness::Component
       /// int**** will result in 4; int* will result in 1, int results in 0.  
       template<Cid SID = ID> requires (SID == ID)
       constexpr size_t GetIndirections(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().GetIndirections();
          else
             return IndirectsOf<TYPE>;
@@ -224,14 +224,14 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsConstant(this auto const& self) noexcept {
          if constexpr (requires { self.template GetAllocation<ID>(); }) {
-            if constexpr (ThisCom::TypeErased) {
+            if constexpr (TypeErased) {
                return not self.template GetAllocation<ID>()
                        or ThisCom::GetTypeInner().IsConstant();
             }
             else return CT::Constant<TYPE> or not self.template GetAllocation<ID>();
          }
          else {
-            if constexpr (ThisCom::TypeErased)
+            if constexpr (TypeErased)
                return ThisCom::GetTypeInner().IsConstant();
             else
                return CT::Constant<TYPE>;
@@ -242,7 +242,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if the container is deep                             
       template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsDeep(this auto const& self) noexcept {
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             return ThisCom::GetTypeInner().IsDeep();
          else
             return CT::Deep<TYPE>;
@@ -255,7 +255,7 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<ID>())
             return false;
 
-         if constexpr (ThisCom::TypeErased) {
+         if constexpr (TypeErased) {
             // Type-erased                                              
             const auto T = ThisCom::GetTypeInner();
             if (T.IsExecutable())
@@ -346,7 +346,7 @@ namespace Langulus::Anyness::Component
          static_assert(CT::NotReference<T>, "Strip all references first");
          
          const auto type = MetaDataOf<T>();
-         if constexpr (ThisCom::TypeErased)
+         if constexpr (TypeErased)
             ThisCom::SetType(type);
          else {
             static_assert(Exact<T, TYPE>, "Type mismatch");         
@@ -363,7 +363,7 @@ namespace Langulus::Anyness::Component
       void SetType(this C& self, META type) {
          auto& t = ThisCom::GetTypeInner();
          
-         if constexpr (ThisCom::TypeErased) {
+         if constexpr (TypeErased) {
             // This container is type-erased                            
             if (t == type)
                return;
@@ -416,7 +416,7 @@ namespace Langulus::Anyness::Component
       ///      to the next type which is set                                  
       template<Cid SID = ID> requires (SID == ID)
       constexpr void ResetType(this auto& self) noexcept {
-         if constexpr (ThisCom::TypeErased) {
+         if constexpr (TypeErased) {
             if constexpr (requires { self.template IsTypeConstrained<SID>(); }) {
                if (not self.template IsTypeConstrained<SID>())
                   ThisCom::SetTypeInner({});
@@ -441,7 +441,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
-         if constexpr (ThisCom::TypeErased) {
+         if constexpr (TypeErased) {
             META type = intent->template GetType<ID>();
             if constexpr (CT::Copied<I> or CT::Cloned<I>) {
                // When copying, we're cloning just the first layer, so  

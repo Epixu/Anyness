@@ -333,7 +333,7 @@ namespace Langulus
    #else
       #define LglsAssumeDev(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeDevWarn(CONDITION, ...) LANGULUS(NOOP)
-      #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+      #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(static_cast<bool>(CONDITION))]]
    #endif
 
    /// Custom assumption that works both at runtime and at compile-time.      
