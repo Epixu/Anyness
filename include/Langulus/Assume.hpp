@@ -329,7 +329,7 @@ namespace Langulus
       /// compiler to generate more performant code                           
       #define LglsAssumeDevAndOptimize(CONDITION, ...) \
          ::Langulus::AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-         LglsCompilerSpecificAssume(CONDITION)
+         LglsCompilerSpecificAssume(static_cast<bool>(CONDITION))
    #else
       #define LglsAssumeDev(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeDevWarn(CONDITION, ...) LANGULUS(NOOP)
