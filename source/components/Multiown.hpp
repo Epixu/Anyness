@@ -11,32 +11,34 @@
 
 namespace Langulus::Anyness::Component
 {
+   template<class...> struct Multiown;
+
+   template<CT::Component...TN> requires (CountEnabled<TN...> == 0)
+   struct Multiown<TN...> {
+      using CTTI_Component = Yes<>;
+      static constexpr bool SkipThisComponent = true;
+   };
+
    ///                                                                        
-   /// Combines multiple deep ownership components into a unified interface to
+   /// Combines multiple ownership components into a unified interface to     
    /// combat C++ base method ambiguities, and to add a bit more convenience. 
-   ///   @tparam TC0, TC1, TCN... all the deep ownership components to unify  
-   template<CT::Component TC0, CT::Component TC1, CT::Component...TCN>
-   struct LANGULUS_EBCO Multiown : TC0, TC1, TCN... {
+   ///   @tparam TN... all the ownership components to unify                  
+   template<CT::Component...TN> requires (CountEnabled<TN...> >= 2)
+   struct LANGULUS_EBCO Multiown<TN...> : TN... {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Subcomponents  = Types<TC0, TC1, TCN...>;
-      using Id             = ConcatenateValueLists<typename TC0::Id,
-                                                   typename TC1::Id,
-                                                   typename TCN::Id...>;
-      static_assert(TC0::Id::Count == 1
-              and   TC1::Id::Count == 1
-              and ((TCN::Id::Count == 1) and ...),
-              "Each subcomponent needs to be dedicated to their single dimension");
+      using Subcomponents  = decltype( Types<TN...>::Discard([]<class C>{ return requires { C::SkipThisComponent; }; }));
+      using Id             = decltype(Subcomponents::Extract([]<class C>{ return typename C::Id{}; }));
+
+      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Id::Count == 1; }),
+         "Each subcomponent needs to be dedicated to their single dimension");
 
       static constexpr int ComponentPrecedence = 2000;
-      static_assert(TC0::ComponentPrecedence == 2000
-              and   TC1::ComponentPrecedence == 2000
-              and ((TCN::ComponentPrecedence == 2000) and ...),
-              "All precedences should match");
-      
+      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 2000; }),
+         "All precedences should match");
       
       /// Get the allocation                                                  
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr auto GetAllocation(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -47,7 +49,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get the memory reference count                                      
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr auto GetUses(this auto const& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -60,7 +62,7 @@ namespace Langulus::Anyness::Component
       /// Shallow-copy all initialized elements in memory to another          
       /// allocation, that is owned once only by this container.              
       ///   @attention if we already own the memory just Keep() it once       
-      template<Cid SID>
+      template<Cid SID = Id::First>
       void TakeOwnership(this auto& self) {
          Subcomponents::ForEachConstOr([&]<class C> {
             if constexpr (C::Id::First == SID)
@@ -78,7 +80,7 @@ namespace Langulus::Anyness::Component
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr decltype(auto) GetAllocationInner(this auto&& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept -> decltype(auto) {
             if constexpr (C::Id::First == SID)
@@ -90,7 +92,7 @@ namespace Langulus::Anyness::Component
       
       /// Set allocation (inner)                                              
       ///   @attention this will not dereference previous allocation          
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr void SetAllocationInner(this auto& self, Allocation const* a) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -103,7 +105,7 @@ namespace Langulus::Anyness::Component
       /// Automatically set the allocation by searching for it using the heap 
       /// pointer. If allocation wasn't found, it will be set to nullptr.     
       ///   @attention this will not dereference previous allocation          
-      template<Cid SID>
+      template<Cid SID = Id::First>
       void FindAllocationInner(this auto& self) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -114,7 +116,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Resets allocation and all of its derivatives                        
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr void ResetAllocationInner(this auto&& self) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -157,7 +159,7 @@ namespace Langulus::Anyness::Component
       /// Reference the allocation once.                                      
       /// If container has DeepOwnership component, all entries will be       
       /// individually referenced as well.                                    
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr void Keep(this auto& self) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -170,7 +172,7 @@ namespace Langulus::Anyness::Component
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced                                                  
       ///   @attention this never modifies any state                          
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr void Free(this auto& self) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -184,7 +186,7 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't perform any referencing or indirection         
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr void DestroyElementShallow(this auto& self) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)

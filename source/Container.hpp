@@ -645,9 +645,10 @@ namespace Langulus::Anyness
                using PROVIDER = typename decltype(FindProvider<SID>())::First;
                constexpr Cid LAST_ID = PROVIDER::Id::Last;
                const size_t reserved = self.template GetReserved<LAST_ID>();
+               const size_t indirects = self.template GetIndirections<LAST_ID>();
                const size_t stride = self.template GetStride<LAST_ID>();
-               const size_t offset_local = self.template DefineHeapFooter<LAST_ID>(reserved);
-               const size_t offset_global = self.template GetHeapFooterOffsetGlobal<PICK, SID>(reserved);
+               const size_t offset_local = DefineHeapFooter<LAST_ID>(reserved, indirects);
+               const size_t offset_global = GetHeapFooterOffsetGlobal<PICK, SID>(reserved);
                const auto heap = self.template GetRawAs<uint8_t, LAST_ID>();
                using RC = LglsMutIf(SELF, TypeOf<R>*);
                return reinterpret_cast<RC>(heap + reserved * stride + offset_local + offset_global);
@@ -870,14 +871,46 @@ namespace Langulus::Anyness
       
       /// Call AssignFrom in all components that implement it.                
       /// Fallback to AssignDefault otherwise.                                
-      template<CT::Container SELF, CT::Container FROM>
-      constexpr SELF& AssignAbsorb(this SELF& self, FROM&& rhs) {
-         static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+      template<CT::Container LHS, CT::Container RHS>
+      constexpr LHS& AssignAbsorb(this LHS& self, RHS&& rhs) {
+         static_assert(CT::Contiguous<LHS> == CT::Contiguous<RHS>,
             "You can't assign-absorb from containers with different contiguousness");
 
-         ComponentList::ForEach([&]<class C>{
-            if_available(self.C::AssignFrom(FWDIntent(rhs)));
+         decltype(auto) from = DeintCast(rhs);
+         //if constexpr (requires { &self == &from; }) {
+            // Make sure 'lhs' and 'rhs' are different instances,       
+            // otherwise we lose rhs if we free lhs, and we have to     
+            // free lhs in order to overwrite it with rhs.              
+            if (static_cast<const void*>(&self) == static_cast<const void*>(&from))
+               return self;
+         //}
+
+         // Never modify containers if type-incompatible                
+         LHS::Dimensions::ForEach([&self, &from]<Cid D> {
+            using RHS_T = Deint<RHS>;
+            if constexpr (CT::TypeErased<RHS_T> or CT::TypeErased<LHS>) {
+               auto t1 = self.template GetType<D>();
+               auto t2 = from.template GetType<D>();
+               if (t1 and t2) {
+                  LglsAssert(t1.IsSame(t2), "Type mismatch", ": ",
+                     t1, " is not same as ", t2);
+               }
+            }
+            else {
+               (void) self; (void) from;
+               static_assert(Same<TypeOf<LHS, D>, TypeOf<RHS_T, D>>, "Type mismatch");
+            }
          });
+
+         // Free old data and absorb the new container                  
+         self.Destroy();
+         //self.Free();
+         self.ResetCount(); //TODO redundant?
+         self.Absorb(LglsFwd(rhs));
+
+         /*ComponentList::ForEach([&]<class C>{
+            if_available(self.C::AssignFrom(FWDIntent(rhs)));
+         });*/
          return self;
       }
    };

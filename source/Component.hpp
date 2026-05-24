@@ -97,6 +97,11 @@ namespace Langulus::Anyness::Component
       size_t mHeaderBytes;
       size_t mReserved;
    };
+
+   template<CT::Component...CN>
+   constexpr size_t CountEnabled = decltype(Types<CN...>::Discard([]<class C>{
+      return requires { C::SkipThisComponent; }; })
+   )::Count;
 }
 
 namespace Langulus::CT

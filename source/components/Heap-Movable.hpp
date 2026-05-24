@@ -202,7 +202,7 @@ namespace Langulus::Anyness::Component
 
       /// Free this container and absorb from any other, respecting intents   
       ///   @param intent the intent and container to assign from             
-      template<class C, CT::Intent I> requires CT::Container<I>
+      /*template<class C, CT::Intent I> requires CT::Container<I>
       void AssignFrom(this C& self, I&& intent) {
          using IT = Deint<I>;
          IT from = LglsFwd(intent.what);
@@ -230,7 +230,7 @@ namespace Langulus::Anyness::Component
          self.Free();
          self.ResetCount();
          self.Absorb(LglsFwd(intent));
-      }
+      }*/
       
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only

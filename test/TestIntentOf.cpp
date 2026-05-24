@@ -1760,6 +1760,22 @@ TEST_CASE_TEMPLATE("Testing DeintCast (non-moving)", TestType
    const TestType i {*value};
    static_assert(::std::same_as<decltype(DeintCast(i)), const int&>);
    REQUIRE(DeintCast(i) == 656);
+
+   int const& store1 = DeintCast(*value);
+   REQUIRE(store1 == 656);
+   REQUIRE(&store1 == value);
+
+   int const& store2 = DeintCast(Copy{*value});
+   REQUIRE(store2 == 656);
+   REQUIRE(&store2 == value);
+
+   decltype(auto) store3 = DeintCast(Clone{*value});
+   static_assert(requires {
+      requires CT::Reference<decltype(store1)>;
+      requires CT::Reference<decltype(store2)>;
+      requires CT::Reference<decltype(store3)>;
+   });
+
    delete value;
 }
 
@@ -1772,5 +1788,21 @@ TEST_CASE_TEMPLATE("Testing DeintCast (moving)", TestType
    TestType i {static_cast<int&&>(*value)};
    static_assert(::std::same_as<decltype(DeintCast(LglsFwd(i))), int&&>);
    REQUIRE(DeintCast(LglsFwd(i)) == 656);
+
+   int& store1 = DeintCast(*value);
+   REQUIRE(store1 == 656);
+   REQUIRE(&store1 == value);
+
+   int&& store2 = DeintCast(Move{*value});
+   REQUIRE(store2 == 656);
+   REQUIRE(&store2 == value);
+
+   decltype(auto) store3 = DeintCast(Abandon{*value});
+   static_assert(requires {
+      requires CT::Reference<decltype(store1)>;
+      requires CT::Reference<decltype(store2)>;
+      requires CT::Reference<decltype(store3)>;
+   });
+
    delete value;
 }

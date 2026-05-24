@@ -11,34 +11,36 @@
 
 namespace Langulus::Anyness::Component
 {
+   template<class...> struct MultiownDeep;
+
+   template<CT::Component...TN> requires (CountEnabled<TN...> == 0)
+   struct MultiownDeep<TN...> {
+      using CTTI_Component = Yes<>;
+      static constexpr bool SkipThisComponent = true;
+   };
+
    ///                                                                        
    /// Combines multiple deep ownership components into a unified interface to
    /// combat C++ base method ambiguities, and to add a bit more convenience. 
-   ///   @tparam TC0, TC1, TCN... all the deep ownership components to unify  
-   template<CT::Component TC0, CT::Component TC1, CT::Component...TCN>
-   struct LANGULUS_EBCO MultiownDeep : TC0, TC1, TCN... {
+   ///   @tparam TN... all the deep ownership components to unify              
+   template<CT::Component...TN> requires (CountEnabled<TN...> >= 2)
+   struct LANGULUS_EBCO MultiownDeep<TN...> : TN... {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Subcomponents  = Types<TC0, TC1, TCN...>;
-      using Id             = ConcatenateValueLists<typename TC0::Id,
-                                                   typename TC1::Id,
-                                                   typename TCN::Id...>;
-      static_assert(TC0::Id::Count == 1
-              and   TC1::Id::Count == 1
-              and ((TCN::Id::Count == 1) and ...),
-              "Each subcomponent needs to be dedicated to their single dimension");
+      using Subcomponents  = decltype( Types<TN...>::Discard([]<class C>{ return requires { C::SkipThisComponent; }; }));
+      using Id             = decltype(Subcomponents::Extract([]<class C>{ return typename C::Id{}; }));
+
+      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Id::Count == 1; }),
+         "Each subcomponent needs to be dedicated to their single dimension");
 
       static constexpr int ComponentPrecedence = 2000;
-      static_assert(TC0::ComponentPrecedence == 2000
-              and   TC1::ComponentPrecedence == 2000
-              and ((TCN::ComponentPrecedence == 2000) and ...),
-              "All precedences should match");
-
+      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 2000; }),
+         "All precedences should match");
       
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID>
+      template<Cid SID = Id::First>
       auto GetEntries(this auto const& self) assumptious -> Allocation const* const* {
          return Subcomponents::ForEachConstOr([&]<class C> assumptious {
             if constexpr (C::Id::First == SID)
@@ -50,7 +52,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID>
+      template<Cid SID = Id::First>
       auto GetEntriesAt(this auto const& self, auto const& idx) assumptious -> Allocation const* const* {
          return Subcomponents::ForEachConstOr([&]<class C> assumptious {
             if constexpr (C::Id::First == SID)
@@ -69,7 +71,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr decltype(auto) GetEntriesInner(this auto&& self) noexcept {
          return Subcomponents::ForEachConstOr([&]<class C> noexcept -> decltype(auto) {
             if constexpr (C::Id::First == SID)
@@ -80,7 +82,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the entry array (inner)                                         
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr void SetEntriesInner(this auto& self, auto entries) noexcept {
          Subcomponents::ForEachConstOr([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -110,7 +112,7 @@ namespace Langulus::Anyness::Component
 
       /// This method is called upon allocation to nullify all entries        
       /// for a specific dimension.                                           
-      template<Cid SID>
+      template<Cid SID = Id::First>
       constexpr void ConstructHeapRequest(this auto& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
             if constexpr (C::Id::First == SID)
@@ -120,7 +122,7 @@ namespace Langulus::Anyness::Component
 
       /// Deep-reference an element                                           
       ///   @attention works on one dimension at a time!                      
-      template<bool FIND_MISSING, Cid SID>
+      template<bool FIND_MISSING = false, Cid SID = Id::First>
       constexpr void KeepElementDeep(this auto& self) assumptious {
          Subcomponents::ForEachConstOr([&]<class C> assumptious {
             if constexpr (C::Id::First == SID)
@@ -130,7 +132,9 @@ namespace Langulus::Anyness::Component
          });
       }
 
-      template<bool DESTROY, Cid SID>
+      /// Deep-dereference (and eventually destroy) an element                
+      ///   @attention works on one dimension at a time!                      
+      template<bool DESTROY = true, Cid SID = Id::First>
       constexpr void DestroyElementDeep(this auto& self) assumptious {
          Subcomponents::ForEachConstOr([&]<class C> assumptious {
             if constexpr (C::Id::First == SID)

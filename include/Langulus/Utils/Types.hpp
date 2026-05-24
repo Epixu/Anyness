@@ -148,6 +148,13 @@ namespace Langulus
       static consteval auto GenerateTypes(auto&&) { return Types<> {}; }
       static consteval auto GenerateData(auto&&) { return Tuple {}; }
       static consteval auto GenerateDataOptimized(auto&&) { return TupleOptimized {}; }
+      static constexpr auto Discard(auto&&) { return Types<>{}; }
+      static constexpr auto Extract(auto&& lambda) {
+         static_assert(requires{ LglsLamb(lambda, void); },
+            "Provided argument is not a lambda of the form []<class T> where T can be 'void'"
+            " - consider this case if you want to Extract from empty type lists");
+         return decltype(LglsLamb(lambda, void)) {};
+      }
 
       template<class...N>
       consteval auto operator + (Types<N...>&&) const -> Types<N...> { return {}; }
@@ -256,6 +263,23 @@ namespace Langulus
          static_assert(requires{ {LglsLamb(lambda, T)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return TupleOptimized {LglsLamb(lambda, T)};
+      }
+
+      /// Discard elements for which lambda returns true                      
+      static constexpr auto Discard(auto&& lambda) {
+         static_assert(requires{ {LglsLamb(lambda, T)} -> ::std::convertible_to<bool>; },
+            "Provided argument is not a lambda of the form []<class> -> convertible to bool");
+         if constexpr (LglsLamb(lambda, T))
+            return Types<>{};
+         else
+            return Types<T>{};
+      }
+
+      /// Collects stuff inside the types into a new value/type list          
+      static constexpr auto Extract(auto&& lambda) {
+         static_assert(requires{ LglsLamb(lambda, T); },
+            "Provided argument is not a lambda of the form []<class>");
+         return LglsLamb(lambda, T);
       }
 
       template<class...N>
@@ -423,6 +447,52 @@ namespace Langulus
             LglsLamb(lambda, T2),
             LglsLamb(lambda, TN)...
          };
+      }
+
+      /// Discard elements for which lambda returns true                      
+      static constexpr auto Discard(auto&& lambda) {
+         static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::convertible_to<bool>; },
+            "Provided argument is not a lambda of the form []<class> -> convertible to bool");
+         if constexpr (LglsLamb(lambda, T1)) {
+            if constexpr (LglsLamb(lambda, T2)) {
+               if constexpr (sizeof...(TN) > 0)
+                  return Types<TN...>::Discard(LglsFwd(lambda));
+               else
+                  return Types<>{};
+            }
+            else {
+               if constexpr (sizeof...(TN) > 0)
+                  return Types<T2>{} + Types<TN...>::Discard(LglsFwd(lambda));
+               else
+                  return Types<T2>{};
+            }
+         }
+         else {
+            if constexpr (LglsLamb(lambda, T2)) {
+               if constexpr (sizeof...(TN) > 0)
+                  return Types<T1>{} + Types<TN...>::Discard(LglsFwd(lambda));
+               else
+                  return Types<T1>{};
+            }
+            else {
+               if constexpr (sizeof...(TN) > 0)
+                  return Types<T1, T2>{} + Types<TN...>::Discard(LglsFwd(lambda));
+               else
+                  return Types<T1, T2>{};
+            }
+         }
+      }
+
+      /// Collects stuff inside the types into a new value/type list          
+      static constexpr auto Extract(auto&& lambda) {
+         static_assert(requires{ LglsLamb(lambda, T1); },
+            "Provided argument is not a lambda of the form []<class>");
+         if constexpr (sizeof...(TN) > 0) {
+            return LglsLamb(lambda, T1)
+                +  LglsLamb(lambda, T2)
+                + (LglsLamb(lambda, TN) + ...);
+         }
+         else return LglsLamb(lambda, T1) + LglsLamb(lambda, T2);
       }
 
       template<class...N>
