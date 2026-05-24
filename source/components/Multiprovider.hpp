@@ -7,6 +7,8 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+LglsDisableWarningPush
+LglsDisableWarning_UnusedLocalTypedef
 
 
 namespace Langulus::Anyness::Component
@@ -30,8 +32,11 @@ namespace Langulus::Anyness::Component
       using Subcomponents  = decltype( Types<TN...>::Discard([]<class C>{ return requires { C::SkipThisComponent; }; }));
       using Id             = decltype(Subcomponents::Extract([]<class C>{ return typename C::Id{}; }));
 
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Id::Count == 1; }),
-         "Each subcomponent needs to be dedicated to their single dimension");
+      static_assert(Subcomponents::ForEachIndexedAnd([]<class C, size_t I> {
+         return C::Id::Count == 1 and C::Id::First == I; }),
+         "Each enabled subcomponent needs to be dedicated to their single dimension, "
+         "and all subcomponents need to be sequential"
+      );
 
       static constexpr int ComponentPrecedence = -2000;
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == -2000; }),
@@ -43,50 +48,34 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr auto GetRaw(this auto&& self) noexcept {
-         return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetRaw();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetRaw();
       }
       
       /// Get a direct access to the heap memory as a different type          
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<class T, Cid SID = Id::First>
+      template<class T, Cid SID = 0>
       constexpr auto GetRawAs(this auto&& self) noexcept {
-         return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               return self.C::template GetRawAs<T>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::template GetRawAs<T>();
       }
 
       /// Get a direct access to the initialized heap memory's end.           
       ///   @attention this makes sense only when provider is contiguous.     
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr auto GetRawEnd(this auto&& self) noexcept {
-         return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetRawEnd();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetRawEnd();
       }
     
       /// Get a direct access to the entire heap reserve's end.               
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr auto GetRawReserveEnd(this auto&& self) noexcept {
-         return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetRawReserveEnd();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetRawReserveEnd();
       }
       
       /// Get pointer to the first element for the given dimension.           
@@ -99,14 +88,10 @@ namespace Langulus::Anyness::Component
       ///      type of the container, if statically typed                     
       ///   @tparam SID can be used to access specific dimension              
       ///   @return pointer to the first element of the desired dimension     
-      template<class AS = void, Cid SID = Id::First>
+      template<class AS = void, Cid SID = 0>
       auto* Get(this auto&& self) assumptious {
-         return Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::template Get<AS>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::template Get<AS>();
       }
 
       /// Get first element as a handle, or any desired wrapping type.        
@@ -115,27 +100,19 @@ namespace Langulus::Anyness::Component
       ///   @tparam AS the type we're wrapping in                             
       ///   @tparam SID can be used to access specific dimension              
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = Id::First>
+      template<CT::NotVoid AS, Cid SID = 0>
       decltype(auto) As(this auto&& self) {
-         return Subcomponents::ForEachConstOr([&]<class C> -> decltype(auto) {
-            if constexpr (C::Id::First == SID)
-               return self.C::template As<AS>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::template As<AS>();
       }
 
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<Cid SID = Id::First, class AS = void>
+      template<Cid SID = 0, class AS = void>
       auto GetResolved(this auto&& self) {
-         return Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::template GetResolved<SID, AS>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::template GetResolved<SID, AS>();
       }
 
       /// Get first element, removing 'count' indirections                    
@@ -145,14 +122,10 @@ namespace Langulus::Anyness::Component
       ///      Using 'void' will default to C::DeepType.                      
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element for chosen dimension              
-      template<Cid SID = Id::First, class AS = void>
+      template<Cid SID = 0, class AS = void>
       auto GetDense(this auto&& self, size_t count = -1) {
-         return Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::template GetDense<SID, AS>(count);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::template GetDense<SID, AS>(count);
       }
 
    protected:
@@ -165,64 +138,44 @@ namespace Langulus::Anyness::Component
       LglsComOwnershipEmergent(friend);
       
       /// Get the heap pointer (inner)                                        
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
-         return Subcomponents::ForEachConstOr([&]<class C> noexcept -> decltype(auto) {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetHeapInner();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetHeapInner();
       }
 
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr void* GetRawVoid(this auto&& self) noexcept {
-         return Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetRawVoid();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetRawVoid();
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr void SetHeapInner(this auto& self, CT::Sparse auto heap) assumptious {
-         Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::SetHeapInner(heap);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::SetHeapInner(heap);
       }
 
       /// Reset the heap pointer to null                                      
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
-         Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               return self.C::SetHeapInner(nullptr);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::SetHeapInner(nullptr);
       }
       
       /// Get a size based on reflected allocation page and count.            
       /// This will allocate memory for relevant headers, footers, and types  
       /// across all dimensions used in this heap component.                  
       ///   @param reserve the number of elements to request                  
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr auto RequestHeap(this auto const& self, size_t reserve) assumptious
       -> Request if_inherits(RequestHeap(reserve)) {
-         return Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::RequestHeap(reserve);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::RequestHeap(reserve);
       }
 
       /// Default-initialize the heap pointer                                 
@@ -254,27 +207,19 @@ namespace Langulus::Anyness::Component
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       void AllocateFresh(this auto& self, const Request& request) {
-         Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::AllocateFresh(request);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::AllocateFresh(request);
       }
 
       /// Allocate a number of elements, relying on the type of the container 
       ///   @attention assumes container is typed                             
       ///   @param elements number of elements to allocate                    
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       void AllocateMore(this auto& self, size_t elements) {
-         Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::AllocateMore(elements);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::AllocateMore(elements);
       }
 
       /// Shrink the block, depending on currently reserved	elements.         
@@ -282,39 +227,27 @@ namespace Langulus::Anyness::Component
       /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
       /// allocations never move when shrinking.                              
       ///   @param elements number of elements to reserve                     
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       void AllocateLess(this auto& self, size_t elements) {
-         Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::AllocateLess(elements);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::AllocateLess(elements);
       }
 
       /// Remap footer requests onto the new reserve                          
       ///   @param elements the newly reserved number of elements             
       ///   @attention works on one dimension at a time!                      
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       void RemapHeapRequests(this auto& self, size_t elements) {
-         Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::RemapHeapRequests(elements);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::RemapHeapRequests(elements);
       }
 
       /// Invoked to remedy the situation when element constructors throw     
       ///   @param n the number of elements that were actually initialized    
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       void PartialSuccess(this auto& self, size_t n) {
-         Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::PartialSuccess(n);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::PartialSuccess(n);
       }
 
       /// Branch out the current container by doing a shallow copy.           
@@ -324,14 +257,10 @@ namespace Langulus::Anyness::Component
       /// Essentially implements the Copy-On-Write principle.                 
       ///   @param elements usually branching is accompanied by a resize,     
       ///      so specify it here                                             
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       void BranchOut(this auto& self, size_t elements) {
-         Subcomponents::ForEachConstOr([&]<class C> {
-            if constexpr (C::Id::First == SID)
-               return self.C::BranchOut(elements);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::BranchOut(elements);
       }
       
       /// Destroys only the first element.                                    
@@ -339,14 +268,10 @@ namespace Langulus::Anyness::Component
       ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
-      template<bool FORCE_DESTROY = true, Cid SID = Id::First>
+      template<bool FORCE_DESTROY = true, Cid SID = 0>
       void DestroyElement(this auto& self) assumptious {
-         Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::template DestroyElement<FORCE_DESTROY>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::template DestroyElement<FORCE_DESTROY>();
       }
 
       /// Destroys all elements.                                              
@@ -354,16 +279,14 @@ namespace Langulus::Anyness::Component
       ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
-      template<bool FORCE_DESTROY = true, Cid SID = Id::First>
+      template<bool FORCE_DESTROY = true, Cid SID = 0>
       void DestroyAllElements(this auto& self) assumptious {
-         Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::template DestroyAllElements<FORCE_DESTROY>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::template DestroyAllElements<FORCE_DESTROY>();
       }
 
       #undef if_inherits
    };
 }
+
+LglsDisableWarningPop

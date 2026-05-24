@@ -7,6 +7,8 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+LglsDisableWarningPush
+LglsDisableWarning_UnusedLocalTypedef
 
 
 namespace Langulus::Anyness::Component
@@ -30,8 +32,11 @@ namespace Langulus::Anyness::Component
       using Subcomponents  = decltype( Types<TN...>::Discard([]<class C>{ return requires { C::SkipThisComponent; }; }));
       using Id             = decltype(Subcomponents::Extract([]<class C>{ return typename C::Id{}; }));
 
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Id::Count == 1; }),
-         "Each subcomponent needs to be dedicated to their single dimension");
+      static_assert(Subcomponents::ForEachIndexedAnd([]<class C, size_t I> {
+         return C::Id::Count == 1 and C::Id::First == I; }),
+         "Each enabled subcomponent needs to be dedicated to their single dimension, "
+         "and all subcomponents need to be sequential"
+      );
 
       static constexpr int ComponentPrecedence = 2000;
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 2000; }),
@@ -43,26 +48,18 @@ namespace Langulus::Anyness::Component
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       auto GetEntries(this auto const& self) assumptious -> Allocation const* const* {
-         return Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetEntries();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetEntries();
       }
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       auto GetEntriesAt(this auto const& self, auto const& idx) assumptious -> Allocation const* const* {
-         return Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetEntriesAt(idx);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetEntriesAt(idx);
       }
 
    protected:
@@ -74,25 +71,17 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr decltype(auto) GetEntriesInner(this auto&& self) noexcept {
-         return Subcomponents::ForEachConstOr([&]<class C> noexcept -> decltype(auto) {
-            if constexpr (C::Id::First == SID)
-               return self.C::GetEntriesInner();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         return self.C::GetEntriesInner();
       }
 
       /// Set the entry array (inner)                                         
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr void SetEntriesInner(this auto& self, auto entries) noexcept {
-         Subcomponents::ForEachConstOr([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               return self.C::SetEntriesInner(entries);
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::SetEntriesInner(entries);
       }
 
       /// Default-initialization of this component                            
@@ -115,39 +104,31 @@ namespace Langulus::Anyness::Component
 
       /// This method is called upon allocation to nullify all entries        
       /// for a specific dimension.                                           
-      template<Cid SID = Id::First>
+      template<Cid SID = 0>
       constexpr void ConstructHeapRequest(this auto& self) noexcept 
       if_inherits(ConstructHeapRequest()) {
-         Subcomponents::ForEach([&]<class C> noexcept {
-            if constexpr (C::Id::First == SID)
-               if_available(self.C::ConstructHeapRequest());
-         });
+         using C = typename Subcomponents::template At<SID>;
+         if_available(self.C::ConstructHeapRequest());
       }
 
       /// Deep-reference an element                                           
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = Id::First>
       constexpr void KeepElementDeep(this auto& self) assumptious {
-         Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::template KeepElementDeep<FIND_MISSING>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::template KeepElementDeep<FIND_MISSING>();
       }
 
       /// Deep-dereference (and eventually destroy) an element                
       ///   @attention works on one dimension at a time!                      
       template<bool DESTROY = true, Cid SID = Id::First>
       constexpr void DestroyElementDeep(this auto& self) assumptious {
-         Subcomponents::ForEachConstOr([&]<class C> assumptious {
-            if constexpr (C::Id::First == SID)
-               return self.C::template DestroyElementDeep<DESTROY>();
-            else
-               return No{};
-         });
+         using C = typename Subcomponents::template At<SID>;
+         self.C::template DestroyElementDeep<DESTROY>();
       }
 
       #undef if_inherits
    };
 }
+
+LglsDisableWarningPop
