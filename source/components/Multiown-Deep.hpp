@@ -42,8 +42,7 @@ namespace Langulus::Anyness::Component
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 2000; }),
          "All precedences should match");
 
-      #define if_inherits(...) requires (Subcomponents::ForEachOr([&]<class C> { \
-         return requires { self.C::__VA_ARGS__; }; }))
+      #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
 
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
@@ -104,10 +103,10 @@ namespace Langulus::Anyness::Component
 
       /// This method is called upon allocation to nullify all entries        
       /// for a specific dimension.                                           
-      template<Cid SID = 0>
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
       constexpr void ConstructHeapRequestPerDimension(this auto& self) noexcept 
       if_inherits(ConstructHeapRequestPerDimension()) {
-         using C = typename Subcomponents::template At<SID>;
+         //using C = typename Subcomponents::template At<SID>;
          if_available(self.C::ConstructHeapRequestPerDimension());
       }
 
