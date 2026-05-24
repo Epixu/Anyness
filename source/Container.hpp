@@ -146,6 +146,10 @@ namespace Langulus::Anyness
 
    namespace Component
    {
+
+      template<class CC, class C, Cid SID>
+      concept HasConstructHeapRequestPerDimension = requires (CC cc) { cc.C::template ConstructHeapRequestPerDimension<SID>(); };
+
    ///                                                                        
    /// A container definition using composition                               
    ///   @tparam COMPONENTS list of components that define the container      
@@ -686,7 +690,7 @@ namespace Langulus::Anyness
       constexpr void ConstructHeapRequestPerDimension(this CC&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             //if_available(self.C::template ConstructHeapRequestPerDimension<SID>());
-            if constexpr (requires (CC cc) { cc.C::template ConstructHeapRequestPerDimension<SID>(); })
+            if constexpr (HasConstructHeapRequestPerDimension<CC, C, SID>)
                self.C::template ConstructHeapRequestPerDimension<SID>();
          });
       }
