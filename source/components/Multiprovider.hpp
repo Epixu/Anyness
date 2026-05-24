@@ -182,8 +182,9 @@ namespace Langulus::Anyness::Component
 
       /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {
-         Subcomponents::ForEach([&]<class C>() noexcept {
-            self.C::ConstructDefault();
+         Subcomponents::ForEach([&]<class C> noexcept {
+            using T = Decay<C>;
+            self.T::ConstructDefault();
          });
       }
       
@@ -193,7 +194,7 @@ namespace Langulus::Anyness::Component
       ///      account only when we're cloning or copying, as only then       
       ///      a new allocation occurs.                                       
       void ConstructFrom(this auto& self, auto&& intent, size_t reserve = 0) {
-         Subcomponents::ForEach([&]<class C>() {
+         Subcomponents::ForEach([&]<class C> {
             self.C::ConstructFrom(LglsFwd(intent), reserve);
          });
       }
