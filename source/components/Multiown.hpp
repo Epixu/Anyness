@@ -105,7 +105,8 @@ namespace Langulus::Anyness::Component
 
       /// Default-initialize the component                                    
       ///   @attention this will not dereference previous allocation          
-      constexpr void ConstructDefault(this auto& self) noexcept {
+      template<class SELF>
+      constexpr void ConstructDefault(this SELF& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
             if_available_gcc(C::template ConstructDefault<SELF>)();
          });
