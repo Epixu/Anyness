@@ -219,7 +219,7 @@ namespace Langulus::Anyness::Component
       
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I, CT::Container C> requires (HasStates and CT::Container<I>)
+      template<class C, CT::Intent I> requires (HasStates and CT::Container<I>)
       void ConstructFrom(this C& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
          if constexpr (requires { from.GetStateInner(); }) {

@@ -91,9 +91,9 @@ namespace Langulus::Anyness::Component
       ///   @attention nothing is transferred when disowned, because hash     
       ///      must be kept in heap memory relative to the allocation         
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I>
+      template<class SELF, CT::Intent I>
       requires (CT::Container<I> and not (CT::Copied<I> or CT::Cloned<I> or CT::Disowned<I>))
-      void ConstructFrom(this auto& self, I&& intent) {
+      void ConstructFrom(this SELF& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
          // Notice only the inner hash gets copied, to avoid            
          // precomputation if rhs doesn't cache it. It will be          

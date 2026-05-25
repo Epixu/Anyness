@@ -107,7 +107,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this will not dereference previous allocation          
       constexpr void ConstructDefault(this auto& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
-            self.C::ConstructDefault();
+            if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
       
@@ -118,9 +118,10 @@ namespace Langulus::Anyness::Component
       ///   @important notice that Copy and Clone intents are not handled     
       ///      here. They're handled in heap components instead, in case      
       ///      something throws an exception while constructing.              
-      constexpr void ConstructFrom(this auto& self, auto&& intent) {
+      template<class SELF, CT::Intent I> requires CT::Container<I>
+      constexpr void ConstructFrom(this SELF& self, I&& intent) {
          Subcomponents::ForEach([&]<class C> {
-            self.C::ConstructFrom(LglsFwd(intent));
+            if_available_gcc(C::template ConstructFrom<SELF, I>)(LglsFwd(intent));
          });
       }
 

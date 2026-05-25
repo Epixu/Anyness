@@ -87,9 +87,9 @@ namespace Langulus::Anyness::Component
       ///   @important notice that Copy and Clone intents are not handled     
       ///      here. They're handled in heap components instead, in case      
       ///      something throws an exception while constructing.              
-      template<CT::Intent I>
+      template<class SELF, CT::Intent I>
       requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I>)
-      void ConstructFrom(this auto& self, I&& intent) {
+      void ConstructFrom(this SELF& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
 
          if constexpr (CT::Referred<I>) {

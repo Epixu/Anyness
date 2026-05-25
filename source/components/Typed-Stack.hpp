@@ -439,8 +439,8 @@ namespace Langulus::Anyness::Component
 
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this auto& self, I&& intent) {
+      template<class SELF, CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this SELF& self, I&& intent) {
          if constexpr (TypeErased) {
             META type = intent->template GetType<ID>();
             if constexpr (CT::Copied<I> or CT::Cloned<I>) {

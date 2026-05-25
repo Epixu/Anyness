@@ -434,8 +434,8 @@ namespace Langulus::Anyness::Component
 
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this auto& self, I&& intent) if_inherits(ConstructFrom(LglsFwd(intent))) {
+      template<class SELF, CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this SELF& self, I&& intent) if_inherits(ConstructFrom(LglsFwd(intent))) {
          Subcomponents::ForEach([&]<class C> {
             if_available(self.C::ConstructFrom(LglsFwd(intent)));
          });

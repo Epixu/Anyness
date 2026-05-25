@@ -675,16 +675,18 @@ namespace Langulus::Anyness
          }
       }
 
-      constexpr void ConstructDefault(this auto&& self) noexcept {
+      template<class SELF>
+      constexpr void ConstructDefault(this SELF&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
-            if_available(self.C::ConstructDefault());
+            if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
 
       /// Often used to clear global heap footers upon allocation             
-      constexpr void ConstructHeapRequestGlobal(this auto&& self) noexcept {
+      template<class SELF>
+      constexpr void ConstructHeapRequestGlobal(this SELF&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
-            if_available(self.C::ConstructHeapRequestGlobal());
+            if_available_gcc(C::template ConstructHeapRequestGlobal<SELF>)();
          });
       }
 
@@ -705,8 +707,8 @@ namespace Langulus::Anyness
             "You can't absorb from containers with different contiguousness");
 
          ComponentList::ForEach([&]<class C>{
-                 if_available(self.C::ConstructFrom(FWDIntent(from)))
-            else if_available(self.C::ConstructDefault())
+                 if_available_gcc(C::template ConstructFrom<SELF, FROM>)(FWDIntent(from));
+            else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
 
