@@ -97,18 +97,27 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 ) {
    static MemoryState memoryState;
    using T = typename TestType::First;
-   using E = typename TestType::Second;
-   using ScopedE = typename TestType::template At<2>;
-   constexpr bool Managed = ScopedE::Managed;
-   
-   GIVEN("Absorb-constructed container") {
-      const ScopedE originalElement {556};
-      const ScopedE element {555};
+   using E1 = typename TestType::Second;
+   using E2 = typename TestType::template At<3>;
+   using ScopedE1 = typename TestType::template At<2>;
+   using ScopedE2 = typename TestType::template At<4>;
+   constexpr bool Managed1 = ScopedE1::Managed;
+   constexpr bool Managed2 = ScopedE2::Managed;
 
-      T piecewise1{Piecewise, *originalElement};
-      T piecewise2{Piecewise, *originalElement};
-      T piecewise3{Piecewise, *originalElement};
-      T piecewise4{Piecewise, *originalElement};
+#if LANGULUS(BENCHMARK)
+   using stdmap = ::std::unordered_map<E1, E2>;
+#endif
+
+   GIVEN("Absorb-constructed container") {
+      const ScopedE1 originalElement1{556};
+      const ScopedE2 originalElement2{112};
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+
+      T piecewise1{Piecewise, TPair {*originalElement1, *originalElement2}};
+      T piecewise2{Piecewise, TPair {*originalElement1, *originalElement2}};
+      T piecewise3{Piecewise, TPair {*originalElement1, *originalElement2}};
+      T piecewise4{Piecewise, TPair {*originalElement1, *originalElement2}};
 
       T pack_referred1{Absorb,             piecewise1};
       T pack_referred2{Absorb,       Refer(piecewise1)};
@@ -120,43 +129,46 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       T pack_disowned {Absorb,      Disown(piecewise1)};
 
       WHEN("Absorb-constructed") {
-         Set_CheckState_OwnedFull<E>(pack_referred1);
-         Set_CheckState_OwnedFull<E>(pack_referred2);
-         Set_CheckState_OwnedFull<E>(pack_copied);
-         Set_CheckState_OwnedFull<E>(pack_cloned);
-         Set_CheckState_OwnedFull<E>(pack_moved1);
-         Set_CheckState_OwnedFull<E>(pack_moved2);
-         Set_CheckState_OwnedFull<E>(pack_abandoned);
-         Set_CheckState_DisownedFull<E>(pack_disowned);
+         Map_CheckState_OwnedFull<E1, E2>(pack_referred1);
+         Map_CheckState_OwnedFull<E1, E2>(pack_referred2);
+         Map_CheckState_OwnedFull<E1, E2>(pack_copied);
+         Map_CheckState_OwnedFull<E1, E2>(pack_cloned);
+         Map_CheckState_OwnedFull<E1, E2>(pack_moved1);
+         Map_CheckState_OwnedFull<E1, E2>(pack_moved2);
+         Map_CheckState_OwnedFull<E1, E2>(pack_abandoned);
+         Map_CheckState_DisownedFull<E1, E2>(pack_disowned);
 
-         Set_CheckState_ContainsOne(pack_referred1,  Refer(originalElement), 3);
-         Set_CheckState_ContainsOne(pack_referred2,  Refer(originalElement), 3);
-         Set_CheckState_ContainsOne(pack_copied,     Refer(originalElement), 1);
-         Set_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
-         Set_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
-         Set_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
-         Set_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 0);
+         Map_CheckState_ContainsOne(pack_referred1,  Refer(originalElement1),  Refer(originalElement2), 3);
+         Map_CheckState_ContainsOne(pack_referred2,  Refer(originalElement1),  Refer(originalElement2), 3);
+         Map_CheckState_ContainsOne(pack_copied,     Refer(originalElement1),  Refer(originalElement2), 1);
+         Map_CheckState_ContainsOne(pack_cloned,     Clone(originalElement1),  Clone(originalElement2), 1);
+         Map_CheckState_ContainsOne(pack_moved1,     Refer(originalElement1),  Refer(originalElement2), 1);
+         Map_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement1),  Refer(originalElement2), 1);
+         Map_CheckState_ContainsOne(pack_disowned,  Disown(originalElement1), Disown(originalElement2), 0);
 
-         BenchmarkSetStd("Empty/AbsorbConstructor(" + NameOf<E>() + ")", 30, 100,
-            T temp,                                              (new (&temp) T{Absorb, piecewise1}),
-            ::std::unordered_set<E> temp_std1 (*originalElement);
-            ::std::unordered_set<E> temp_std2,                    new (&temp_std2) ::std::unordered_set<E> {temp_std1}
+         BenchmarkMapStd("Empty/AbsorbConstructor(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+            T temp,                                                     (new (&temp) T{Absorb, piecewise1}),
+            stdmap temp_std1({{*originalElement1, *originalElement2}});
+            stdmap temp_std2,                                           new (&temp_std2) stdmap{temp_std1}
          );
       }
 
       WHEN("Assigned compatible referred value") {
          auto assign_refer = [&](T& a, [[maybe_unused]] const char* intent) {
-            a.Assign(*element);
+            a.Assign(*element1, *element2);
 
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Set_CheckState_OwnedFull<E>(a);
-            Set_CheckState_ContainsOne(a, Refer(element));
+            if constexpr (CT::DeepDense<E1>)
+               Many_CheckState_OwnedFull<TypeOf<E1>>(*element1);
+            if constexpr (CT::DeepDense<E2>)
+               Many_CheckState_OwnedFull<TypeOf<E2>>(*element2);
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(*element),                             a.Assign(*originalElement),
-               ::std::unordered_set<E> temp_std (1, *element), temp_std[0] = *originalElement
+            Map_CheckState_OwnedFull<E1, E2>(a);
+            Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
+
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Assign(Refer(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               a.Assign(*element1, *element2),              a.Assign(*originalElement1, *originalElement2),
+               stdmap temp_std({{*element1, *element2}}),   temp_std[0] = *originalElement
             );
          };
 
@@ -219,17 +231,20 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       
       WHEN("Assigned compatible cloned value") {
          auto assign_clone = [&](T& a, [[maybe_unused]] const char* intent) {
-            a.Assign(Clone(*element));
+            a.Assign(Clone(*element1), Clone(*element2));
 
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Set_CheckState_OwnedFull<E>(a);
-            Set_CheckState_ContainsOne(a, Clone(element));
+            if constexpr (CT::DeepDense<E1>)
+               Many_CheckState_OwnedFull<TypeOf<E1>>(*element1);
+            if constexpr (CT::DeepDense<E2>)
+               Many_CheckState_OwnedFull<TypeOf<E2>>(*element2);
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Clone(*element)),                    a.Assign(Clone(*originalElement)),
-               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
+            Map_CheckState_OwnedFull<E1, E2>(a);
+            Map_CheckState_ContainsOne(a, Clone(element1), Clone(element2));
+
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Assign(Clone(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               a.Assign(Clone(*element1), Clone(*element2)),      a.Assign(Clone(*originalElement1), Clone(*originalElement2)),
+               stdmap temp_std({{*element1, *element2}}),         temp_std[0] = *originalElement
             );
          };
 
@@ -288,17 +303,20 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
       WHEN("Assigned compatible copied value") {
          auto assign_copy = [&](T& a, [[maybe_unused]] const char* intent) {
-            a.Assign(Copy(*element));
+            a.Assign(Copy(*element1), Copy(*element2));
 
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Set_CheckState_OwnedFull<E>(a);
-            Set_CheckState_ContainsOne(a, Refer(element));
+            if constexpr (CT::DeepDense<E1>)
+               Many_CheckState_OwnedFull<TypeOf<E1>>(*element1);
+            if constexpr (CT::DeepDense<E2>)
+               Many_CheckState_OwnedFull<TypeOf<E2>>(*element2);
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Copy(*element)),                     a.Assign(Copy(*originalElement)),
-               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
+            Map_CheckState_OwnedFull<E1, E2>(a);
+            Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
+
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Assign(Copy(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               a.Assign(Copy(*element1), Copy(*element2)),     a.Assign(Copy(*originalElement1), Copy(*originalElement2)),
+               stdmap temp_std({{*element1, *element2}}),      temp_std[0] = *originalElement
             );
          };
 
@@ -357,22 +375,30 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
       WHEN("Assigned compatible moved value") {
          auto assign_move = [&](T& a, [[maybe_unused]] const char* intent) {
-            auto movable = *element;
-            a.Assign(::std::move(movable));
+            auto movable1 = *element1;
+            auto movable2 = *element2;
+            a.Assign(::std::move(movable1), ::std::move(movable2));
 
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_Default<TypeOf<E>>(movable);
-            Set_CheckState_OwnedFull<E>(a);
-            Set_CheckState_ContainsOne(a, Refer(element));
+            if constexpr (CT::DeepDense<E1>)
+               Many_CheckState_Default<TypeOf<E1>>(movable1);
+            if constexpr (CT::DeepDense<E2>)
+               Many_CheckState_Default<TypeOf<E2>>(movable2);
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               auto movable1 = *element;
-               auto movable2 = *originalElement;
-               a.Assign(Move(movable1)),                                 a.Assign(Move(movable2)),
-               auto movable1 = *element;
-               auto movable2 = *originalElement;
-               ::std::unordered_set<E> temp_std (::std::move(movable1)), temp_std[0] = ::std::move(movable2)
+            Map_CheckState_OwnedFull<E1, E2>(a);
+            Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
+
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Assign(Move(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               auto movable11 = *element1;
+               auto movable21 = *originalElement1;
+               auto movable12 = *element2;
+               auto movable22 = *originalElement2;
+               a.Assign(Move(movable11), Move(movable12)),                             a.Assign(Move(movable21), Move(movable22)),
+               auto movable11 = *element1;
+               auto movable21 = *originalElement1;
+               auto movable12 = *element2;
+               auto movable22 = *originalElement2;
+               stdmap temp_std (::std::move(movable11), ::std::move(movable12)),       temp_std[0] = ::std::move(movable21)
             );
          };
 
@@ -384,18 +410,23 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          assign_move(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::ContainsOne<E1, E2>) {
          WHEN("Assigned and absorbed moved container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
+            if (not pack_referred1.IsKeySame(element1->GetType())
+            and not pack_referred1.IsValSame(element2->GetType())) {
                auto misabsorb_move = [&](T& a) {
-                  auto movable = *element;
-                  REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
+                  auto movable1 = *element1;
+                  auto movable2 = *element2;
+                  REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable1), ::std::move(movable2)));
 
-                  Set_CheckState_OwnedFull<E>(a);
-                  Set_CheckState_ContainsOne(a, Refer(originalElement));
-                  Many_CheckState_OwnedFull<int>(movable);
-                  REQUIRE(movable.GetUses() == 2);
-                  REQUIRE(movable.template As<int>() == 555);
+                  Map_CheckState_OwnedFull<E1, E2>(a);
+                  Map_CheckState_ContainsOne(a, Refer(originalElement1), Refer(originalElement2));
+                  Many_CheckState_OwnedFull<int>(movable1);
+                  Many_CheckState_OwnedFull<int>(movable2);
+                  REQUIRE(movable1.GetUses() == 2);
+                  REQUIRE(movable1.template As<int>() == 555);
+                  REQUIRE(movable2.GetUses() == 2);
+                  REQUIRE(movable2.template As<int>() == 111);
                };
 
                misabsorb_move(pack_referred1);
@@ -410,21 +441,23 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             };
 
             auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent) {
-               auto movable = *element;
-               a.AssignAbsorb(::std::move(movable));
+               auto movable1 = *element1;
+               auto movable2 = *element2;
+               a.AssignAbsorb(::std::move(movable1), ::std::move(movable2));
 
-               Many_CheckState_Default<TypeOf<E>>(movable);
-               Set_Helper_TestSame(a, *element);
+               Many_CheckState_Default<TypeOf<E1>>(movable1);
+               Many_CheckState_Default<TypeOf<E2>>(movable2);
+               Map_Helper_TestSame(a, *element1, *element2);
                REQUIRE(a.GetUses() == 2);
-               REQUIRE(a.GetAllocation() == element->GetAllocation());
+               REQUIRE(a.GetAllocation() == element1->GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  T movable1 = *element;
-                  T movable2 = *originalElement;
-                  a.AssignAbsorb(Move(movable1)),                       a.AssignAbsorb(Move(movable2)),
-                  ::std::unordered_set<E> movable1 (*element);
-                  ::std::unordered_set<E> movable2 (*originalElement),  movable1 = ::std::move(movable2)
+               BenchmarkMapStd(
+                  std::string("Absorb/") + intent + "/AssignAbsorb(Move(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+                  T movable1{*element1, *element2};
+                  T movable2{*originalElement1, *originalElement2};
+                  a.AssignAbsorb(Move(movable1)),                             a.AssignAbsorb(Move(movable2)),
+                  stdmap movable1{{*element1, *element2}};
+                  stdmap movable2{{*originalElement1, *originalElement2}},     movable1 = ::std::move(movable2)
                );
             };
 
@@ -439,15 +472,15 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
       WHEN("Assigned compatible disowned value") {
          auto assign_disown = [&](T& a, [[maybe_unused]] const char* intent) {
-            a.Assign(Disown(*element));
+            a.Assign(Disown(*element1), Disown(*element2));
 
-            Set_CheckState_OwnedFull<E>(a);
-            Set_CheckState_ContainsOne(a, Disown(element));
+            Map_CheckState_OwnedFull<E1, E2>(a);
+            Map_CheckState_ContainsOne(a, Disown(element1), Disown(element2));
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Disown(*element)),                   a.Assign(Disown(*originalElement)),
-               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Assign(Disown(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               a.Assign(Disown(*element1), Disown(*element2)),          a.Assign(Disown(*originalElement1), Disown(*originalElement2)),
+               stdmap temp_std({{*element1, *element2}}),               temp_std[0] = *originalElement
             );
          };
 
@@ -459,13 +492,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          assign_disown(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::ContainsOne<E1, E2>) {
          WHEN("Assigned and absorbed disowned container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
+            if (not pack_referred1.IsKeySame(element1->GetType())
+            and not pack_referred1.IsValSame(element2->GetType())) {
                auto misabsorb_disown = [&](T& a) {
-                  REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
-                  Set_CheckState_OwnedFull<E>(a);
-                  Set_CheckState_ContainsOne(a, Disown(originalElement));
+                  REQUIRE_THROWS(a.AssignAbsorb(Disown(*element1), Disown(*element2)));
+                  Map_CheckState_OwnedFull<E1, E2>(a);
+                  Map_CheckState_ContainsOne(a, Disown(originalElement1), Disown(originalElement2));
                };
 
                misabsorb_disown(pack_referred1);
@@ -480,22 +514,25 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             }
 
             auto absorb_disown = [&](T& a, [[maybe_unused]] const char* intent) {
-               a.AssignAbsorb(Disown(*element));
+               a.AssignAbsorb(Disown(*element1), Disown(*element2));
 
-               REQUIRE(a.GetRaw() == element->GetRaw());
-               REQUIRE(a.IsExact(element->GetType()));
-               REQUIRE(a == *element);
-               REQUIRE(a.IsDeep() == element->IsDeep());
-               REQUIRE(a.IsConstant() != element->IsConstant());
-               REQUIRE(a.GetUnconstrainedState() == element->GetUnconstrainedState());
+               REQUIRE(a.GetRaw() == element1->GetRaw());
+               REQUIRE(a.IsKeyExact(element1->GetType()));
+               REQUIRE(a.IsValExact(element2->GetType()));
+               REQUIRE(a == {*element1, *element2});
+               REQUIRE(a.IsKeyDeep() == element1->IsDeep());
+               REQUIRE(a.IsValDeep() == element2->IsDeep());
+               REQUIRE(a.IsKeyConstant());
+               REQUIRE(a.IsValConstant() != element2->IsConstant());
+               REQUIRE(a.GetUnconstrainedState() == element1->GetUnconstrainedState());
                REQUIRE(a.GetUses() == 0);
                REQUIRE_FALSE(a.GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Disown(*element)),                      a.AssignAbsorb(Disown(*originalElement)),
-                  ::std::unordered_set<E> temp_std1 (*element);
-                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
+               BenchmarkMapStd(
+                  std::string("Absorb/") + intent + "/AssignAbsorb(Disown(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+                  a.AssignAbsorb(Disown(*element1), Disown(*element2)),             a.AssignAbsorb(Disown(*originalElement1), Disown(*originalElement2)),
+                  stdmap temp_std1({{*element1, *element1}});
+                  stdmap temp_std2({{*originalElement1, *originalElement2}}),       temp_std1 = temp_std2
                );
             };
 
@@ -510,22 +547,30 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       
       WHEN("Assigned compatible abandoned value") {
          auto assign_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
-            auto movable = *element;
-            a.Assign(Abandon(movable));
+            auto movable1 = *element1;
+            auto movable2 = *element2;
+            a.Assign(Abandon(movable1), Abandon(movable2));
 
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_Abandoned<TypeOf<E>>(movable);
-            Set_CheckState_OwnedFull<E>(a);
-            Set_CheckState_ContainsOne(a, Refer(element));
+            if constexpr (CT::DeepDense<E1>)
+               Many_CheckState_Abandoned<TypeOf<E1>>(movable1);
+            if constexpr (CT::DeepDense<E2>)
+               Many_CheckState_Abandoned<TypeOf<E2>>(movable2);
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               auto movable1 = *element;
-               auto movable2 = *originalElement;
-               a.Assign(Abandon(movable1)),                                a.Assign(Abandon(movable2)),
-               auto movable1 = *element;
-               auto movable2 = *originalElement;
-               ::std::unordered_set<E> temp_std (::std::move(movable1)),   temp_std[0] = ::std::move(movable2)
+            Map_CheckState_OwnedFull<E1, E2>(a);
+            Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
+
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Assign(Abandon(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               auto movable11 = *element1;
+               auto movable21 = *originalElement1;
+               auto movable12 = *element2;
+               auto movable22 = *originalElement2;
+               a.Assign(Abandon(movable11), Abandon(movable12)),     a.Assign(Abandon(movable21), Abandon(movable22)),
+               auto movable11 = *element1;
+               auto movable21 = *originalElement1;
+               auto movable12 = *element2;
+               auto movable22 = *originalElement2;
+               stdmap temp_std (::std::move(movable11)),              temp_std[0] = ::std::move(movable21)
             );
          };
 
@@ -594,7 +639,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       WHEN("Assigned compatible empty self") {
          auto assign_empty_self = [&](T& a) {
             a = T{};
-            Set_CheckState_Default<E>(a);
+            Map_CheckState_Default<E1, E2>(a);
          };
 
          assign_empty_self(pack_referred1);
@@ -615,7 +660,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             LglsDisableWarning_SelfAssign
                a = a;
             LglsDisableWarningPop
-            Set_Helper_TestSame(a, backup);
+            Map_Helper_TestSame(a, backup);
             REQUIRE(a.GetUses() == uses_before);
          };
 
@@ -634,8 +679,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             T absorbed1 {a};
             T absorbed2 {Refer {a}};
 
-            Set_Helper_TestSame(absorbed1, a);
-            Set_Helper_TestSame(absorbed2, a);
+            Map_Helper_TestSame(absorbed1, a);
+            Map_Helper_TestSame(absorbed2, a);
             REQUIRE(absorbed1.GetUses() == uses);
             REQUIRE(absorbed2.GetUses() == uses);
          };
@@ -655,12 +700,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             T backup = a;
             T absorbed {::std::move(a)};
 
-            Set_CheckState_Default<E>(a);
+            Map_CheckState_Default<E1, E2>(a);
             if (uses == 0)
-               Set_CheckState_DisownedFull<E>(absorbed);
+               Map_CheckState_DisownedFull<E1, E2>(absorbed);
             else
-               Set_CheckState_OwnedFull<E>(absorbed);
-            Set_Helper_TestSame(absorbed, backup);
+               Map_CheckState_OwnedFull<E1, E2>(absorbed);
+            Map_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -679,12 +724,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             T backup = a;
             T absorbed {Move(a)};
 
-            Set_CheckState_Default<E>(a);
+            Map_CheckState_Default<E1, E2>(a);
             if (uses == 0)
-               Set_CheckState_DisownedFull<E>(absorbed);
+               Map_CheckState_DisownedFull<E1, E2>(absorbed);
             else
-               Set_CheckState_OwnedFull<E>(absorbed);
-            Set_Helper_TestSame(absorbed, backup);
+               Map_CheckState_OwnedFull<E1, E2>(absorbed);
+            Map_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -703,12 +748,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             T backup = a;
             T absorbed {Abandon {a}};
 
-            Set_CheckState_Abandoned<E>(a);
+            Map_CheckState_Abandoned<E1, E2>(a);
             if (uses == 0)
-               Set_CheckState_DisownedFull<E>(absorbed);
+               Map_CheckState_DisownedFull<E1, E2>(absorbed);
             else
-               Set_CheckState_OwnedFull<E>(absorbed);
-            Set_Helper_TestSame(absorbed, backup);
+               Map_CheckState_OwnedFull<E1, E2>(absorbed);
+            Map_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -726,13 +771,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          auto absorb_construct_disown = [&](T& a) {
             T absorbed {Disown {a}};
 
-            Set_CheckState_OwnedFull<E>(a);
-            Set_CheckState_DisownedFull<E>(absorbed);
+            Map_CheckState_OwnedFull<E1, E2>(a);
+            Map_CheckState_DisownedFull<E1, E2>(absorbed);
             REQUIRE(absorbed.GetRaw() == a.GetRaw());
-            REQUIRE(absorbed.IsExact(a.GetType()));
+            REQUIRE(absorbed.IsKeyExact(a.GetKeyType()));
+            REQUIRE(absorbed.IsValExact(a.GetValType()));
             REQUIRE(absorbed == a);
-            REQUIRE(absorbed.IsDeep() == a.IsDeep());
-            REQUIRE(absorbed.IsConstant() != a.IsConstant());
+            REQUIRE(absorbed.IsKeyDeep() == a.IsKeyDeep());
+            REQUIRE(absorbed.IsValDeep() == a.IsValDeep());
+            REQUIRE(absorbed.IsKeyConstant() == a.IsKeyConstant());
+            REQUIRE(absorbed.IsValConstant() != a.IsValConstant());
             REQUIRE(absorbed.GetUnconstrainedState() == a.GetUnconstrainedState());
             REQUIRE(absorbed.GetUses() == 0);
          };
@@ -746,42 +794,58 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          absorb_construct_disown(pack_abandoned);
 
          T absorbed{Disown {pack_disowned}};
-         Set_CheckState_DisownedFull<E>(pack_disowned);
-         Set_CheckState_DisownedFull<E>(absorbed);
+         Map_CheckState_DisownedFull<E1, E2>(pack_disowned);
+         Map_CheckState_DisownedFull<E1, E2>(absorbed);
          REQUIRE(absorbed.GetRaw() == pack_disowned.GetRaw());
-         REQUIRE(absorbed.IsExact(pack_disowned.GetType()));
+         REQUIRE(absorbed.IsKeyExact(pack_disowned.GetKeyType()));
+         REQUIRE(absorbed.IsValExact(pack_disowned.GetValType()));
          REQUIRE(absorbed == pack_disowned);
-         REQUIRE(absorbed.IsDeep() == pack_disowned.IsDeep());
-         REQUIRE(absorbed.IsConstant() == pack_disowned.IsConstant());
+         REQUIRE(absorbed.IsKeyDeep() == pack_disowned.IsKeyDeep());
+         REQUIRE(absorbed.IsValDeep() == pack_disowned.IsValDeep());
+         REQUIRE(absorbed.IsKeyConstant() == pack_disowned.IsKeyConstant());
+         REQUIRE(absorbed.IsValConstant() == pack_disowned.IsValConstant());
          REQUIRE(absorbed.GetUnconstrainedState() == pack_disowned.GetUnconstrainedState());
          REQUIRE(absorbed.GetUses() == 0);
       }
       
       WHEN("Absorbed by copy") {
-         const bool managed_sparse = CT::Sparse<E> and Managed;
+         const bool managed_sparse = CT::Sparse<E1, E2> and Managed1 and Managed2;
          auto absorb_construct_copy = [&](T& a, int uses, int entry_refs, int indi_refs) {
             T absorbed {Copy {a}};
 
             if (uses == 0)
-               Set_CheckState_DisownedFull<E>(a);
+               Map_CheckState_DisownedFull<E1, E2>(a);
             else
-               Set_CheckState_OwnedFull<E>(a);
+               Map_CheckState_OwnedFull<E1, E2>(a);
             REQUIRE(a.GetUses() == uses);
 
-            Set_CheckState_OwnedFull<E>(absorbed);
+            Map_CheckState_OwnedFull<E1, E2>(absorbed);
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
-            REQUIRE(absorbed.template AsAt<E>(0) == a.template AsAt<E>(0));
+            REQUIRE(absorbed.template KeyAsAt<E1>(0) == a.template KeyAsAt<E1>(0));
+            REQUIRE(absorbed.template ValAsAt<E2>(0) == a.template ValAsAt<E2>(0));
 
-            if constexpr (CT::Sparse<E>) {
-               auto entry = *absorbed.GetEntries();
+            if constexpr (CT::Sparse<E1>) {
+               auto entry = *absorbed.GetKeyEntries();
                if ((entry_refs) == 0)
                   REQUIRE(entry == nullptr);
                if (entry)
                   REQUIRE(entry->GetUses() == (entry_refs));
-               if constexpr (CT::Referenced<Decay<E>>) {
-                  auto e = absorbed.template AsAt<E>(0);
+               if constexpr (CT::Referenced<Decay<E1>>) {
+                  auto e = absorbed.template KeyAsAt<E1>(0);
+                  REQUIRE(DenseCast(e).GetReferences() == indi_refs);
+               }
+            }
+
+            if constexpr (CT::Sparse<E2>) {
+               auto entry = *absorbed.GetValEntries();
+               if ((entry_refs) == 0)
+                  REQUIRE(entry == nullptr);
+               if (entry)
+                  REQUIRE(entry->GetUses() == (entry_refs));
+               if constexpr (CT::Referenced<Decay<E2>>) {
+                  auto e = absorbed.template ValAsAt<E2>(0);
                   REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
             }
@@ -802,12 +866,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             T absorbed {Clone {a}};
 
             if (uses == 0)
-               Set_CheckState_DisownedFull<E>(a);
+               Map_CheckState_DisownedFull<E1, E2>(a);
             else
-               Set_CheckState_OwnedFull<E>(a);
+               Map_CheckState_OwnedFull<E1, E2>(a);
 
-            Set_CheckState_OwnedFull<E>(absorbed);
-            REQUIRE((absorbed == a) == CT::Dense<E>);
+            Map_CheckState_OwnedFull<E1, E2>(absorbed);
+            REQUIRE((absorbed == a) == CT::Dense<E1, E2>);
             REQUIRE(absorbed.GetUses() == 1);
          };
 
@@ -905,18 +969,18 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent, int uses = 1) {
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                                   temp.Clear(),
-               ::std::unordered_set<E> temp_std (*element),  temp_std.clear()
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Clear(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+               T temp = a,                                  temp.Clear(),
+               stdmap temp_std({{*element1, *element2}}),   temp_std.clear()
             );
 
             a.Clear();
 
             if (uses != 1)
-               Set_CheckState_Default<E>(a, true);
+               Map_CheckState_Default<E1, E2>(a, true);
             else
-               Set_CheckState_OwnedEmpty<E>(a);
+               Map_CheckState_OwnedEmpty<E1, E2>(a);
          };
 
          clear_full(pack_referred1, "Refer", 3);
@@ -929,15 +993,15 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Reset(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                                  temp.Reset(),
-               ::std::unordered_set<E> temp_std (*element), temp_std.clear()
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/Reset(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+               T temp = a,                                temp.Reset(),
+               stdmap temp_std({{*element1, *element2}}), temp_std.clear()
             );
 
             a.Reset();
 
-            Set_CheckState_Default<E>(a);
+            Map_CheckState_Default<E1, E2>(a);
          };
 
          reset_full(pack_referred1, "Refer");
@@ -948,13 +1012,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          reset_full(pack_disowned,  "Disown");
       }
 
-      if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and not CT::Container<E>) {
+      if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and not CT::Container<E1> and not CT::Container<E2>) {
          // Works only if E doesn't move entries around                 
          WHEN("Reset, and then immediately allocated again") {
             auto reset_and_reallocate = [&](T& a) {
                const auto memory = a.GetRaw();
                a.Reset();
-               a = *element;
+               a = {*element1, *element2};
                REQUIRE(a.GetRaw() == memory);
             };
 
@@ -970,8 +1034,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       }
 
       WHEN("Compared") {
-         ScopedE e1 {1};
-         T another_pack1 {Piecewise, *e1};
+         ScopedE1 e1 {1};
+         ScopedE2 e2 {2};
+         T another_pack1{Piecewise, {*e1, *e2}};
          T defaulted_pack;
 
          auto compared_full = [&](T& a, [[maybe_unused]] const char* intent) {
@@ -985,17 +1050,17 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             REQUIRE_FALSE(a != same_pack);
 
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/operator==(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                                dont_optimize |= (a == same_pack),
-               const ::std::unordered_set<E> a_std (*element);
-               const ::std::unordered_set<E> another_pack1_std (*e1),   dont_optimize |= (a_std == another_pack1_std)
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/operator==(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+               (void) 0,                                       dont_optimize |= (a == same_pack),
+               const stdmap a_std (*element1, *element2);
+               const stdmap another_pack1_std (*e1, *e2),      dont_optimize |= (a_std == another_pack1_std)
             );
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/operator!=(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                                dont_optimize |= (a != same_pack),
-               const ::std::unordered_set<E> a_std (*element);
-               const ::std::unordered_set<E> another_pack1_std (*e1),   dont_optimize |= (a_std != another_pack1_std)
+            BenchmarkMapStd(
+               std::string("Absorb/") + intent + "/operator!=(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+               (void) 0,                                          dont_optimize |= (a != same_pack),
+               const stdmap a_std (*element1, *element2);
+               const stdmap another_pack1_std (*e1, *e2),         dont_optimize |= (a_std != another_pack1_std)
             );
          };
 
@@ -1008,21 +1073,22 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       }
 
       WHEN("Contains when full") {
-         ScopedE e1 {1};
+         ScopedE1 e1 {1};
+         ScopedE2 e2 {2};
          
          auto contains_full = [&](T& a) {
-            REQUIRE      (a.Contains(*originalElement));
-            REQUIRE_FALSE(a.Contains(*e1));
+            REQUIRE      (a.Contains(*originalElement1, *originalElement2));
+            REQUIRE_FALSE(a.Contains(*e1, *e2));
          };
 
          contains_full(pack_referred1);
          contains_full(pack_referred2);
          contains_full(pack_copied);
 
-         if constexpr (CT::Sparse<E>) {
-            REQUIRE      (pack_cloned.GetDenseAt(0).Contains(DenseCast(*originalElement)));
-            REQUIRE_FALSE(pack_cloned.Contains(*originalElement));
-            REQUIRE_FALSE(pack_cloned.Contains(*e1));
+         if constexpr (CT::Sparse<E1, E2>) {
+            REQUIRE      (pack_cloned.GetDenseAt(0).Contains(DenseCast(*originalElement1), DenseCast(*originalElement2)));
+            REQUIRE_FALSE(pack_cloned.Contains(*originalElement1, *originalElement2));
+            REQUIRE_FALSE(pack_cloned.Contains(*e1, *e2));
          }
          else contains_full(pack_cloned);
 
@@ -1032,8 +1098,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkSet("Absorb/Contains(" + NameOf<E>() + ")", 30,
-            (void) 0, dont_optimize |= pack_referred1.Contains(*element)
+         BenchmarkMap("Absorb/Contains(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30,
+            (void) 0, dont_optimize |= pack_referred1.Contains(*element1, *element2)
          );
       }
    }
