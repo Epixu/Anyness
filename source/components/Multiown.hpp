@@ -127,9 +127,10 @@ namespace Langulus::Anyness::Component
       
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
-      constexpr void Destroy(this auto& self) noexcept {
+      template<class SELF>
+      constexpr void Destroy(this SELF& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
-            self.C::Destroy();
+            if_available_gcc(C::template Destroy<SELF>)();
          });
       }
 

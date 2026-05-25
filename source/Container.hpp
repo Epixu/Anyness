@@ -712,10 +712,11 @@ namespace Langulus::Anyness
 
       /// Call Destroy in all components that implement it.                   
       /// Always do it in reverse order!                                      
-      constexpr void Destroy(this auto& self) {
+      template<class SELF>
+      constexpr void Destroy(this SELF& self) {
          if not consteval {
             ComponentList::Reverse::ForEach([&]<class C> {
-               if_available(self.C::Destroy());
+               if_available_gcc(C::template Destroy<SELF>)();
             });
          }
       }
