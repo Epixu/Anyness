@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
       ///   @param reserve Optional reserve override, which is taken into     
       ///      account only when we're cloning or copying, as only then       
       ///      a new allocation occurs.                                       
-      template<CT::Container C, CT::Intent I> requires CT::Container<I>
+      template<class C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent, size_t reserve = 0) {
          using IT = Deint<I>;
          IT from = LglsFwd(intent.what);

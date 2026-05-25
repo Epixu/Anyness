@@ -26,7 +26,7 @@
 ///   @important: in order for this to work, you might need your              
 ///      'deduced this' functions spell out their 'this' argument explicitly  
 #define if_available_gcc(...) \
-   if constexpr (requires { &__VA_ARGS__; }) { self.__VA_ARGS__(); }
+   if constexpr (requires { &__VA_ARGS__; }) self.__VA_ARGS__
 
 namespace Langulus::Anyness
 {
@@ -693,7 +693,7 @@ namespace Langulus::Anyness
       template<Cid SID, class SELF>
       constexpr void ConstructHeapRequestPerDimension(this SELF&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
-            if_available_gcc(C::template ConstructHeapRequestPerDimension<SID, SELF>);
+            if_available_gcc(C::template ConstructHeapRequestPerDimension<SID, SELF>)();
          });
       }
 

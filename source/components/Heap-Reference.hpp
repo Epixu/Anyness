@@ -503,8 +503,8 @@ namespace Langulus::Anyness::Component
       /// pointer, ignoring any intents.                                      
       ///   @param self deduced this                                          
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this auto& self, I&& intent, size_t = 0) noexcept {
+      template<class C, CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this C& self, I&& intent, size_t = 0) noexcept {
          ThisCom::SetHeapInner(intent.what.template GetHeapInner<Id::First>());
       }
       

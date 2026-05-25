@@ -182,7 +182,7 @@ namespace Langulus::Anyness::Component
       template<class SELF>
       constexpr void ConstructDefault(this SELF& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
-            if_available_gcc(C::template ConstructDefault<SELF>);
+            if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
       
@@ -191,9 +191,10 @@ namespace Langulus::Anyness::Component
       ///   @param reserve Optional reserve override, which is taken into     
       ///      account only when we're cloning or copying, as only then       
       ///      a new allocation occurs.                                       
-      void ConstructFrom(this auto& self, auto&& intent, size_t reserve = 0) {
+      template<class SELF, CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this SELF& self, I&& intent, size_t reserve = 0) {
          Subcomponents::ForEach([&]<class C> {
-            self.C::ConstructFrom(LglsFwd(intent), reserve);
+            if_available_gcc(C::template ConstructFrom<SELF, I>)(LglsFwd(intent), reserve);
          });
       }
 
