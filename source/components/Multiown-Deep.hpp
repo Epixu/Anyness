@@ -96,9 +96,10 @@ namespace Langulus::Anyness::Component
       /// to allocate any new memory, so all this does is copy the            
       /// pointer, ignoring any intents.                                      
       ///   @param intent the intent and container to transfer from           
-      constexpr void ConstructFrom(this auto& self, auto&& intent) noexcept {
+      template<class SELF, CT::Intent I> requires CT::Container<I>
+      constexpr void ConstructFrom(this SELF& self, I&& intent) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
-            self.C::ConstructFrom(LglsFwd(intent));
+            if_available_gcc(C::template ConstructFrom<SELF, I>)(LglsFwd(intent));
          });
       }
 
