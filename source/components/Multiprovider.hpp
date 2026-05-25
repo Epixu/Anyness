@@ -179,9 +179,10 @@ namespace Langulus::Anyness::Component
       }
 
       /// Default-initialize the heap pointer                                 
-      constexpr void ConstructDefault(this auto& self) noexcept {
+      template<class SELF>
+      constexpr void ConstructDefault(this SELF& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
-            self.C::ConstructDefault();
+            if_available_gcc(C::template ConstructDefault<SELF>);
          });
       }
       
