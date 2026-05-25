@@ -707,7 +707,7 @@ namespace Langulus::Anyness
             "You can't absorb from containers with different contiguousness");
 
          ComponentList::ForEach([&]<class C>{
-                 if_available_gcc(C::template ConstructFrom<SELF, FROM>)(FWDIntent(from));
+                 if_available_gcc(C::template ConstructFrom<SELF, IntentOf(from)>)(FWDIntent(from));
             else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
