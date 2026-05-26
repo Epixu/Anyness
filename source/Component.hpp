@@ -516,9 +516,9 @@ namespace Langulus::Anyness
       );
 
       /// Comparison, search, pattern matching                                
-      template<Cid = 0, bool HASH = true, Cid...> struct Comparison;
+      template<bool HASH = true, Cid = 0, Cid...> struct Comparison;
       #define LglsComComparison(modifier) \
-         template<Cid, bool, Cid...> modifier struct Comparison
+         template<bool, Cid, Cid...> modifier struct Comparison
 
       /// Conversion                                                          
       template<Cid = 0, Cid...> struct Conversion;

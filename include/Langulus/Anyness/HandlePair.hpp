@@ -28,7 +28,7 @@ namespace Langulus::Anyness
       Com::MultiownDeep<Com::OwnershipDeepReference<true, 0>,
                         Com::OwnershipDeepReference<true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
-      Com::Comparison<0, true, 1>,
+      Com::Comparison<true, 0, 1>,
       Com::IterationOperators<0, 1>
    > {
       using CTTI_Deep      = Yes<>;
@@ -125,7 +125,7 @@ namespace Langulus::Anyness
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
-      Com::Comparison<0, true, 1>,
+      Com::Comparison<true, 0, 1>,
       Com::IterationOperators<0, 1>
    > {
       using CTTI_Deep      = Yes<>;
@@ -222,7 +222,7 @@ namespace Langulus::Anyness
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<1>,
       Com::Emplacement<1>,
-      Com::Comparison<0, true, 1>,
+      Com::Comparison<true, 0, 1>,
       Com::IterationOperators<0, 1>
    > {
       using CTTI_Deep      = Yes<>;
@@ -319,7 +319,7 @@ namespace Langulus::Anyness
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepEmergent<true, 0>>,
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepEmergent<true, 1>>>,
       Com::HashEmergent<0, Hash, 1>,
-      Com::Comparison<0, true, 1>,
+      Com::Comparison<true, 0, 1>,
       Com::IterationOperators<0, 1>
    > {
       using CTTI_Deep      = Yes<>;
@@ -422,7 +422,7 @@ namespace Langulus::Anyness
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
-      Com::Comparison<0, true, 1>,
+      Com::Comparison<true, 0, 1>,
       Com::IterationOperators<0, 1>
    > {
       using CTTI_Deep      = Yes<>;
@@ -573,7 +573,7 @@ namespace Langulus::Anyness
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
-      Com::Comparison<0, true, 1>
+      Com::Comparison<true, 0, 1>
    > {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;

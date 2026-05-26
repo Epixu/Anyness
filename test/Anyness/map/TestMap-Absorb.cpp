@@ -453,11 +453,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
                BenchmarkMapStd(
                   std::string("Absorb/") + intent + "/AssignAbsorb(Move(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
-                  T movable1{*element1, *element2};
-                  T movable2{*originalElement1, *originalElement2};
-                  a.AssignAbsorb(Move(movable1)),                             a.AssignAbsorb(Move(movable2)),
-                  stdmap movable1{{*element1, *element2}};
-                  stdmap movable2{{*originalElement1, *originalElement2}},     movable1 = ::std::move(movable2)
+                  T movable1({*element1, *element2});
+                  T movable2({*originalElement1, *originalElement2});
+                  a.AssignAbsorb(Move(movable1)),                                a.AssignAbsorb(Move(movable2)),
+                  stdmap movable1({{*element1, *element2}});
+                  stdmap movable2({{*originalElement1, *originalElement2}}),     movable1 = ::std::move(movable2)
                );
             };
 
@@ -519,7 +519,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
                REQUIRE(a.GetRaw() == element1->GetRaw());
                REQUIRE(a.IsKeyExact(element1->GetType()));
                REQUIRE(a.IsValExact(element2->GetType()));
-               REQUIRE(a == {*element1, *element2});
+               REQUIRE(a == TPair {*element1, *element2});
                REQUIRE(a.IsKeyDeep() == element1->IsDeep());
                REQUIRE(a.IsValDeep() == element2->IsDeep());
                REQUIRE(a.IsKeyConstant());
@@ -570,7 +570,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
                auto movable21 = *originalElement1;
                auto movable12 = *element2;
                auto movable22 = *originalElement2;
-               stdmap temp_std (::std::move(movable11)),              temp_std[0] = ::std::move(movable21)
+               stdmap temp_std(::std::move(movable11)),              temp_std[0] = ::std::move(movable21)
             );
          };
 
@@ -1036,7 +1036,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       WHEN("Compared") {
          ScopedE1 e1 {1};
          ScopedE2 e2 {2};
-         T another_pack1{Piecewise, {*e1, *e2}};
+         T another_pack1{Piecewise, TPair {*e1, *e2}};
          T defaulted_pack;
 
          auto compared_full = [&](T& a, [[maybe_unused]] const char* intent) {

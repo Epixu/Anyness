@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Inner
       Com::Assignment<0, 1>,              // Allows assignment          
       Com::Removal<0, 1>,                 // Allows clear/reset         
       Com::Conversion<0, 1>,              // Allows conversion          
-      Com::Comparison<0, true, 1>,        // Allows comparisons         
+      Com::Comparison<true, 0, 1>,        // Allows comparisons         
       Com::State::Future<>,               // Toggle future linking      
       Com::State::Past<>                  // Toggle past linking        
    >;
@@ -116,8 +116,8 @@ namespace Langulus::Anyness
          return this->AssignAbsorb(LglsFwd(pair));
       }
 
-      using Com::Comparison<0, true, 1>::operator <=>;
-      using Com::Comparison<0, true, 1>::operator ==;
+      using Com::Comparison<true, 0, 1>::operator <=>;
+      using Com::Comparison<true, 0, 1>::operator ==;
 
       decltype(auto) GetKeyHandle(this auto&& self) noexcept {
          return self.GetHandle().GetKeyHandle(); //TODO use PickDimension instead?

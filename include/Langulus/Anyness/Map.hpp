@@ -49,7 +49,7 @@ namespace Langulus::Anyness::Inner
       //Com::Assignment<1>,                 // Assignment of values       
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
-      Com::Comparison<0/*, true, 1*/>,        // Allows comparisons of K/V  
+      Com::Comparison<true, 0, 1>,        // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
       Com::State::Sorted<SORT>,           // Toggle ordered map         
@@ -132,8 +132,8 @@ namespace Langulus::Anyness::Inner
       template<CT::Pair A1, CT::Pair...AN>
       constexpr Map(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->MergeInner(LglsFwd(a1));
-        (this->MergeInner(LglsFwd(an)), ...);
+         this->MergeInner(NestIntentOf(a1, a1.GetKeyHandle()), NestIntentOf(a1, a1.GetValHandle()));
+        (this->MergeInner(NestIntentOf(an, an.GetKeyHandle()), NestIntentOf(an, an.GetValHandle())), ...);
       }
       
       /// Assignment                                                          
@@ -177,8 +177,8 @@ namespace Langulus::Anyness::Inner
          return *this;
       }
 
-      using Com::Comparison<0/*, true, 1*/>::operator <=>;
-      using Com::Comparison<0/*, true, 1*/>::operator ==;
+      //using Com::Comparison<0/*, true, 1*/>::operator <=>;
+      //using Com::Comparison<0/*, true, 1*/>::operator ==;
 
       /// Three-way comparison with pairs                                     
       /*template<CT::Container C, CT::Pair P> requires CT::NoIntent<P>
@@ -187,14 +187,19 @@ namespace Langulus::Anyness::Inner
          if (key_compare == Compared::Equivalent)
             return lhs.template CompareOne<1>(rhs.val);
          return key_compare;
+      }*/
+
+      /// Equality comparison with maps                                       
+      constexpr bool operator == (CT::Map auto const& rhs) const assumptious {
+         return Com::Comparison<true, 0, 1>::operator == (rhs);
       }
 
       /// Equality comparison with pairs                                      
-      template<CT::Container C, CT::Pair P> requires CT::NoIntent<P>
-      constexpr bool operator == (this C const& lhs, P const& rhs) assumptious {
-         return lhs.template CompareOneEqual<0>(rhs.key)
-            and lhs.template CompareOneEqual<1>(rhs.val);
-      }*/
+      constexpr bool operator == (CT::Pair auto const& rhs) const assumptious {
+         using C = Com::Comparison<true, 0, 1>;
+         return C::template CompareOneEqual<0>(rhs.GetKey())
+            and C::template CompareOneEqual<1>(rhs.GetVal());
+      }
 
       constexpr bool IsKeyConstant() const noexcept {
          return true;

@@ -741,6 +741,7 @@ namespace Langulus
 //#define FWDIntent(a) IntentOf(a) {LglsFwd(a)} // for some reason this doesn't work on clang 22
 #define FWDIntent(a) ::Langulus::DeduceIntent(LglsFwd(a))
 #define IntentOf(a) ::Langulus::Deref<decltype(FWDIntent(a))>
+#define NestIntentOf(a, ...) ::Langulus::Deref<decltype(FWDIntent(a))>::Nest(__VA_ARGS__)
 
 /// A handy constructor & assignment pattern that adds all possible intents   
 /// and collapses them for a given type. Useful when you don't want intents   

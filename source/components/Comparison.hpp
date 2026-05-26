@@ -41,11 +41,10 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements comparison for containers. This includes functions for      
    /// searching and pattern-matching.                                        
-   ///   @tparam ID heap/stack we're comparing                                
    ///   @tparam HASH whether to compare hashes before elements. This is      
    ///      mostly useful when hash is cachable, otherwise kind of pointless. 
-   ///   @tparam SHARED providers that share the same comparison scheme       
-   template<Cid ID, bool HASH, Cid...SHARED>
+   ///   @tparam ID, SHARED heaps/stacks we're comparing                      
+   template<bool HASH, Cid ID, Cid...SHARED>
    struct Comparison {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
