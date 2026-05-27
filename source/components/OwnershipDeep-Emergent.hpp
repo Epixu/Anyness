@@ -630,10 +630,12 @@ namespace Langulus::Anyness::Component
                // are referenced (even if they have no corresponding    
                // entry), we need to zero the source pointer, so that   
                // we avoid them getting dereferenced later.             
-               LglsAssumeDev(rhs.template GetUses<SID>() == 1,
-                  "Can't move out from used memory");
-               auto pointers_src = rhs.template GetRaw<SID>();
-               memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
+               if (rhs.IsSparse()) {
+                  LglsAssumeDev(rhs.template GetUses<SID>() == 1,
+                     "Can't move out from used memory");
+                  auto pointers_src = rhs.template GetRaw<SID>();
+                  memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
+               }
             }
          }
          else if constexpr (CT::Sparse<Deint<I>>) {

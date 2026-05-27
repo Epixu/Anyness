@@ -189,8 +189,8 @@ namespace Langulus::Anyness::Component
 
             // Make a local pair to use as a swapper                    
             THandlePair<
-               THandle<Decvq<Deref<Deint<K>>>>,
-               THandle<Decvq<Deref<Deint<V>>>>
+               Tif<CT::Handle<K>, Deref<Deint<K>>, THandle<Decvq<Deref<Deint<K>>>>>,
+               Tif<CT::Handle<V>, Deref<Deint<V>>, THandle<Decvq<Deref<Deint<V>>>>>
             > swapper {LglsFwd(k), LglsFwd(v)};
             result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
             ++result.itemsInserted;

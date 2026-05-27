@@ -155,16 +155,16 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      template<Cid SID = 0>
-      constexpr void SetHeapInner(this auto& self, CT::Sparse auto heap) assumptious {
-         using C = typename Subcomponents::template At<SID>;
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
+      constexpr void SetHeapInner(this auto& self, CT::Sparse auto heap) assumptious 
+      if_inherits(SetHeapInner(nullptr)) {
          self.C::SetHeapInner(heap);
       }
 
       /// Reset the heap pointer to null                                      
-      template<Cid SID = 0>
-      constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
-         using C = typename Subcomponents::template At<SID>;
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
+      constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept 
+      if_inherits(SetHeapInner(nullptr)) {
          self.C::SetHeapInner(nullptr);
       }
       

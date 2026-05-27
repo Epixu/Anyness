@@ -70,16 +70,16 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   
-      template<Cid SID = 0>
-      constexpr decltype(auto) GetEntriesInner(this auto&& self) noexcept {
-         using C = typename Subcomponents::template At<SID>;
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
+      constexpr decltype(auto) GetEntriesInner(this auto&& self) noexcept 
+      if_inherits(GetEntriesInner()) {
          return self.C::GetEntriesInner();
       }
 
       /// Set the entry array (inner)                                         
-      template<Cid SID = 0>
-      constexpr void SetEntriesInner(this auto& self, auto entries) noexcept {
-         using C = typename Subcomponents::template At<SID>;
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
+      constexpr void SetEntriesInner(this auto& self, auto entries) noexcept 
+      if_inherits(GetEntriesInner()) {
          self.C::SetEntriesInner(entries);
       }
 

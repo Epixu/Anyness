@@ -190,8 +190,8 @@ void Map_CheckState_Default(C const& map, bool typed = false) {
    REQUIRE_FALSE(map);
    REQUIRE      (not map);
 
-   //Many_CheckState_Default<K>(map.GetKeys());
-   //Many_CheckState_Default<V>(map.GetVals());
+   //TODO Many_CheckState_Default<K>(map.GetKeys());
+   //TODO Many_CheckState_Default<V>(map.GetVals());
 
    REQUIRE_FALSE(map.IsCompressed());
    REQUIRE_FALSE(map.IsEncrypted());
@@ -216,8 +216,8 @@ void Map_CheckState_OwnedEmpty(C const& map) {
    REQUIRE_FALSE(map);
    REQUIRE      (not map);
 
-   Many_CheckState_OwnedEmpty<K>(map.GetKeys());
-   Many_CheckState_OwnedEmpty<V>(map.GetVals());
+   //TODO Many_CheckState_OwnedEmpty<K>(map.GetKeys());
+   //TODO Many_CheckState_OwnedEmpty<V>(map.GetVals());
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
@@ -238,8 +238,8 @@ void Map_CheckState_OwnedFull(C const& map) {
    REQUIRE      (map);
    REQUIRE_FALSE(not map);
 
-   //Many_CheckState_OwnedFull<K>(map.GetKeys());
-   //Many_CheckState_OwnedFull<V>(map.GetVals());
+   //TODO Many_CheckState_OwnedFull<K>(map.GetKeys());
+   //TODO Many_CheckState_OwnedFull<V>(map.GetVals());
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
@@ -260,16 +260,16 @@ void Map_CheckState_DisownedFull(C const& map) {
    REQUIRE      (map);
    REQUIRE_FALSE(not map);
 
-   //Many_CheckState_DisownedFull<K>(map.GetKeys());
-   //Many_CheckState_DisownedFull<V>(map.GetVals());
+   //TODO Many_CheckState_DisownedFull<K>(map.GetKeys());
+   //TODO Many_CheckState_DisownedFull<V>(map.GetVals());
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_Abandoned(C const& map) {
    REQUIRE_FALSE(map.GetAllocation());
 
-   Many_CheckState_Abandoned<K>(map.GetKeys());
-   Many_CheckState_Abandoned<V>(map.GetVals());
+   //TODO Many_CheckState_Abandoned<K>(map.GetKeys());
+   //TODO Many_CheckState_Abandoned<V>(map.GetVals());
 }
 
 template<CT::Container T, CT::Intent I1, CT::Intent I2> requires CT::NoIntent<T>

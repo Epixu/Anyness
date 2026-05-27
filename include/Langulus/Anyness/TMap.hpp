@@ -91,9 +91,10 @@ namespace Langulus::Anyness
          if constexpr (sizeof...(AN) == 0 and CT::Map<A1>)
             this->Absorb(LglsFwd(a1));
          else {
+            static_assert(CT::Pair<A1, AN...>, "Arguments must be pairs");
             this->ConstructDefault();
-            this->Merge(LglsFwd(a1));
-           (this->Merge(LglsFwd(an)), ...);
+            this->MergeInner(LglsFwd(a1));
+           (this->MergeInner(LglsFwd(an)), ...);
          }
       }
       
@@ -110,11 +111,11 @@ namespace Langulus::Anyness
       }
       
       /// Construction that emplaces all arguments inside                     
-      template<class A1, class...AN>
+      template<CT::Pair A1, CT::Pair...AN>
       constexpr TMap(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->Merge(LglsFwd(a1));
-        (this->Merge(LglsFwd(an)), ...);
+         this->MergeInner(NestIntentOf(a1, a1.GetKeyHandle()), NestIntentOf(a1, a1.GetValHandle()));
+        (this->MergeInner(NestIntentOf(an, an.GetKeyHandle()), NestIntentOf(an, an.GetValHandle())), ...);
       }
 
       /// Assignment                                                          
@@ -129,8 +130,10 @@ namespace Langulus::Anyness
       constexpr TMap& operator = (A&& argument) {
          if constexpr (CT::Map<A>)
             return this->AssignAbsorb(LglsFwd(argument));
-         else
+         else {
+            static_assert(CT::Pair<A>, "Argument must be pair or map");
             return this->Assign(LglsFwd(argument));
+         }
       }
 
       /// Clear the map and assign a single pair                              
@@ -150,6 +153,18 @@ namespace Langulus::Anyness
 
       //using Com::Comparison<0/*, true, 1*/>::operator <=>;
       //using Com::Comparison<0/*, true, 1*/>::operator ==;
+      
+      /// Equality comparison with maps                                       
+      constexpr bool operator == (CT::Map auto const& rhs) const assumptious {
+         return Com::Comparison<true, 0, 1>::operator == (rhs);
+      }
+
+      /// Equality comparison with pairs                                      
+      constexpr bool operator == (CT::Pair auto const& rhs) const assumptious {
+         using C = Com::Comparison<true, 0, 1>;
+         return C::template CompareOneEqual<0>(rhs.GetKey())
+            and C::template CompareOneEqual<1>(rhs.GetVal());
+      }
 
       constexpr bool IsKeyConstant() const noexcept {
          return true;

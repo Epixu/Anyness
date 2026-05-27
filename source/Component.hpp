@@ -665,15 +665,21 @@ namespace Langulus::Anyness
 
          /// Default initialization shouldn't initialize anything, but also   
          /// completely fail if T is a reference type.                        
-         constexpr StackVariable() noexcept requires (CT::NotReference<T>) {};
+         constexpr StackVariable() noexcept requires CT::NotReference<T> {};
+
+         /// Initializing a reference                                         
+         constexpr StackVariable(T& v) noexcept requires CT::Reference<T>
+            : value {v} {}
 
          /// Constructs directly if possible                                  
-         constexpr StackVariable(auto&& v) noexcept requires (    requires { T{LglsFwd(v)}; })
+         constexpr StackVariable(auto&& v) noexcept
+         requires (    requires { T{LglsFwd(v)}; } and CT::NotReference<T>)
             : value {LglsFwd(v)} {}
 
          /// Strips intents before constructing in case first attempt         
          /// fails. Useful for primitive types that don't support intents.    
-         constexpr StackVariable(auto&& v) noexcept requires (not requires { T{LglsFwd(v)}; })
+         constexpr StackVariable(auto&& v) noexcept
+         requires (not requires { T{LglsFwd(v)}; } and CT::NotReference<T>)
             : value {LglsFwd(DeintCast(v))} {}
       };
       

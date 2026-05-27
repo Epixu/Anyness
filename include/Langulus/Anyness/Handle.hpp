@@ -102,9 +102,9 @@ namespace Langulus::Anyness
       /// Statically typed handle to a local dense value                      
       /// (isomorphic to TOwn)                                                
       //TODO inherit TOwn from this?
-      template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
+      template</*CT::NotReference*/class T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleLocalDense = Com::Container<
-         Com::TypedStatic<DMeta, T>,
+         Com::TypedStatic<DMeta, Deref<T>>,
          Com::Stack<T>,
          Com::CountStatic<1u>,
          Com::HashEmergent<>,

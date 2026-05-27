@@ -55,42 +55,6 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRawReserveEnd(this auto&& self) noexcept {
          return ThisCom::GetRawEnd();
       }
-
-      /// Get reference to first element as sparse or dense, depending on T.  
-      /// This is a lower-level routine that does only sparseness checking.   
-      /// No conversion or copying occurs, only pointer arithmetic.           
-      ///   @attention no type-safety                                         
-      ///   @tparam AS the type of data we're accessing - use void to use the 
-      ///      type of the stack                                              
-      /*template<class AS = void, Cid SID = ID, CT::Container C> requires (SID == ID)
-      constexpr decltype(auto) Get(this C&& self) assumptious {
-         static_assert(not CT::Handle<AS>,    "AS can't be a handle");
-         static_assert(not CT::Reference<AS>, "Strip references first");
-
-         using TC    = LglsMutIf(C, Deref<T>);
-         using TCP   = LglsMutIf(C, TC*);
-         using TH    = Tif<CT::Void<AS>, TC, AS>;
-         using THP   = LglsMutIf(C, TH*);
-         auto& stack = ThisCom::GetStackInner();
-
-         // Casting to a desired static type                            
-         if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
-            // No difference in indirections                            
-            return *static_cast<THP>(static_cast<TCP>(&stack));
-         }
-         else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
-            // We need to dereference. Can be done without a            
-            // reinterpret_cast, and thus be constexpr-friendly.        
-            // Supports packed pointers as well.                        
-            return *static_cast<THP>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TCP>(&stack)));
-         }
-         else {
-            // We are allowed to add one additional indirection         
-            static_assert(IndirectsOf<TCP> == IndirectsOf<TH>,
-               "Too many indirections");
-            return *const_cast<THP>(reinterpret_cast<ConstAll<THP>>(&stack));
-         }
-      }*/
       
       /// Get pointer to the first element for the given dimension.           
       /// This is a lower-level routine that does only sparseness checking.   
@@ -107,7 +71,7 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
 
-         using TC   = LglsMutIf(C, T);
+         using TC   = LglsMutIf(C, Deref<T>);
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
@@ -133,33 +97,6 @@ namespace Langulus::Anyness::Component
             return static_cast<LglsMutIf(C, TH)>(heap);
          }
       }
-
-      /// Get first element as a handle, or any desired wrapping type.        
-      /// Conversion or copying may occur, depending on type.                 
-      ///   @tparam AS the type we're wrapping in                             
-      ///   @return the element, as a reference if possible                   
-      /*template<CT::NotVoid AS, Cid SID = ID, CT::Container C>
-      requires (SID == ID and CT::Contiguous<C>)
-      decltype(auto) As(this C&& self) {
-         static_assert(not CT::Reference<AS>, "Strip references first");
-
-         if constexpr (CT::Handle<AS>)
-            return self.template GetHandle<AS>();
-         else {
-            // Access directly or wrapped in a container                
-            if constexpr (Akin<T, AS>) {
-               // Access directly                                       
-               return ThisCom::template Get<AS>();
-            }
-            else if constexpr (CT::DeepDense<AS>) {
-               // Wrap in a container                                   
-               Decvq<AS> temp {Absorb, self};
-               if_available(temp.SetCountInner(1));
-               return temp;
-            }
-            else static_assert(false, "Type mismatch");
-         }
-      }*/
       
       /// Get first element as a handle, or any desired wrapping type.        
       /// Conversion or copying may occur, depending on type.                 

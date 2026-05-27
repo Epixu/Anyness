@@ -13,10 +13,10 @@
 namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid K, CT::NotVoid V>
-   requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
+   requires (CT::NotHandle<K, V> /*and CT::NotReference<K, V>*/)
    using TPairBase = Com::Container<
-      Com::Multitype<Com::TypedStatic<DMeta, K, 0>,
-                     Com::TypedStatic<DMeta, V, 1>>,
+      Com::Multitype<Com::TypedStatic<DMeta, Deref<K>, 0>,
+                     Com::TypedStatic<DMeta, Deref<V>, 1>>,
       Com::Multiprovider<Com::Stack<K, 0>,
                          Com::Stack<V, 1>>,
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      

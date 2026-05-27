@@ -64,6 +64,7 @@ namespace Langulus::Anyness::Component
    public:
       /// Compare two containers for equality.                                
       /// This has much greater performance when hashed.                      
+      ///   @attention compares all shared dimensions at once                 
       ///   @param lhs left container                                         
       ///   @param rhs right container                                        
       ///   @return true if the two containers are identical                  
@@ -285,6 +286,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Three-way compare two containers                                    
+      ///   @attention compares all shared dimensions at once                 
       ///   @attention this doesn't benefit from hashing and will three-way   
       ///      compare all elements until short-circuited                     
       ///   @return the ordering result                                       
@@ -425,8 +427,8 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Equality-compare with one single value, if exactly one element is   
-      /// contained                                                           
+      /// Equality-compare with the first contained element                   
+      ///   @attention compares all shared dimensions at once                 
       ///   @param rhs the value to compare against                           
       ///   @return true if elements are the same                             
       template<CT::Container C, CT::NoIntent RT>
@@ -482,8 +484,8 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Three-way compare with one single value, if exactly one element is  
-      /// contained                                                           
+      /// Equality-compare with the first contained element                   
+      ///   @attention compares all shared dimensions at once                 
       ///   @attention this doesn't benefit from hashing                      
       ///   @param rhs the value to compare against                           
       ///   @return true if elements are the same                             
@@ -549,6 +551,7 @@ namespace Langulus::Anyness::Component
       /// Compare hashes of two containers.                                   
       /// Most useful when hashes are cached, as it will otherwise force      
       /// HashRecompute every time this comparison happens.                   
+      ///   @attention compares all shared dimensions at once                 
       ///   @return true if hashes are the same                               
       template<CT::Container LHS, CT::Container RHS>
       constexpr bool CompareHashes(this LHS const& lhs, RHS const& rhs)
@@ -565,12 +568,13 @@ namespace Langulus::Anyness::Component
       auto MatchesLoose(this const C1&, const C2&) noexcept -> Count<C1>;
       
       /// Find a single element's index inside container                      
-      ///   @tparam SID the data provider to search in                        
+      ///   @attention compares all shared dimensions at once                 
       ///   @param item the item to search for                                
       ///   @param cookie resume search from a given index                    
       ///   @return handle of the found item                                  
       template<Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
-      auto Find(this C&& self, T const& item, size_t cookie = 0) assumptious -> DecideHandle<C> {
+      auto Find(this C&& self, T const& item, size_t cookie = 0) assumptious
+      -> DecideHandle<C> {
          if (self.IsEmpty())
             return {};
 
@@ -591,12 +595,13 @@ namespace Langulus::Anyness::Component
       }
 
       /// Find a single element's index inside container, searching in reverse
-      ///   @tparam SID the data provider to search in                        
+      ///   @attention compares all shared dimensions at once                 
       ///   @param item the item to search for                                
       ///   @param cookie resume search from a given index                    
       ///   @return handle of the found item                                  
       template<Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
-      auto FindReverse(this C&& self, T const& item, size_t cookie = 0) assumptious -> DecideHandle<C> {
+      auto FindReverse(this C&& self, T const& item, size_t cookie = 0) assumptious
+      -> DecideHandle<C> {
          if (self.IsEmpty())
             return {};
 
@@ -617,15 +622,14 @@ namespace Langulus::Anyness::Component
       }
 
       /// Find a matching sequence of one or more matching elements           
+      ///   @attention compares all shared dimensions at once                 
       ///   @tparam REVERSE true to perform search in reverse                 
       ///   @param range sequence of items to search for                      
       ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if not found       
       template<bool REVERSE = false, CT::ContainsMany C1, CT::Container C2>
       requires CT::Contiguous<C1, C2>
-      auto FindRange(this C1 const& self, C2 const& range, Count<C1> cookie = 0) noexcept
-         /* -> At<C1>*/
-      {
+      auto FindRange(this C1 const& self, C2 const& range, Count<C1> cookie = 0) noexcept {
          using strategy = IterateNoDeref<REVERSE, const C1>;
          if (cookie >= self.GetCount() or range.GetCount() > self.GetCount() - cookie)
             return strategy(self).end();
@@ -715,12 +719,15 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if the container contains an element                          
-      template<CT::Container C>
-      bool Contains(this C const& self, const CT::NoIntent auto& item) {
+      ///   @attention compares all shared dimensions at once                 
+      ///   @param A1 the item to search for                                  
+      ///   @return if all provided dimensions are found together             
+      template<CT::Container C, CT::NoIntent A1>
+      bool Contains(this C const& self, A1 const& a1) {
          if constexpr (CT::ContainsMany<C>)
-            return static_cast<bool>(self.Find(item));
+            return static_cast<bool>(self.Find(a1));
          else
-            return self.CompareOneEqual(item);
+            return self.CompareOneEqual(a1);
       }
 
       /// Three-way comparison                                                
@@ -729,6 +736,7 @@ namespace Langulus::Anyness::Component
          return lhs.Compare(rhs);
       }*/
 
+      ///   @attention compares all shared dimensions at once                 
       template<CT::Container LHS, CT::NoIntent RHS> requires CT::CompatibleDimensions<LHS, RHS>
       constexpr auto operator <=> (this LHS const& lhs, RHS const& rhs) assumptious {
          if constexpr (Same<LHS, RHS>)
@@ -752,6 +760,7 @@ namespace Langulus::Anyness::Component
          return lhs.CompareEqual(rhs);
       }*/
 
+      ///   @attention compares all shared dimensions at once                 
       template<CT::Container LHS, CT::NoIntent RHS> requires CT::CompatibleDimensions<LHS, RHS>
       constexpr bool operator == (this LHS const& lhs, RHS const& rhs) assumptious {
          if constexpr (Same<LHS, RHS>)
@@ -772,7 +781,6 @@ namespace Langulus::Anyness::Component
    protected:      
       /// Find a single element's index inside container (inner)              
       ///   @tparam REVERSE true to perform search in reverse                 
-      ///   @tparam SID chosen dimension                                      
       ///   @attention assumes container is not empty                         
       ///   @attention that container is of the same comparable type          
       ///   @attention operates on a single dimension at a time               

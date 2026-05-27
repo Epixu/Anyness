@@ -899,13 +899,11 @@ namespace Langulus::Anyness
             "You can't assign-absorb from containers with different contiguousness");
 
          decltype(auto) from = DeintCast(rhs);
-         //if constexpr (requires { &self == &from; }) {
-            // Make sure 'lhs' and 'rhs' are different instances,       
-            // otherwise we lose rhs if we free lhs, and we have to     
-            // free lhs in order to overwrite it with rhs.              
-            if (static_cast<const void*>(&self) == static_cast<const void*>(&from))
-               return self;
-         //}
+         // Make sure 'lhs' and 'rhs' are different instances,          
+         // otherwise we lose rhs if we free lhs, and we have to        
+         // free lhs in order to overwrite it with rhs.                 
+         if (static_cast<const void*>(&self) == static_cast<const void*>(&from))
+            return self;
 
          // Never modify containers if type-incompatible                
          LHS::Dimensions::ForEach([&self, &from]<Cid D> {
@@ -926,13 +924,8 @@ namespace Langulus::Anyness
 
          // Free old data and absorb the new container                  
          self.Destroy();
-         //self.Free();
          self.ResetCount(); //TODO redundant?
          self.Absorb(LglsFwd(rhs));
-
-         /*ComponentList::ForEach([&]<class C>{
-            if_available(self.C::AssignFrom(FWDIntent(rhs)));
-         });*/
          return self;
       }
    };

@@ -353,9 +353,9 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      constexpr THandlePair(THandleEmergent<K>&& key, THandleEmergent<V>&& val) noexcept {
-         this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(key.GetHeapInner());
-         this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
+      constexpr THandlePair(CT::Handle auto&& key, CT::Handle auto&& val) noexcept {
+         this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(DeintCast(key).GetHeapInner());
+         this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(DeintCast(val).GetHeapInner());
       }
 
       /// Assignment is disabled                                              

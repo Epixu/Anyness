@@ -32,8 +32,8 @@
 namespace Langulus::Anyness::Inner
 {
    using PairBase = Com::Container<
-      Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,  // Type-erased key       
-                     Com::TypedStack<DMeta, void, false, 1>>,  // Type-erased value     
+      Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
+                     Com::TypedStack<DMeta, void, false, 1>>,
       Com::HeapMovable<0, 0, HeapEntry<0>, HeapEntry<1>>,
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
