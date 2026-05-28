@@ -61,6 +61,9 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
+      template<CT::Container C>
+      using Ordering = Tif<CT::TypeErased<C>, Compared, ::std::partial_ordering>;
+
    public:
       /// Compare two containers for equality.                                
       /// This has much greater performance when hashed.                      
@@ -291,8 +294,7 @@ namespace Langulus::Anyness::Component
       ///      compare all elements until short-circuited                     
       ///   @return the ordering result                                       
       template<CT::Container LHS, CT::Container RHS>
-      constexpr auto Compare(this const LHS& lhs, const RHS& rhs)
-      -> Tif<CT::TypeErased<LHS, RHS>, Compared, ::std::partial_ordering> {
+      constexpr auto Compare(this const LHS& lhs, const RHS& rhs) -> Ordering<LHS> {
          LglsVerboseScoped("Comparing ",
             Logger::White, lhs.GetCount(), "x of ", lhs.GetName(),
             Logger::Reset, " with ",
@@ -435,6 +437,7 @@ namespace Langulus::Anyness::Component
       constexpr bool CompareOneEqual(this C const& self, const RT& rhs) {
          if consteval {
             // Heap should be empty at compile-time                     
+            //TODO what about stack-based containers?
             return false;
          }
          else {
@@ -442,45 +445,11 @@ namespace Langulus::Anyness::Component
                return false;
 
             if constexpr (CT::TypeErased<C>) {
-               //                                                       
-               // THIS is type-erased, do runtime type checks           
                if (not self.IsTyped())
                   return false;
-
-               if constexpr (CT::Text<RT>) {
-                  // Text types can be more loosely compared            
-                  if (self.template IsSame<Text>()) {
-                     // Implicitly make a text container                
-                     if constexpr (CT::Contiguous<C>)
-                        return *self.template Get<Text>() == Text {Disown(rhs)};
-                     else
-                        return *self.template GetAt<Text>(0) == Text {Disown(rhs)};
-                  }
-               }
-
-               if constexpr (CT::ComparableEqual<RT, RT>) {
-                  // Non-deep element compare                           
-                  if (self.template IsSame<RT>()) {
-                     if constexpr (CT::Contiguous<C>)
-                        return *self.template Get<RT>() == rhs;
-                     else
-                        return *self.template GetAt<RT>(0) == rhs;
-                  }
-               }
-            }
-            else {
-               //                                                       
-               // Both sides are statically typed                       
-               using T = TypeOf<C>;
-               if constexpr (CT::ComparableEqual<T, RT>) {
-                  if constexpr (CT::Contiguous<C>)
-                     return *self.GetRaw() == rhs;
-                  else
-                     return *self.template GetAt<T>(0) == rhs;
-               }
             }
 
-            return false;
+            return self.template CompareOneEqualInner<Id::First>(rhs);
          }
       }
 
@@ -490,61 +459,21 @@ namespace Langulus::Anyness::Component
       ///   @param rhs the value to compare against                           
       ///   @return true if elements are the same                             
       template<CT::Container C, CT::NoIntent RT>
-      constexpr auto CompareOne(this C const& self, const RT& rhs)
-      -> Tif<CT::TypeErased<C>, Compared, ::std::partial_ordering> {
+      constexpr auto CompareOne(this C const& self, const RT& rhs) -> Ordering<C> {
          if constexpr (CT::TypeErased<C>) {
-            //                                                          
-            // THIS is type-erased, do runtime type checks              
             if (self.GetCount() != 1)
                return Compared::Unordered;
 
             if (not self.IsTyped())
                return Compared::Unordered;
 
-            if constexpr (CT::Text<RT>) {
-               // Text types can be more loosely compared               
-               if (self.template IsSame<Text>()) {
-                  // Implicitly make a text container                   
-                  if constexpr (CT::Contiguous<C>)
-                     return FromOrdering(*self.template Get<Text>() <=> Text{Disown(rhs)});
-                  else
-                     return FromOrdering(*self.template GetAt<Text>(0) <=> Text{Disown(rhs)});
-               }
-            }
-
-            /*if constexpr (CT::Container<RT>) {
-               // Containers can be more loosely compared               
-               if (not self.IsSparse()) {
-                  auto deep = self.template GetDeep<RT>();
-                  return deep ? *deep == rhs : false;
-               }
-               else return false;
-            }
-            else*/ if constexpr (CT::Comparable<RT, RT>) {
-               // Non-deep element compare                              
-               if (self.template IsSame<RT>()) {
-                  if constexpr (CT::Contiguous<C>)
-                     return FromOrdering(*self.template Get<RT>() <=> rhs);
-                  else
-                     return FromOrdering(*self.template GetAt<RT>(0) <=> rhs);
-               }
-               return Compared::Unordered;
-            }
-            else return Compared::Unordered;
+            return self.template CompareOneInner<Id::First>(rhs);
          }
          else {
-            //                                                          
-            // Both sides are statically typed                          
             if (self.GetCount() != 1)
                return ::std::partial_ordering::unordered;
             
-            if constexpr (CT::Comparable<TypeOf<C>, RT>) {
-               if constexpr (CT::Contiguous<C>)
-                  return ToPartialOrdering(*self.Get() <=> rhs);
-               else
-                  return ToPartialOrdering(*self.GetAt(0) <=> rhs);
-            }
-            else return ::std::partial_ordering::unordered;
+            return self.template CompareOneInner<Id::First>(rhs);
          }
       }
 
@@ -585,13 +514,32 @@ namespace Langulus::Anyness::Component
             cookie = self.GetOffset(item);
          }
 
-         if constexpr (CT::TypeErased<C>) {
+         /*if constexpr (CT::TypeErased<C>) {
             auto comparer = self.GetType().GetComparerEqual();
             if (not comparer or not self.IsSame(MetaDataOf<T>()))
                return {};
-         }
+         }*/
 
-         return self.template FindInner<false, SID>(item, cookie);
+         if constexpr (requires { typename T::Dimensions; }) {
+            // Find the first relevant dimension                        
+            using RELEVANT = typename Id::template Intersect<typename T::Dimensions>;
+            auto first_rhs = item.GetHandle();
+            auto first_lhs = self.template FindInner<false, RELEVANT::First>(first_rhs, cookie);
+            if constexpr (RELEVANT::Count == 1)
+               return first_lhs;
+            else if (first_lhs) {
+               // Compare the rest of the dimensions with the first     
+               // handle                                                
+               if (RELEVANT::Expand([&first_lhs, &first_rhs]<Cid, Cid...DN> {
+                  return (first_lhs.template CompareOneEqualInner<DN>(first_rhs) and ...);
+               }))
+                  return first_lhs;
+               else
+                  return {};
+            }
+            else return {};
+         }
+         else return self.template FindInner<false, SID>(item, cookie);
       }
 
       /// Find a single element's index inside container, searching in reverse
@@ -612,13 +560,31 @@ namespace Langulus::Anyness::Component
             cookie = self.GetOffset(item);
          }
 
-         if constexpr (CT::TypeErased<C>) {
+         /*if constexpr (CT::TypeErased<C>) {
             auto comparer = self.GetType().GetComparerEqual();
             if (not comparer or not self.IsSame(MetaDataOf<T>()))
                return {};
+         }*/
+         if constexpr (requires { typename T::Dimensions; }) {
+            // Find the first relevant dimension                        
+            using RELEVANT = typename Id::template Intersect<typename T::Dimensions>;
+            auto first_rhs = item.GetHandle();
+            auto first_lhs = self.template FindInner<true, RELEVANT::First>(first_rhs, cookie);
+            if constexpr (RELEVANT::Count == 1)
+               return first_lhs;
+            else if (first_lhs) {
+               // Compare the rest of the dimensions with the first     
+               // handle                                                
+               if (RELEVANT::Expand([&first_lhs, &first_rhs]<Cid, Cid...DN> {
+                  return (first_lhs.template CompareOneEqualInner<DN>(first_rhs) and ...);
+               }))
+                  return first_lhs;
+               else
+                  return {};
+            }
+            else return {};
          }
-
-         return self.template FindInner<true, SID>(item, cookie);
+         else return self.template FindInner<true, SID>(item, cookie);
       }
 
       /// Find a matching sequence of one or more matching elements           
@@ -874,6 +840,113 @@ namespace Langulus::Anyness::Component
 
          //TODO allow hash table to warp back to the beginning
          return result;
+      }
+
+      /// Equality-compare with the first contained element                   
+      ///   @attention compares one dimension at a time                       
+      ///   @attention assumes container is if type 'RT' and not empty        
+      ///   @param rhs the value to compare against                           
+      ///   @return true if elements are the same                             
+      template<Cid SID, class C, CT::NoIntent RT>
+      constexpr bool CompareOneEqualInner(this C const& self, const RT& rhs) {
+         LglsAssumeDev(not self.template IsEmpty<SID>(),
+            "Container is assumed not empty");
+
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // THIS is type-erased, do runtime type checks              
+            LglsAssumeDev(self.template IsTyped<SID>(),
+               "Container is assumed typed");
+
+            if constexpr (CT::Text<RT>) {
+               // Text types can be more loosely compared               
+               if (self.template IsSame<Text, SID>()) {
+                  // Implicitly make a text container                   
+                  if constexpr (CT::Contiguous<C>)
+                     return *self.template Get<Text, SID>() == Text {Disown(rhs)};
+                  else
+                     return *self.template GetAt<Text, SID>(0) == Text {Disown(rhs)};
+               }
+            }
+
+            if constexpr (CT::ComparableEqual<RT, RT>) {
+               // Non-deep element compare                              
+               if (self.template IsSame<RT, SID>()) {
+                  if constexpr (CT::Contiguous<C>)
+                     return *self.template Get<RT, SID>() == rhs;
+                  else
+                     return *self.template GetAt<RT, SID>(0) == rhs;
+               }
+            }
+         }
+         else {
+            //                                                          
+            // Both sides are statically typed                          
+            using T = TypeOf<C, SID>;
+
+            if constexpr (CT::ComparableEqual<T, RT>) {
+               if constexpr (CT::Contiguous<C>)
+                  return *self.template GetRaw<SID>() == rhs;
+               else
+                  return *self.template GetAt<T, SID>(0) == rhs;
+            }
+         }
+
+         return false;
+      }
+      
+      /// Equality-compare with the first contained element                   
+      ///   @attention compares one dimension at a time                       
+      ///   @attention assumes container is if type 'RT' and not empty        
+      ///   @param rhs the value to compare against                           
+      ///   @return true if elements are the same                             
+      template<Cid SID, class C, CT::NoIntent RT>
+      constexpr auto CompareOneInner(this C const& self, const RT& rhs) -> Ordering<C> {
+         LglsAssumeDev(not self.template IsEmpty<SID>(),
+            "Container is assumed not empty");
+
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // THIS is type-erased, do runtime type checks              
+            LglsAssumeDev(self.template IsTyped<SID>(),
+               "Container is assumed typed");
+
+            if constexpr (CT::Text<RT>) {
+               // Text types can be more loosely compared               
+               if (self.template IsSame<Text, SID>()) {
+                  // Implicitly make a text container                   
+                  if constexpr (CT::Contiguous<C>)
+                     return FromOrdering(*self.template Get<Text, SID>() <=> Text{Disown(rhs)});
+                  else
+                     return FromOrdering(*self.template GetAt<Text, SID>(0) <=> Text{Disown(rhs)});
+               }
+            }
+            
+            if constexpr (CT::Comparable<RT, RT>) {
+               // Non-deep element compare                              
+               if (self.template IsSame<RT, SID>()) {
+                  if constexpr (CT::Contiguous<C>)
+                     return FromOrdering(*self.template Get<RT, SID>() <=> rhs);
+                  else
+                     return FromOrdering(*self.template GetAt<RT, SID>(0) <=> rhs);
+               }
+               return Compared::Unordered;
+            }
+            else return Compared::Unordered;
+         }
+         else {
+            //                                                          
+            // Both sides are statically typed                          
+            using T = TypeOf<C, SID>;
+
+            if constexpr (CT::Comparable<T, RT>) {
+               if constexpr (CT::Contiguous<C>)
+                  return ToPartialOrdering(*self.template GetRaw<SID>() <=> rhs);
+               else
+                  return ToPartialOrdering(*self.template GetAt<T, SID>(0) <=> rhs);
+            }
+            else return ::std::partial_ordering::unordered;
+         }
       }
    };
 }

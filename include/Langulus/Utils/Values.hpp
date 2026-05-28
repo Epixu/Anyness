@@ -41,6 +41,8 @@ namespace Langulus
       template<auto...N>
       consteval auto operator + (Values<N...>&&) const -> Values<N...> { return {}; }
 
+      static constexpr void Expand(auto&&) {}
+
       template<class>
       using Intersect = Values<>;
    };
@@ -100,6 +102,12 @@ namespace Langulus
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
+         return LglsLamb(lambda, E1);
+      }
+
+      static constexpr auto Expand(auto&& lambda) {
+         static_assert(requires{ LglsLamb(lambda, E1); },
+            "Provided argument is not a lambda of the form []<auto>");
          return LglsLamb(lambda, E1);
       }
 
@@ -198,6 +206,12 @@ namespace Langulus
             else
                return Values<EN...>::ForEachConstOr(LglsFwd(lambda));
          }
+      }
+
+      static constexpr auto Expand(auto&& lambda) {
+         static_assert(requires{ LglsLamb(lambda, E1, E2, EN...); },
+            "Provided argument is not a lambda of the form []<auto...>");
+         return LglsLamb(lambda, E1, E2, EN...);
       }
 
       template<class OTHER>
