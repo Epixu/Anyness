@@ -818,6 +818,8 @@ TEST_CASE_TEMPLATE("Testing refer-constructible types", T
    , ReferConstructibleButNotAssignable
    , ForcefullyPod
    , int
+   , CustomTypedType
+   , CustomUntypedType
 ) {
    static_assert(    CT::Referred<  Refer<T>>);
    static_assert(not CT::Referred<   Move<T>>);
@@ -850,6 +852,17 @@ TEST_CASE_TEMPLATE("Testing refer-constructible types", T
    auto test1 = reinterpret_cast<T*>(storage1);
    auto test2 = reinterpret_cast<T*>(storage2);
    new (test1) T {*test2};
+
+   if constexpr (CT::Aggregate<T>) {
+      static_assert(::std::same_as<decltype(Refer<int>::Nest(*test2)), T&>);
+      static_assert(::std::same_as<decltype(Refer<int>::Nest(Clone(*test2))), T const&>);
+      static_assert(::std::same_as<decltype(Refer<int>::Nest(Move(*test2))), T&&>);
+   }
+   else {
+      static_assert(::std::same_as<decltype(Refer<int>::Nest(*test2)), Refer<T>>);
+      static_assert(::std::same_as<decltype(Refer<int>::Nest(Clone(*test2))), Refer<T>>);
+      static_assert(::std::same_as<decltype(Refer<int>::Nest(Move(*test2))), Refer<T>>);
+   }
 }
 
 TEST_CASE_TEMPLATE("Testing non-refer-constructible types", T

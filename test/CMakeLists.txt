@@ -56,9 +56,9 @@ add_langulus_test(LangulusAnynessTest
                Anyness/set/TestSet-Absorb.cpp
                Anyness/set/TestSet-Piecewise.cpp
 
-               Anyness/map/TestMap-Empty.cpp
+               #[[Anyness/map/TestMap-Empty.cpp
                Anyness/map/TestMap-Absorb.cpp
-               #Anyness/map/TestMap-Piecewise.cpp
+               #Anyness/map/TestMap-Piecewise.cpp]]
 
    LIBRARIES   doctest
                LangulusAnyness

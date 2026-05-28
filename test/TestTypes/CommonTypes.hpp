@@ -13,8 +13,8 @@ using RTTI::VMeta;
 class IncompleteType;
 
 
-template<class T>
-struct SheddableType { using CTTI_Sheddable = T; };
+//template<class T>
+//struct SheddableType { using CTTI_Sheddable = T; };
 
 enum class Pi {
    Number = 314,
@@ -27,6 +27,55 @@ struct NotReflectableExtern {};
 struct ReflectableIntern    { using CTTI_ReflectAs = char; };
 struct ReflectableExtern    {};
 struct ReflectableAsSelf    { using CTTI_ReflectAs = ReflectableAsSelf; };
+
+template<class T>
+struct SheddableType;
+
+template<CT::NotVoid T>
+struct SheddableType<T> {
+   using CTTI_Sheddable = T;
+   using CTTI_Typed = T;
+
+   T instance;
+
+   SheddableType(T t) : instance {LglsFwd(t)} {}
+};
+
+template<CT::Void T>
+struct SheddableType<T> {
+   using CTTI_Sheddable = T;
+   using CTTI_Typed = T;
+};
+
+template<class T>
+struct SheddableTypeCastableExplicit : SheddableType<T> {
+   using SheddableType<T>::SheddableType;
+   using SheddableType<T>::instance;
+   explicit operator T () noexcept { return LglsFwd(instance); }
+   explicit operator T () const noexcept { return LglsFwd(const_cast<SheddableTypeCastableExplicit<T>*>(this)->instance); }
+};
+
+template<class T>
+struct SheddableTypeCastableImplicit : SheddableType<T> {
+   using SheddableType<T>::SheddableType;
+   using SheddableType<T>::instance;
+   operator T () noexcept { return LglsFwd(instance); }
+   operator T () const noexcept { return LglsFwd(const_cast<SheddableTypeCastableImplicit<T>*>(this)->instance); }
+};
+
+template<class T>
+struct SheddableTypeCastableUsingMethod : SheddableType<T> {
+   using SheddableType<T>::SheddableType;
+   using SheddableType<T>::instance;
+   auto TypedCast()       noexcept -> T&       { return instance; }
+   auto TypedCast() const noexcept -> T const& { return instance; }
+};
+
+struct CustomTypedType { using CTTI_Typed = int; };
+struct CustomTypedTypeDerived : CustomTypedType { };
+struct CustomUntypedType : CustomTypedType { using CTTI_Typed = void; };
+enum TypedEnum : int64_t {one1, two2};
+enum class TypedEnumClass : int64_t {one1, two2};
 
 namespace Langulus::CTTI
 {
@@ -853,6 +902,3 @@ static_assert(    ::std::is_copy_constructible_v<ForcefullyPod>);
 static_assert(    ::std::is_move_constructible_v<ForcefullyPod>);
 static_assert(not ::std::is_copy_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
 static_assert(not ::std::is_move_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
-
-enum TypedEnum : int64_t {one1, two2};
-enum class TypedEnumClass : int64_t {one1, two2};

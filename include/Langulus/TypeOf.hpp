@@ -28,6 +28,8 @@ namespace Langulus::CT::Inner
    ///      type list, it will produce a compile-time error.                  
    template<class T, size_t INDEX>
    consteval auto GetUnderlyingType() {
+      static_assert(not ::std::is_const_v<T>, "Strip constness first");
+      static_assert(not ::std::is_volatile_v<T>, "Strip volatileness first");
       static_assert(not ::std::is_reference_v<T>, "Strip references first");
 
       if constexpr (::std::is_bounded_array_v<T>) {
@@ -100,7 +102,7 @@ namespace Langulus
    ///   - if T has CTTI_Typed/value_type -> return the inner type(s)         
    ///   - otherwise just return a void type                                  
    template<class T, int INDEX = 0>
-   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Deref<T>, INDEX>())::First;
+   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Decvq<Deref<T>>, INDEX>())::First;
 
    namespace CT
    {

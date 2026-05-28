@@ -97,9 +97,20 @@ namespace Langulus::CT
 
 namespace Langulus
 {
+   namespace Inner
+   {
+      template<class T>
+      consteval auto GetDeintInner() {
+         if constexpr (CT::Intent<T>)
+            return Types<TypeOf<T>> {};
+         else
+            return Types<T> {};
+      }
+   }
+
    /// Shed only the intent from a type, if any                               
    template<class T>
-   using Deint = Tif<CT::Intent<Deref<T>>, TypeOf<T>, T>;
+   using Deint = typename decltype(Inner::GetDeintInner<T>())::First;
 
    /// Decay an intent to the contained data                                  
    ///   @param intent the intent to decay                                    

@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/TypeOf.hpp>
+#include "TestTypes/CommonTypes.hpp"
 #include <string_view>
 #include <array>
 #include <vector>
@@ -17,50 +18,6 @@ using namespace Langulus;
 ///                                                                           
 /// CT::Typed / CT::Untyped                                                   
 ///                                                                           
-namespace
-{
-   template<class T>
-   struct SheddableType {
-      using CTTI_Sheddable = T;
-      using CTTI_Typed = T;
-
-      T instance;
-
-      SheddableType(T t) : instance {LglsFwd(t)} {}
-   };
-
-   template<class T>
-   struct SheddableTypeCastableExplicit : SheddableType<T> {
-      using SheddableType<T>::SheddableType;
-      using SheddableType<T>::instance;
-      explicit operator T () noexcept { return LglsFwd(instance); }
-      explicit operator T () const noexcept { return LglsFwd(const_cast<SheddableTypeCastableExplicit<T>*>(this)->instance); }
-   };
-
-   template<class T>
-   struct SheddableTypeCastableImplicit : SheddableType<T> {
-      using SheddableType<T>::SheddableType;
-      using SheddableType<T>::instance;
-      operator T () noexcept { return LglsFwd(instance); }
-      operator T () const noexcept { return LglsFwd(const_cast<SheddableTypeCastableImplicit<T>*>(this)->instance); }
-   };
-
-   template<class T>
-   struct SheddableTypeCastableUsingMethod : SheddableType<T> {
-      using SheddableType<T>::SheddableType;
-      using SheddableType<T>::instance;
-      auto TypedCast()       noexcept -> T&       { return instance; }
-      auto TypedCast() const noexcept -> T const& { return instance; }
-   };
-
-   struct CustomTypedType { using CTTI_Typed = int; };
-   struct CustomTypedTypeDerived : CustomTypedType { };
-   struct CustomUntypedType : CustomTypedType { using CTTI_Typed = void; };
-   enum TypedEnum : int64_t {one1, two2};
-   enum class TypedEnumClass : int64_t {one1, two2};
-   struct IncompleteType;
-}
-
 TEST_CASE_TEMPLATE("Testing typed type", TestType
    , std::vector<bool>
    , std::string_view
