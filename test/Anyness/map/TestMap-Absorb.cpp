@@ -1070,14 +1070,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          
          auto contains_full = [&](T& a) {
             REQUIRE      (a.Contains(*originalElement1));
-            REQUIRE      (a.Contains(TPair                       {*originalElement1, *originalElement2}));
-            REQUIRE      (a.Contains(TPair<E1 const&, E2 const&> {*originalElement1, *originalElement2}));
-            REQUIRE_FALSE(a.Contains(TPair<E1 const&, E2 const&> {*e1, *originalElement2}));
-            REQUIRE_FALSE(a.Contains(TPair<E1 const&, E2 const&> {*originalElement1, *e2}));
+            REQUIRE      (a.ContainsEx(TPair                       {*originalElement1, *originalElement2}));
+            REQUIRE      (a.ContainsEx(TPair<E1 const&, E2 const&> {*originalElement1, *originalElement2}));
+            REQUIRE_FALSE(a.ContainsEx(TPair<E1 const&, E2 const&> {*e1, *originalElement2}));
+            REQUIRE_FALSE(a.ContainsEx(TPair<E1 const&, E2 const&> {*originalElement1, *e2}));
             REQUIRE_FALSE(a.Contains(*e1));
             REQUIRE_FALSE(a.Contains(*originalElement2));
-            REQUIRE_FALSE(a.Contains(TPair           {*e1, *e2}));
-            REQUIRE_FALSE(a.Contains(TPair<E1&, E2&> {*e1, *e2}));
+            REQUIRE_FALSE(a.ContainsEx(TPair           {*e1, *e2}));
+            REQUIRE_FALSE(a.ContainsEx(TPair<E1&, E2&> {*e1, *e2}));
          };
 
          contains_full(pack_referred1);
@@ -1087,9 +1087,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          if constexpr (CT::Sparse<E1, E2>) {
             REQUIRE      (pack_cloned.GetDenseAt(0).Contains(DenseCast(*originalElement1)));
             REQUIRE_FALSE(pack_cloned.GetDenseAt(0).Contains(DenseCast(*originalElement2)));
-            REQUIRE      (pack_cloned.GetDenseAt(0).Contains(TPair {DenseCast(*originalElement1), DenseCast(*originalElement2)}));
-            REQUIRE_FALSE(pack_cloned.Contains(TPair {*originalElement1, *originalElement2}));
-            REQUIRE_FALSE(pack_cloned.Contains(TPair {*e1, *e2}));
+            REQUIRE      (pack_cloned.GetDenseAt(0).ContainsEx(TPair {DenseCast(*originalElement1), DenseCast(*originalElement2)}));
+            REQUIRE_FALSE(pack_cloned.ContainsEx(TPair {*originalElement1, *originalElement2}));
+            REQUIRE_FALSE(pack_cloned.ContainsEx(TPair {*e1, *e2}));
          }
          else contains_full(pack_cloned);
 
