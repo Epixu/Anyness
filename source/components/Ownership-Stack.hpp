@@ -112,6 +112,11 @@ namespace Langulus::Anyness::Component
          self.template ResetCount<SID>();
       }
 
+      /// Same as ResetAllocationInner, but here in case container lacks it   
+      constexpr void ResetAllAllocations(this auto&& self) noexcept {
+         ThisCom::ResetAllocationInner();
+      }
+
       /// Default-initialize the component                                    
       ///   @attention this will not dereference previous allocation          
       constexpr void ConstructDefault(this auto& self) noexcept {

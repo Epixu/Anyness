@@ -188,7 +188,12 @@ namespace Langulus::Anyness::Component
             DecvqAllCast(a)->AddRef(-1);
          }
       }
-      
+
+      /// Same as free, but here in case container isn't Multiown             
+      void FreeAll(this auto& self) noexcept {
+         self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
+      }
+
       /// Destroy the first element                                           
       ///   @attention doesn't perform any referencing or indirection         
       ///   @attention assumes first element is validly constructed           

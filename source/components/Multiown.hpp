@@ -103,6 +103,13 @@ namespace Langulus::Anyness::Component
          self.C::ResetAllocationInner();
       }
 
+      /// Resets all allocations                                              
+      constexpr void ResetAllAllocations(this auto&& self) noexcept {
+         Subcomponents::ForEach([&]<class C> noexcept {
+            if_available_gcc(C::ResetAllocationInner)();
+         });
+      }
+
       /// Default-initialize the component                                    
       ///   @attention this will not dereference previous allocation          
       template<class SELF>
@@ -145,13 +152,22 @@ namespace Langulus::Anyness::Component
          self.C::Keep();
       }
 
-      /// Dereference memory block once and destroy all elements if data was  
-      /// fully dereferenced                                                  
+      /// Dereference specific memory block once and destroy all elements     
+      /// associated with it, if data was fully dereferenced                  
       ///   @attention this never modifies any state                          
       template<Cid SID = 0>
       constexpr void Free(this auto& self) noexcept {
          using C = typename Subcomponents::template At<SID>;
          return self.C::Free();
+      }
+      
+      /// Dereference all memory blocks once and destroy all elements if data 
+      /// was fully dereferenced                                              
+      ///   @attention this never modifies any state                          
+      constexpr void FreeAll(this auto& self) noexcept {
+         Subcomponents::ForEach([&]<class C> noexcept {
+            if_available_gcc(C::Free)();
+         });
       }
       
       /// Destroy the first element                                           

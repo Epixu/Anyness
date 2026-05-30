@@ -418,6 +418,13 @@ namespace Langulus::Anyness::Component
          self.C::ResetType();
       }
       
+      /// Reset all types                                                     
+      constexpr void ResetAllTypes(this auto& self) noexcept {
+         Subcomponents::ForEach([&]<class C> noexcept {
+            if_available(self.C::ResetType());
+         });
+      }
+      
       /// Get the contained type (inner)                                      
       template<Cid SID = 0>
       constexpr auto& GetTypeInner(this auto&& self) noexcept {

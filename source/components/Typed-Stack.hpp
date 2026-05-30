@@ -425,6 +425,11 @@ namespace Langulus::Anyness::Component
          }
       }
       
+      /// Resets all types, in case container is not Multitype                
+      constexpr void ResetAllTypes(this auto& self) noexcept {
+         ThisCom::ResetType();
+      }
+      
       /// Get the contained type (inner)                                      
       template<Cid SID = ID> requires (SID == ID)
       constexpr auto& GetTypeInner(this auto&& self) noexcept {

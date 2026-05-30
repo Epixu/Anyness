@@ -76,7 +76,7 @@ namespace Langulus::Anyness::Component
       ///      container is statically-typed.                                 
       ///   @param arguments Constructor arguments                            
       ///   @return a reference or handle to the newly created element        
-      template<class E = void, Cid SID = ID, CT::Container C, class...A> requires Relevant<SID>
+      template<class E = void, Cid SID = ID, CT::Container C, class...A> requires Relevant<SID>//TODO its not clear whether Emplace works on all dimensions or not - figure it out
       auto Emplace(this C& self, A&&...arguments)
       -> DecidePick<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
          auto a = self.template GetAllocation<SID>();
@@ -110,7 +110,7 @@ namespace Langulus::Anyness::Component
                      ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
                }
                catch (...) {
-                  self.template ResetAllocationInner<SID>();
+                  self.ResetAllAllocations();
                   throw;
                }
             }
@@ -137,7 +137,7 @@ namespace Langulus::Anyness::Component
                      ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
                }
                catch (...) {
-                  self.template ResetAllocationInner<SID>();
+                  self.ResetAllAllocations();
                   throw;
                }
             }
@@ -170,7 +170,7 @@ namespace Langulus::Anyness::Component
                   }
 
                   Allocator::Deallocate(DecvqAllCast(a));
-                  self.template ResetAllocationInner<SID>();
+                  self.ResetAllAllocations();
                   throw;
                }
             }

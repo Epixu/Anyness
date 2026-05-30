@@ -98,7 +98,7 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty()) {
             if (al->GetUses() > 1) {
                DecvqAllCast(al)->AddRef(-1);
-               self.ResetAllocationInner();
+               self.ResetAllAllocations();
             }
             return;
          }
@@ -117,7 +117,7 @@ namespace Langulus::Anyness::Component
             // allocation, because it isn't ours.                       
             self.template DestroyAllElements<false>();
             DecvqAllCast(al)->AddRef(-1);
-            self.ResetAllocationInner();
+            self.ResetAllAllocations();
          }
       }
 
@@ -126,11 +126,10 @@ namespace Langulus::Anyness::Component
       ///   @attention notice that heap pointer is not zeroed here, as it     
       ///      is not a requirement. It is UB if you GetRaw while count is 0! 
       void Reset(this auto& self) {
-         //TODO reset all dimensions??
-         self.Free();
-         self.ResetAllocationInner();
+         if_available(self.FreeAll());
+         if_available(self.ResetAllAllocations());
          if_available(self.ResetState());
-         if_available(self.ResetType());
+         if_available(self.ResetAllTypes());
       }
    };
 }
