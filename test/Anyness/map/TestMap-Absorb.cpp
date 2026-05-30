@@ -107,6 +107,78 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 #if LANGULUS(BENCHMARK)
    using stdmap = ::std::unordered_map<E1, E2>;
 #endif
+   
+   GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      const ScopedE1 element3{556};
+      const ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(*element3, *element4);
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      const ScopedE1 element3{556};
+      const ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(Refer(*element3), Refer(*element4));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (copied), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      const ScopedE1 element3{556};
+      const ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(Copy(*element3), Copy(*element4));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (cloned), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      const ScopedE1 element3{556};
+      const ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(Clone(*element3), Clone(*element4));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (move), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      ScopedE1 element3{556};
+      ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(::std::move(*element3), ::std::move(*element4));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (move using intent), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      ScopedE1 element3{556};
+      ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(Move(*element3), Move(*element4));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (abandon), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      ScopedE1 element3{556};
+      ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(Abandon(*element3), Abandon(*element4));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (disown), and then destroyed") {
+      const ScopedE1 element1{555};
+      const ScopedE2 element2{111};
+      const ScopedE1 element3{556};
+      const ScopedE2 element4{112};
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      piecewise1.Assign(Disown(*element3), Disown(*element4));
+   }
 
    GIVEN("Absorb-constructed container") {
       const ScopedE1 originalElement1{556};
