@@ -385,7 +385,7 @@ namespace Langulus::Anyness::Component
 
          if (self.template GetCount<SID>() > desiredReserve) {
             auto temp = self.SelectInner(desiredReserve);
-            temp.template DestroyAllElements<true, SID>();
+            temp.template DestroyAllElements<true/*, SID*/>();
             if_available(self.template SetCountInner<SID>(desiredReserve));
          }
 

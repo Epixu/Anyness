@@ -170,17 +170,19 @@ namespace Langulus::Anyness::Component
          if (a->GetUses() == 1) {
             // Dereference, and eventually destroy all elements - all   
             // indirections, as well as dense elements.                 
-            Id::ForEach([&self]<Cid D> {
+            /*Id::ForEach([&self]<Cid D> {
                self.template DestroyAllElements<true, D>();
-            });
+            });*/
+            self.template DestroyAllElements<true>();
             Allocator::Deallocate(DecvqAllCast(a));
          }
          else {
             // Dereference, and eventually destroy all elements -       
             // affect indirections and elements behind them only!       
-            Id::ForEach([&self]<Cid D> {
+            /*Id::ForEach([&self]<Cid D> {
                self.template DestroyAllElements<false, D>();
-            });
+            });*/
+            self.template DestroyAllElements<false>();
             DecvqAllCast(a)->AddRef(-1);
          }
       }

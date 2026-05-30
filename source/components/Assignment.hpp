@@ -221,9 +221,9 @@ namespace Langulus::Anyness::Component
                   if (a->GetUses() == 1) {
                      // We don't deallocate the memory. We can reuse it.
                      // But we have to destroy all shared elements.     
-                     CommonIds::ForEach([&self]<Cid D> {
-                        self.template DestroyAllElements<true, D>();
-                     });
+                     //CommonIds::ForEach([&self]<Cid D> {
+                        self.template DestroyAllElements<true/*, D*/>();
+                     //});
 
                      if constexpr (CT::ContainsMany<C>)
                         self.template AllocateLess<SID>(1);

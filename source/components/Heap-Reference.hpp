@@ -624,18 +624,21 @@ namespace Langulus::Anyness::Component
       }
 
       /// Destroys all elements.                                              
-      ///   @attention destroys one dimension at a time!                      
+            ///   @attention destroys one dimension at a time!                      
       ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
-      template<bool FORCE_DESTROY = true, Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<bool FORCE_DESTROY = true/*, Cid SID = Id::First*/, CT::Container C>// requires Relevant<SID>
       void DestroyAllElements(this C& self) assumptious {
          if constexpr (FORCE_DESTROY or CT::DeeplyOwned<C>) {
-            if (self.template IsEmpty<SID>())
-               return;
+            //if (self.template IsEmpty<SID>())
+            //   return;
 
             self.Apply([](auto&& item) {
-               item.template DestroyElement<FORCE_DESTROY, SID>();
+               Id::ForEach([&item]<Cid D> {
+                  item.template DestroyElement<FORCE_DESTROY, D>();
+               });
+               //item.template DestroyElement<FORCE_DESTROY, SID>();
             });
          }
       }

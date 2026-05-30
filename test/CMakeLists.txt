@@ -21,7 +21,7 @@ add_langulus_test(LangulusAnynessTest
                TestTypeOf.cpp
                TestTypes.cpp
                
-               CT/TestAbstract.cpp
+               #[[CT/TestAbstract.cpp
                CT/TestAkin.cpp
                CT/TestAllocatable.cpp
                CT/TestBool.cpp
@@ -37,7 +37,7 @@ add_langulus_test(LangulusAnynessTest
                
                $<IF:$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>,Allocator/TestManaged.cpp,Allocator/TestUnmanaged.cpp>
                
-               #[[Anyness/TestText.cpp
+               Anyness/TestText.cpp
                Anyness/TestBytes.cpp
                Anyness/TestTRef.cpp
                Anyness/TestTOwn.cpp
