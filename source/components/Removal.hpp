@@ -95,20 +95,27 @@ namespace Langulus::Anyness::Component
             return;
          }
 
+         if (self.IsEmpty()) {
+            if (al->GetUses() > 1) {
+               DecvqAllCast(al)->AddRef(-1);
+               self.ResetAllocationInner();
+            }
+            return;
+         }
+
          if (al->GetUses() == 1) {
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the memory and type  
             // only if the container keeps track of the count separately
-            self.DestroyAllElements();
+            self.template DestroyAllElements<true>();
             if_available(self.ResetHashTable());
             self.ResetCount();
          }
          else {
             // If reached, then data is referenced from multiple places.
-            // Don't call destructors, just dereference.                
+            // Don't call destructors, just dereference and clear       
+            // allocation, because it isn't ours.                       
             self.template DestroyAllElements<false>();
-
-            // Dereference memory                                       
             DecvqAllCast(al)->AddRef(-1);
             self.ResetAllocationInner();
          }

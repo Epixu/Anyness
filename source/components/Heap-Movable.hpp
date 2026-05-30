@@ -186,16 +186,13 @@ namespace Langulus::Anyness::Component
             //self.template SetType<Id::First>(from.template GetType<Id::First>());
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
-            if constexpr (I::IsKept()) {
-               if constexpr (I::IsMoved()) {
-                  // Move                                               
-                  if constexpr (CT::StronglyOwned<I>) {
-                     from.template SetHeapInner<Id::First>(nullptr);
-                     if_available(from.ResetState());
-                     if_available(from.template ResetType<Id::First>());
-                  }
-               }
-               else static_assert(CT::Referred<I>);
+            if constexpr (I::IsKept() and I::IsMoved() and CT::StronglyOwned<I>) {
+               from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
+               if_available(from.ResetState());
+               Id::ForEach([&from]<Cid D>{
+                  (void) from;
+                  if_available(from.template ResetType<D>());
+               });
             }
          }
       }

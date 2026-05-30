@@ -173,7 +173,8 @@ namespace Langulus::Anyness::Component
             /*Id::ForEach([&self]<Cid D> {
                self.template DestroyAllElements<true, D>();
             });*/
-            self.template DestroyAllElements<true>();
+            if (not self.IsEmpty())
+               self.template DestroyAllElements<true>();
             Allocator::Deallocate(DecvqAllCast(a));
          }
          else {
@@ -182,7 +183,8 @@ namespace Langulus::Anyness::Component
             /*Id::ForEach([&self]<Cid D> {
                self.template DestroyAllElements<false, D>();
             });*/
-            self.template DestroyAllElements<false>();
+            if (not self.IsEmpty())
+               self.template DestroyAllElements<false>();
             DecvqAllCast(a)->AddRef(-1);
          }
       }
