@@ -47,6 +47,7 @@ namespace Langulus::Anyness
       //using CTTI_Typed     = Types<K, V>;
 
       static constexpr bool TypeErased = false;
+      static constexpr bool Emergent   = true;
 
       using Base     = Inner::TPairBase<K, V>;
       using DeepType = Any;
@@ -74,7 +75,9 @@ namespace Langulus::Anyness
 
       /// Manual constructor                                                  
       constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
-         : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {}
+         : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
+         Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
+      }
 
       constexpr TPair(CT::Handle auto&& a1, CT::Handle auto&& a2) {
          this->template EmplaceWithIntent<0>(FWDIntent(a1));
@@ -82,9 +85,11 @@ namespace Langulus::Anyness
       }
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
          : Base{Stackwise, LglsFwd(a1), LglsFwd(a2)} {
+         Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1)
          : Base{Stackwise, LglsFwd(a1), {}} {
+         Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
 
       /// Construction that absorbs the provided pair                         

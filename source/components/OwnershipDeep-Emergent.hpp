@@ -59,7 +59,7 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      /// Find and populate an indirection entry                              
+      /// Find _and populate_ an indirection entry                            
       template<bool CUSTOM_POINTERS, CT::Container C>
       static void FindEntry(
          AllocationPtr const* entries, CT::Sparse auto ptr,
@@ -96,113 +96,177 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
-      /// Nests through all indirection layers of the first contained element 
+      /// Nests through all indirection layers of the first contained element.
+      /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
       ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
+      ///   @attention individuals will be referenced if REF_INDIVIDUAL is    
+      ///      enabled, regardless if an entry was found.                     
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
-         /*static_assert(CT::ContainsOne<C>,
-            "Referencing only first element in a container with many. GetHandle() first?");*/
-
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't keep anything in a container without ownership");
          }
 
-         /*if (self.template IsEmpty<SID>())
-            return;*/
+         auto entries = self.template GetEntriesInner<SID>();
+         if (not entries)
+            return;
 
          using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Referencing a type-erased element                        
             const auto T = self.template GetType<SID>();
+            LglsAssumeDev(T.IsSparse(),
+               "Don't call KeepElementDeepStandardPointers if container isn't sparse");
 
-            if (T.IsSparse()) {
-               auto entries = self.template GetEntriesInner<SID>();
-               if (not entries)
-                  return;
+            const auto subT = T.GetDeptr();
+            const auto ptr = *static_cast<void**>(self.template GetRawVoid<SID>());
+            LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
-               const auto subT = T.GetDeptr();
-               const auto ptr = *static_cast<void**>(self.template GetRawVoid<SID>());
-               LglsAssumeDevAndOptimize(ptr, "Null pointer");
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               if constexpr (FIND_MISSING)
+                  ThisCom::template FindEntry<false, C>(entries, ptr);
+            #endif
 
-               if (subT.IsSparse()) {
-                  // Pointer to pointer                                 
-                  H temp {ptr, entries + 1, subT};
-                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
+            if (subT.IsSparse()) {
+               // Pointer to pointer                                    
+               H temp {ptr, entries + 1, subT};
+               temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
+            }
+            else if constexpr (REF_INDIVIDUAL) {
+               if (const auto referencer = subT.GetReferencer()) {
+                  // Pointer to dense                                   
+                  referencer(ptr, 1);
                }
-               else if constexpr (REF_INDIVIDUAL) {
-                  if (const auto referencer = subT.GetReferencer()) {
-                     // Pointer to dense                                
-                     referencer(ptr, 1);
-                  }
-               }
-
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  if constexpr (FIND_MISSING)
-                     ThisCom::template FindEntry<false, C>(entries, ptr);
-               #endif
-
-               if (*entries)
-                  DecvqAllCast(*entries)->AddRef(1);
             }
          }
          else {
             //                                                          
             // Referencing a statically-typed element                   
             using T = TypeOf<C, SID>;         
+            static_assert(CT::Sparse<T>,
+               "Don't call KeepElementDeepStandardPointers if container isn't sparse");
 
-            if constexpr (CT::Sparse<T>) {
-               using DT = Deptr<T>;
-               auto entries = self.template GetEntriesInner<SID>();
-               if (not entries)
-                  return;
+            using DT = Deptr<T>;
+            auto ptr = *self.template GetRaw<SID>();
+            LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
-               //auto ptr = *self.template GetRawAs<T, SID>();
-               auto ptr = *self.template GetRaw<SID>();
-               LglsAssumeDevAndOptimize(ptr, "Null pointer");
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               if constexpr (FIND_MISSING)
+                  ThisCom::template FindEntry<false, C>(entries, ptr);
+            #endif
 
-               if constexpr (CT::Sparse<DT>) {
-                  // Pointer to pointer                                 
-                  typename H::Denser temp {ptr, entries + 1};
-                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
-               }
-               else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
-                  // Pointer to dense                                   
-                  ptr->Reference(1);
-               }
-            
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  if constexpr (FIND_MISSING)
-                     ThisCom::template FindEntry<false, C>(entries, ptr);
-               #endif
-
-               if (*entries)
-                  DecvqAllCast(*entries)->AddRef(1);
+            if constexpr (CT::Sparse<DT>) {
+               // Pointer to pointer                                    
+               typename H::Denser temp {ptr, entries + 1};
+               temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
+            }
+            else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+               // Pointer to dense                                      
+               ptr->Reference(1);
             }
          }
+
+         if (*entries)
+            DecvqAllCast(*entries)->AddRef(1);
+      }
+
+      /// Nests through all indirection layers of the first contained element.
+      /// Emergent - every indirection will be sought in the memory manager   
+      /// if MANAGED_MEMORY is enabled.                                       
+      ///   @attention individuals will be referenced if REF_INDIVIDUAL is    
+      ///      enabled, regardless if an entry was found.                     
+      ///   @attention assumes there are no custom pointers involved!         
+      ///   @attention doesn't change any container state                     
+      ///   @attention works on one dimension at a time!                      
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      void KeepElementDeepStandardPointersEmergent(this C& self) assumptious {
+         if constexpr (not CT::Handle<C>) {
+            LglsAssumeDev(self.template GetAllocation<SID>(),
+               "Can't keep anything in a container without ownership");
+         }
+         
+         [[maybe_unused]] Allocation const* entry = nullptr;
+         using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // Referencing a type-erased element                        
+            const auto T = self.template GetType<SID>();
+            LglsAssumeDev(T.IsSparse(),
+               "Don't call KeepElementDeepStandardPointersEmergent if container isn't sparse");
+
+            const auto subT = T.GetDeptr();
+            const auto ptr = *static_cast<void**>(self.template GetRawVoid<SID>());
+            LglsAssumeDevAndOptimize(ptr, "Null pointer");
+
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               entry = Allocator::Find(ptr);
+            #endif
+
+            if (subT.IsSparse()) {
+               // Pointer to pointer                                    
+               H temp {ptr, nullptr, subT};
+               temp.KeepElementDeepStandardPointersEmergent();
+            }
+            else if constexpr (REF_INDIVIDUAL) {
+               if (const auto referencer = subT.GetReferencer()) {
+                  // Pointer to dense                                   
+                  referencer(ptr, 1);
+               }
+            }
+
+         }
+         else {
+            //                                                          
+            // Referencing a statically-typed element                   
+            using T = TypeOf<C, SID>;         
+            static_assert(CT::Sparse<T>,
+               "Don't call KeepElementDeepStandardPointersEmergent if container isn't sparse");
+
+            using DT = Deptr<T>;
+            auto ptr = *self.template GetRaw<SID>();
+            LglsAssumeDevAndOptimize(ptr, "Null pointer");
+
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               entry = Allocator::Find(ptr);
+            #endif
+
+            if constexpr (CT::Sparse<DT>) {
+               // Pointer to pointer                                    
+               typename H::Denser temp {ptr, nullptr};
+               temp.KeepElementDeepStandardPointersEmergent();
+            }
+            else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+               // Pointer to dense                                      
+               ptr->Reference(1);
+            }
+         }
+
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            if (entry)
+               DecvqAllCast(entry)->AddRef(1);
+         #endif
       }
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Nests through all indirection layers of the first contained element.
       /// Supports any number of custom pointer indirections.                 
+      /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
       ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
+      ///   @attention individuals will be referenced if REF_INDIVIDUAL is    
+      ///      enabled, regardless if an entry was found.                     
       ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
-         /*static_assert(CT::ContainsOne<C>,
-            "Referencing only first element in a container with many. GetHandle() first?");*/
-         /*LglsAssumeDev(not self.template IsEmpty<SID>(),
-            "No point in calling this on an empty container");*/
-
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't keep anything in a container without ownership");
@@ -216,7 +280,8 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::TypeErased<C>) {
             // Check if containing indirections                         
             auto T = self.template GetType<SID>();
-            LglsAssumeDev(T.IsSparse(), "Sparseness mismatch");
+            LglsAssumeDev(T.IsSparse(),
+               "Don't call KeepElementDeepCustomPointers if container isn't sparse");
 
             void* src = self.template GetRawVoid<SID>();
             while (src and T.IsSparse()) {
@@ -245,7 +310,8 @@ namespace Langulus::Anyness::Component
          }
          else {
             using T = TypeOf<C, SID>;
-            static_assert(CT::Sparse<T>, "Sparseness mismatch");
+            static_assert(CT::Sparse<T>,
+               "Don't call KeepElementDeepCustomPointers if container isn't sparse");
 
             auto& ptr = *self.template Get<void, SID>();
             ForEachIndirection(ptr, [&](auto& i) {
@@ -262,17 +328,91 @@ namespace Langulus::Anyness::Component
                DenseCast(ptr).Reference(1);
          }
       }
+
+      /// Nests through all indirection layers of the first contained element.
+      /// Supports any number of custom pointer indirections.                 
+      /// Emergent - every indirection will be sought in the memory manager.  
+      ///   @attention individuals will be referenced if REF_INDIVIDUAL is    
+      ///      enabled, regardless if an entry was found.                     
+      ///   @attention assumes container is not disowned!                     
+      ///   @attention doesn't change any container state                     
+      ///   @attention works on one dimension at a time!                      
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      void KeepElementDeepCustomPointersEmergent(this C& self) assumptious {
+         if constexpr (not CT::Handle<C>) {
+            LglsAssumeDev(self.template GetAllocation<SID>(),
+               "Can't keep anything in a container without ownership");
+         }
+
+         if constexpr (CT::TypeErased<C>) {
+            // Check if containing indirections                         
+            auto T = self.template GetType<SID>();
+            LglsAssumeDev(T.IsSparse(),
+               "Don't call KeepElementDeepCustomPointersEmergent if container isn't sparse");
+
+            void* src = self.template GetRawVoid<SID>();
+            while (src and T.IsSparse()) {
+               auto nextT = T.GetDeptr();
+               auto entry = Allocator::Find(src);
+
+               if (nextT.IsSparse()) {
+                  // Pointer T -> Pointer nextT                         
+                  T.GetDereffer()(src, &src);
+               }
+               else if constexpr (REF_INDIVIDUAL) {
+                  if (const auto referencer = nextT.GetReferencer()) {
+                     // Pointer T -> Dense nextT                        
+                     referencer(const_cast<void*>(UnpackPointer(T, nextT, src)), 1);
+                  }
+               }
+
+               if (entry)
+                  DecvqAllCast(entry)->AddRef(1);
+
+               // Move to next indirection                              
+               T = nextT;
+            }
+         }
+         else {
+            using T = TypeOf<C, SID>;
+            static_assert(CT::Sparse<T>,
+               "Don't call KeepElementDeepCustomPointersEmergent if container isn't sparse");
+
+            auto& ptr = *self.template Get<void, SID>();
+            ForEachIndirection(ptr, [&](auto& i) {
+               if (auto entry = Allocator::Find(i))
+                  DecvqAllCast(entry)->AddRef(1);
+            });
+
+            if constexpr (REF_INDIVIDUAL and CT::Referenced<Decay<T>>)
+               DenseCast(ptr).Reference(1);
+         }
+      }
    #endif
 
       /// Deep-reference an element                                           
+      ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
+      ///      it in the memory manager, if MANAGED_MEMORY feature is enabled.
+      ///      Ignored if container is marked Emergent.                       
+      ///   @attention individuals will be referenced if REF_INDIVIDUAL is    
+      ///      enabled, regardless if an entry was found.                     
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeep(this C& self) assumptious {
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            ThisCom::template KeepElementDeepCustomPointers<FIND_MISSING, SID>();
-         #else
-            ThisCom::template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
-         #endif
+         if constexpr (requires { C::Emergent; }) {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               ThisCom::template KeepElementDeepCustomPointersEmergent<SID>();
+            #else
+               ThisCom::template KeepElementDeepStandardPointersEmergent<SID>();
+            #endif
+         }
+         else {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               ThisCom::template KeepElementDeepCustomPointers<FIND_MISSING, SID>();
+            #else
+               ThisCom::template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
+            #endif
+         }
       }
 
       /// Nests through all indirection layers and destroys elements and      

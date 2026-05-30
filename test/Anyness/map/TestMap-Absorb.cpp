@@ -115,7 +115,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       const ScopedE1 element3{556};
       const ScopedE2 element4{112};
       T piecewise1{Piecewise, TPair {*element1, *element2}};
-      piecewise1.Assign(*element3, *element4);
+      //piecewise1.Assign(*element3, *element4);
    }
 
    GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {

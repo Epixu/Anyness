@@ -130,8 +130,36 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void Keep(this C& self) noexcept {
          auto a = self.template GetAllocation<SID>();
-         if (not a)
-            return; // Container is disowned, and nothing gets reffed   
+         if (not a) {
+            // Container is disowned, and nothing gets reffed, unless   
+            // the container is marked Emergent. Emergent containers    
+            // don't support disownment, so that you can do deep        
+            // ownership without having a main allocation, so that      
+            // elements can lie on the stack instead. Examples:         
+            // TPair and THandlePair                                    
+            if constexpr (requires { C::Emergent; }) {
+               if constexpr (CT::DeeplyOwned<C>) {
+                  // Reference all indirections and (optionally) items  
+                  if constexpr (CT::TypeErased<C>) {
+                     if (self.template IsSparse<SID>()) {
+                        self.Apply([](auto&& item) {
+                           Id::ForEach([&item]<Cid D> {
+                              item.template KeepElementDeep<false, D>();
+                           });
+                        });
+                     }
+                  }
+                  else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
+                     self.Apply([](auto&& item) {
+                        Id::ForEach([&item]<Cid D> {
+                           item.template KeepElementDeep<false, D>();
+                        });
+                     });
+                  }
+               }
+            }
+            return;
+         }
 
          DecvqAllCast(a)->AddRef(1);
 
