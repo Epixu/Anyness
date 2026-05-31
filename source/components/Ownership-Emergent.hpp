@@ -202,20 +202,22 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::DeeplyOwned<C>) {
                   // Dereference all indirections and (optionally) items
                   if constexpr (CT::TypeErased<C>) {
-                     if (self.template IsSparse<SID>()) {
+                     if (not self.IsEmpty() and self.template IsSparse<SID>()) {
                         self.Apply([](auto&& item) {
                            Id::ForEach([&item]<Cid D> {
-                              item.template FreeElementDeep<false, D>();
+                              item.template DestroyElementDeep<false, D>();
                            });
                         });
                      }
                   }
                   else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
-                     self.Apply([](auto&& item) {
-                        Id::ForEach([&item]<Cid D> {
-                           item.template FreeElementDeep<false, D>();
+                     if (not self.IsEmpty()) {
+                        self.Apply([](auto&& item) {
+                           Id::ForEach([&item]<Cid D> {
+                              item.template DestroyElementDeep<false, D>();
+                           });
                         });
-                     });
+                     }
                   }
                }
             }

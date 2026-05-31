@@ -8,6 +8,32 @@
 #include "TestAnyCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
+namespace Langulus::Anyness
+{
+   // Explicit instantiation for using extern templates in other tests  
+   template struct TAny<Text>;
+   template struct TAny<int>;
+   template struct TAny<Any>;
+   template struct TAny<RT>;
+   template struct TAny<char>;
+
+   template struct TAny<Text*>;
+   template struct TAny<int*>;
+   template struct TAny<Any*>;
+   template struct TAny<RT*>;
+   template struct TAny<char*>;
+
+   template struct TAny<Text**>;
+   template struct TAny<int**>;
+   template struct TAny<Any**>;
+   template struct TAny<RT**>;
+   template struct TAny<char**>;
+
+   template struct TAny<pptr8>;
+   template struct TAny<pptr16>;
+   template struct TAny<pptr32>;
+}
+
 
 TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    // Elements are not allocated by the memory manager                  

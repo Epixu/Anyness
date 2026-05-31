@@ -8,6 +8,32 @@
 #include "TestAnyCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
+namespace Langulus::Anyness
+{
+   // Reuses definitions from TestAny-Empty.cpp. Reduces compile time.  
+   extern template struct TAny<Text>;
+   extern template struct TAny<int>;
+   extern template struct TAny<Any>;
+   extern template struct TAny<RT>;
+   extern template struct TAny<char>;
+
+   extern template struct TAny<Text*>;
+   extern template struct TAny<int*>;
+   extern template struct TAny<Any*>;
+   extern template struct TAny<RT*>;
+   extern template struct TAny<char*>;
+
+   extern template struct TAny<Text**>;
+   extern template struct TAny<int**>;
+   extern template struct TAny<Any**>;
+   extern template struct TAny<RT**>;
+   extern template struct TAny<char**>;
+
+   extern template struct TAny<pptr8>;
+   extern template struct TAny<pptr16>;
+   extern template struct TAny<pptr32>;
+}
+
 
 TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
    // Elements are not allocated by the memory manager                  

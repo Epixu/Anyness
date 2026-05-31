@@ -8,6 +8,32 @@
 #include "TestSetCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
+namespace Langulus::Anyness
+{
+   // Reuses definitions from TestSet-Empty.cpp. Reduces compile time.  
+   extern template struct TSet<Text>;
+   extern template struct TSet<int>;
+   extern template struct TSet<Any>;
+   extern template struct TSet<RT>;
+   extern template struct TSet<char>;
+
+   extern template struct TSet<Text*>;
+   extern template struct TSet<int*>;
+   extern template struct TSet<Any*>;
+   extern template struct TSet<RT*>;
+   extern template struct TSet<char*>;
+
+   extern template struct TSet<Text**>;
+   extern template struct TSet<int**>;
+   extern template struct TSet<Any**>;
+   extern template struct TSet<RT**>;
+   extern template struct TSet<char**>;
+
+   extern template struct TSet<pptr8>;
+   extern template struct TSet<pptr16>;
+   extern template struct TSet<pptr32>;
+}
+
 
 TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
    // Elements are not allocated by the memory manager                  

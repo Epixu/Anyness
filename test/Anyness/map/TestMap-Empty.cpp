@@ -8,6 +8,32 @@
 #include "TestMapCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
+namespace Langulus::Anyness
+{
+   // Explicit instantiation for using extern templates in other tests  
+   template struct TMap<Text, Text>;
+   template struct TMap<int, int>;
+   template struct TMap<Any, Any>;
+   template struct TMap<RT, RT>;
+   template struct TMap<char, char>;
+
+   template struct TMap<Text*, Text*>;
+   template struct TMap<int*, int*>;
+   template struct TMap<Any*, Any*>;
+   template struct TMap<RT*, RT*>;
+   template struct TMap<char*, char*>;
+
+   template struct TMap<Text**, Text**>;
+   template struct TMap<int**, int**>;
+   template struct TMap<Any**, Any**>;
+   template struct TMap<RT**, RT**>;
+   template struct TMap<char**, char**>;
+
+   template struct TMap<pptr8, pptr8>;
+   template struct TMap<pptr16, pptr16>;
+   template struct TMap<pptr32, pptr32>;
+}
+
 
 TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    , Types<Map, Text*, ScopedElement<Text*>, Text*, ScopedElement<Text*>>

@@ -8,6 +8,32 @@
 #include "TestSetCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
+namespace Langulus::Anyness
+{
+   // Explicit instantiation for using extern templates in other tests  
+   template struct TSet<Text>;
+   template struct TSet<int>;
+   template struct TSet<Any>;
+   template struct TSet<RT>;
+   template struct TSet<char>;
+
+   template struct TSet<Text*>;
+   template struct TSet<int*>;
+   template struct TSet<Any*>;
+   template struct TSet<RT*>;
+   template struct TSet<char*>;
+
+   template struct TSet<Text**>;
+   template struct TSet<int**>;
+   template struct TSet<Any**>;
+   template struct TSet<RT**>;
+   template struct TSet<char**>;
+
+   template struct TSet<pptr8>;
+   template struct TSet<pptr16>;
+   template struct TSet<pptr32>;
+}
+
 
 TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    // Elements are not allocated by the memory manager                  

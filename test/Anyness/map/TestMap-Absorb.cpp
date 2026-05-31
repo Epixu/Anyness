@@ -8,6 +8,32 @@
 #include "TestMapCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
+namespace Langulus::Anyness
+{
+   // Reuses definitions from TestMap-Empty.cpp. Reduces compile time.  
+   extern template struct TMap<Text, Text>;
+   extern template struct TMap<int, int>;
+   extern template struct TMap<Any, Any>;
+   extern template struct TMap<RT, RT>;
+   extern template struct TMap<char, char>;
+
+   extern template struct TMap<Text*, Text*>;
+   extern template struct TMap<int*, int*>;
+   extern template struct TMap<Any*, Any*>;
+   extern template struct TMap<RT*, RT*>;
+   extern template struct TMap<char*, char*>;
+
+   extern template struct TMap<Text**, Text**>;
+   extern template struct TMap<int**, int**>;
+   extern template struct TMap<Any**, Any**>;
+   extern template struct TMap<RT**, RT**>;
+   extern template struct TMap<char**, char**>;
+
+   extern template struct TMap<pptr8, pptr8>;
+   extern template struct TMap<pptr16, pptr16>;
+   extern template struct TMap<pptr32, pptr32>;
+}
+
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
    , Types<Map, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>

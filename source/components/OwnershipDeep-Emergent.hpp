@@ -187,12 +187,10 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointersEmergent(this C& self) assumptious {
-         if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.template GetAllocation<SID>(),
-               "Can't keep anything in a container without ownership");
-         }
-         
-         [[maybe_unused]] Allocation const* entry = nullptr;
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            Allocation const* entry = nullptr;
+         #endif
+
          using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
             //                                                          
@@ -334,16 +332,10 @@ namespace Langulus::Anyness::Component
       /// Emergent - every indirection will be sought in the memory manager.  
       ///   @attention individuals will be referenced if REF_INDIVIDUAL is    
       ///      enabled, regardless if an entry was found.                     
-      ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointersEmergent(this C& self) assumptious {
-         if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.template GetAllocation<SID>(),
-               "Can't keep anything in a container without ownership");
-         }
-
          if constexpr (CT::TypeErased<C>) {
             // Check if containing indirections                         
             auto T = self.template GetType<SID>();
@@ -417,11 +409,15 @@ namespace Langulus::Anyness::Component
 
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
+      /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
+      ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
+      ///      sparse elements are always destroyed if fully dereferenced.    
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state or entry            
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      ///   @attention works on one dimension at a time!                      
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
@@ -429,7 +425,7 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't destroy anything in a container without ownership");
-            LglsAssumeDev(not DESTROY or self.template GetUses<SID>() == 1,
+            LglsAssumeDev(not FORCE_DESTROY or self.template GetUses<SID>() == 1,
                "Can't destroy data used from multiple locations");
             if (self.template IsEmpty<SID>())
                return;
@@ -439,7 +435,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Destroying a type-erased element                         
-            const auto T = self.template GetType<SID>();            
+            const auto T = self.template GetType<SID>();
             if (T.IsSparse()) {
                auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
@@ -457,7 +453,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      if (auto subEntry = entries + 1) {
                         H temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                        temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                      }
                   }
                   else if (auto destructor = subT.GetDestructor()) {
@@ -479,7 +475,7 @@ namespace Langulus::Anyness::Component
                      // Dereference all indirection layers.             
                      if (auto subEntry = entries + 1) {
                         H temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                        temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                      }
                   }
                   else if constexpr (REF_INDIVIDUAL) {
@@ -506,7 +502,7 @@ namespace Langulus::Anyness::Component
                   //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
             }
-            else if constexpr (DESTROY) {
+            else if constexpr (FORCE_DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
                   // Call destructor of dense element                   
                   const auto ptr = self.template GetRaw<SID>();
@@ -538,7 +534,7 @@ namespace Langulus::Anyness::Component
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
                      typename H::Denser temp{ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                     temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       
@@ -555,7 +551,7 @@ namespace Langulus::Anyness::Component
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
                      typename H::Denser temp {ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                     temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                   }
                   else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
                      // This element occurs in more than one place.     
@@ -579,7 +575,172 @@ namespace Langulus::Anyness::Component
                   //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
             }
-            else if constexpr (DESTROY and CT::Destroyable<T>) {
+            else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
+               // Call destructor of dense element                      
+               auto& element = self.Get();
+               IF_SAFE(if constexpr (REF_INDIVIDUAL and CT::Referenced<T>)
+                  element.Reference(-1));
+               element.~T();
+            }
+         }
+      }
+
+      /// Nests through all indirection layers and destroys elements and      
+      /// their entries if they are fully dereferenced.                       
+      /// Emergent - every indirection will be sought in the memory manager   
+      /// if MANAGED_MEMORY is enabled.                                       
+      ///   @attention individuals will be dereferenced if REF_INDIVIDUAL is  
+      ///      enabled, regardless if an entry was found.                     
+      ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
+      ///      sparse elements are always destroyed if fully dereferenced.    
+      ///   @attention assumes there are no custom pointers involved!         
+      ///   @attention doesn't change any container state or entry            
+      ///   @attention works on one dimension at a time!                      
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      void DestroyElementDeepStandardPointersEmergent(this C& self) assumptious {
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            Allocation const* entry = nullptr;
+         #endif
+
+         using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // Destroying a type-erased element                         
+            const auto T = self.template GetType<SID>();
+            if (T.IsSparse()) {
+               const auto subT = T.GetDeptr();
+               const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
+               LglsAssumeDevAndOptimize(ptr, "Null pointer");
+
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               entry = Allocator::Find(ptr);
+
+               if (entry and 1 == entry->GetUses()) {
+                  if (subT.IsSparse()) {
+                     // Pointer to pointer.                             
+                     // Destroy all nested indirection layers.          
+                     H temp {ptr, nullptr, subT};
+                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
+                  }
+                  else if (auto destructor = subT.GetDestructor()) {
+                     // Pointer to a complete, destroyable dense.       
+                     // Call the destructor.                            
+                     if constexpr (REF_INDIVIDUAL) {
+                        if (const auto referencer = subT.GetReferencer()) {
+                           if (referencer(ptr, -1) == 0)
+                              destructor(ptr);
+                        }
+                        else destructor(ptr);
+                     }
+                     else destructor(ptr);
+                  }
+               }
+               else {
+            #endif
+                  if (subT.IsSparse()) {
+                     // Pointer to pointer.                             
+                     // Dereference all indirection layers.             
+                     H temp {ptr, nullptr, subT};
+                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
+                  }
+                  else if constexpr (REF_INDIVIDUAL) {
+                     if (const auto referencer = subT.GetReferencer()) {
+                        // This element occurs in more than one place.  
+                        // We're not allowed to deallocate the memory   
+                        // behind it, but we must call destructors if T 
+                        // is referencable and its individual references
+                        // have reached 0. This can happen when hive    
+                        // elements are dereferenced, for example.      
+                        if (referencer(ptr, -1) == 0)
+                           subT.GetDestructor()(ptr);
+                     }
+                  }
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               }
+
+               // Deallocate or dereference                             
+               if (entry) {
+                  if (1 == entry->GetUses())
+                     Allocator::Deallocate(DecvqAllCast(entry));
+                  else
+                     DecvqAllCast(entry)->AddRef(-1);
+               }
+            #endif
+            }
+            else if constexpr (FORCE_DESTROY) {
+               if (const auto destructor = T.GetDestructor()) {
+                  // Call destructor of dense element                   
+                  const auto ptr = self.template GetRaw<SID>();
+                  if constexpr (REF_INDIVIDUAL) {
+                     IF_SAFE(if (const auto referencer = T.GetReferencer())
+                        referencer(ptr, -1));
+                  }
+                  destructor(ptr);
+               }
+            }
+         }
+         else {
+            //                                                          
+            // Destroying a statically-typed element                    
+            using T = TypeOf<C, SID>;
+            
+            if constexpr (CT::Sparse<T>) {
+               using DT = Deptr<T>;
+               auto& ptr = *self.template GetRawAs<T, SID>();
+               if (not ptr)
+                  return;
+
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               entry = Allocator::Find(ptr);
+
+               if (entry and 1 == entry->GetUses()) {
+                  if constexpr (CT::Sparse<DT>) {
+                     // Pointer to pointer.                             
+                     // Destroy all nested indirection layers.          
+                     typename H::Denser temp{ptr, nullptr};
+                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
+                  }
+                  else if constexpr (CT::Destroyable<DT>) {
+                     // Pointer to a complete, destroyable dense.       
+                     // Call the destructor.                            
+                     if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+                        if (ptr->Reference(-1) == 0)
+                           ptr->~DT();
+                     }
+                     else ptr->~DT();
+                  }
+               }
+               else {
+            #endif
+                  if constexpr (CT::Sparse<DT>) {
+                     // Pointer to pointer.                             
+                     // Destroy all nested indirection layers.          
+                     typename H::Denser temp {ptr, nullptr};
+                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
+                  }
+                  else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+                     // This element occurs in more than one place.     
+                     // We're not allowed to deallocate the memory      
+                     // behind it, but we must call destructors if T is 
+                     // referencable and its individual references have 
+                     // reached 0. This can happen when hive elements   
+                     // are dereferenced.                               
+                     if (ptr->Reference(-1) == 0)
+                        ptr->~DT();
+                  }
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               }
+
+               // Deallocate or dereference                             
+               if (entry) {
+                  if (1 == entry->GetUses())
+                     Allocator::Deallocate(DecvqAllCast(entry));
+                  else
+                     DecvqAllCast(entry)->AddRef(-1);
+               }
+            #endif
+            }
+            else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
                // Call destructor of dense element                      
                auto& element = self.Get();
                IF_SAFE(if constexpr (REF_INDIVIDUAL and CT::Referenced<T>)
@@ -592,12 +753,14 @@ namespace Langulus::Anyness::Component
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
+      /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
+      ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
+      ///      sparse elements are always destroyed if fully dereferenced.    
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention doesn't change any container state                     
-      ///   @tparam DESTROY will never destroy a dense element if true        
-      //TODO could use some statically-typed optimizations
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      ///   @attention works on one dimension at a time!                      
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
@@ -605,7 +768,7 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't destroy anything in a container without ownership");
-            LglsAssumeDev(not DESTROY or self.template GetUses<SID>() == 1,
+            LglsAssumeDev(not FORCE_DESTROY or self.template GetUses<SID>() == 1,
                "Can't destroy data used from multiple locations");
             if (self.template IsEmpty<SID>())
                return;
@@ -676,7 +839,89 @@ namespace Langulus::Anyness::Component
                ++entries;
             }
          }
-         else if constexpr (DESTROY) {
+         else if constexpr (FORCE_DESTROY) {
+            if (const auto destructor = T.GetDestructor()) {
+               // Call destructor of dense element                      
+               void* const ptr = self.template GetRawVoid<SID>();
+               if constexpr (REF_INDIVIDUAL) {
+                  IF_SAFE(if (const auto referencer = T.GetReferencer())
+                     referencer(ptr, -1));
+               }
+               destructor(ptr);
+            }
+         }
+      }
+
+      /// Nests through all indirection layers and destroys elements and      
+      /// their entries if they are fully dereferenced.                       
+      /// Emergent - every indirection will be sought in the memory manager   
+      /// if MANAGED_MEMORY is enabled.                                       
+      ///   @attention individuals will be dereferenced if REF_INDIVIDUAL is  
+      ///      enabled, regardless if an entry was found.                     
+      ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
+      ///      sparse elements are always destroyed if fully dereferenced.    
+      ///   @attention doesn't change any container state                     
+      ///   @attention works on one dimension at a time!                      
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      void DestroyElementDeepCustomPointersEmergent(this C& self) assumptious {
+         //                                                             
+         // Destroying a type-erased element                            
+         auto T = self.template GetType<SID>();
+         if (T.IsSparse()) {
+            void const* src = self.template GetRaw<SID>();
+
+            while (src and T.IsSparse()) {
+               auto entry = Allocator::Find(src);
+               auto nextT = T.GetDeptr();
+               const bool nextDense = nextT.IsDense();
+               if (not nextDense) {
+                  // Pointer T -> Pointer nextT                         
+                  T.GetDereffer()(const_cast<void*>(src), &src);
+               }
+               else if (entry and 1 == entry->GetUses()) {
+                  // Pointer T -> Dense nextT, with license to destroy  
+                  if (auto destructor = nextT.GetDestructor()) {
+                     // Pointer to a complete, destroyable dense.       
+                     // Call the destructor.                            
+                     src = UnpackPointer(T, nextT, src);
+                     if constexpr (REF_INDIVIDUAL) {
+                        if (const auto referencer = nextT.GetReferencer()) {
+                           if (referencer(const_cast<void*>(src), -1) == 0)
+                              destructor(const_cast<void*>(src));
+                        }
+                        else destructor(const_cast<void*>(src));
+                     }
+                     else destructor(const_cast<void*>(src));
+                  }
+               }
+               else if constexpr (REF_INDIVIDUAL) {
+                  // Pointer T -> Dense nextT, destroy only if deref    
+                  if (const auto referencer = nextT.GetReferencer()) {
+                     // This element occurs in more than one place.     
+                     // We're not allowed to deallocate the memory      
+                     // behind it, but we must call destructors if T is 
+                     // referencable and its individual references have 
+                     // reached 0. This can happen when hive elements   
+                     // are dereferenced.                               
+                     src = UnpackPointer(T, nextT, src);
+                     if (src and referencer(const_cast<void*>(src), -1) == 0)
+                        nextT.GetDestructor()(const_cast<void*>(src));
+                  }
+               }
+
+               // Deallocate or dereference                             
+               if (entry) {
+                  if (1 == entry->GetUses())
+                     Allocator::Deallocate(DecvqAllCast(entry));
+                  else
+                     DecvqAllCast(entry)->AddRef(-1);
+               }
+
+               // Move to next indirection                              
+               T = nextT;
+            }
+         }
+         else if constexpr (FORCE_DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
                void* const ptr = self.template GetRawVoid<SID>();
@@ -690,13 +935,22 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeep(this C& self) assumptious {
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            ThisCom::template DestroyElementDeepCustomPointers<DESTROY, SID>();
-         #else
-            ThisCom::template DestroyElementDeepStandardPointers<DESTROY, SID>();
-         #endif
+         if constexpr (requires { C::Emergent; }) {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               ThisCom::template DestroyElementDeepCustomPointersEmergent<FORCE_DESTROY, SID>();
+            #else
+               ThisCom::template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY, SID>();
+            #endif
+         }
+         else {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               ThisCom::template DestroyElementDeepCustomPointers<FORCE_DESTROY, SID>();
+            #else
+               ThisCom::template DestroyElementDeepStandardPointers<FORCE_DESTROY, SID>();
+            #endif
+         }
       }
 
       /// Emplace on top of the first element using an intent                 
@@ -719,9 +973,6 @@ namespace Langulus::Anyness::Component
                return;
          }
 
-         /*static_assert(CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. "
-            "GetHandle() first?");*/
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations"
