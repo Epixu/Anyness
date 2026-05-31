@@ -277,17 +277,15 @@ namespace Langulus::Anyness::Component
       }
 
       /// Destroys all elements.                                              
-            ///   @attention destroys one dimension at a time!                      
+      ///   @attention destroys all relevant dimensions at once!              
       ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
-      template<bool FORCE_DESTROY = true/*, Cid SID = 0*/>
+      template<bool FORCE_DESTROY = true>
       void DestroyAllElements(this auto& self) assumptious {
-         Subcomponents::ForEach([&]<class C> {
+         Subcomponents::ForEach([&]<class C> assumptious {
             self.C::template DestroyAllElements<FORCE_DESTROY>();
          });
-         /*using C = typename Subcomponents::template At<SID>;
-         self.C::template DestroyAllElements<FORCE_DESTROY>();*/
       }
 
       #undef if_inherits

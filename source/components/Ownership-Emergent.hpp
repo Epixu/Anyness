@@ -43,8 +43,9 @@ namespace Langulus::Anyness::Component
             return Allocator::Find(self.template GetRaw<SID>());
          #else
             (void)self;
-            static_assert(false, "Emergent ownership is not allowed "
-                                 "when managed memory is disabled");
+            return nullptr;
+            //static_assert(false, "Emergent ownership is not allowed "
+            //                     "when managed memory is disabled");
          #endif
       }
 

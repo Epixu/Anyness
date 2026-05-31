@@ -599,7 +599,7 @@ namespace Langulus::Anyness::Component
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepStandardPointersEmergent(this C& self) assumptious {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            Allocation const* entry = nullptr;
+         Allocation const* entry = nullptr;
          #endif
 
          using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
@@ -612,7 +612,7 @@ namespace Langulus::Anyness::Component
                const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
                entry = Allocator::Find(ptr);
 
                if (entry and 1 == entry->GetUses()) {
@@ -636,7 +636,7 @@ namespace Langulus::Anyness::Component
                   }
                }
                else {
-            #endif
+               #endif
                   if (subT.IsSparse()) {
                      // Pointer to pointer.                             
                      // Dereference all indirection layers.             
@@ -655,7 +655,7 @@ namespace Langulus::Anyness::Component
                            subT.GetDestructor()(ptr);
                      }
                   }
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
                }
 
                // Deallocate or dereference                             
@@ -665,7 +665,7 @@ namespace Langulus::Anyness::Component
                   else
                      DecvqAllCast(entry)->AddRef(-1);
                }
-            #endif
+               #endif
             }
             else if constexpr (FORCE_DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
@@ -690,7 +690,7 @@ namespace Langulus::Anyness::Component
                if (not ptr)
                   return;
 
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
                entry = Allocator::Find(ptr);
 
                if (entry and 1 == entry->GetUses()) {
@@ -711,7 +711,7 @@ namespace Langulus::Anyness::Component
                   }
                }
                else {
-            #endif
+               #endif
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
@@ -728,7 +728,7 @@ namespace Langulus::Anyness::Component
                      if (ptr->Reference(-1) == 0)
                         ptr->~DT();
                   }
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
                }
 
                // Deallocate or dereference                             
@@ -738,7 +738,7 @@ namespace Langulus::Anyness::Component
                   else
                      DecvqAllCast(entry)->AddRef(-1);
                }
-            #endif
+               #endif
             }
             else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
                // Call destructor of dense element                      
