@@ -29,9 +29,11 @@ namespace Langulus::Anyness
    extern template struct TMap<RT**, RT**>;
    extern template struct TMap<char**, char**>;
 
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
    extern template struct TMap<pptr8, pptr8>;
    extern template struct TMap<pptr16, pptr16>;
    extern template struct TMap<pptr32, pptr32>;
+#endif
 }
 
 

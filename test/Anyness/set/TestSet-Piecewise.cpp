@@ -29,9 +29,11 @@ namespace Langulus::Anyness
    extern template struct TSet<RT**>;
    extern template struct TSet<char**>;
 
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
    extern template struct TSet<pptr8>;
    extern template struct TSet<pptr16>;
    extern template struct TSet<pptr32>;
+#endif
 }
 
 

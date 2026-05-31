@@ -29,9 +29,11 @@ namespace Langulus::Anyness
    extern template struct TMany<RT**>;
    extern template struct TMany<char**>;
 
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
    extern template struct TMany<pptr8>;
    extern template struct TMany<pptr16>;
    extern template struct TMany<pptr32>;
+#endif
 }
 
 
