@@ -191,16 +191,41 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void Free(this C& self) noexcept {
          auto a = self.template GetAllocation<SID>();
-         if (not a)
-            return; // Container is disowned, and nothing gets аеreffed 
+         if (not a) {
+            // Container is disowned, and nothing gets dereffed, unless 
+            // the container is marked Emergent. Emergent containers    
+            // don't support disownment, so that you can do deep        
+            // ownership without having a main allocation, so that      
+            // elements can lie on the stack instead. Examples:         
+            // TPair and THandlePair                                    
+            if constexpr (requires { C::Emergent; }) {
+               if constexpr (CT::DeeplyOwned<C>) {
+                  // Dereference all indirections and (optionally) items
+                  if constexpr (CT::TypeErased<C>) {
+                     if (self.template IsSparse<SID>()) {
+                        self.Apply([](auto&& item) {
+                           Id::ForEach([&item]<Cid D> {
+                              item.template FreeElementDeep<false, D>();
+                           });
+                        });
+                     }
+                  }
+                  else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
+                     self.Apply([](auto&& item) {
+                        Id::ForEach([&item]<Cid D> {
+                           item.template FreeElementDeep<false, D>();
+                        });
+                     });
+                  }
+               }
+            }
+            return;
+         }
 
          LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
          if (a->GetUses() == 1) {
             // Dereference, and eventually destroy all elements - all   
             // indirections, as well as dense elements.                 
-            /*Id::ForEach([&self]<Cid D> {
-               self.template DestroyAllElements<true, D>();
-            });*/
             if (not self.IsEmpty())
                self.template DestroyAllElements<true>();
             Allocator::Deallocate(DecvqAllCast(a));
@@ -208,9 +233,6 @@ namespace Langulus::Anyness::Component
          else {
             // Dereference, and eventually destroy all elements -       
             // affect indirections and elements behind them only!       
-            /*Id::ForEach([&self]<Cid D> {
-               self.template DestroyAllElements<false, D>();
-            });*/
             if (not self.IsEmpty())
                self.template DestroyAllElements<false>();
             DecvqAllCast(a)->AddRef(-1);

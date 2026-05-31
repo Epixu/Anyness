@@ -115,7 +115,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       const ScopedE1 element3{556};
       const ScopedE2 element4{112};
       T piecewise1{Piecewise, TPair {*element1, *element2}};
-      //piecewise1.Assign(*element3, *element4);
+      piecewise1.Assign(*element3, *element4);
    }
 
    GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {
@@ -1077,7 +1077,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          reset_full(pack_disowned,  "Disown");
       }
 
-      if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and not CT::Container<E1> and not CT::Container<E2>) {
+      if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and CT::NotContainer<E1, E2>) {
          // Works only if E doesn't move entries around                 
          WHEN("Reset, and then immediately allocated again") {
             auto reset_and_reallocate = [&](T& a) {
