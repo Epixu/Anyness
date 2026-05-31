@@ -107,8 +107,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-cl.exe",
         "CMAKE_CXX_COMPILER": "clang-cl.exe",
-        "CMAKE_C_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC} -ftime-trace=\"compilation_time.json\"",
-        "CMAKE_CXX_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC} -ftime-trace=\"compilation_time.json\""
+        "CMAKE_C_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC} -ftime-trace=\"${sourceDir}/out/build/${presetName}/compilation_time.json\"",
+        "CMAKE_CXX_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC} -ftime-trace=\"${sourceDir}/out/build/${presetName}/compilation_time.json\""
       }
     },
 

@@ -120,7 +120,7 @@ namespace Langulus::Anyness::Component
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
-      void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
+      void Destroy(this auto& self) noexcept /*requires ((STYLE & OnDestroy) != 0)*/ {
          self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
       }
 

@@ -284,7 +284,7 @@ namespace Langulus::Anyness::Component
       template<bool FORCE_DESTROY = true>
       void DestroyAllElements(this auto& self) assumptious {
          Subcomponents::ForEach([&]<class C> assumptious {
-            self.C::template DestroyAllElements<FORCE_DESTROY>();
+            if_available_gcc(C::template DestroyAllElements<FORCE_DESTROY>)();
          });
       }
 
