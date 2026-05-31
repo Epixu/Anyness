@@ -1028,11 +1028,10 @@ namespace Langulus::Anyness::Component
                   memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
                }
             }
-            else if constexpr (requires { Deref<H>::Emergent; }/* and REF_INDIVIDUAL*/) {
-               // We are moving/abandoning, but since individual items  
-               // are referenced (even if they have no corresponding    
-               // entry), we need to zero the source pointer, so that   
-               // we avoid them getting dereferenced later.             
+            else if constexpr (requires { Deref<H>::Emergent; }) {
+               // We are moving/abandoning, but since rhs is emergent,  
+               // we need to zero the source pointer, so that we avoid  
+               // them getting dereferenced later.                      
                if (rhs.IsSparse()) {
                   auto pointers_src = rhs.template GetRaw<SID>();
                   memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());

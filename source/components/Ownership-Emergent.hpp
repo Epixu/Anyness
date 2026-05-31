@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the allocation                                                  
       template<Cid SID = ID> requires Relevant<SID>
-      auto GetAllocation(this auto const& self) noexcept {
+      auto GetAllocation(this auto const& self) noexcept -> AllocationPtr {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             return Allocator::Find(self.template GetRaw<SID>());
          #else
