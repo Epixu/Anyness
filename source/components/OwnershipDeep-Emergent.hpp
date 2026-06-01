@@ -712,22 +712,22 @@ namespace Langulus::Anyness::Component
                }
                else {
                #endif
-                  if constexpr (CT::Sparse<DT>) {
-                     // Pointer to pointer.                             
-                     // Destroy all nested indirection layers.          
-                     typename H::Denser temp {ptr, nullptr};
-                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
-                  }
-                  else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
-                     // This element occurs in more than one place.     
-                     // We're not allowed to deallocate the memory      
-                     // behind it, but we must call destructors if T is 
-                     // referencable and its individual references have 
-                     // reached 0. This can happen when hive elements   
-                     // are dereferenced.                               
-                     if (ptr->Reference(-1) == 0)
-                        ptr->~DT();
-                  }
+               if constexpr (CT::Sparse<DT>) {
+                  // Pointer to pointer.                             
+                  // Destroy all nested indirection layers.          
+                  typename H::Denser temp {ptr, nullptr};
+                  temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
+               }
+               else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+                  // This element occurs in more than one place.     
+                  // We're not allowed to deallocate the memory      
+                  // behind it, but we must call destructors if T is 
+                  // referencable and its individual references have 
+                  // reached 0. This can happen when hive elements   
+                  // are dereferenced.                               
+                  if (ptr->Reference(-1) == 0)
+                     ptr->~DT();
+               }
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
                }
 

@@ -231,7 +231,7 @@ namespace Langulus::Anyness
          this->Absorb(Disown(other));
       }
 
-      constexpr HandleDisownedMut(void* ptr, DMeta type) noexcept {
+      constexpr HandleDisownedMut(void* ptr, EntryPtr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
       }
@@ -368,7 +368,7 @@ namespace Langulus::Anyness
       }
 
       /// Manual constructor for some niche uses, like iterators              
-      constexpr HandleDisowned(void const* ptr, DMeta type) noexcept {
+      constexpr HandleDisowned(void const* ptr, EntryPtr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
       }
@@ -548,7 +548,7 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      constexpr THandleEmergent(void const* ptr) noexcept {
+      constexpr THandleEmergent(void const* ptr, EntryPtr = nullptr) noexcept {
          this->SetHeapInner(ptr);
       }
 
@@ -604,7 +604,7 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      constexpr THandleEmergent(Deref<T>* ptr) noexcept {
+      constexpr THandleEmergent(Deref<T>* ptr, EntryPtr = nullptr) noexcept {
          this->SetHeapInner(ptr);
       }
 
@@ -662,7 +662,7 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      constexpr THandleDisowned(Deref<T>* ptr) noexcept {
+      constexpr THandleDisowned(Deref<T>* ptr, EntryPtr = nullptr) noexcept {
          this->SetHeapInner(ptr);
       }
 
