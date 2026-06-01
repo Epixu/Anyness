@@ -1090,6 +1090,28 @@ namespace Langulus::Anyness::Component
          auto entries = self.template GetEntriesInner<SID>();
          memset(DecvqAllCast(entries), 0, entries_size);
       }
+
+      /// Called on container destruction                                     
+      ///   @attention this never modifies any state                          
+      ///   @attention operates on all relevant dimensions at once!           
+      template<class C>
+      void Destroy(this C& self) noexcept {
+         if (self.IsEmpty())
+            return;
+
+         self.Apply([&](auto&& item) {
+            Id::ForEach([&]<Cid D> {//TODO take dimension outside loop for less context switching overhead
+               if constexpr (CT::TypeErased<C>) {
+                  if (self.template IsSparse<D>())
+                     item.template DestroyElementDeep<false, D>();
+               }
+               else {
+                  if constexpr (CT::Sparse<TypeOf<C, D>>)
+                     item.template DestroyElementDeep<false, D>();
+               }
+            });
+         });
+      }
    };
 
    #undef ThisCom

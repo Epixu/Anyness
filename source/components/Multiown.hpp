@@ -155,30 +155,30 @@ namespace Langulus::Anyness::Component
       /// Dereference specific memory block once and destroy all elements     
       /// associated with it, if data was fully dereferenced                  
       ///   @attention this never modifies any state                          
-      template<Cid SID = 0>
+      /*template<Cid SID = 0>
       constexpr void Free(this auto& self) noexcept {
          using C = typename Subcomponents::template At<SID>;
          return self.C::Free();
-      }
+      }*/
       
       /// Dereference all memory blocks once and destroy all elements if data 
       /// was fully dereferenced                                              
       ///   @attention this never modifies any state                          
-      constexpr void FreeAll(this auto& self) noexcept {
+      /*constexpr void FreeAll(this auto& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
             if_available_gcc(C::Free)();
          });
-      }
+      }*/
       
       /// Destroy the first element                                           
       ///   @attention doesn't perform any referencing or indirection         
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<Cid SID = 0>
+      /*template<Cid SID = 0>
       constexpr void DestroyElementShallow(this auto& self) noexcept {
          using C = typename Subcomponents::template At<SID>;
          return self.C::DestroyElementShallow();
-      }
+      }*/
    };
 }
 

@@ -128,7 +128,8 @@ namespace Langulus::Anyness::Component
             if (a->GetUses() != 1) {
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
-               self.template Free<SID>();
+               self.Destroy();
+               //self.template Free<SID>();
 
                try {
                   if constexpr (sizeof...(arguments) > 0)

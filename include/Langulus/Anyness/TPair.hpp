@@ -67,10 +67,10 @@ namespace Langulus::Anyness
       constexpr TPair(TPair&& other) noexcept requires CT::NotReference<K, V> {
          this->Absorb(Move(other));
       }
-      constexpr ~TPair() noexcept requires CT::NotReference<K, V> {
+      constexpr ~TPair() noexcept /*requires CT::NotReference<K, V>*/ {
          this->Destroy();
       }
-      constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
+      //constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
 
       /// Manual constructor                                                  
       constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)

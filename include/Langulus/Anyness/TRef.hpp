@@ -101,7 +101,8 @@ namespace Langulus::Anyness
                return *this;
          
             if (DeintCast(pointer)) {
-               this->Free();
+               //this->Free();
+               this->Destroy();
                this->SetHeapInner(DeintCast(pointer));
                if constexpr (not CT::Disowned<A>)
                   this->FindAllocationInner();

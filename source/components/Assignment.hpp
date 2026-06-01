@@ -235,7 +235,8 @@ namespace Langulus::Anyness::Component
                   // afford to call any destructors. All we do is reset 
                   // this container and allocate a new block, which     
                   // will be exclusively ours.                          
-                  self.OWNER::Free();
+                  //self.OWNER::Free();
+                  self.Destroy();
                   self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                }
             }

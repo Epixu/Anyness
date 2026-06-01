@@ -107,7 +107,7 @@ namespace Langulus::Anyness::Component
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the memory and type  
             // only if the container keeps track of the count separately
-            self.template DestroyAllElements<true>();
+            self.template DestroyAllElements<true>(); //TODO use Destroy<DEALLOCATE = false>
             if_available(self.ResetHashTable());
             self.ResetCount();
          }
@@ -115,7 +115,7 @@ namespace Langulus::Anyness::Component
             // If reached, then data is referenced from multiple places.
             // Don't call destructors, just dereference and clear       
             // allocation, because it isn't ours.                       
-            self.template DestroyAllElements<false>();
+            self.template DestroyAllElements<false>();//TODO use Destroy<DEALLOCATE = false>
             DecvqAllCast(al)->AddRef(-1);
             self.ResetAllAllocations();
          }

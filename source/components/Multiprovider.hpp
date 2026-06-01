@@ -271,7 +271,7 @@ namespace Langulus::Anyness::Component
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
       template<bool FORCE_DESTROY = true, Cid SID = 0>
-      void DestroyElement(this auto& self) assumptious {
+      void DestroyElement(this auto& self) assumptious { //TODO remove
          using C = typename Subcomponents::template At<SID>;
          self.C::template DestroyElement<FORCE_DESTROY>();
       }
@@ -282,7 +282,7 @@ namespace Langulus::Anyness::Component
       ///      It will still destroy the element, but only when fully         
       ///      dereferenced in all its indirections.                          
       template<bool FORCE_DESTROY = true>
-      void DestroyAllElements(this auto& self) assumptious {
+      void DestroyAllElements(this auto& self) assumptious { //TODO remove
          Subcomponents::ForEach([&]<class C> assumptious {
             if_available_gcc(C::template DestroyAllElements<FORCE_DESTROY>)();
          });

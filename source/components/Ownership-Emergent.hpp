@@ -120,7 +120,7 @@ namespace Langulus::Anyness::Component
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
-      void Destroy(this auto& self) noexcept /*requires ((STYLE & OnDestroy) != 0)*/ {
+      void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
          self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
       }
 
@@ -193,35 +193,7 @@ namespace Langulus::Anyness::Component
       void Free(this C& self) noexcept {
          auto a = self.template GetAllocation<SID>();
          if (not a) {
-            // Container is disowned, and nothing gets dereffed, unless 
-            // the container is marked Emergent. Emergent containers    
-            // don't support disownment, so that you can do deep        
-            // ownership without having a main allocation, so that      
-            // elements can lie on the stack instead. Examples:         
-            // TPair and THandlePair                                    
-            if constexpr (requires { C::Emergent; }) {
-               if constexpr (CT::DeeplyOwned<C>) {
-                  // Dereference all indirections and (optionally) items
-                  if constexpr (CT::TypeErased<C>) {
-                     if (not self.IsEmpty() and self.template IsSparse<SID>()) {
-                        self.Apply([](auto&& item) {
-                           Id::ForEach([&item]<Cid D> {
-                              item.template DestroyElementDeep<false, D>();
-                           });
-                        });
-                     }
-                  }
-                  else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
-                     if (not self.IsEmpty()) {
-                        self.Apply([](auto&& item) {
-                           Id::ForEach([&item]<Cid D> {
-                              item.template DestroyElementDeep<false, D>();
-                           });
-                        });
-                     }
-                  }
-               }
-            }
+            // Container is disowned, and nothing gets dereffed
             return;
          }
 
@@ -229,38 +201,55 @@ namespace Langulus::Anyness::Component
          if (a->GetUses() == 1) {
             // Dereference, and eventually destroy all elements - all   
             // indirections, as well as dense elements.                 
-            if (not self.IsEmpty())
-               self.template DestroyAllElements<true>();
+            //if (not self.IsEmpty())
+            //   self.template DestroyAllElements<true>();
+
+            if (not self.IsEmpty()) {
+               self.Apply([](auto&& item) {
+                  Id::ForEach([&item]<Cid D> {
+                     //TODO taking dimensions outside the loop will probbaly be faster? too much context switches
+                     if constexpr (CT::TypeErased<C>) {
+                        // Destroying a type-erased element                         
+                        auto T = item.template GetType<D>();
+                        if (const auto destructor = T.GetDestructor()) {
+                           const auto ptr = item.template GetRaw<D>();
+                           destructor(ptr);
+                        }
+                     }
+                     else {
+                        // Destroying a statically-typed element                    
+                        using T = TypeOf<C, D>;
+                        if constexpr (CT::Destroyable<T>) {
+                           auto* element = item.template Get<void, D>();
+                           element->~T();
+                        }
+                     }
+                  });
+               });
+            }
+
             Allocator::Deallocate(DecvqAllCast(a));
          }
          else {
             // Dereference, and eventually destroy all elements -       
             // affect indirections and elements behind them only!       
-            if (not self.IsEmpty())
-               self.template DestroyAllElements<false>();
+            //if (not self.IsEmpty())
+            //   self.template DestroyAllElements<false>();
             DecvqAllCast(a)->AddRef(-1);
          }
       }
 
       /// Same as free, but here in case container isn't Multiown             
-      void FreeAll(this auto& self) noexcept {
+      /*void FreeAll(this auto& self) noexcept {
          self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
-      }
+      }*/
 
       /// Destroy the first element                                           
       ///   @attention doesn't perform any referencing or indirection         
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      /*template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementShallow(this C& self) noexcept {
-         //static_assert(CT::ContainsOne<C>,
-         //   "Destroying only first element in a container with many");
-         static_assert(not CT::DeeplyOwned<C>,
-            "Can't shallow-destroy a deeply-owned container");
-
-         if (self.template IsEmpty<SID>())
-            return;
-
          if constexpr (CT::TypeErased<C>) {
             // Destroying a type-erased element                         
             auto T = self.template GetType<SID>();
@@ -277,6 +266,6 @@ namespace Langulus::Anyness::Component
                element->~T();
             }
          }
-      }
+      }*/
    };
 }

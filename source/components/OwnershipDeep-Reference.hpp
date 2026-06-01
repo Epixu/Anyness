@@ -41,10 +41,8 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires Relevant<SID>
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
-         if (self.template IsSparse<SID>())// {
-            //LglsAssumeDev(self.template GetRaw<SID>(), "No memory available");
+         if (self.template IsSparse<SID>())
             return ThisCom::GetEntriesInner();
-         //}
          return nullptr;
       }
 
