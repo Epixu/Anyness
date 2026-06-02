@@ -25,8 +25,8 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0>>,
                          Com::HeapReference<HeapEntry<1>>>,
       Com::CountStatic<1u, 0, 1>,
-      Com::MultiownDeep<Com::OwnershipDeepReference<true, 0>,
-                        Com::OwnershipDeepReference<true, 1>>,
+      Com::MultiownDeep<Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>,
+                        Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Comparison<true, 0, 1>,
       Com::IterationOperators<0, 1>
@@ -62,8 +62,8 @@ namespace Langulus::Anyness
       constexpr THandlePair(Handle&& key, Handle&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
-         this->Com::OwnershipDeepReference<true, 0>::SetEntriesInner(key.GetEntriesInner());
-         this->Com::OwnershipDeepReference<true, 1>::SetEntriesInner(val.GetEntriesInner());
+         this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
+         this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
@@ -75,7 +75,7 @@ namespace Langulus::Anyness
       Handle GetKey() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
       }
@@ -86,7 +86,7 @@ namespace Langulus::Anyness
       Handle GetVal() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
       }
@@ -120,8 +120,8 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0>>,
                          Com::HeapReference<HeapEntry<1>>>,
       Com::CountStatic<1u, 0, 1>,
-      Com::MultiownDeep<Com::OwnershipDeepReference<true, 0>,
-                        Com::OwnershipDeepReference<true, 1>>,
+      Com::MultiownDeep<Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>,
+                        Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
@@ -159,8 +159,8 @@ namespace Langulus::Anyness
       constexpr THandlePair(HandleMut&& key, HandleMut&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
-         this->Com::OwnershipDeepReference<true, 0>::SetEntriesInner(key.GetEntriesInner());
-         this->Com::OwnershipDeepReference<true, 1>::SetEntriesInner(val.GetEntriesInner());
+         this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
+         this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
@@ -172,7 +172,7 @@ namespace Langulus::Anyness
       HandleMut GetKey() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
       }
@@ -184,7 +184,7 @@ namespace Langulus::Anyness
       HandleMut GetVal() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
       }
@@ -217,8 +217,8 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0>>,
                          Com::HeapReference<HeapEntry<1>>>,
       Com::CountStatic<1u, 0, 1>,
-      Com::MultiownDeep<Com::OwnershipDeepReference<true, 0>,
-                        Com::OwnershipDeepReference<true, 1>>,
+      Com::MultiownDeep<Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>,
+                        Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<1>,
       Com::Emplacement<1>,
@@ -256,8 +256,8 @@ namespace Langulus::Anyness
       constexpr THandlePair(Handle&& key, HandleMut&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
-         this->Com::OwnershipDeepReference<true, 0>::SetEntriesInner(key.GetEntriesInner());
-         this->Com::OwnershipDeepReference<true, 1>::SetEntriesInner(val.GetEntriesInner());
+         this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
+         this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
@@ -269,7 +269,7 @@ namespace Langulus::Anyness
       Handle GetKey() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner(),
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
          };
       }
@@ -280,7 +280,7 @@ namespace Langulus::Anyness
       HandleMut GetVal() noexcept {
          return {
             this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner(),
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
             this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
          };
       }
@@ -314,10 +314,10 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0, Deref<K>*>>,
                          Com::HeapReference<HeapEntry<1, Deref<V>*>>>,
       Com::CountStatic<1u, 0, 1>,
-      Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipEmergent<Com::WeakOwnership, 0>>,
-                        EnableComponentIf<CT::Dense<V>,  Com::OwnershipEmergent<Com::WeakOwnership, 1>>>,
-      Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepEmergent<true, 0>>,
-                        EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepEmergent<true, 1>>>,
+      //Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipEmergent<Com::WeakOwnership, 0>>,
+      //                  EnableComponentIf<CT::Dense<V>,  Com::OwnershipEmergent<Com::WeakOwnership, 1>>>,
+      Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepEmergent<Com::WeakOwnership, true, 0>>,
+                        EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepEmergent<Com::WeakOwnership, true, 1>>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Comparison<true, 0, 1>,
       Com::IterationOperators<0, 1>
@@ -333,7 +333,7 @@ namespace Langulus::Anyness
       using KeyHandle = THandleEmergent<K>;
       using ValHandle = THandleEmergent<V>;
 
-      static constexpr bool Emergent      = true;
+      //static constexpr bool Emergent      = true;
       //static constexpr bool HeapCanBeNull = true;
       static constexpr uint Owned         = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
       static constexpr bool DeeplyOwned   = CT::Sparse<K> or CT::Sparse<V>;
@@ -415,10 +415,10 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0, Deref<K>*>>,
                          Com::HeapReference<HeapEntry<1, Deref<V>*>>>,
       Com::CountStatic<1u, 0, 1>,
-      Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipStack<Com::WeakOwnership, 0>>,
-                        EnableComponentIf<CT::Dense<V>,  Com::OwnershipStack<Com::WeakOwnership, 1>>>,
-      Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepReference<true, 0>>,
-                        EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepReference<true, 1>>>,
+      //Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipStack<Com::WeakOwnership, 0>>,
+      //                  EnableComponentIf<CT::Dense<V>,  Com::OwnershipStack<Com::WeakOwnership, 1>>>,
+      Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>>,
+                        EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
@@ -461,15 +461,17 @@ namespace Langulus::Anyness
          this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
 
-         if constexpr (CT::Dense<K>)
+         /*if constexpr (CT::Dense<K>)
             this->Com::OwnershipStack<Com::WeakOwnership, 0>::SetAllocationInner(key.GetAllocation());
-         else
-            this->Com::OwnershipDeepReference<true, 0>::SetEntriesInner(key.GetEntries());
+         else*/
+         if constexpr (CT::Sparse<K>)
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntries());
 
-         if constexpr (CT::Dense<V>)
+         /*if constexpr (CT::Dense<V>)
             this->Com::OwnershipStack<Com::WeakOwnership, 1>::SetAllocationInner(val.GetAllocation());
-         else
-            this->Com::OwnershipDeepReference<true, 1>::SetEntriesInner(val.GetEntries());
+         else*/
+         if constexpr (CT::Sparse<V>)
+            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntries());
       }
 
       /// Assignment is disabled                                              
@@ -484,7 +486,7 @@ namespace Langulus::Anyness
       }
 
       KeyHandle GetKeyHandle() noexcept {
-         if constexpr (CT::Dense<K, V>) {
+         /*if constexpr (CT::Dense<K, V>) {
             return KeyHandle {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
@@ -495,11 +497,16 @@ namespace Langulus::Anyness
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0>::GetAllocation()
             };
+         }*/
+         if constexpr (CT::Sparse<K>) {
+            return KeyHandle {
+               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
+               this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner()
+            };
          }
          else {
             return KeyHandle {
-               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
-               this->Com::OwnershipDeepReference<true, 0>::GetEntriesInner()
+               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
             };
          }
       }
@@ -512,7 +519,7 @@ namespace Langulus::Anyness
       }
 
       ValHandle GetValHandle() noexcept {
-         if constexpr (CT::Dense<K, V>) {
+         /*if constexpr (CT::Dense<K, V>) {
             return ValHandle {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
@@ -523,11 +530,16 @@ namespace Langulus::Anyness
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
                this->Com::OwnershipStack<Com::WeakOwnership, 1>::GetAllocation()
             };
+         }*/
+         if constexpr (CT::Sparse<V>) {
+            return ValHandle {
+               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
+               this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner()
+            };
          }
          else {
             return ValHandle {
-               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
-               this->Com::OwnershipDeepReference<true, 1>::GetEntriesInner()
+               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()
             };
          }
       }
@@ -568,8 +580,8 @@ namespace Langulus::Anyness
       //EnableComponentIf<CT::Sparse<V>, Com::ReserveEmergent<size_t, 1>>,
       Com::Multiown    <EnableComponentIf<CT::Sparse<K>, Com::OwnershipStack<Com::StrongOwnership, 0>>,
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipStack<Com::StrongOwnership, 1>>>,
-      Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepHeap<true, 0>>,
-                        EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepHeap<true, 1>>>,
+      Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0>>,
+                        EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 1>>>,
       Com::HashEmergent<0, Hash, 1>,
       Com::Assignment<0, 1>,
       Com::Emplacement<0, 1>,
@@ -624,7 +636,7 @@ namespace Langulus::Anyness
          if constexpr (CT::Sparse<K>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<true, 0>::GetEntriesInner()
+               this->Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0>::GetEntriesInner()
             };
          }
          else return THandleEmergent<K&> {this->Com::Stack<K, 0>::GetRaw()};
@@ -638,7 +650,7 @@ namespace Langulus::Anyness
          if constexpr (CT::Sparse<V>) {
             return THandle<V&> {
                this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<true, 1>::GetEntriesInner()
+               this->Com::OwnershipDeepHeap<Com::StrongOwnership, true, 1>::GetEntriesInner()
             };
          }
          else return THandleEmergent<V&> {this->Com::Stack<V, 1>::GetRaw()};

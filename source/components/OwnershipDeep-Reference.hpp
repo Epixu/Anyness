@@ -13,12 +13,16 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.OwnershipDeepReference<REF_INDIVIDUAL, ID, SHARED...>
+   #define ThisCom self.OwnershipDeepReference<STYLE, REF_INDIVIDUAL, ID, SHARED...>
 
    ///                                                                        
    /// The pointer to the array of allocations for each element and           
    /// indirection is kept locally. Useful to carry allocation data inside    
    /// handles.                                                               
+   ///   @tparam STYLE whether ownership will be automatically applied on     
+   ///      construction, reassignment and destruction. Usually 0 if container
+   ///      is just a view, or in other cases where you want to carry an      
+   ///      allocation pointer, but not necessarily reference it.             
    ///   @tparam REF_INDIVIDUAL toggles whether contained items that were     
    ///      reflected as CT::Referenced get referenced. Elements will get     
    ///      referenced even if no entry for the element exist, but you can    
@@ -27,10 +31,10 @@ namespace Langulus::Anyness::Component
    ///      entire container is considered disowned.                          
    ///   @tparam ID which heap/stack are we keeping track of?                 
    ///   @tparam SHARED additional provider IDs that share the same behavior  
-   template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
-   struct OwnershipDeepReference : OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...> {
+   template<uint STYLE, bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
+   struct OwnershipDeepReference : OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...> {
       using StackRequest = EntryPtr;
-      using Id = typename OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...>::Id;
+      using Id = typename OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...>::Id;
 
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;

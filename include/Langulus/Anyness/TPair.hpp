@@ -12,8 +12,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<CT::NotVoid K, CT::NotVoid V>
-   requires (CT::NotHandle<K, V> /*and CT::NotReference<K, V>*/)
+   template<CT::NotVoid K, CT::NotVoid V> requires CT::NotHandle<K, V>
    using TPairBase = Com::Container<
       Com::Multitype<Com::TypedStatic<DMeta, Deref<K>, 0>,
                      Com::TypedStatic<DMeta, Deref<V>, 1>>,
@@ -21,8 +20,8 @@ namespace Langulus::Anyness::Inner
                          Com::Stack<V, 1>>,
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
-      Com::OwnershipEmergent<Com::NoOwnership, 0, 1>,
-      Com::OwnershipDeepEmergent<true, 0, 1>,
+      //Com::OwnershipEmergent<Com::NoOwnership, 0, 1>,
+      Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>,
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         
       Com::Assignment<0, 1>,              // Allows assignment          
@@ -46,7 +45,7 @@ namespace Langulus::Anyness
       using CTTI_MapsTo    = Text;
 
       static constexpr bool TypeErased = false;
-      static constexpr bool Emergent   = true;
+      //static constexpr bool Emergent   = true;
 
       using Base     = Inner::TPairBase<K, V>;
       using DeepType = Any;
@@ -75,7 +74,9 @@ namespace Langulus::Anyness
       /// Manual constructor                                                  
       constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
-         this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
+         if constexpr (CT::Sparse<K> or CT::Sparse<V>)
+            this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
+         //this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
 
       constexpr TPair(CT::Handle auto&& a1, CT::Handle auto&& a2) {
@@ -84,11 +85,15 @@ namespace Langulus::Anyness
       }
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
          : Base{Stackwise, LglsFwd(a1), LglsFwd(a2)} {
-         this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
+         if constexpr (CT::Sparse<K> or CT::Sparse<V>)
+            this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
+         //this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1)
          : Base{Stackwise, LglsFwd(a1), {}} {
-         this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
+         if constexpr (CT::Sparse<K> or CT::Sparse<V>)
+            this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
+         //this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
 
       /// Construction that absorbs the provided pair                         

@@ -233,8 +233,10 @@ namespace Langulus::Anyness::Component
                      auto to     = handle + newIndex;
                      Id::ForEach([&to,&from]<Cid D>{
                         to.template EmplaceWithIntent<D>(Abandon(from));
-                        from.template DestroyElement<true, D>();
+                        //from.template DestroyElement<true, D>();
                      });
+
+                     from.template Destroy<false>();
 
                      tableBeg[newIndex] = attempt;
                      *table = 0;

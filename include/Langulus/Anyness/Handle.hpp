@@ -34,7 +34,7 @@ namespace Langulus::Anyness
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
-         Com::OwnershipStack<Com::WeakOwnership>,
+         //Com::OwnershipStack<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -48,7 +48,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<1u>,
-         Com::OwnershipDeepReference<>,
+         Com::OwnershipDeepReference<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -58,7 +58,7 @@ namespace Langulus::Anyness
       
       /// Statically typed handle to a dense element held inside a container  
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleEmbeddedDenseEmergent = Com::Container<
+      using THandleEmbeddedDenseEmergent = THandleEmbeddedDense<T>; /*Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<1u>,
@@ -69,7 +69,7 @@ namespace Langulus::Anyness
          Com::Emplacement<>,
          Com::Comparison<>,
          Com::IterationOperators<>
-      >;
+      >;*/
 
       /// Statically typed handle to a sparse element held inside a container 
       /// (with emergent deep ownership)                                      
@@ -78,7 +78,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<1u>,
-         Com::OwnershipDeepEmergent<>,
+         Com::OwnershipDeepEmergent<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -141,7 +141,7 @@ namespace Langulus::Anyness
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       //Com::ReserveEmergent<>,
-      Com::OwnershipDeepReference<>,
+      Com::OwnershipDeepReference<Com::WeakOwnership>,
       Com::HashEmergent<>,
       Com::Assignment<>,
       Com::Emplacement<>,
@@ -268,7 +268,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
-      Com::OwnershipDeepReference<>,
+      Com::OwnershipDeepReference<Com::NoOwnership>,
       Com::HashEmergent<>,
       Com::Comparison<>,
       Com::IterationOperators<>
@@ -432,9 +432,14 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      constexpr THandle(void const* ptr, AllocationPtr alloc) noexcept {
+      /*constexpr THandle(void const* ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
+      }*/
+
+      constexpr THandle(void const* ptr, EntryPtr = nullptr) noexcept {
+         this->SetHeapInner(ptr);
+         //this->SetAllocationInner(alloc);
       }
 
       /// Assignment is disabled                                              
@@ -525,7 +530,7 @@ namespace Langulus::Anyness
       using Denser         = THandleEmergent;
       using DeepType       = HandleDisowned; //TODO why disowned??
 
-      static constexpr bool Emergent = true;
+      //static constexpr bool Emergent = true;
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
@@ -581,7 +586,7 @@ namespace Langulus::Anyness
       using Denser         = THandleEmergent<Deptr<T>&>;
       using DeepType       = HandleDisowned; //TODO why disowned??
 
-      static constexpr bool Emergent = true;
+      //static constexpr bool Emergent = true;
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 

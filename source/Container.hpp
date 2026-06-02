@@ -714,11 +714,11 @@ namespace Langulus::Anyness
 
       /// Call Destroy in all components that implement it.                   
       /// Always do it in reverse order!                                      
-      template<class SELF>
+      template<bool DEALLOCATE = true, class SELF>
       constexpr void Destroy(this SELF& self) {
          if not consteval {
             ComponentList::Reverse::ForEach([&]<class C> {
-               if_available_gcc(C::template Destroy<SELF>)();
+               if_available_gcc(C::template Destroy<DEALLOCATE, SELF>)();
             });
          }
       }
@@ -753,26 +753,17 @@ namespace Langulus::Anyness
             // User desires a simple handle                             
             if constexpr (CT::TypeErased<H>) {
                // Type-erased handle                                    
-               if constexpr (CT::DeeplyOwned<H>) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   return H {
                      self.template Get<void, SID>(),
                      self.template GetEntries<SID>(),
                      self.template GetType<SID>()
                   };
                }
-               else if constexpr (CT::Owned<H>) {
-                  return H {
-                     self.template Get<void, SID>(),
-                     self.template GetAllocation<SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-               else {
-                  return H {
-                     self.template Get<void, SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
+               else return H {
+                  self.template Get<void, SID>(),
+                  self.template GetType<SID>()
+               };
             }
             else {
                // Statically typed handle                               
@@ -786,27 +777,13 @@ namespace Langulus::Anyness
                }
                else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
 
-               if constexpr (CT::DeeplyOwned<H>) {
-                  if constexpr (requires { H::Emergent; })
-                     return H {self.template Get<void, SID>()};
-                  else {
-                     return H {
-                        self.template Get<void, SID>(),
-                        self.template GetEntries<SID>()
-                     };
-                  }
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
+                  return H {
+                     self.template Get<void, SID>(),
+                     self.template GetEntries<SID>()
+                  };
                }
-               else if constexpr (CT::Owned<H>) {
-                  if constexpr (requires { H::Emergent; })
-                     return H {self.template Get<void, SID>()};
-                  else {
-                     return H {
-                        self.template Get<void, SID>(),
-                        self.template GetAllocation<SID>()
-                     };
-                  }
-               }
-               else return H {&self.template Get<void, SID>()};
+               else return H { self.template Get<void, SID>() };
             }
          }
       }

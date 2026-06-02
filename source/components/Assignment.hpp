@@ -211,7 +211,8 @@ namespace Langulus::Anyness::Component
                   constexpr Cid SID = CommonIds::First;
                   auto& a = self.OWNER::GetAllocationInner();
                   if (not a) {
-                     // Nothing was allocated                           
+                     // Nothing was allocated. Could still be emergent! 
+                     self.Destroy();
                      self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                      return;
                   }
@@ -222,9 +223,9 @@ namespace Langulus::Anyness::Component
                      // We don't deallocate the memory. We can reuse it.
                      // But we have to destroy all shared elements.     
                      //CommonIds::ForEach([&self]<Cid D> {
-                        self.template DestroyAllElements<true/*, D*/>();
+                        //self.template DestroyAllElements<true/*, D*/>();
                      //});
-
+                     self.template Destroy<false>();
                      if constexpr (CT::ContainsMany<C>)
                         self.template AllocateLess<SID>(1);
                      return;
@@ -271,13 +272,15 @@ namespace Langulus::Anyness::Component
                auto item = first + (self.IsSparse() ? 0 : 1);
                auto const itemsEnd = first + self.GetCount();
                while (item.GetRaw() != itemsEnd.GetRaw()) {
-                  item.DestroyElement();
+                  item.template Destroy<false>();
+                  //item.DestroyElement();
                   ++item;
                }
                if_available(first.ResetEntries());
             }
             else if (self.IsSparse()) {
-               self.DestroyElement();
+               self.template Destroy<false>();
+               //self.DestroyElement();
                if_available(self.ResetEntries());
             }
             return true;

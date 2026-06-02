@@ -12,7 +12,11 @@
 
 namespace Langulus::Anyness::Component
 {
-   using RTTI::DMeta;
+   //using RTTI::DMeta;
+
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.OwnershipEmergent<STYLE, ID, SHARED...>
 
    ///                                                                        
    /// Heap allocation will be searched on demand every time.                 
@@ -36,18 +40,20 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 
-      /// Get the allocation                                                  
-      template<Cid SID = ID> requires Relevant<SID>
-      auto GetAllocation(this auto const& self) noexcept -> AllocationPtr {
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         /// Get the allocation by searching the memory manager               
+         template<Cid SID = ID> requires Relevant<SID>
+         auto GetAllocation(this auto const& self) noexcept -> AllocationPtr {
             return Allocator::Find(self.template GetRaw<SID>());
-         #else
-            (void)self;
+         }
+      #else
+         /// Always invalid allocation when managed memory is disabled.       
+         /// Emergent containers without memory management can't reference.   
+         template<Cid SID = ID> requires Relevant<SID>
+         constexpr auto GetAllocation() const noexcept -> AllocationPtr {
             return nullptr;
-            //static_assert(false, "Emergent ownership is not allowed "
-            //                     "when managed memory is disabled");
-         #endif
-      }
+         }
+      #endif
 
       /// Get the memory reference count                                      
       template<Cid SID = ID> requires Relevant<SID>
@@ -65,7 +71,7 @@ namespace Langulus::Anyness::Component
       requires (CT::HeapAllocated<C> and Relevant<SID>)
       void TakeOwnership(this C& self) {
          if (not self.template GetHeapInner<SID>()
-              or self.template GetAllocation<SID>())
+         or      self.template GetAllocation<SID>())
             return;
 
          // Shallow-copy all elements in a fresh allocation             
@@ -96,7 +102,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Referred<I>) {
             // Refer                                                    
             if constexpr (STYLE & OnCreate)
-               self.Keep();
+               ThisCom::Keep();
          }
          else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
             // Abandon/Move                                             
@@ -104,9 +110,9 @@ namespace Langulus::Anyness::Component
             else if constexpr ((STYLE & OnCreate) and CT::StronglyOwned<I>) {
                // We can't reset source allocation pointer, which means 
                // that source destructor will dereference when out of   
-               // scope. We have to reference the data here.            
-               // Keeping 'from' because it is more likely to have the  
-               // allocation pointer cached.                            
+               // scope, because it is likely emergent. We are forced   
+               // to reference the data here. Keeping 'from' because it 
+               // is more likely to have the allocation cached.         
                from.Keep();
             }
          }
@@ -120,152 +126,70 @@ namespace Langulus::Anyness::Component
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
-      void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
-         self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
+      template<bool DEALLOCATE = true, class SELF>
+      void Destroy(this SELF& self) noexcept requires ((STYLE & OnDestroy) != 0) {
+         ThisCom::template Free<DEALLOCATE>();
       }
 
-      /// Reference the allocation once.                                      
-      /// If container has DeepOwnership component, all entries will be       
-      /// individually referenced as well.                                    
-      ///   @attention operates on all relevant dimensions at once!           
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
-      void Keep(this C& self) noexcept {
-         auto a = self.template GetAllocation<SID>();
-         if (not a) {
-            // Container is disowned, and nothing gets reffed, unless   
-            // the container is marked Emergent. Emergent containers    
-            // don't support disownment, so that you can do deep        
-            // ownership without having a main allocation, so that      
-            // elements can lie on the stack instead. Examples:         
-            // TPair and THandlePair                                    
-            if constexpr (requires { C::Emergent; }) {
-               if constexpr (CT::DeeplyOwned<C>) {
-                  // Reference all indirections and (optionally) items  
-                  if constexpr (CT::TypeErased<C>) {
-                     if (self.template IsSparse<SID>()) {
-                        self.Apply([](auto&& item) {
-                           Id::ForEach([&item]<Cid D> {
-                              item.template KeepElementDeep<false, D>();
-                           });
-                        });
-                     }
-                  }
-                  else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
-                     self.Apply([](auto&& item) {
-                        Id::ForEach([&item]<Cid D> {
-                           item.template KeepElementDeep<false, D>();
-                        });
-                     });
-                  }
-               }
-            }
+      /// Reference the allocation once                                       
+      void Keep(this auto& self) noexcept {
+         auto a = self.template GetAllocation<Id::First>();
+         if (not a)
             return;
-         }
 
          DecvqAllCast(a)->AddRef(1);
-
-         if constexpr (CT::DeeplyOwned<C>) {
-            // Reference all indirections and (optionally) items        
-            if constexpr (CT::TypeErased<C>) {
-               if (self.template IsSparse<SID>()) {
-                  self.Apply([](auto&& item) {
-                     Id::ForEach([&item]<Cid D> {
-                        item.template KeepElementDeep<false, D>();
-                     });
-                  });
-               }
-            }
-            else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
-               self.Apply([](auto&& item) {
-                  Id::ForEach([&item]<Cid D> {
-                     item.template KeepElementDeep<false, D>();
-                  });
-               });
-            }
-         }
       }
 
-      /// Dereference memory block once and destroy all elements if data was  
-      /// fully dereferenced                                                  
+      /// Dereference memory block once and destroy all immediate elements if 
+      /// local allocation was fully dereferenced.                            
+      ///   @tparam DEALLOCATE are we going to reuse the allocation? if not,  
+      ///      set this to true, to discard it.                               
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool DEALLOCATE = true, CT::Container C>
       void Free(this C& self) noexcept {
-         auto a = self.template GetAllocation<SID>();
-         if (not a) {
-            // Container is disowned, and nothing gets dereffed
+         auto a = self.template GetAllocation<Id::First>();
+         if (not a)
             return;
-         }
 
          LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
-         if (a->GetUses() == 1) {
-            // Dereference, and eventually destroy all elements - all   
-            // indirections, as well as dense elements.                 
-            //if (not self.IsEmpty())
-            //   self.template DestroyAllElements<true>();
+         if (a->GetUses() != 1) {
+            // Memory is used elsewhere, just dereference once          
+            if constexpr (DEALLOCATE)
+               DecvqAllCast(a)->AddRef(-1);
+            return;
+         }
+      
+         //                                                             
+         // If reached, this was the only container that owns the       
+         // immediate elements. It is time to destroy them.             
+         if (not self.template IsEmpty<Id::First>()) {
+            Id::ForEach([&self]<Cid D> {
+               if constexpr (CT::TypeErased<C>) {
+                  auto T = self.template GetType<D>();
+                  if (const auto destructor = T.GetDestructor()) {
+                     self.Apply([&destructor](auto&& item) {
+                        const auto ptr = item.template GetRaw<D>();
+                        destructor(ptr);
+                     });
+                  }
+               }
+               else {
+                  using T = TypeOf<C, D>;
+                  if constexpr (CT::Destroyable<T>) {
+                     self.Apply([](auto&& item) {
+                        auto* element = item.template Get<void, D>();
+                        element->~T();
+                     });
+                  }
+               }
+            });
+         }
 
-            if (not self.IsEmpty()) {
-               self.Apply([](auto&& item) {
-                  Id::ForEach([&item]<Cid D> {
-                     //TODO taking dimensions outside the loop will probbaly be faster? too much context switches
-                     if constexpr (CT::TypeErased<C>) {
-                        // Destroying a type-erased element                         
-                        auto T = item.template GetType<D>();
-                        if (const auto destructor = T.GetDestructor()) {
-                           const auto ptr = item.template GetRaw<D>();
-                           destructor(ptr);
-                        }
-                     }
-                     else {
-                        // Destroying a statically-typed element                    
-                        using T = TypeOf<C, D>;
-                        if constexpr (CT::Destroyable<T>) {
-                           auto* element = item.template Get<void, D>();
-                           element->~T();
-                        }
-                     }
-                  });
-               });
-            }
-
+         if constexpr (DEALLOCATE)
             Allocator::Deallocate(DecvqAllCast(a));
-         }
-         else {
-            // Dereference, and eventually destroy all elements -       
-            // affect indirections and elements behind them only!       
-            //if (not self.IsEmpty())
-            //   self.template DestroyAllElements<false>();
-            DecvqAllCast(a)->AddRef(-1);
-         }
       }
-
-      /// Same as free, but here in case container isn't Multiown             
-      /*void FreeAll(this auto& self) noexcept {
-         self.OwnershipEmergent<STYLE, ID, SHARED...>::Free();
-      }*/
-
-      /// Destroy the first element                                           
-      ///   @attention doesn't perform any referencing or indirection         
-      ///   @attention assumes first element is validly constructed           
-      ///   @attention does not modify any container state                    
-      /*template<Cid SID = ID, CT::Container C> requires Relevant<SID>
-      void DestroyElementShallow(this C& self) noexcept {
-         if constexpr (CT::TypeErased<C>) {
-            // Destroying a type-erased element                         
-            auto T = self.template GetType<SID>();
-            if (const auto destructor = T.GetDestructor()) {
-               const auto ptr = self.template GetRaw<SID>();
-               destructor(ptr);
-            }
-         }
-         else {
-            // Destroying a statically-typed element                    
-            using T = TypeOf<C, SID>;
-            if constexpr (CT::Destroyable<T>) {
-               auto* element = self.template Get<void, SID>();
-               element->~T();
-            }
-         }
-      }*/
    };
+
+   #undef ThisCom
 }

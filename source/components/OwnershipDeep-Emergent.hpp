@@ -23,11 +23,15 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...>
+   #define ThisCom self.OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...>
 
    ///                                                                        
    /// Manages deep ownership by searching for an allocation every time.      
    /// Also used as base for other deep ownership components.                 
+   ///   @tparam STYLE whether ownership will be automatically applied on     
+   ///      construction, reassignment and destruction. Usually 0 if container
+   ///      is just a view, or in other cases where you want to carry an      
+   ///      allocation pointer, but not necessarily reference it.             
    ///   @tparam REF_INDIVIDUAL toggles whether contained items that were     
    ///      reflected as CT::Referenced get referenced. Elements will get     
    ///      referenced even if no entry for the element exist, but you can    
@@ -36,7 +40,7 @@ namespace Langulus::Anyness::Component
    ///      entire container is considered disowned.                          
    ///   @tparam ID which heap/stack are we keeping track of?                 
    ///   @tparam SHARED additional provider IDs that share the same behavior  
-   template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
+   template<uint STYLE, bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -47,6 +51,12 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 2000;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
+
+      /// Emergent deep ownership can't provide an array of entries           
+      template<Cid SID = ID> requires Relevant<SID>
+      constexpr auto GetEntries() const noexcept -> AllocationPtr const* {
+         return nullptr;
+      }
 
    protected:
       LglsComHeapReference(friend);
@@ -391,7 +401,7 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeep(this C& self) assumptious {
-         if constexpr (requires { C::Emergent; }) {
+         if constexpr (not requires { self.template GetEntriesInner<SID>(); }) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                ThisCom::template KeepElementDeepCustomPointersEmergent<SID>();
             #else
@@ -937,7 +947,7 @@ namespace Langulus::Anyness::Component
 
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeep(this C& self) assumptious {
-         if constexpr (requires { C::Emergent; }) {
+         if constexpr (not requires { self.template GetEntriesInner<SID>(); }) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                ThisCom::template DestroyElementDeepCustomPointersEmergent<FORCE_DESTROY, SID>();
             #else
@@ -1064,6 +1074,27 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// Reference all entries                                               
+      ///   @attention operates on all relevant dimensions at once!           
+      template</*Cid SID = ID, */CT::Container C> /*requires Relevant<SID>*/
+      void Keep(this C& self) noexcept {
+         // Reference all indirections and (optionally) items           
+         Id::ForEach([&self]<Cid D> {
+            if constexpr (CT::TypeErased<C>) {
+               if (self.template IsSparse<D>()) {
+                  self.Apply([](auto&& item) {
+                     item.template KeepElementDeep<false, D>();
+                  });
+               }
+            }
+            else if constexpr (CT::Sparse<TypeOf<C, D>>) {
+               self.Apply([](auto&& item) {
+                  item.template KeepElementDeep<false, D>();
+               });
+            }
+         });
+      }
+
       /// Reset all entries for the first element                             
       ///   @attention this overwrites previous entries without dereferencing 
       template<Cid SID = ID, CT::Container C>
@@ -1094,22 +1125,24 @@ namespace Langulus::Anyness::Component
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
-      template<class C>
-      void Destroy(this C& self) noexcept {
+      template<bool DEALLOCATE = true, class SELF>
+      void Destroy(this SELF& self) noexcept requires ((STYLE & OnDestroy) != 0) {
          if (self.IsEmpty())
             return;
 
-         self.Apply([&](auto&& item) {
-            Id::ForEach([&]<Cid D> {//TODO take dimension outside loop for less context switching overhead
-               if constexpr (CT::TypeErased<C>) {
-                  if (self.template IsSparse<D>())
+         Id::ForEach([&]<Cid D> {
+            if constexpr (CT::TypeErased<SELF>) {
+               if (self.template IsSparse<D>()) {
+                  self.Apply([](auto&& item) {
                      item.template DestroyElementDeep<false, D>();
+                  });
                }
-               else {
-                  if constexpr (CT::Sparse<TypeOf<C, D>>)
-                     item.template DestroyElementDeep<false, D>();
-               }
-            });
+            }
+            else if constexpr (CT::Sparse<TypeOf<SELF, D>>) {
+               self.Apply([](auto&& item) {
+                  item.template DestroyElementDeep<false, D>();
+               });
+            }
          });
       }
    };

@@ -13,7 +13,7 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.OwnershipDeepHeap<REF_INDIVIDUAL, ID, SHARED...>
+   #define ThisCom self.OwnershipDeepHeap<STYLE, REF_INDIVIDUAL, ID, SHARED...>
 
    ///                                                                        
    /// Reserves a part of the heap to keep track of sparse element's          
@@ -26,6 +26,10 @@ namespace Langulus::Anyness::Component
    ///   third  int*** allocations... etc.},                                  
    /// essentially forming an array of indirections indexed like:             
    ///   entries[item_index * number_of_indirections + indirection_index]     
+   ///   @tparam STYLE whether ownership will be automatically applied on     
+   ///      construction, reassignment and destruction. Usually 0 if container
+   ///      is just a view, or in other cases where you want to carry an      
+   ///      allocation pointer, but not necessarily reference it.             
    ///   @tparam REF_INDIVIDUAL toggles whether contained items that were     
    ///      reflected as CT::Referenced get referenced. Elements will get     
    ///      referenced even if no entry for the element exist, but you can    
@@ -36,10 +40,10 @@ namespace Langulus::Anyness::Component
    ///   @tparam SHARED additional provider IDs that share the same behavior  
    ///   @note this is used primarily for local handles and containers with   
    ///      ownership in general. Shouldn't be used for embedded containers.  
-   template<bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
-   struct OwnershipDeepHeap : OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...> {
+   template<uint STYLE, bool REF_INDIVIDUAL, Cid ID, Cid...SHARED>
+   struct OwnershipDeepHeap : OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...> {
       using HeapRequest = PerDimension<PerElement<PerIndirection<AllocationPtr>>>;
-      using Id = typename OwnershipDeepEmergent<REF_INDIVIDUAL, ID, SHARED...>::Id;
+      using Id = typename OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...>::Id;
 
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
