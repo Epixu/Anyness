@@ -138,6 +138,62 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    REQUIRE(testtype2.IsExact(testtype2.GetDecvq()));
    REQUIRE(testtype3.IsExact(testtype3.GetDecvq()));
    
+   GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(*element2);
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Refer(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (copied), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Copy(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (cloned), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Clone(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (move), and then destroyed") {
+      const ScopedE element1{555};
+      ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(::std::move(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (move using intent), and then destroyed") {
+      const ScopedE element1{555};
+      ScopedE element2{112};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Move(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (abandon), and then destroyed") {
+      const ScopedE element1{555};
+      ScopedE element2{112};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Abandon(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (disown), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Disown(*element2));
+   }
+
    GIVEN("Absorb-constructed container") {
       const ScopedE originalElement {556};
       const ScopedE element {555};

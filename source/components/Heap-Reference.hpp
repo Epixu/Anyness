@@ -232,26 +232,17 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::TypeErased<AS>) {
                // Type-erased handle                                    
-               if constexpr (CT::DeeplyOwned<AS>) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   return AS {
                      ThisCom::template Get<void, SID>(),
                      self.template GetEntries<SID>(),
                      self.template GetType<SID>()
                   };
                }
-               else if constexpr (CT::Owned<AS>) {
-                  return AS {
-                     ThisCom::template Get<void, SID>(),
-                     self.template GetAllocation<SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-               else {
-                  return AS {
-                     ThisCom::template Get<void, SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
+               else return AS {
+                  self.template Get<void, SID>(),
+                  self.template GetType<SID>()
+               };
             }
             else {
                // Statically typed handle                               
@@ -265,16 +256,10 @@ namespace Langulus::Anyness::Component
                }
                else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
 
-               if constexpr (CT::DeeplyOwned<AS>) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   return AS {
                      ThisCom::template Get<void, SID>(),
                      self.template GetEntries<SID>()
-                  };
-               }
-               else if constexpr (CT::Owned<AS>) {
-                  return AS {
-                     ThisCom::template Get<void, SID>(),
-                     self.template GetAllocation<SID>()
                   };
                }
                else return AS {ThisCom::template Get<void, SID>()};

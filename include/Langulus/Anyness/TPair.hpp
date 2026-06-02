@@ -44,7 +44,7 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_MapsTo    = Text;
 
-      static constexpr bool TypeErased = false;
+      //static constexpr bool TypeErased = false;
       //static constexpr bool Emergent   = true;
 
       using Base     = Inner::TPairBase<K, V>;

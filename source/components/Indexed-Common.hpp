@@ -173,26 +173,17 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::TypeErased<AS>) {
                // Type-erased handle                                    
-               if constexpr (CT::DeeplyOwned<AS>) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   return AS {
                      self.template GetAt<void, SID>(LglsFwd(idx)),
                      self.template GetEntries<SID>(),
                      self.template GetType<SID>()
                   };
                }
-               else if constexpr (CT::Owned<AS>) {
-                  return AS {
-                     self.template GetAt<void, SID>(LglsFwd(idx)),
-                     self.template GetAllocation<SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-               else {
-                  return AS {
-                     self.template GetAt<void, SID>(LglsFwd(idx)),
-                     self.template GetType<SID>()
-                  };
-               }
+               else return AS {
+                  self.template GetAt<void, SID>(LglsFwd(idx)),
+                  self.template GetType<SID>()
+               };
             }
             else {
                // Statically typed handle                               
@@ -206,21 +197,13 @@ namespace Langulus::Anyness::Component
                }
                else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
 
-               if constexpr (CT::DeeplyOwned<AS>) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   return AS {
                      self.template GetAt<void, SID>(LglsFwd(idx)),
                      self.template GetEntries<SID>()
                   };
                }
-               else if constexpr (CT::Owned<AS>) {
-                  return AS {
-                     self.template GetAt<void, SID>(LglsFwd(idx)),
-                     self.template GetAllocation<SID>()
-                  };
-               }
-               else return AS {
-                  self.template GetAt<void, SID>(LglsFwd(idx))
-               };
+               else return AS { self.template GetAt<void, SID>(LglsFwd(idx)) };
             }
          }
          else {

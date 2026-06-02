@@ -42,6 +42,10 @@ namespace Langulus::Anyness::Component
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 2000; }),
          "All precedences should match");
 
+      static constexpr uint OwnedDeep = Subcomponents::First::OwnedDeep;
+      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::OwnedDeep == OwnedDeep; }),
+         "Currently all deep ownerships must be of the same style");
+
       #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
 
       /// Get entry array if containing pointers                              

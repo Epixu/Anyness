@@ -468,41 +468,43 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
       REQUIRE((*map.template ValAsAt<E2*>(0)) == *e2);
    }
 
-   if constexpr (CT::Dense<E1>)
-      REQUIRE(map.GetKeyEntries() == nullptr);
-   else if (uses) {
-      REQUIRE(map.GetKeyEntries() != nullptr);
+   if constexpr (CT::OwnedDeep<T>) {
+      if constexpr (CT::Dense<E1>)
+         REQUIRE(map.GetKeyEntries() == nullptr);
+      else if (uses) {
+         REQUIRE(map.GetKeyEntries() != nullptr);
 
-      if constexpr (not CT::Disowned<IK>) {
-         for (size_t i = 0; i < IndirectsOf<E1>; ++i) {
-            if constexpr (CT::Cloned<IK>)
-               REQUIRE(map.GetKeyEntriesAt(0)[i] != e1.entries[i + 1]);
-            else
-               REQUIRE(map.GetKeyEntriesAt(0)[i] == e1.entries[i + 1]);
+         if constexpr (not CT::Disowned<IK>) {
+            for (size_t i = 0; i < IndirectsOf<E1>; ++i) {
+               if constexpr (CT::Cloned<IK>)
+                  REQUIRE(map.GetKeyEntriesAt(0)[i] != e1.entries[i + 1]);
+               else
+                  REQUIRE(map.GetKeyEntriesAt(0)[i] == e1.entries[i + 1]);
+            }
+         }
+         else {
+            for (size_t i = 0; i < IndirectsOf<E1>; ++i)
+               REQUIRE(map.GetKeyEntriesAt(0)[i] == nullptr);
          }
       }
-      else {
-         for (size_t i = 0; i < IndirectsOf<E1>; ++i)
-            REQUIRE(map.GetKeyEntriesAt(0)[i] == nullptr);
-      }
-   }
 
-   if constexpr (CT::Dense<E2>)
-      REQUIRE(map.GetValEntries() == nullptr);
-   else if (uses) {
-      REQUIRE(map.GetValEntries() != nullptr);
+      if constexpr (CT::Dense<E2>)
+         REQUIRE(map.GetValEntries() == nullptr);
+      else if (uses) {
+         REQUIRE(map.GetValEntries() != nullptr);
 
-      if constexpr (not CT::Disowned<IV>) {
-         for (size_t i = 0; i < IndirectsOf<E2>; ++i) {
-            if constexpr (CT::Cloned<IV>)
-               REQUIRE(map.GetValEntriesAt(0)[i] != e2.entries[i + 1]);
-            else
-               REQUIRE(map.GetValEntriesAt(0)[i] == e2.entries[i + 1]);
+         if constexpr (not CT::Disowned<IV>) {
+            for (size_t i = 0; i < IndirectsOf<E2>; ++i) {
+               if constexpr (CT::Cloned<IV>)
+                  REQUIRE(map.GetValEntriesAt(0)[i] != e2.entries[i + 1]);
+               else
+                  REQUIRE(map.GetValEntriesAt(0)[i] == e2.entries[i + 1]);
+            }
          }
-      }
-      else {
-         for (size_t i = 0; i < IndirectsOf<E2>; ++i)
-            REQUIRE(map.GetValEntriesAt(0)[i] == nullptr);
+         else {
+            for (size_t i = 0; i < IndirectsOf<E2>; ++i)
+               REQUIRE(map.GetValEntriesAt(0)[i] == nullptr);
+         }
       }
    }
 

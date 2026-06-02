@@ -46,7 +46,7 @@ namespace Langulus::Anyness::Component
       using CTTI_ReflectAs = void;
       using Id = Values<ID, SHARED...>;
 
-      static constexpr bool DeeplyOwned = true;
+      static constexpr uint OwnedDeep = STYLE;
       static constexpr bool ReferenceElements = REF_INDIVIDUAL;
       static constexpr int  ComponentPrecedence = 2000;
       template<Cid SID>
@@ -1009,7 +1009,7 @@ namespace Langulus::Anyness::Component
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (CT::StronglyOwned<H> and I::IsMoved()) {
+                  if constexpr (CT::OwnedStrong<H> and I::IsMoved()) {
                      // We are moving/abandoning, and we have to make   
                      // sure that source entries are zeroes, because    
                      // otherwise they will be dereferenced when H goes 
@@ -1026,7 +1026,7 @@ namespace Langulus::Anyness::Component
                // elements.                                             
                ThisCom::template KeepElementDeep<false, SID>();
             }
-            else if constexpr (CT::StronglyOwned<H> and REF_INDIVIDUAL) {
+            else if constexpr (CT::OwnedStrong<H> and REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
                // are referenced (even if they have no corresponding    
                // entry), we need to zero the source pointer, so that   

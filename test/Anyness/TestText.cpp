@@ -165,9 +165,9 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
    static_assert(    CT::ContainsMany<T>);
    static_assert(    CT::HasVariableCount<T>);
    static_assert(    CT::HeapAllocated<T>);
-   static_assert(not CT::DeeplyOwned<T>);
+   static_assert(not CT::OwnedDeep<T>);
    static_assert(    CT::Owned<T>);
-   static_assert(    CT::StronglyOwned<T>);
+   static_assert(    CT::OwnedStrong<T>);
    static_assert(    CT::Comparable<T, T>);
    static_assert(    CT::Comparable<T, E>);
    static_assert(    ::std::ranges::range<T>);

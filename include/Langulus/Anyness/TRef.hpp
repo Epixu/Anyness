@@ -26,7 +26,7 @@ namespace Langulus::Anyness::Inner
       Com::CountStatic<1u>,               // Statically sized          
       Com::ReserveEmergent<>,             // Reserve derived from alloc
       Com::OwnershipStack<>,              // Allocation is referenced  
-      Com::OwnershipDeepHeap<>,           // Indirections referenced   
+      EnableComponentIf<CT::Sparse<T>, Com::OwnershipDeepHeap<>>,
       Com::Emplacement<>,                 // Can be emplaced           
       Com::Assignment<>,                  // Can be reassigned         
       Com::Comparison<>,                  // Can be compared           

@@ -347,22 +347,24 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
       REQUIRE(*pack.template GetRawAs<E>() == *e);
    }
 
-   if constexpr (CT::Dense<E>)
-      REQUIRE(pack.GetEntries() == nullptr);
-   else if (uses) {
-      REQUIRE(pack.GetEntries() != nullptr);
+   if constexpr (CT::OwnedDeep<T>) {
+      if constexpr (CT::Dense<E>)
+         REQUIRE(pack.GetEntries() == nullptr);
+      else if (uses) {
+         REQUIRE(pack.GetEntries() != nullptr);
 
-      if constexpr (not CT::Disowned<I>) {
-         for (size_t i = 0; i < IndirectsOf<E>; ++i) {
-            if constexpr (CT::Cloned<I>)
-               REQUIRE(pack.GetEntries()[i] != e.entries[i + 1]);
-            else
-               REQUIRE(pack.GetEntries()[i] == e.entries[i + 1]);
+         if constexpr (not CT::Disowned<I>) {
+            for (size_t i = 0; i < IndirectsOf<E>; ++i) {
+               if constexpr (CT::Cloned<I>)
+                  REQUIRE(pack.GetEntries()[i] != e.entries[i + 1]);
+               else
+                  REQUIRE(pack.GetEntries()[i] == e.entries[i + 1]);
+            }
          }
-      }
-      else {
-         for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(pack.GetEntries()[i] == nullptr);
+         else {
+            for (size_t i = 0; i < IndirectsOf<E>; ++i)
+               REQUIRE(pack.GetEntries()[i] == nullptr);
+         }
       }
    }
 

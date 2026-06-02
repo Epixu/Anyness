@@ -41,7 +41,11 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 1000;
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 1000; }),
          "All precedences should match");
-      
+
+      static constexpr uint Owned = Subcomponents::First::Owned;
+      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Owned == Owned; }),
+         "Currently all shallow ownerships must be of the same style");
+
       /// Get the allocation                                                  
       template<Cid SID = 0>
       constexpr auto GetAllocation(this auto const& self) noexcept {

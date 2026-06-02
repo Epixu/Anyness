@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Inner
       Com::ReserveStack<>,             // Reserve kept as member        
       Com::IndexedLinear<>,            // Indexed directly              
       Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
+      EnableComponentIf<CT::Sparse<T>, Com::OwnershipDeepHeap<>>,
       Com::HashStack<>,                // Hash can be cached            
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           

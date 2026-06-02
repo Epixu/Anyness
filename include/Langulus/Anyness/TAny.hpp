@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Inner
       Com::CountStatic<1u>,            // Statically sized to 1         
       Com::ReserveEmergent<>,          // Reserve derived from alloc    
       Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
+      EnableComponentIf<CT::Sparse<T>, Com::OwnershipDeepHeap<>>,
       Com::HashEmergent<>,             // Hash is retrieved from item   
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             

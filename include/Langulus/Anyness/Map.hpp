@@ -77,8 +77,8 @@ namespace Langulus::Anyness::Inner
       using Pick          = HandleType;
       using PickMut       = HandleMutType;
 
-      static constexpr bool TypeErased = true;
-      static constexpr bool DeeplyOwned = true;
+      //static constexpr bool TypeErased = true;
+      //static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
 
       constexpr Map() noexcept {

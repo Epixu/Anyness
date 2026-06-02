@@ -40,8 +40,8 @@ namespace Langulus::Anyness
       using KeyHandle = Handle;
       using ValHandle = Handle;
 
-      static constexpr bool TypeErased    = true;
-      static constexpr bool DeeplyOwned   = true;
+      //static constexpr bool TypeErased    = true;
+      //static constexpr bool DeeplyOwned   = true;
       //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
@@ -137,8 +137,8 @@ namespace Langulus::Anyness
       using KeyHandle = HandleMut;
       using ValHandle = HandleMut;
 
-      static constexpr bool TypeErased    = true;
-      static constexpr bool DeeplyOwned   = true;
+      //static constexpr bool TypeErased    = true;
+      //static constexpr bool DeeplyOwned   = true;
       //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
@@ -234,8 +234,8 @@ namespace Langulus::Anyness
       using KeyHandle = Handle;
       using ValHandle = HandleMut;
 
-      static constexpr bool TypeErased    = true;
-      static constexpr bool DeeplyOwned   = true;
+      //static constexpr bool TypeErased    = true;
+      //static constexpr bool DeeplyOwned   = true;
       //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
@@ -335,8 +335,8 @@ namespace Langulus::Anyness
 
       //static constexpr bool Emergent      = true;
       //static constexpr bool HeapCanBeNull = true;
-      static constexpr uint Owned         = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
-      static constexpr bool DeeplyOwned   = CT::Sparse<K> or CT::Sparse<V>;
+      //static constexpr uint Owned         = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
+      //static constexpr bool DeeplyOwned   = CT::Sparse<K> or CT::Sparse<V>;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -436,9 +436,9 @@ namespace Langulus::Anyness
       using KeyHandle = THandle<K>;
       using ValHandle = THandle<V>;
 
-      static constexpr bool TypeErased        = false;
-      static constexpr uint Owned             = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
-      static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
+      //static constexpr bool TypeErased        = false;
+      //static constexpr uint Owned             = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
+      //static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
       //static constexpr bool HeapCanBeNull     = true;
 
@@ -598,9 +598,9 @@ namespace Langulus::Anyness
       using KeyHandle = Tif<CT::Sparse<K>, THandle<K&>, THandleEmergent<K&>>;
       using ValHandle = Tif<CT::Sparse<V>, THandle<V&>, THandleEmergent<V&>>;
 
-      static constexpr bool TypeErased        = false;
-      static constexpr uint Owned             = CT::Sparse<K> or CT::Sparse<V> ? Com::StrongOwnership : 0;
-      static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
+      //static constexpr bool TypeErased        = false;
+      //static constexpr uint Owned             = CT::Sparse<K> or CT::Sparse<V> ? Com::StrongOwnership : 0;
+      //static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
       //static constexpr bool HeapCanBeNull     = DeeplyOwned;
 

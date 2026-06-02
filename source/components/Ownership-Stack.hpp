@@ -150,7 +150,7 @@ namespace Langulus::Anyness::Component
                   ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
 
                   if_available(from.template SetAllocationInner<ID>(nullptr))
-                  else if constexpr (STYLE & OnCreate and CT::StronglyOwned<I>) {
+                  else if constexpr (STYLE & OnCreate and CT::OwnedStrong<I>) {
                      // We can't reset source allocation pointer, which 
                      // means that source destructor will dereference   
                      // when out of scope: must reference data here.    

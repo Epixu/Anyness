@@ -112,6 +112,19 @@ namespace Langulus::CT
    concept Owned = Container<T...>
        and ((ShedDeref<T>::Owned != 0) and ...);
 
+   /// Check if listed containers are referenced upon construction/assignment 
+   /// and then automatically dereferenced on destruction                     
+   template<class...T>
+   concept OwnedStrong = Container<T...>
+       and (((ShedDeref<T>::Owned & Anyness::Component::StrongOwnership) == Anyness::Component::StrongOwnership) and ...);
+   
+   /// Check if listed types are containers with any kind of DeepOwnership    
+   /// component                                                              
+   template<class...T>
+   concept OwnedDeep = Container<T...>
+       and ((ShedDeref<T>::OwnedDeep != 0) and ...);
+       //and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
+
    /// Check if two containers/elements have the same dimensions              
    template<class LHS, class RHS>
    concept CompatibleDimensions =
@@ -119,12 +132,6 @@ namespace Langulus::CT
         or (Container<LHS> and not Container<RHS> and Same<Anyness::Component::Dimensions<LHS>, Values<Anyness::Cid(0)>>)
         or (Container<RHS> and not Container<LHS> and Same<Anyness::Component::Dimensions<RHS>, Values<Anyness::Cid(0)>>);
 
-   /// Check if listed containers are referenced upon construction/assignment 
-   /// and then automatically dereferenced on destruction                     
-   template<class...T>
-   concept StronglyOwned = Container<T...>
-       and (((ShedDeref<T>::Owned & Anyness::Component::StrongOwnership) != 0) and ...);
-   
    /// Check if listed types are containers with any kind of heap memory      
    template<class...T>
    concept HeapAllocated = Container<T...>
@@ -157,13 +164,6 @@ namespace Langulus::CT
    template<class...T>
    concept TypeErased = Container<T...>
        and ((ShedDeref<T>::TypeErased) and ...);
-
-   /// Check if listed types are containers with any kind of DeepOwnership    
-   /// component                                                              
-   template<class...T>
-   concept DeeplyOwned = Container<T...>
-       and (ShedDeref<T>::DeeplyOwned and ...)
-       and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
 
    /// Check if listed types are containers, and are indexed                  
    template<class...T>

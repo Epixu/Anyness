@@ -114,42 +114,27 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::TypeErased<AS>) {
                // Type-erased handle                                    
-               if constexpr (CT::DeeplyOwned<AS>) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   return AS {
                      ThisCom::Get(),
                      self.template GetEntries<SID>(),
                      self.template GetType<SID>()
                   };
                }
-               else if constexpr (CT::Owned<AS>) {
-                  return AS {
-                     ThisCom::Get(),
-                     nullptr /*self.template GetAllocation<SID>()*/, //TODO is this correct?
-                     self.template GetType<SID>()
-                  };
-               }
-               else {
-                  return AS {
-                     ThisCom::Get(),
-                     self.template GetType<SID>()
-                  };
-               }
+               else return AS {
+                  ThisCom::Get(),
+                  self.template GetType<SID>()
+               };
             }
             else {
                // Statically typed handle                               
                using HT = Deref<TypeOf<AS>>;
                static_assert(Same<T, HT>, "Type mismatch");
 
-               if constexpr (CT::DeeplyOwned<AS>) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   return AS {
                      ThisCom::Get(),
                      self.template GetEntries<SID>()
-                  };
-               }
-               else if constexpr (CT::Owned<AS>) {
-                  return AS {
-                     ThisCom::Get(),
-                     nullptr /*self.template GetAllocation<SID>()*/ //TODO is this correct?
                   };
                }
                else return AS {ThisCom::Get()};

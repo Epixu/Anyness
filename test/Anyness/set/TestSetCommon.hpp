@@ -158,22 +158,24 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
       REQUIRE((*set.template AsAt<E*>(0)) == *e);
    }
 
-   if constexpr (CT::Dense<E>)
-      REQUIRE(set.GetEntries() == nullptr);
-   else if (uses) {
-      REQUIRE(set.GetEntries() != nullptr);
+   if constexpr (CT::OwnedDeep<T>) {
+      if constexpr (CT::Dense<E>)
+         REQUIRE(set.GetEntries() == nullptr);
+      else if (uses) {
+         REQUIRE(set.GetEntries() != nullptr);
 
-      if constexpr (not CT::Disowned<I>) {
-         for (size_t i = 0; i < IndirectsOf<E>; ++i) {
-            if constexpr (CT::Cloned<I>)
-               REQUIRE(set.GetEntriesAt(0)[i] != e.entries[i + 1]);
-            else
-               REQUIRE(set.GetEntriesAt(0)[i] == e.entries[i + 1]);
+         if constexpr (not CT::Disowned<I>) {
+            for (size_t i = 0; i < IndirectsOf<E>; ++i) {
+               if constexpr (CT::Cloned<I>)
+                  REQUIRE(set.GetEntriesAt(0)[i] != e.entries[i + 1]);
+               else
+                  REQUIRE(set.GetEntriesAt(0)[i] == e.entries[i + 1]);
+            }
          }
-      }
-      else {
-         for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(set.GetEntriesAt(0)[i] == nullptr);
+         else {
+            for (size_t i = 0; i < IndirectsOf<E>; ++i)
+               REQUIRE(set.GetEntriesAt(0)[i] == nullptr);
+         }
       }
    }
 

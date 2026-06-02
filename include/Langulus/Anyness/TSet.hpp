@@ -20,7 +20,7 @@ namespace Langulus::Anyness::Inner
       Com::ReserveStack<>,             // Reserve kept as member        
       Com::IndexedHashStack<>,         // Indexed by hash table         
       Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
+      EnableComponentIf<CT::Sparse<T>, Com::OwnershipDeepHeap<>>,
       Com::HashHeap<>,                 // Hash can be cached            
       Com::Merging<>,                  // Allows merging                
       Com::MergingOperators<>,         // <<= and >>= merging           

@@ -34,13 +34,13 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
    static_assert(T::CountHeapProviders() == 1);
    static_assert(    CT::HeapAllocated<T>);
    static_assert(not CT::Multiheap<T>);
-   static_assert(    CT::StronglyOwned<T>);
+   static_assert(    CT::OwnedStrong<T>);
    static_assert(    CT::Owned<T>);
+   static_assert(not CT::OwnedDeep<T>);
    static_assert(    CT::HasVariableCount<T>);
    static_assert(not CT::ContainsMany<T>);
    static_assert(    CT::ContainsOne<T>);
    static_assert(not CT::TypeErased<T>);
-   static_assert(not CT::DeeplyOwned<T>);
    static_assert(not CT::Indexed<T>);
    static_assert(not CT::IndexedLinearly<T>);
 

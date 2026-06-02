@@ -16,15 +16,13 @@ namespace Langulus::Anyness::Inner
    using TMapBase = Com::Container<
       Com::Multitype<Com::TypedStack<DMeta, K, true, 0>,
                      Com::TypedStack<DMeta, V, true, 1>>,
-      Com::HeapMovable<8, 2,
-         HeapEntry<0, K*>,                // Key heap data              
-         HeapEntry<1, V*>                 // Value heap data            
-      >,
+      Com::HeapMovable<8, 2, HeapEntry<0, K*>, HeapEntry<1, V*>>,
       Com::CountStack<size_t, 0, 1>,      // Dynamically sized          
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     
       Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
-      Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>,
+      Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0>>,
+                        EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 1>>>,
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      
       //Com::Insertion<1>,                  // Allows inserting values    
@@ -64,8 +62,8 @@ namespace Langulus::Anyness
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 
-      static constexpr bool TypeErased = false;
-      static constexpr bool DeeplyOwned = true;
+      //static constexpr bool TypeErased = false;
+      //static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
 
       using Key = K;
@@ -179,17 +177,17 @@ namespace Langulus::Anyness
          return self.template AsAt<AS, 1>(LglsFwd(idx));
       }
 
-      constexpr auto GetKeyEntries() const noexcept {
+      constexpr auto GetKeyEntries() const noexcept requires CT::Sparse<K> {
          return this->template GetEntries<0>();
       }
-      constexpr auto GetValEntries() const noexcept {
+      constexpr auto GetValEntries() const noexcept requires CT::Sparse<V> {
          return this->template GetEntries<1>();
       }
 
-      auto GetKeyEntriesAt(CT::Index auto&& idx) const assumptious {
+      auto GetKeyEntriesAt(CT::Index auto&& idx) const assumptious requires CT::Sparse<K> {
          return this->template GetEntriesAt<0>(LglsFwd(idx));
       }
-      auto GetValEntriesAt(CT::Index auto&& idx) const assumptious {
+      auto GetValEntriesAt(CT::Index auto&& idx) const assumptious requires CT::Sparse<V> {
          return this->template GetEntriesAt<1>(LglsFwd(idx));
       }
    };

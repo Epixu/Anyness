@@ -61,8 +61,8 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_MapsTo    = Text;
 
-      static constexpr bool TypeErased = true;
-      static constexpr bool DeeplyOwned = true;
+      //static constexpr bool TypeErased = true;
+      //static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
 
       using Base     = Inner::PairBase;
