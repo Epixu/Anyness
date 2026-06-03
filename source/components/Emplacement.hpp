@@ -128,8 +128,7 @@ namespace Langulus::Anyness::Component
             if (a->GetUses() != 1) {
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
-               self.Destroy();
-               //self.template Free<SID>();
+               self.Free();
 
                try {
                   if constexpr (sizeof...(arguments) > 0)
@@ -146,7 +145,7 @@ namespace Langulus::Anyness::Component
                // We're allowed to reuse the memory.                    
                // Need to destroy and overwrite only the first element. 
                auto item = self.GetHandle();
-               item.template Destroy<false>();
+               item.Free();
                //item.template DestroyElement<true, SID>();
                if_available(item.template ResetEntries<SID>());
                //TODO clear the correspnding hash table spot?
@@ -166,7 +165,7 @@ namespace Langulus::Anyness::Component
                      item += 1;
                      const auto itemsEnd = self.GetHandle() + self.template GetCount<SID>();
                      while (item.GetRaw() != itemsEnd.GetRaw()) {
-                        item.template Destroy<false>();
+                        item.Free();
                         //item.template DestroyElement<true, SID>();
                         ++item;
                      }

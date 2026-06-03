@@ -163,10 +163,7 @@ namespace Langulus::Anyness::Component
                   // Partial success is not allowed - we have to        
                   // destroy everything we initialized                  
                   while (n) {
-                     dst.template Destroy<false>();
-                     /*Id::ForEach([&dst]<Cid D>{
-                        dst.template DestroyElement<true, D>();
-                     });*/
+                     dst.Free();
                      --dst;
                      --n;
                   }
@@ -383,8 +380,7 @@ namespace Langulus::Anyness::Component
 
          if (self.template GetCount<SID>() > desiredReserve) {
             auto temp = self.SelectInner(desiredReserve);
-            //temp.template DestroyAllElements<true/*, SID*/>();
-            temp.template Destroy<false>();
+            temp.template Free<false>();
             if_available(self.template SetCountInner<SID>(desiredReserve));
          }
 

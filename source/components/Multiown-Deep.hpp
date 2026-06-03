@@ -87,6 +87,31 @@ namespace Langulus::Anyness::Component
          self.C::SetEntriesInner(entries);
       }
 
+      /// Called on container destruction                                     
+      ///   @attention this never modifies any state                          
+      template<class SELF>
+      constexpr void Destroy(this SELF& self) noexcept {
+         Subcomponents::Reverse::ForEach([&]<class C> noexcept {
+            if_available_gcc(C::template Destroy<SELF>)();
+         });
+      }
+
+      /// Reference all entries once.                                         
+      template<class SELF>
+      constexpr void Keep(this SELF& self) noexcept {
+         Subcomponents::ForEach([&]<class C> noexcept {
+            if_available_gcc(C::template Keep<SELF>)();
+         });
+      }
+
+      /// Dereference all entries once, always deallocate fully dereferenced  
+      template<bool DEALLOCATE = true, class SELF>
+      constexpr void Free(this SELF& self) noexcept {
+         Subcomponents::Reverse::ForEach([&]<class C> noexcept {
+            if_available_gcc(C::template Free<DEALLOCATE, SELF>)();
+         });
+      }
+
       /// Default-initialization of this component                            
       template<class SELF>
       constexpr void ConstructDefault(this SELF& self) noexcept {

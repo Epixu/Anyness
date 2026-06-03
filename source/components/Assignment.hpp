@@ -212,7 +212,7 @@ namespace Langulus::Anyness::Component
                   auto& a = self.OWNER::GetAllocationInner();
                   if (not a) {
                      // Nothing was allocated. Could still be emergent! 
-                     self.Destroy();
+                     self.Free();
                      self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                      return;
                   }
@@ -225,7 +225,7 @@ namespace Langulus::Anyness::Component
                      //CommonIds::ForEach([&self]<Cid D> {
                         //self.template DestroyAllElements<true/*, D*/>();
                      //});
-                     self.template Destroy<false>();
+                     self.template Free<false>();
                      if constexpr (CT::ContainsMany<C>)
                         self.template AllocateLess<SID>(1);
                      return;
@@ -237,7 +237,7 @@ namespace Langulus::Anyness::Component
                   // this container and allocate a new block, which     
                   // will be exclusively ours.                          
                   //self.OWNER::Free();
-                  self.Destroy();
+                  self.Free();
                   self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                }
             }
@@ -272,14 +272,14 @@ namespace Langulus::Anyness::Component
                auto item = first + (self.IsSparse() ? 0 : 1);
                auto const itemsEnd = first + self.GetCount();
                while (item.GetRaw() != itemsEnd.GetRaw()) {
-                  item.template Destroy<false>();
+                  item.Free();
                   //item.DestroyElement();
                   ++item;
                }
                if_available(first.ResetEntries());
             }
             else if (self.IsSparse()) {
-               self.template Destroy<false>();
+               self.template Free<false>();
                //self.DestroyElement();
                if_available(self.ResetEntries());
             }
@@ -290,7 +290,7 @@ namespace Langulus::Anyness::Component
          // referenced from elsewhere as well, so we can't afford to    
          // call any destructors. All we do is reset this container and 
          // allocate a new block, which will be exclusively ours.       
-         self.Destroy();
+         self.Free();
          self.AllocateFresh(self.RequestHeap(1));
          return false;
       }

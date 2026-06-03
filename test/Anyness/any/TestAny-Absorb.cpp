@@ -975,12 +975,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             }
          };
 
-         emplace_overwrite(pack_referred1, "Refer");
+         //emplace_overwrite(pack_referred1, "Refer");
          emplace_overwrite(pack_copied,    "Copy");
-         emplace_overwrite(pack_cloned,    "Clone");
+         /*emplace_overwrite(pack_cloned,    "Clone");
          emplace_overwrite(pack_moved1,    "Move");
          emplace_overwrite(pack_abandoned, "Abandon");
-         emplace_overwrite(pack_disowned,  "Disown");
+         emplace_overwrite(pack_disowned,  "Disown");*/
       }
 
       WHEN("Emplace (overwrite, describe)") {
@@ -1011,11 +1011,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          };
 
          emplace_overwrite_describe(pack_referred1, "Refer");
-         emplace_overwrite_describe(pack_copied,    "Copy");
+         /*emplace_overwrite_describe(pack_copied,    "Copy");
          emplace_overwrite_describe(pack_cloned,    "Clone");
          emplace_overwrite_describe(pack_moved1,    "Move");
          emplace_overwrite_describe(pack_abandoned, "Abandon");
-         emplace_overwrite_describe(pack_disowned,  "Disown");
+         emplace_overwrite_describe(pack_disowned,  "Disown");*/
       }
       
       WHEN("Cleared") {

@@ -713,12 +713,35 @@ namespace Langulus::Anyness
       }
 
       /// Call Destroy in all components that implement it.                   
-      /// Always do it in reverse order!                                      
-      template<bool DEALLOCATE = true, class SELF>
+      /// You have to call it manually in your container's destructor, so     
+      /// that 'deducing this' works appropriately.                           
+      template<class SELF>
       constexpr void Destroy(this SELF& self) {
          if not consteval {
+            // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
-               if_available_gcc(C::template Destroy<DEALLOCATE, SELF>)();
+               if_available_gcc(C::template Destroy<SELF>)();
+            });
+         }
+      }
+
+      /// Call Free in all components that implement it.                      
+      /// Always do it in reverse order!                                      
+      template<bool DEALLOCATE = true, class SELF>
+      constexpr void Free(this SELF& self) {
+         if not consteval {
+            ComponentList::Reverse::ForEach([&]<class C> {
+               if_available_gcc(C::template Free<DEALLOCATE, SELF>)();
+            });
+         }
+      }
+
+      /// Call Keep in all components that implement it.                      
+      template<class SELF>
+      constexpr void Keep(this SELF& self) {
+         if not consteval {
+            ComponentList::ForEach([&]<class C> {
+               if_available_gcc(C::template Keep<SELF>)();
             });
          }
       }
@@ -900,8 +923,8 @@ namespace Langulus::Anyness
          });
 
          // Free old data and absorb the new container                  
-         self.Destroy();
-         self.ResetCount(); //TODO redundant?
+         self.Free();
+         self.ResetCount(); //TODO not redundant! but why? shouldn't Absorb set it either way?
          self.Absorb(LglsFwd(rhs));
          return self;
       }

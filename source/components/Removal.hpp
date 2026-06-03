@@ -84,22 +84,27 @@ namespace Langulus::Anyness::Component
       /// Destroy all elements but don't deallocate memory, unless we have to 
       ///   @attention will never reset state or type                         
       void Clear(this auto& self) {
-         //TODO clear all dimensions??
          const auto al = self.GetAllocation();
+         if (self.IsEmpty()) {
+            // Container is already empty. Just make sure that we're    
+            // not gatekeeping an allocation that's used elsewhere.     
+            if (al and al->GetUses() > 1) {
+               // Since container is empty, all that this does is       
+               // dereference and reset all allocations                 
+               self.Free();
+               self.ResetAllAllocations();
+            }
+            return;
+         }
+         
          if (not al) {
-            // Data is either static or unallocated.                    
-            // Don't call destructors, just clear it up.                
+            // Data is either unallocated, static, or emergent.         
+            // Free any emergent items, or static sparse items.         
+            // Allocations are already nonexistent, so no need to reset.
+            self.Free();
             if_available(self.SetReservedInner(0));
             if_available(self.SetHashTableInner(nullptr));
             self.ResetCount();
-            return;
-         }
-
-         if (self.IsEmpty()) {
-            if (al->GetUses() > 1) {
-               DecvqAllCast(al)->AddRef(-1);
-               self.ResetAllAllocations();
-            }
             return;
          }
 
@@ -107,18 +112,16 @@ namespace Langulus::Anyness::Component
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the memory and type  
             // only if the container keeps track of the count separately
-            //self.template DestroyAllElements<true>(); //TODO use Destroy<DEALLOCATE = false>
-            self.template Destroy<false>(); //TODO use Destroy<DEALLOCATE = false>
+            self.template Free<false>();
             if_available(self.ResetHashTable());
             self.ResetCount();
          }
          else {
             // If reached, then data is referenced from multiple places.
-            // Don't call destructors, just dereference and clear       
-            // allocation, because it isn't ours.                       
-            //self.template DestroyAllElements<false>();//TODO use Destroy<DEALLOCATE = false>
-            self.Destroy();//TODO use Destroy<DEALLOCATE = false>
-            //DecvqAllCast(al)->AddRef(-1);
+            // Don't call local destructors, just dereference and clear 
+            // allocation, because it isn't ours. Indirections will     
+            // always get destroyed if they are fully dereferenced.     
+            self.Free();
             self.ResetAllAllocations();
          }
       }
@@ -128,7 +131,7 @@ namespace Langulus::Anyness::Component
       ///   @attention notice that heap pointer is not zeroed here, as it     
       ///      is not a requirement. It is UB if you GetRaw while count is 0! 
       void Reset(this auto& self) {
-         if_available(self.FreeAll());
+         if_available(self.Free());
          if_available(self.ResetAllAllocations());
          if_available(self.ResetState());
          if_available(self.ResetAllTypes());

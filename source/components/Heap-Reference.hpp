@@ -584,44 +584,6 @@ namespace Langulus::Anyness::Component
          result.mReserved = reserve;
          return result;
       }
-
-      /// Destroys only the first element.                                    
-      ///   @attention destroys one dimension at a time!                      
-      ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
-      ///      It will still destroy the element, but only when fully         
-      ///      dereferenced in all its indirections.                          
-      /*template<bool FORCE_DESTROY = true, Cid SID = Id::First, CT::Container C> requires Relevant<SID> //TODO remove this, its pointless with the new ownership ::Destroy separation
-      void DestroyElement(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
-            "Destroying only first element in a container with many. GetHandle() first?");
-
-         if constexpr (FORCE_DESTROY) {
-            if constexpr (CT::DeeplyOwned<C>)
-               self.template DestroyElementDeep<true, SID>();
-            else if constexpr (CT::Owned<C>)
-               self.template DestroyElementShallow<SID>();
-            else
-               static_assert(false, "No destruction routine was called");
-         }
-         else if constexpr (CT::DeeplyOwned<C>)
-            self.template DestroyElementDeep<false, SID>();
-      }*/
-
-      /// Destroys all elements.                                              
-      ///   @attention destroys all relevant dimensions                       
-      ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
-      ///      It will still destroy the element, but only when fully         
-      ///      dereferenced in all its indirections.                          
-      /*template<bool FORCE_DESTROY = true, CT::Container C>
-      void DestroyAllElements(this C& self) assumptious { //TODO remove this, just use Destroy<DEALLOCATE = FALSE> or something
-         if constexpr (FORCE_DESTROY or CT::DeeplyOwned<C>) {
-            self.Apply([](auto&& item) {
-               Id::ForEach([&item]<Cid D> {
-                  item.template DestroyElement<FORCE_DESTROY, D>();
-               });
-            });
-         }
-      }*/
    };
 
    #undef ThisCom

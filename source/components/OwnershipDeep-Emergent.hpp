@@ -422,6 +422,8 @@ namespace Langulus::Anyness::Component
       /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
       ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
       ///      sparse elements are always destroyed if fully dereferenced.    
+            //TODO FORCE_DESTROY no longer required?
+
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention assumes there are no custom pointers involved!         
@@ -446,7 +448,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Destroying a type-erased element                         
             const auto T = self.template GetType<SID>();
-            if (T.IsSparse()) {
+            if (T.IsSparse()) { //TODO this branch no longer required
                auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
                   return;
@@ -512,7 +514,7 @@ namespace Langulus::Anyness::Component
                   //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
             }
-            else if constexpr (FORCE_DESTROY) {
+            /*else if constexpr (FORCE_DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
                   // Call destructor of dense element                   
                   const auto ptr = self.template GetRaw<SID>();
@@ -522,14 +524,14 @@ namespace Langulus::Anyness::Component
                   }
                   destructor(ptr);
                }
-            }
+            }*/
          }
          else {
             //                                                          
             // Destroying a statically-typed element                    
             using T = TypeOf<C, SID>;
             
-            if constexpr (CT::Sparse<T>) {
+            if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
                using DT = Deptr<T>;
                auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
@@ -585,13 +587,13 @@ namespace Langulus::Anyness::Component
                   //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
             }
-            else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
+            /*else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
                // Call destructor of dense element                      
                auto& element = self.Get();
                IF_SAFE(if constexpr (REF_INDIVIDUAL and CT::Referenced<T>)
                   element.Reference(-1));
                element.~T();
-            }
+            }*/
          }
       }
 
@@ -603,6 +605,8 @@ namespace Langulus::Anyness::Component
       ///      enabled, regardless if an entry was found.                     
       ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
       ///      sparse elements are always destroyed if fully dereferenced.    
+            //TODO FORCE_DESTROY no longer required?
+
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state or entry            
       ///   @attention works on one dimension at a time!                      
@@ -617,7 +621,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Destroying a type-erased element                         
             const auto T = self.template GetType<SID>();
-            if (T.IsSparse()) {
+            if (T.IsSparse()) { //TODO this branch no longer required
                const auto subT = T.GetDeptr();
                const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
@@ -677,7 +681,7 @@ namespace Langulus::Anyness::Component
                }
                #endif
             }
-            else if constexpr (FORCE_DESTROY) {
+            /*else if constexpr (FORCE_DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
                   // Call destructor of dense element                   
                   const auto ptr = self.template GetRaw<SID>();
@@ -687,14 +691,14 @@ namespace Langulus::Anyness::Component
                   }
                   destructor(ptr);
                }
-            }
+            }*/
          }
          else {
             //                                                          
             // Destroying a statically-typed element                    
             using T = TypeOf<C, SID>;
             
-            if constexpr (CT::Sparse<T>) {
+            if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
                using DT = Deptr<T>;
                auto& ptr = *self.template GetRawAs<T, SID>();
                if (not ptr)
@@ -750,13 +754,13 @@ namespace Langulus::Anyness::Component
                }
                #endif
             }
-            else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
+            /*else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
                // Call destructor of dense element                      
                auto& element = self.Get();
                IF_SAFE(if constexpr (REF_INDIVIDUAL and CT::Referenced<T>)
                   element.Reference(-1));
                element.~T();
-            }
+            }*/
          }
       }
       
@@ -766,6 +770,8 @@ namespace Langulus::Anyness::Component
       /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
       ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
       ///      sparse elements are always destroyed if fully dereferenced.    
+            //TODO FORCE_DESTROY no longer required?
+
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention doesn't change any container state                     
@@ -787,7 +793,7 @@ namespace Langulus::Anyness::Component
          //                                                             
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
-         if (T.IsSparse()) {
+         if (T.IsSparse()) { //TODO this branch no longer required
             auto entries = self.template GetEntriesInner<SID>(); //TODO this needs to be GetEntries and it should account for entries for different types being in the same heap allocation
             if (not entries)
                return;
@@ -849,7 +855,7 @@ namespace Langulus::Anyness::Component
                ++entries;
             }
          }
-         else if constexpr (FORCE_DESTROY) {
+         /*else if constexpr (FORCE_DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
                void* const ptr = self.template GetRawVoid<SID>();
@@ -859,7 +865,7 @@ namespace Langulus::Anyness::Component
                }
                destructor(ptr);
             }
-         }
+         }*/
       }
 
       /// Nests through all indirection layers and destroys elements and      
@@ -870,6 +876,7 @@ namespace Langulus::Anyness::Component
       ///      enabled, regardless if an entry was found.                     
       ///   @tparam FORCE_DESTROY Destroy dense elements if true. Note:       
       ///      sparse elements are always destroyed if fully dereferenced.    
+      //TODO FORCE_DESTROY no longer required?
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
@@ -877,7 +884,7 @@ namespace Langulus::Anyness::Component
          //                                                             
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
-         if (T.IsSparse()) {
+         if (T.IsSparse()) { // TODO this branch no longer required
             void const* src = self.template GetRaw<SID>();
 
             while (src and T.IsSparse()) {
@@ -931,7 +938,7 @@ namespace Langulus::Anyness::Component
                T = nextT;
             }
          }
-         else if constexpr (FORCE_DESTROY) {
+         /*else if constexpr (FORCE_DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
                void* const ptr = self.template GetRawVoid<SID>();
@@ -941,10 +948,11 @@ namespace Langulus::Anyness::Component
                }
                destructor(ptr);
             }
-         }
+         }*/
       }
    #endif
 
+      //TODO FORCE_DESTROY no longer required?
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeep(this C& self) assumptious {
          if constexpr (not requires { self.template GetEntriesInner<SID>(); }) {
@@ -1076,8 +1084,11 @@ namespace Langulus::Anyness::Component
 
       /// Reference all entries                                               
       ///   @attention operates on all relevant dimensions at once!           
-      template</*Cid SID = ID, */CT::Container C> /*requires Relevant<SID>*/
+      template<CT::Container C>
       void Keep(this C& self) noexcept {
+         if (self.IsEmpty())
+            return;
+
          // Reference all indirections and (optionally) items           
          Id::ForEach([&self]<Cid D> {
             if constexpr (CT::TypeErased<C>) {
@@ -1093,6 +1104,73 @@ namespace Langulus::Anyness::Component
                });
             }
          });
+      }
+
+      /// Dereferences all entries and destroy all indirections whose entries 
+      /// were fully dereferenced.                                            
+      ///   @tparam DEALLOCATE not used, here only for ABI compatibility      
+      ///   @attention this never modifies any state                          
+      ///   @attention operates on all relevant dimensions at once!           
+      template<bool DEALLOCATE = true, CT::Container C>
+      void Free(this C& self) noexcept {
+         if (self.IsEmpty())
+            return;
+
+         // Reference all indirections and (optionally) items           
+         Id::ForEach([&self]<Cid D> {
+            if constexpr (CT::TypeErased<C>) {
+               if (self.template IsSparse<D>()) {
+                  self.Apply([](auto&& item) {
+                     item.template DestroyElementDeep<false, D>();
+                  });
+               }
+            }
+            else if constexpr (CT::Sparse<TypeOf<C, D>>) {
+               self.Apply([](auto&& item) {
+                  item.template DestroyElementDeep<false, D>();
+               });
+            }
+         });
+
+         if constexpr (not CT::Owned<C>) {
+            // The container has deep ownership, but no shallow         
+            // ownership. We are allowed to destroy immediate elements  
+            // here, because it won't happen otherwise.                 
+            Id::ForEach([&self]<Cid D> {
+               if constexpr (CT::TypeErased<C>) {
+                  const auto T = self.template GetType<D>();
+                  if (const auto destructor = T.GetDestructor()) {
+                     self.Apply([&destructor, &T](auto&& item) {
+                        const auto ptr = item.template GetRaw<D>();
+                        if constexpr (REF_INDIVIDUAL) {
+                           IF_SAFE(if (const auto referencer = T.GetReferencer())
+                              referencer(ptr, -1));
+                        }
+                        destructor(ptr);
+                     });
+                  }
+               }
+               else {
+                  using T = TypeOf<C, D>;
+                  if constexpr (CT::Destroyable<T>) {
+                     self.Apply([](auto&& item) {
+                        auto* element = item.template Get<void, D>();
+                        IF_SAFE(if constexpr (REF_INDIVIDUAL and CT::Referenced<T>)
+                           element->Reference(-1));
+                        element->~T();
+                     });
+                  }
+               }
+            });
+         }
+      }
+
+      /// Called on container destruction                                     
+      ///   @attention this never modifies any state                          
+      ///   @attention operates on all relevant dimensions at once!           
+      template<class SELF>
+      void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
+         ThisCom::Free();
       }
 
       /// Reset all entries for the first element                             
@@ -1120,30 +1198,6 @@ namespace Langulus::Anyness::Component
          const auto entries_size = sizeof(AllocationPtr) * indirections;
          auto entries = self.template GetEntriesInner<SID>();
          memset(DecvqAllCast(entries), 0, entries_size);
-      }
-
-      /// Called on container destruction                                     
-      ///   @attention this never modifies any state                          
-      ///   @attention operates on all relevant dimensions at once!           
-      template<bool DEALLOCATE = true, class SELF>
-      void Destroy(this SELF& self) noexcept requires ((STYLE & OnDestroy) != 0) {
-         if (self.IsEmpty())
-            return;
-
-         Id::ForEach([&]<Cid D> {
-            if constexpr (CT::TypeErased<SELF>) {
-               if (self.template IsSparse<D>()) {
-                  self.Apply([](auto&& item) {
-                     item.template DestroyElementDeep<false, D>();
-                  });
-               }
-            }
-            else if constexpr (CT::Sparse<TypeOf<SELF, D>>) {
-               self.Apply([](auto&& item) {
-                  item.template DestroyElementDeep<false, D>();
-               });
-            }
-         });
       }
    };
 

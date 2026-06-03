@@ -126,9 +126,9 @@ namespace Langulus::Anyness::Component
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
-      template<bool DEALLOCATE = true, class SELF>
+      template<class SELF>
       void Destroy(this SELF& self) noexcept requires ((STYLE & OnDestroy) != 0) {
-         ThisCom::template Free<DEALLOCATE>();
+         ThisCom::Free();
       }
 
       /// Reference the allocation once                                       

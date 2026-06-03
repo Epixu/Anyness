@@ -236,7 +236,7 @@ namespace Langulus::Anyness::Component
                         //from.template DestroyElement<true, D>();
                      });
 
-                     from.template Destroy<false>();
+                     from.template Free<false>();
 
                      tableBeg[newIndex] = attempt;
                      *table = 0;

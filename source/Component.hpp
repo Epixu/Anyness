@@ -118,7 +118,7 @@ namespace Langulus::CT
    concept OwnedStrong = Container<T...>
        and (((ShedDeref<T>::Owned & Anyness::Component::StrongOwnership) == Anyness::Component::StrongOwnership) and ...);
    
-   /// Check if listed types are containers with any kind of DeepOwnership    
+   /// Check if listed types are containers with any kind of OwnershipDeep    
    /// component                                                              
    template<class...T>
    concept OwnedDeep = Container<T...>
