@@ -83,14 +83,42 @@ namespace Langulus::Anyness::Component
          ThisCom::SetEntriesInner(nullptr);
       }
 
-      /// Transfer from any kind of container.                                
-      /// This is only a reference to the entries and is not allowed          
-      /// to allocate any new memory, so all this does is copy the            
-      /// pointer, ignoring any intents.                                      
-      ///   @param intent the intent and container to transfer from           
+      /// Copy the pointer to the entries, and reference if we have to        
+      ///   @param intent The intent and container to transfer from.          
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) noexcept {
          ThisCom::SetEntriesInner(intent.what.template GetEntries<ID>());
+
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and (STYLE & OnCreateAndDestroy) != 0) {
+            static_assert(not CT::Disowned<I>,
+               "Disownment is not allowed for emergent deep ownership");
+            decltype(auto) from = LglsFwd(intent.what);
+
+            if constexpr (CT::Referred<I>) {
+               // Refer                                                 
+               ThisCom::Keep();
+            }
+            else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
+               // Abandon/Move                                          
+               // We must reference only if we can't guarantee a        
+               // transfer of deep ownership.                           
+               if constexpr (requires { from.template ResetEntries<ID>(); }) {
+                  Id::ForEach([&from]<Cid D> {
+                     // Note - all dimensions _must_ be resettable   
+                     // to be well formed.                           
+                     from.template ResetEntries<D>();
+                  });
+               }
+               else {
+                  // We can't reset source entries (they are probably
+                  // emergent, too), which means that source _may_   
+                  // dereference them when destroyed. We must        
+                  // reference here as well to prevent segfault.     
+                  ThisCom::Keep();
+               }
+            }
+         }
+
       }
    };
 

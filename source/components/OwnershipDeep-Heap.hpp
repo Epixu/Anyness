@@ -117,6 +117,38 @@ namespace Langulus::Anyness::Component
 
          memset(ThisCom::template GetEntriesInner<SID>(), 0, count * sizeof(AllocationPtr));
       }
+      
+      /// Refer all allocations pointed to by all indirections on absorption. 
+      ///   @note When entries are stored on the heap, it is assumed that     
+      ///      SetAllocationInner has been called in a previous component.    
+      ///   @param intent The intent and container to transfer from           
+      ///   @important Notice that Copy and Clone intents are not handled     
+      ///      here. They're handled in heap components instead, in case      
+      ///      something throws an exception while constructing.              
+      template<class SELF, CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this SELF& self, I&& intent) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and (STYLE & OnCreateAndDestroy) != 0) {
+            decltype(auto) from = LglsFwd(intent.what);
+            LglsAssumeDev(self.template GetAllocationInner<ID>(),
+               "Allocation should've been initialized");
+
+            if constexpr (CT::Referred<I>) {
+               // Refer                                                 
+               ThisCom::Keep();
+            }
+            else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
+               // Abandon/Move                                          
+               if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
+                  LglsAssumeDev(from.template GetAllocationInner<ID>() == nullptr,
+                     "Remote container should've been disowned at this point");
+               }
+               else if constexpr (from.OwnedDeep & OnCreateAndDestroy) {
+                  // 'from' is likely emergent, we have to reference    
+                  ThisCom::Keep();
+               }
+            }
+         }
+      }
    };
 
    #undef ThisCom

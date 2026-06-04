@@ -146,8 +146,7 @@ namespace Langulus::Anyness::Component
                // Need to destroy and overwrite only the first element. 
                auto item = self.GetHandle();
                item.Free();
-               //item.template DestroyElement<true, SID>();
-               if_available(item.template ResetEntries<SID>());
+               if_available(item.ResetAllEntries());
                //TODO clear the correspnding hash table spot?
 
                // Emplace a new element on the first position.          

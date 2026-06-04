@@ -88,37 +88,38 @@ namespace Langulus::Anyness::Component
       LglsComRemoval(friend);
       LglsComEmplacement(friend);
 
-      /// Transfer from any kind of container, respecting intents             
-      ///   @attention this will not dereference previous allocation          
+      /// Emergent shallow ownership of STYLE has OnCreate                    
       ///   @param intent the intent and container to transfer from           
       ///   @important notice that Copy and Clone intents are not handled     
       ///      here. They're handled in heap components instead, in case      
       ///      something throws an exception while constructing.              
       template<class SELF, CT::Intent I>
-      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I>)
+      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I> and (STYLE & OnCreateAndDestroy) != 0)
       void ConstructFrom(this SELF& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
 
          if constexpr (CT::Referred<I>) {
             // Refer                                                    
-            if constexpr (STYLE & OnCreate)
-               ThisCom::Keep();
+            ThisCom::Keep();
          }
          else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
             // Abandon/Move                                             
-            if_available(from.SetAllocationInner(nullptr))
-            else if constexpr ((STYLE & OnCreate) and CT::OwnedStrong<I>) {
-               // We can't reset source allocation pointer, which means 
-               // that source destructor will dereference when out of   
-               // scope, because it is likely emergent. We are forced   
-               // to reference the data here. Keeping 'from' because it 
-               // is more likely to have the allocation cached.         
-               from.Keep();
+            if constexpr (requires { from.template SetAllocationInner<ID>(nullptr); }) {
+               if constexpr (from.Owned & OnCreateAndDestroy) {
+                  // We can transfer ownership                          
+                  from.template SetAllocationInner<ID>(nullptr);
+               }
+               else ThisCom::Keep();
+            }
+            else {
+               // We can't transfer ownership, because 'from' is likely 
+               // emergent.                                             
+               ThisCom::Keep();
             }
          }
          else if constexpr (CT::Disowned<I>) {
             // Disown                                                   
-            LglsAssert(not from.GetAllocation(),
+            LglsAssert(not from.template GetAllocation<ID>(),
                "Emergent ownership doesn't allow disownment");
          }
       }
@@ -127,7 +128,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
       template<class SELF>
-      void Destroy(this SELF& self) noexcept requires ((STYLE & OnDestroy) != 0) {
+      void Destroy(this SELF& self) noexcept requires ((STYLE & OnCreateAndDestroy) != 0) {
          ThisCom::Free();
       }
 

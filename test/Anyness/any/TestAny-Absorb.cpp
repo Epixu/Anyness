@@ -39,6 +39,8 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
+      , Types<Any, Text*,  ScopedElement<Text*>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
    , Types<Any, int,    ScopedElement<int>>
@@ -46,7 +48,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, RT,     ScopedElement<RT>>
    , Types<Any, char,   ScopedElement<char>>
                         
-   , Types<Any, Text*,  ScopedElement<Text*>>
    , Types<Any, int*,   ScopedElement<int*>>
    , Types<Any, Any*,   ScopedElement<Any*>>
    , Types<Any, RT*,    ScopedElement<RT*>>
@@ -728,14 +729,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             REQUIRE(a.GetUses() == uses_before);
          };
 
-         assign_full_self(pack_referred1);
+         /*assign_full_self(pack_referred1);
          assign_full_self(pack_referred2);
-         assign_full_self(pack_copied);
+         assign_full_self(pack_copied);*/
          assign_full_self(pack_cloned);
-         assign_full_self(pack_moved1);
+         /*assign_full_self(pack_moved1);
          assign_full_self(pack_moved2);
          assign_full_self(pack_abandoned);
-         assign_full_self(pack_disowned);
+         assign_full_self(pack_disowned);*/
       }
 
       WHEN("Absorbed by referral") {

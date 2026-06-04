@@ -71,13 +71,12 @@ namespace Langulus::Anyness::Component
 {
    enum OwnershipStyle {
       NoOwnership = 0,
-      OnCreate = 1,
-      OnAssign = 2,
-      OnDestroy = 4
+      OnCreateAndDestroy = 1,
+      OnAssign = 2
    };
 
-   constexpr uint WeakOwnership = OnAssign;
-   constexpr uint StrongOwnership = OnCreate | OnAssign | OnDestroy;
+   constexpr uint WeakOwnership   = OnAssign;
+   constexpr uint StrongOwnership = OnCreateAndDestroy | OnAssign;
 
    /// Get the dimensions of a container                                      
    /// This is usually defined in the count component, and depicts the        

@@ -34,13 +34,19 @@ namespace Langulus
       template<auto>
       static constexpr bool Contains = false;
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEach(auto&&)    {}
+
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachAnd(auto&&) { return false; }
+
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachOr(auto&&)  { return false; }
 
       template<auto...N>
       consteval auto operator + (Values<N...>&&) const -> Values<N...> { return {}; }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void Expand(auto&&) {}
 
       template<class>
@@ -81,18 +87,21 @@ namespace Langulus
       template<auto...N>
       consteval auto operator + (Values<N...>&&) const -> Values<E1, N...> { return {}; }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, E1); },
             "Provided argument is not a lambda of the form []<auto>");
           LglsLamb(lambda, E1);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachAnd(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
          return LglsLamb(lambda, E1);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachOr(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
@@ -101,10 +110,12 @@ namespace Langulus
 
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
+      LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
          return LglsLamb(lambda, E1);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Expand(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, E1); },
             "Provided argument is not a lambda of the form []<auto>");
@@ -169,6 +180,7 @@ namespace Langulus
       template<auto...N>
       consteval auto operator + (Values<N...>&&) const -> Values<E1, E2, EN..., N...> { return {}; }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, E1); },
             "Provided argument is not a lambda of the form []<auto>");
@@ -177,6 +189,7 @@ namespace Langulus
          (LglsLamb(lambda, EN), ...);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachAnd(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
@@ -185,6 +198,7 @@ namespace Langulus
             and (... and LglsLamb(lambda, EN));
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachOr(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, E1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
@@ -195,6 +209,7 @@ namespace Langulus
 
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
+      LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
          decltype(auto) r1 = LglsLamb(lambda, E1);
          if constexpr (not ::std::same_as<No, decltype(r1)>)
@@ -208,6 +223,7 @@ namespace Langulus
          }
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Expand(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, E1, E2, EN...); },
             "Provided argument is not a lambda of the form []<auto...>");

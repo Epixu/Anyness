@@ -730,6 +730,7 @@ namespace Langulus::Anyness
       template<bool DEALLOCATE = true, class SELF>
       constexpr void Free(this SELF& self) {
          if not consteval {
+            // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
                if_available_gcc(C::template Free<DEALLOCATE, SELF>)();
             });

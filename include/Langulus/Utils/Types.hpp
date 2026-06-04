@@ -130,25 +130,46 @@ namespace Langulus
       using Tuple          = ::std::tuple<>;
       using TupleOptimized = compact_tuple<>;
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEach          (auto&&) {}
+
+      LANGULUS(ALWAYS_INLINED)
       static consteval bool ForEachAnd       (auto&&) { return false; }
+
+      LANGULUS(ALWAYS_INLINED)
       static consteval bool ForEachOr        (auto&&) { return false; }
-      template<uint = 0>
+
+      template<uint = 0> LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEachIndexed   (auto&&) {}
-      template<uint = 0>
+
+      template<uint = 0> LANGULUS(ALWAYS_INLINED)
       static consteval bool ForEachIndexedAnd(auto&&) { return false; }
-      template<uint = 0>
+
+      template<uint = 0> LANGULUS(ALWAYS_INLINED)
       static consteval bool ForEachIndexedOr (auto&&) { return false; }
+
+      LANGULUS(ALWAYS_INLINED)
       static consteval No   ForEachConstOr   (auto&&) { return {}; }
+
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void Expand           (auto&&) {}
 
       template<uint>
       using At = void;
 
+      LANGULUS(ALWAYS_INLINED)
       static consteval auto GenerateTypes(auto&&) { return Types<> {}; }
+
+      LANGULUS(ALWAYS_INLINED)
       static consteval auto GenerateData(auto&&) { return Tuple {}; }
+
+      LANGULUS(ALWAYS_INLINED)
       static consteval auto GenerateDataOptimized(auto&&) { return TupleOptimized {}; }
+
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Discard(auto&&) { return Types<>{}; }
+
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Extract(auto&& lambda) {
          static_assert(requires{ LglsLambStatic(lambda, void); },
             "Provided argument is not a lambda of the form []<class T> static where T can be 'void'"
@@ -187,39 +208,42 @@ namespace Langulus
       using Tuple          = ::std::tuple<T>;
       using TupleOptimized = compact_tuple<T>;
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda,T); },
             "Provided argument is not a lambda of the form []<class>");
          LglsLamb(lambda, T);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachAnd(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda,T)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
          return LglsLamb(lambda, T);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachOr(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda,T)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
          return LglsLamb(lambda, T);
       }
 
-      template<uint IDX = 0>
+      template<uint IDX = 0> LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEachIndexed(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda,T,0); },
             "Provided argument is not a lambda of the form []<class,index>");
          LglsLamb(lambda, T, IDX);
       }
 
-      template<uint IDX = 0>
+      template<uint IDX = 0> LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachIndexedAnd(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda,T,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
          return LglsLamb(lambda, T, IDX);
       }
 
-      template<uint IDX = 0>
+      template<uint IDX = 0> LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachIndexedOr(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda,T,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
@@ -227,12 +251,14 @@ namespace Langulus
       }
 
       /// Just executes lambda with the contained type and returns its result 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, T); },
             "Provided argument is not a lambda of the form []<class>");
          return LglsLamb(lambda, T);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Expand(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, T); },
             "Provided argument is not a lambda of the form []<class...>");
@@ -247,18 +273,21 @@ namespace Langulus
       ///      the lambda may or may not return a type list, which will be    
       ///      concatenated along if so                                       
       ///   @return a type list, containing the generated types               
+      LANGULUS(ALWAYS_INLINED)
       static consteval auto GenerateTypes(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, T)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return Types<decltype(LglsLamb(lambda, T))> {};
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto GenerateData(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, T)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return Tuple {LglsLamb(lambda, T)};
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto GenerateDataOptimized(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, T)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
@@ -266,6 +295,7 @@ namespace Langulus
       }
 
       /// Discard elements for which lambda returns true                      
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Discard(auto&& lambda) {
          static_assert(requires{ {LglsLambStatic(lambda, T)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> static -> convertible to bool");
@@ -276,6 +306,7 @@ namespace Langulus
       }
 
       /// Collects stuff inside the types into a new value/type list          
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Extract(auto&& lambda) {
          static_assert(requires{ LglsLambStatic(lambda, T); },
             "Provided argument is not a lambda of the form []<class> static");
@@ -311,6 +342,7 @@ namespace Langulus
       using Tuple          = ::std::tuple<T1, T2, TN...>;
       using TupleOptimized = compact_tuple<T1, T2, TN...>;
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEach(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, T1); },
             "Provided argument is not a lambda of the form []<class>");
@@ -319,6 +351,7 @@ namespace Langulus
          (LglsLamb(lambda, TN), ...);
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachAnd(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
@@ -327,6 +360,7 @@ namespace Langulus
             and (... and LglsLamb(lambda, TN));
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachOr(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, T1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> -> convertible to bool");
@@ -337,6 +371,7 @@ namespace Langulus
 
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
+      LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, T1); },
             "Lambda is not of the form []<class>");
@@ -356,7 +391,7 @@ namespace Langulus
          }
       }
 
-      template<uint IDX = 0>
+      template<uint IDX = 0> LANGULUS(ALWAYS_INLINED)
       static constexpr void ForEachIndexed(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda,T1,0); },
             "Provided argument is not a lambda of the form []<class,index>");
@@ -366,7 +401,7 @@ namespace Langulus
             Types<TN...>::template ForEachIndexed<IDX + 2>(LglsFwd(lambda));
       }
 
-      template<uint IDX = 0>
+      template<uint IDX = 0> LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachIndexedAnd(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda,T1,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
@@ -381,7 +416,7 @@ namespace Langulus
          }
       }
 
-      template<uint IDX = 0>
+      template<uint IDX = 0> LANGULUS(ALWAYS_INLINED)
       static constexpr bool ForEachIndexedOr(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda,T1,0)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
@@ -396,6 +431,7 @@ namespace Langulus
          }
       }
       
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Expand(auto&& lambda) {
          static_assert(requires{ LglsLamb(lambda, T1, T2, TN...); },
             "Provided argument is not a lambda of the form []<class...>");
@@ -403,7 +439,7 @@ namespace Langulus
       }
 
    private:
-      template<uint I>
+      template<uint I> LANGULUS(ALWAYS_INLINED)
       static consteval auto AtInner() {
               if constexpr (I == 0)    return Types<T1> {};
          else if constexpr (I == 1)    return Types<T2> {};
@@ -420,6 +456,7 @@ namespace Langulus
       ///          The lambda may or may not return Types, which will be      
       ///          concatenated along if so.                                  
       ///   @return a type list, containing the generated types               
+      LANGULUS(ALWAYS_INLINED)
       static consteval auto GenerateTypes(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda,T1)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
@@ -430,6 +467,7 @@ namespace Langulus
          > {};
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto GenerateData(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, T1)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
@@ -440,6 +478,7 @@ namespace Langulus
          };
       }
 
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto GenerateDataOptimized(auto&& lambda) {
          static_assert(requires{ {LglsLamb(lambda, T1)} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
@@ -451,6 +490,7 @@ namespace Langulus
       }
 
       /// Discard elements for which lambda returns true                      
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Discard(auto&& lambda) {
          static_assert(requires{ {LglsLambStatic(lambda, T1)} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class> static -> convertible to bool");
@@ -485,6 +525,7 @@ namespace Langulus
       }
 
       /// Collects stuff inside the types into a new value/type list          
+      LANGULUS(ALWAYS_INLINED)
       static constexpr auto Extract(auto&& lambda) {
          static_assert(requires{ LglsLambStatic(lambda, T1); },
             "Provided argument is not a lambda of the form []<class> static");

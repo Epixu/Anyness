@@ -95,7 +95,7 @@ namespace Langulus::Anyness::Component
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             if (auto found = Allocator::Find(self.template GetRaw<SID>())) {
                ThisCom::SetAllocationInner(found);
-               if constexpr (STYLE & OnCreate)
+               if constexpr (STYLE & OnCreateAndDestroy)
                   ThisCom::Keep();
             }
             else
@@ -139,7 +139,7 @@ namespace Langulus::Anyness::Component
                // Refer                                                 
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
                   ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
-                  if constexpr (STYLE & OnCreate)
+                  if constexpr (STYLE & OnCreateAndDestroy)
                      ThisCom::Keep();
                }
                else ThisCom::FindAllocationInner();
@@ -149,15 +149,18 @@ namespace Langulus::Anyness::Component
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
                   ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
 
-                  if_available(from.template SetAllocationInner<ID>(nullptr))
-                  else if constexpr (STYLE & OnCreate and CT::OwnedStrong<I>) {
-                     // We can't reset source allocation pointer, which 
-                     // means that source destructor will dereference   
-                     // when out of scope: must reference data here.    
-                     ThisCom::Keep();
+                  if constexpr (from.Owned & OnCreateAndDestroy) {
+                     // We can transfer ownership                          
+                     from.template SetAllocationInner<ID>(nullptr);
                   }
+                  else if constexpr (STYLE & OnCreateAndDestroy)
+                     ThisCom::Keep();
                }
-               else ThisCom::FindAllocationInner();
+               else {
+                  // We can't transfer ownership, because 'from' is likely 
+                  // emergent.                                             
+                  ThisCom::FindAllocationInner();
+               }
             }
             else if constexpr (CT::Disowned<I>) {
                // Disown                                                

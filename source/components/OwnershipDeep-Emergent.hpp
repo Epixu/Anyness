@@ -1169,15 +1169,16 @@ namespace Langulus::Anyness::Component
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
       template<class SELF>
-      void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
+      void Destroy(this SELF& self) noexcept requires ((STYLE & OnCreateAndDestroy) != 0) {
          ThisCom::Free();
       }
 
-      /// Reset all entries for the first element                             
-      ///   @attention this overwrites previous entries without dereferencing 
+      /// Reset all entries for a given dimension.                            
+      /// Enabled only if not emergent ownership.                             
+      ///   @attention this zeroes entries without dereferencing them         
       template<Cid SID = ID, CT::Container C>
-      requires(Relevant<SID> and (CT::TypeErased<C> or CT::Sparse<TypeOf<C, SID>>))
-      void ResetEntries(this C& self) {
+      void ResetEntries(this C& self) assumptious //TODO is setting count to 0 a better alternative to this?
+      requires requires { self.template GetEntriesInner<SID>(); } {
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
             // sparsity check for an early exit.                        
@@ -1195,9 +1196,63 @@ namespace Langulus::Anyness::Component
          }
 
          const auto indirections = self.template GetIndirections<SID>();
-         const auto entries_size = sizeof(AllocationPtr) * indirections;
+         const auto reserved     = self.template GetReserved<SID>();
+         const auto entries_size = sizeof(AllocationPtr) * indirections * reserved;
          auto entries = self.template GetEntriesInner<SID>();
          memset(DecvqAllCast(entries), 0, entries_size);
+      }
+
+      /// Executes ResetEntries for all relevant dimensions                   
+      ///   @attention This zeroes entries without dereferencing them.        
+      template<class SELF>
+      void ResetAllEntries(this SELF& self) assumptious { //TODO is setting count to 0 a better alternative to this?
+         using C = OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...>;
+         Id::ForEach([&]<Cid D> assumptious {
+            if_available_gcc(C::template ResetEntries<D, SELF>)();
+         });
+      }
+
+      /// Refer all allocations pointed to by all indirections on absorption. 
+      ///   @note This does emergent referencing - disownement is not allowed.
+      ///      This method is replaced with conventional referencing in       
+      ///      derived components.                                            
+      ///   @param intent The intent and container to transfer from.          
+      ///   @important Notice that Copy and Clone intents are not handled     
+      ///      here. They're handled in heap components instead, in case      
+      ///      something throws an exception while constructing.              
+      template<class SELF, CT::Intent I>
+      requires (CT::Container<I> and (STYLE & OnCreateAndDestroy) != 0)
+      void ConstructFrom(this SELF& self, I&& intent) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+            static_assert(not CT::Disowned<I>,
+               "Disownment is not allowed for emergent deep ownership");
+            decltype(auto) from = LglsFwd(intent.what);
+
+            if constexpr (CT::Referred<I>) {
+               // Refer                                                 
+               ThisCom::Keep();
+            }
+            else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
+               // Abandon/Move                                          
+               if constexpr (requires { from.template ResetEntries<ID>(); }) {
+                  if constexpr (from.OwnedDeep & OnCreateAndDestroy) {
+                     // Deep ownership is transferrable                 
+                     Id::ForEach([&from]<Cid D> {
+                        // Note - all dimensions _must_ be resettable   
+                        // to be well formed.                           
+                        from.template ResetEntries<D>();
+                     });
+                  }
+                  else ThisCom::Keep();
+               }
+               else {
+                  // We can't reset source entries (they are probably   
+                  // emergent, too), which means that source _may_      
+                  // dereference them when destroyed.                   
+                  ThisCom::Keep();
+               }
+            }
+         }
       }
    };
 

@@ -256,6 +256,7 @@ namespace Langulus::Anyness::Component
          auto& a = self.GetAllocationInner();
          if (not a) {
             // Nothing was allocated                                    
+            //TODO can still be emergent though?
             self.AllocateFresh(self.RequestHeap(1));
             return false;
          }
@@ -265,23 +266,21 @@ namespace Langulus::Anyness::Component
          if (a->GetUses() == 1) {
             // We don't deallocate the memory - we can reuse it         
             if constexpr (CT::ContainsMany<C>) {
-               // But we have to destroy all trailing elements          
-               // Just make sure indirections are dereferenced          
-               // for the first element, in case it's sparse            
+               // But we have to destroy all trailing elements.         
+               // Just make sure indirections are dereferenced for the  
+               // first element, in case it's sparse.                   
                auto first = self.GetHandle();
                auto item = first + (self.IsSparse() ? 0 : 1);
                auto const itemsEnd = first + self.GetCount();
                while (item.GetRaw() != itemsEnd.GetRaw()) {
-                  item.Free();
-                  //item.DestroyElement();
+                  item.template Free<false>();
                   ++item;
                }
-               if_available(first.ResetEntries());
+               if_available(first.ResetAllEntries());
             }
             else if (self.IsSparse()) {
                self.template Free<false>();
-               //self.DestroyElement();
-               if_available(self.ResetEntries());
+               if_available(self.ResetAllEntries());
             }
             return true;
          }

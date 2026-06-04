@@ -163,9 +163,16 @@ namespace Langulus::Anyness::Component
       }
 
       template<Cid SID = 0>
-      void ResetEntries(this auto& self) {
+      void ResetEntries(this auto& self) assumptious {
          using C = typename Subcomponents::template At<SID>;
          self.C::ResetEntries();
+      }
+
+      template<class SELF>
+      void ResetAllEntries(this SELF& self) assumptious {
+         Subcomponents::ForEach([&]<class C> assumptious {
+            if_available_gcc(C::template ResetAllEntries<SELF>)();
+         });
       }
 
       #undef if_inherits
