@@ -1234,22 +1234,15 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
                // Abandon/Move                                          
-               if constexpr (requires { from.template ResetEntries<ID>(); }) {
-                  if constexpr (from.OwnedDeep & OnCreateAndDestroy) {
-                     // Deep ownership is transferrable                 
-                     Id::ForEach([&from]<Cid D> {
-                        // Note - all dimensions _must_ be resettable   
-                        // to be well formed.                           
-                        from.template ResetEntries<D>();
-                     });
-                  }
-                  else ThisCom::Keep();
-               }
-               else {
-                  // We can't reset source entries (they are probably   
-                  // emergent, too), which means that source _may_      
-                  // dereference them when destroyed.                   
+               // We must reference only if we can't guarantee a        
+               // transfer of deep ownership. Such transfer can be      
+               // guaranteed only if container has count of zero after  
+               // a move, and has been referenced prior on construction.
+               if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
                   ThisCom::Keep();
+               else {
+                  LglsAssumeDev(from.IsEmpty(),
+                     "Remote count should've been reset after a move");
                }
             }
          }

@@ -142,9 +142,16 @@ namespace Langulus::Anyness::Component
                   LglsAssumeDev(from.template GetAllocationInner<ID>() == nullptr,
                      "Remote container should've been disowned at this point");
                }
-               else if constexpr (from.OwnedDeep & OnCreateAndDestroy) {
-                  // 'from' is likely emergent, we have to reference    
+
+               // We must reference only if we can't guarantee a        
+               // transfer of deep ownership. Such transfer can be      
+               // guaranteed only if container has count of zero after  
+               // a move, and has been referenced prior on construction.
+               if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
                   ThisCom::Keep();
+               else {
+                  LglsAssumeDev(from.IsEmpty(),
+                     "Remote count should've been reset after a move");
                }
             }
          }
