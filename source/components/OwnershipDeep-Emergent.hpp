@@ -1196,8 +1196,12 @@ namespace Langulus::Anyness::Component
          }
 
          const auto indirections = self.template GetIndirections<SID>();
-         const auto reserved     = self.template GetReserved<SID>();
-         const auto entries_size = sizeof(AllocationPtr) * indirections * reserved;
+         size_t entries_size;
+         if constexpr (requires { self.template GetReserved<SID>(); })
+            entries_size = sizeof(AllocationPtr) * indirections * self.template GetReserved<SID>();
+         else
+            entries_size = sizeof(AllocationPtr) * indirections;
+
          auto entries = self.template GetEntriesInner<SID>();
          memset(DecvqAllCast(entries), 0, entries_size);
       }
@@ -1223,7 +1227,8 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I>
       requires (CT::Container<I> and (STYLE & OnCreateAndDestroy) != 0)
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>
+         and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>)) {
             static_assert(not CT::Disowned<I>,
                "Disownment is not allowed for emergent deep ownership");
             decltype(auto) from = LglsFwd(intent.what);

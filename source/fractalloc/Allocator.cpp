@@ -56,7 +56,7 @@ namespace
    uintptr_t gPossiblePoolMemorySpace = 0;
 
    PoolBank* SelectPoolBank(DMeta meta) assumptious {
-      LglsAssumeDevAndOptimize(meta, "Invalid meta data");
+      LglsAssumeDevAndOptimize((bool) meta, "Invalid meta data");
       switch (meta.GetPoolTactic()) {
       case Langulus::PoolTactic::Size:
          return &gSizePoolChain[Langulus::Fractalloc::FastLog2(meta.GetSize())];
@@ -77,7 +77,7 @@ namespace Langulus::Fractalloc
    ///   @param size the number of client bytes to allocate                   
    ///   @return a newly allocated memory that is correctly aligned           
    Pool* AlignedAllocate(const DMeta& type, pot_t size) assumptious {
-      LglsAssumeDev(type,
+      LglsAssumeDev((bool) type,
          "Invalid type");
       LglsAssumeDev(size >= type.GetSize(),
          "Pool can't contain a single instance of provided type");

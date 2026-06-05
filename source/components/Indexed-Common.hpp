@@ -73,7 +73,7 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
-            LglsAssumeDev(T, "Block is not typed");
+            LglsAssumeDev((bool) T, "Block is not typed");
 
             const auto offset_heap = [&self, &heap, &idx, &T] {
                const auto offset = self.SimplifyIndex(idx);
@@ -363,7 +363,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
             if (count >= T.GetIndirections()) {
-               LglsAssert(T.GetOrigin(),
+               LglsAssert((bool) T.GetOrigin(),
                   "Trying to interface incomplete data `", T,
                   "` as dense"
                );

@@ -65,7 +65,7 @@ namespace Langulus::Anyness::Component
             }
 
             // Search for a reflected conversion routine                
-            LglsAssert(TO, "Can't convert to unknown type");
+            LglsAssert((bool) TO, "Can't convert to unknown type");
             const auto converter = FROM.GetMorphism(TO);
             if (not converter.convert)
                return 0;         // Not convertible                     
@@ -145,7 +145,7 @@ namespace Langulus::Anyness::Component
                return out.Concat(self);
             
             // Search for a reflected conversion routine                
-            LglsAssert(TO, "Can't convert to unknown type");
+            LglsAssert((bool) TO, "Can't convert to unknown type");
             const auto converter = FROM.GetMorphism(TO);
             if (not converter.convert)
                return 0;         // Not convertible                     

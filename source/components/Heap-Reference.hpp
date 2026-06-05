@@ -148,7 +148,7 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
-            LglsAssumeDev(T, "Block is not typed");
+            LglsAssumeDev((bool) T, "Block is not typed");
 
             if constexpr (CT::Void<AS>) {
                // Unknown type, just return the heap pointer            
@@ -404,7 +404,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
             if (count >= T.GetIndirections()) {
-               LglsAssert(T.GetOrigin(),
+               LglsAssert((bool) T.GetOrigin(),
                   "Trying to interface incomplete data `", T,
                   "` as dense"
                );
@@ -529,7 +529,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime     
                const auto T = self.template GetType<Id::First>();
-               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               LglsAssumeDev((bool) T, "Requesting allocation size for an untyped container");
                total += reserve * T.GetSize();
                total += C::template DefineHeapFooter<Id::First>(reserve, T.GetIndirections());
             }
@@ -547,7 +547,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime     
                const auto T = self.template GetType<Id::First>();
-               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               LglsAssumeDev((bool) T, "Requesting allocation size for an untyped container");
                const auto size = T.GetSize();
                size_t for_T = ::std::max(reserve * size, static_cast<size_t>(T.GetMinAllocation()));
                reserve = for_T / size;
@@ -566,7 +566,7 @@ namespace Langulus::Anyness::Component
          Values<ENTRYN::Id...>::ForEach([&]<Cid i>{
             if constexpr (CT::TypeErased<C>) {
                const auto T = self.template GetType<i>();
-               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               LglsAssumeDev((bool) T, "Requesting allocation size for an untyped container");
                total = Align(total, T.GetAlignment());
                total += reserve * T.GetSize();
                total += C::template DefineHeapFooter<i>(reserve, T.GetIndirections());

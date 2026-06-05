@@ -416,7 +416,7 @@
 #if LANGULUS_COMPILER(MSVC)
    #define LglsNoSideEffects
    #define LglsPure
-   #define LglsCompilerSpecificAssume(a) __assume(a)
+   #define LglsCompilerSpecificAssume(a, ...) __assume(a)
 
    /// Force no inlining                                                      
    #define LANGULUS_NOINLINE() __declspec(noinline)
@@ -439,7 +439,7 @@
 #else
    #define LglsNoSideEffects __attribute__((const))
    #define LglsPure __attribute__((pure))
-   #define LglsCompilerSpecificAssume(a) [[assume(a)]]
+   #define LglsCompilerSpecificAssume(a, ...) [[assume(static_cast<bool>(a))]]
 
    /// Force no inlining                                                      
    #define LANGULUS_NOINLINE() __attribute__((noinline))

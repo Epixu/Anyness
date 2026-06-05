@@ -100,7 +100,10 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
             ThisCom::SetCountInner(from.template GetCount<ID>());
-            if constexpr (I::ResetsOnMove()) {
+            if constexpr (I::IsMoved() and CT::OwnedStrong<I>) {
+               // Moving/Abandoning                                     
+               // Count is responsible for deep ownership, it has to    
+               // be reset on move to disable destruction in 'from'.    
                if_available(from.template SetCountInner<ID>(0));
             }
          }

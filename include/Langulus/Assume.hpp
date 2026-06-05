@@ -21,8 +21,6 @@
       #define LANGULUS_DEFAULT_STACK_DEPTH 3
    #endif
 #endif
-
-
 namespace Langulus
 {
    #if LANGULUS(STACKTRACE)
@@ -33,7 +31,7 @@ namespace Langulus
       ///      ErrorInner/AssertInner/AssumeInner function that called it.    
       inline void Stacktrace(
          const size_t depth = LANGULUS_DEFAULT_STACK_DEPTH,
-         const size_t skip = LANGULUS_DEFAULT_STACK_SKIP
+         const size_t skip  = LANGULUS_DEFAULT_STACK_SKIP
       ) {
          auto stack = std::stacktrace::current();
          if (depth > 1) {
@@ -75,7 +73,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    void ErrorInner(
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location,
       ::std::string_view const& m1 = "<unknown error>",
       MORE&&...mn
    ) {
@@ -107,8 +105,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    constexpr void AssertInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) {
@@ -134,8 +131,7 @@ namespace Langulus
       }
    }
    
-   #define LglsAssert(CONDITION, ...) \
-      ::Langulus::AssertInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+   #define LglsAssert(...) ::Langulus::AssertInner(HERE(), __VA_ARGS__)
 
    /// Assertion that works at runtime.                                       
    /// Doesn't throw or ruin compilation.                                     
@@ -145,8 +141,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<class...MORE>
    constexpr void AssertWarnInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -166,8 +161,7 @@ namespace Langulus
       }
    }
    
-   #define LglsAssertWarn(CONDITION, ...) \
-      ::Langulus::AssertWarnInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+   #define LglsAssertWarn(...) ::Langulus::AssertWarnInner(HERE(), __VA_ARGS__)
 
    #if LANGULUS(SAFE) > 0
    /// User assumption that works both at runtime and at compile-time.        
@@ -179,8 +173,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    constexpr void AssumeUserInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown user assumption failure>",
       MORE&&...mn
    ) {
@@ -215,8 +208,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<class...MORE>
    constexpr void AssumeUserWarnInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -236,21 +228,19 @@ namespace Langulus
       }
    }
 
-      #define LglsAssumeUser(CONDITION, ...) \
-         ::Langulus::AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
-      #define LglsAssumeUserWarn(CONDITION, ...) \
-         ::Langulus::AssumeUserWarnInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+      #define LglsAssumeUser(...)     ::Langulus::AssumeUserInner(HERE(), __VA_ARGS__)
+      #define LglsAssumeUserWarn(...) ::Langulus::AssumeUserWarnInner(HERE(), __VA_ARGS__)
    
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
       /// compiler to generate more performant code                           
-      #define LglsAssumeUserAndOptimize(CONDITION, ...) \
-         ::Langulus::AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-         LglsCompilerSpecificAssume(CONDITION)
+      #define LglsAssumeUserAndOptimize(...) \
+         ::Langulus::AssumeUserInner(HERE(), __VA_ARGS__); \
+         LglsCompilerSpecificAssume(__VA_ARGS__)
    #else
-      #define LglsAssumeUser(CONDITION, ...) LANGULUS(NOOP)
-      #define LglsAssumeUserWarn(CONDITION, ...) LANGULUS(NOOP)
-      #define LglsAssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+      #define LglsAssumeUser(...)            LANGULUS(NOOP)
+      #define LglsAssumeUserWarn(...)        LANGULUS(NOOP)
+      #define LglsAssumeUserAndOptimize(...) LglsCompilerSpecificAssume(__VA_ARGS__)
    #endif
 
    #if LANGULUS(SAFE) > 1
@@ -263,8 +253,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    constexpr void AssumeDevInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown dev assumption failure>",
       MORE&&...mn
    ) {
@@ -298,8 +287,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<class...MORE>
    constexpr void AssumeDevWarnInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -319,21 +307,19 @@ namespace Langulus
       }
    }
 
-      #define LglsAssumeDev(CONDITION, ...) \
-         ::Langulus::AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
-      #define LglsAssumeDevWarn(CONDITION, ...) \
-         ::Langulus::AssumeDevWarnInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+      #define LglsAssumeDev(...)     ::Langulus::AssumeDevInner(HERE(), __VA_ARGS__)
+      #define LglsAssumeDevWarn(...) ::Langulus::AssumeDevWarnInner(HERE(), __VA_ARGS__)
    
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
       /// compiler to generate more performant code                           
-      #define LglsAssumeDevAndOptimize(CONDITION, ...) \
-         ::Langulus::AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-         LglsCompilerSpecificAssume(static_cast<bool>(CONDITION))
+      #define LglsAssumeDevAndOptimize(...) \
+         ::Langulus::AssumeDevInner(HERE(), __VA_ARGS__); \
+         LglsCompilerSpecificAssume(__VA_ARGS__)
    #else
-      #define LglsAssumeDev(CONDITION, ...) LANGULUS(NOOP)
-      #define LglsAssumeDevWarn(CONDITION, ...) LANGULUS(NOOP)
-      #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(static_cast<bool>(CONDITION))]]
+      #define LglsAssumeDev(...)             LANGULUS(NOOP)
+      #define LglsAssumeDevWarn(...)         LANGULUS(NOOP)
+      #define LglsAssumeDevAndOptimize(...)  LglsCompilerSpecificAssume(__VA_ARGS__)
    #endif
 
    /// Custom assumption that works both at runtime and at compile-time.      
@@ -345,8 +331,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<uint LEVEL, class E = Exception, class...MORE>
    constexpr void AssumeInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assumption failure>",
       MORE&&...mn
    ) {
@@ -377,11 +362,11 @@ namespace Langulus
    /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
-   #define LglsAssume(LEVEL, CONDITION, ...) \
-      ::Langulus::AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
-   #define LglsAssumeAndOptimize(LEVEL, CONDITION, ...) \
-      ::Langulus::AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__) \
-      LglsCompilerSpecificAssume(CONDITION)
+   #define LglsAssume(LEVEL, ...) ::Langulus::AssumeInner<LEVEL>(HERE(), __VA_ARGS__)
+
+   #define LglsAssumeAndOptimize(LEVEL, ...) \
+      ::Langulus::AssumeInner<LEVEL>(HERE(), __VA_ARGS__) \
+      LglsCompilerSpecificAssume(__VA_ARGS__)
    
    /// Custom assumption at runtime. Tested only if LANGULUS(SAFE) >= LEVEL.  
    /// Doesn't throw or ruin compilation.                                     
@@ -391,8 +376,7 @@ namespace Langulus
    ///   @param mn additional information to log                              
    template<uint LEVEL, class...MORE>
    constexpr void AssumeWarnInner(
-      bool condition,
-      [[maybe_unused]] const char* location = nullptr,
+      [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -414,12 +398,11 @@ namespace Langulus
       }
    }
 
-   #define LglsAssumeWarn(LEVEL, CONDITION, ...) \
-      ::Langulus::AssumeWarnInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+   #define LglsAssumeWarn(LEVEL, ...) ::Langulus::AssumeWarnInner<LEVEL>(HERE(), __VA_ARGS__)
 }
 
 /// Convenience macro for specifying temporary lazyness                       
-#define TODO() ::Langulus::AssertInner(false, HERE(), "Unfinished code")
+#define TODO() ::Langulus::AssertInner(HERE(), false, "Unfinished code")
 
 
 namespace fmt

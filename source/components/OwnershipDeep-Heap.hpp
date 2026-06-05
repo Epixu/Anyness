@@ -127,10 +127,15 @@ namespace Langulus::Anyness::Component
       ///      something throws an exception while constructing.              
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and (STYLE & OnCreateAndDestroy) != 0) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>
+         and (STYLE & OnCreateAndDestroy) != 0
+         and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>)) {
             decltype(auto) from = LglsFwd(intent.what);
-            LglsAssumeDev(self.template GetAllocationInner<ID>(),
-               "Allocation should've been initialized");
+
+            if constexpr (not CT::Disowned<I>) {
+               LglsAssumeDev(self.template IsEmpty<ID>() or self.template GetAllocationInner<ID>(),
+                  "Allocation should've been initialized if container is not empty");
+            }
 
             if constexpr (CT::Referred<I>) {
                // Refer                                                 

@@ -39,7 +39,7 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
-      , Types<Any, Text*,  ScopedElement<Text*>>
+   , Types<Any, RT*, ScopedElement<RT*>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
@@ -48,9 +48,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, RT,     ScopedElement<RT>>
    , Types<Any, char,   ScopedElement<char>>
                         
+   , Types<Any, Text*,  ScopedElement<Text*>>
    , Types<Any, int*,   ScopedElement<int*>>
    , Types<Any, Any*,   ScopedElement<Any*>>
-   , Types<Any, RT*,    ScopedElement<RT*>>
    , Types<Any, char*,  ScopedElement<char*>>
 
    , Types<Any, Text**, ScopedElement<Text**>>
@@ -740,24 +740,24 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       }
 
       WHEN("Absorbed by referral") {
-         auto absorb_construct_refer = [&](T& a, int uses) {
+         auto absorb_construct_refer = [&](T& a, T& compare_against, int uses) {
             T absorbed1 {a};
             T absorbed2 {Refer {a}};
 
-            Any_Helper_TestSame(absorbed1, a);
-            Any_Helper_TestSame(absorbed2, a);
+            Any_Helper_TestSame(absorbed1, compare_against);
+            Any_Helper_TestSame(absorbed2, compare_against);
             REQUIRE(absorbed1.GetUses() == uses);
             REQUIRE(absorbed2.GetUses() == uses);
          };
 
-         absorb_construct_refer(pack_referred1, 5);
-         absorb_construct_refer(pack_referred2, 5);
-         absorb_construct_refer(pack_copied,    3);
-         absorb_construct_refer(pack_cloned,    3);
-         absorb_construct_refer(pack_moved1,    3);
-         absorb_construct_refer(pack_moved2,    3);
-         absorb_construct_refer(pack_abandoned, 3);
-         absorb_construct_refer(pack_disowned,  0);
+         absorb_construct_refer(pack_referred1, pack_referred1, 5);
+         absorb_construct_refer(pack_referred2, pack_referred1, 5);
+         absorb_construct_refer(pack_copied,    pack_copied,    3);
+         absorb_construct_refer(pack_cloned,    pack_cloned,    3);
+         absorb_construct_refer(pack_moved1,    pack_moved1,    3);
+         absorb_construct_refer(pack_moved2,    pack_moved2,    3);
+         absorb_construct_refer(pack_abandoned, pack_abandoned, 3);
+         absorb_construct_refer(pack_disowned,  pack_referred1, 5); // referencing a disowned container basically reverses disownment, on managed memory builds at least
       }
       
       WHEN("Absorbed by move") {
@@ -766,10 +766,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             T absorbed {::std::move(a)};
 
             Any_CheckState_Default<E>(a);
-            if (uses == 0)
-               Any_CheckState_DisownedFull<E>(absorbed);
-            else
-               Any_CheckState_OwnedFull<E>(absorbed);
+            Any_CheckState_OwnedFull<E>(absorbed);
             Any_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
@@ -781,7 +778,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          absorb_construct_move(pack_moved1,    2);
          absorb_construct_move(pack_moved2,    2);
          absorb_construct_move(pack_abandoned, 2);
-         absorb_construct_move(pack_disowned,  0);
+         absorb_construct_move(pack_disowned,  3); // moving from a disowned container acts as referencing - nothing was owned prior
       }
       
       WHEN("Absorbed by move (alt)") {
@@ -790,10 +787,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             T absorbed {Move(a)};
 
             Any_CheckState_Default<E>(a);
-            if (uses == 0)
-               Any_CheckState_DisownedFull<E>(absorbed);
-            else
-               Any_CheckState_OwnedFull<E>(absorbed);
+            Any_CheckState_OwnedFull<E>(absorbed);
             Any_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
@@ -805,7 +799,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          absorb_construct_move(pack_moved1,    2);
          absorb_construct_move(pack_moved2,    2);
          absorb_construct_move(pack_abandoned, 2);
-         absorb_construct_move(pack_disowned,  0);
+         absorb_construct_move(pack_disowned,  3);
       }
       
       WHEN("Absorbed by abandon") {
@@ -814,10 +808,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             T absorbed {Abandon {a}};
 
             Any_CheckState_Abandoned<E>(a);
-            if (uses == 0)
-               Any_CheckState_DisownedFull<E>(absorbed);
-            else
-               Any_CheckState_OwnedFull<E>(absorbed);
+            Any_CheckState_OwnedFull<E>(absorbed);
             Any_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
@@ -829,7 +820,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          absorb_construct_abandon(pack_moved1,    2);
          absorb_construct_abandon(pack_moved2,    2);
          absorb_construct_abandon(pack_abandoned, 2);
-         absorb_construct_abandon(pack_disowned,  0);
+         absorb_construct_abandon(pack_disowned,  3); // abandoning from a disowned container acts as referencing - nothing was owned prior
       }
       
       WHEN("Absorbed by disown") {

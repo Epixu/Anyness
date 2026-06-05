@@ -90,18 +90,28 @@ namespace Langulus::Anyness::Component
       /// Automatically set the allocation by searching for it using the heap 
       /// pointer. If allocation wasn't found, it will be set to nullptr.     
       ///   @attention this will not dereference previous allocation          
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
       template<Cid SID = ID> requires Relevant<SID>
       void FindAllocationInner(this auto& self) noexcept {
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if (auto found = Allocator::Find(self.template GetRaw<SID>())) {
-               ThisCom::SetAllocationInner(found);
-               if constexpr (STYLE & OnCreateAndDestroy)
-                  ThisCom::Keep();
-            }
-            else
-         #endif
+         const auto heap = self.template GetRaw<SID>();
+         if (not heap) {
+            ThisCom::SetAllocationInner(nullptr);
+            return;
+         }
+
+         if (auto found = Allocator::Find(heap)) {
+            ThisCom::SetAllocationInner(found);
+            if constexpr (STYLE & OnCreateAndDestroy)
+               ThisCom::Keep();
+         }
+         else ThisCom::SetAllocationInner(nullptr);
+      }
+   #else
+      template<Cid SID = ID> requires Relevant<SID>
+      void FindAllocationInner(this auto& self) noexcept {
          ThisCom::SetAllocationInner(nullptr);
       }
+   #endif
 
       /// Resets allocation and all of its derivatives                        
       template<Cid SID = ID> requires Relevant<SID>
@@ -138,29 +148,32 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Referred<I>) {
                // Refer                                                 
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
-                  ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
-                  if constexpr (STYLE & OnCreateAndDestroy)
-                     ThisCom::Keep();
+                  const auto al = from.template GetAllocationInner<ID>();
+                  if (al) {
+                     ThisCom::SetAllocationInner(al);
+                     if constexpr (STYLE & OnCreateAndDestroy)
+                        ThisCom::Keep();
+                  }
+                  else ThisCom::FindAllocationInner();
                }
                else ThisCom::FindAllocationInner();
             }
-            else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
+            else if constexpr (I::IsMoved()) {
                // Abandon/Move                                          
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
-                  ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
-
-                  if constexpr (from.Owned & OnCreateAndDestroy) {
-                     // We can transfer ownership                          
-                     from.template SetAllocationInner<ID>(nullptr);
+                  const auto al = from.template GetAllocationInner<ID>();
+                  ThisCom::SetAllocationInner(al);
+                  if (al) {
+                     if constexpr (from.Owned & OnCreateAndDestroy) {
+                        // We can transfer ownership                    
+                        from.template SetAllocationInner<ID>(nullptr);
+                     }
+                     else if constexpr (STYLE & OnCreateAndDestroy)
+                        ThisCom::Keep();
                   }
-                  else if constexpr (STYLE & OnCreateAndDestroy)
-                     ThisCom::Keep();
+                  else ThisCom::FindAllocationInner();
                }
-               else {
-                  // We can't transfer ownership, because 'from' is likely 
-                  // emergent.                                             
-                  ThisCom::FindAllocationInner();
-               }
+               else ThisCom::FindAllocationInner();
             }
             else if constexpr (CT::Disowned<I>) {
                // Disown                                                

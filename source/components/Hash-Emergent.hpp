@@ -45,7 +45,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Container is type-erased                                 
             const DMeta T = self.template GetType<SID>();
-            LglsAssumeDev(T, "Can't hash untyped container");
+            LglsAssumeDev((bool) T, "Can't hash untyped container");
             const auto hasher = T.GetHasher();
             LglsAssumeDev(hasher, "Not hashable");
 
@@ -142,7 +142,7 @@ namespace Langulus::Anyness::Component
          // Do some assumption checking                                 
          if constexpr (CT::TypeErased<C>) {
             const DMeta T = self.template GetType<SID>();
-            LglsAssumeDev(T, "Can't hash untyped container");
+            LglsAssumeDev((bool) T, "Can't hash untyped container");
             LglsAssumeDev(T.GetHasher(), "Not hashable");
          }
          else {

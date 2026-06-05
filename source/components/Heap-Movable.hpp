@@ -180,11 +180,10 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Move/Refer/Abandon/Disown other                          
-            //static_assert(I::IsShallow());
-            //self.template SetType<Id::First>(from.template GetType<Id::First>());
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
-            if constexpr (I::IsKept() and I::IsMoved() and CT::OwnedStrong<I>) {
+            if constexpr (I::ResetsOnMove() and CT::OwnedStrong<I>) {
+               // We are moving 'from' - it needs to be fully reset     
                from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
                if_available(from.ResetState());
                Id::ForEach([&from]<Cid D>{
@@ -192,40 +191,22 @@ namespace Langulus::Anyness::Component
                   if_available(from.template ResetType<D>());
                });
             }
-         }
-      }
-
-      /// Free this container and absorb from any other, respecting intents   
-      ///   @param intent the intent and container to assign from             
-      /*template<class C, CT::Intent I> requires CT::Container<I>
-      void AssignFrom(this C& self, I&& intent) {
-         using IT = Deint<I>;
-         IT from = LglsFwd(intent.what);
-
-         if constexpr (requires { &self == &from; }) {
-            // Make sure 'lhs' and 'rhs' are different instances,       
-            // otherwise we lose rhs if we free lhs, and we have to     
-            // free lhs in order to overwrite it with rhs.              
-            if (&self == &from)
-               return;
-         }
-
-         // Never modify containers if type-incompatible                
-         if constexpr (CT::TypeErased<IT> or CT::TypeErased<C>) {
-            auto t1 = self.GetType();
-            auto t2 = from.GetType();
-            if (t1 and t2) {
-               LglsAssert(t1.IsSame(t2), "Type mismatch", ": ",
-                  t1, " is not same as ", t2);
+            else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
+               // We are abandoning 'from' - we need to reset only the  
+               // properties responsible for destruction.               
+               // This will be done in their respective components:     
+               //    1. Allocation responsible for shallow ownership    
+               //    2. Count responsible for deep ownership            
+               // Some monocontainers have no variable count, and in    
+               // some cases the heap pointer is used to specify the    
+               // count of 1. In these cases, this component is         
+               // responsible to reset the pointer.                     
+               if constexpr (not requires { from.template SetCountInner<Id::First>(0); }) {
+                  from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
+               }
             }
          }
-         else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
-
-         // Free old data and absorb the new container                  
-         self.Free();
-         self.ResetCount();
-         self.Absorb(LglsFwd(intent));
-      }*/
+      }
       
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
@@ -448,7 +429,7 @@ namespace Langulus::Anyness::Component
          Id::ForEachConstOr([&]<Cid i>{
             if constexpr (CT::TypeErased<C>) {
                const auto T = self.template GetType<i>();
-               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               LglsAssumeDev((bool) T, "Requesting allocation size for an untyped container");
                to_footer = Align(to_footer, T.GetAlignment());
                to_footer += newReserved * T.GetSize();
             }
