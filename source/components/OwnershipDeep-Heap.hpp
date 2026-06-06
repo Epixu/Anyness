@@ -125,36 +125,32 @@ namespace Langulus::Anyness::Component
       ///   @important Notice that Copy and Clone intents are not handled     
       ///      here. They're handled in heap components instead, in case      
       ///      something throws an exception while constructing.              
-      template<class SELF, CT::Intent I> requires CT::Container<I>
+      template<class SELF, CT::Intent I>
+      requires (CT::Container<I> and (STYLE& OnCreateAndDestroy) != 0
+         and not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>
+         and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>))
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>
-         and (STYLE & OnCreateAndDestroy) != 0
-         and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>)) {
-            decltype(auto) from = LglsFwd(intent.what);
+         decltype(auto) from = LglsFwd(intent.what);
 
-            if constexpr (not CT::Disowned<I>) {
-               LglsAssumeDev(self.template IsEmpty<ID>() or self.template GetAllocationInner<ID>(),
-                  "Allocation should've been initialized if container is not empty");
-            }
-
-            if constexpr (CT::Referred<I>) {
-               // Refer                                                 
+         if constexpr (CT::Referred<I>) {
+            // Refer                                                    
+            ThisCom::Keep();
+         }
+         else if constexpr (I::IsMoved()) {
+            // Abandon/Move                                             
+            // We must reference only if we can't guarantee a transfer  
+            // of deep ownership. Such transfer can be guaranteed only  
+            // if container has count of zero after a move, and has     
+            // been referenced prior on construction.                   
+            if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
                ThisCom::Keep();
-            }
-            else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
-               // Abandon/Move                                          
-               if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
-                  LglsAssumeDev(from.template GetAllocationInner<ID>() == nullptr,
-                     "Remote container should've been disowned at this point");
+            else {
+               if (from.IsDisowned()) {
+                  // Remote was never owned, we own it now              
+                  ThisCom::Keep();
                }
 
-               // We must reference only if we can't guarantee a        
-               // transfer of deep ownership. Such transfer can be      
-               // guaranteed only if container has count of zero after  
-               // a move, and has been referenced prior on construction.
-               if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
-                  ThisCom::Keep();
-               else {
+               if constexpr (CT::Moved<I>) {
                   LglsAssumeDev(from.IsEmpty(),
                      "Remote count should've been reset after a move");
                }

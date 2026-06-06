@@ -164,15 +164,16 @@ namespace Langulus::Anyness
    ///      builds down a lot...                                              
    template<CT::Component...COMPONENTS>
    requires ValidComponentOrder<COMPONENTS...>
-   struct LANGULUS_EBCO Container : COMPONENTS..., DecideStateComponent<COMPONENTS...> {
+   struct LANGULUS_EBCO Container : DecideStateComponent<COMPONENTS...>, COMPONENTS... {
       using CTTI_Container = Yes<>;
-      using ComponentList = Types<COMPONENTS..., DecideStateComponent<COMPONENTS...>>;
-      using Base = Container;
+      using StateComponent = DecideStateComponent<COMPONENTS...>;
+      using ComponentList  = Types<StateComponent, COMPONENTS...>;
+      using Base           = Container;
 
       /// Generate a new container type with additional components            
       ///   @attention doesn't check for duplicates                           
-      template<CT::Component...MORE_COMPONENTS>
-      using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
+      //template<CT::Component...MORE_COMPONENTS>
+      //using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
       /// Check if container is valid                                         
       constexpr bool IsValid() const noexcept {
@@ -187,9 +188,9 @@ namespace Langulus::Anyness
       }
       
       /// Check if a component is included at compile-time                    
-      template<class C>
+      /*template<class C>
       static constexpr bool HasComponent
-         = AkinAsOneOf<C, COMPONENTS..., DecideStateComponent<COMPONENTS...>>;
+         = AkinAsOneOf<C, COMPONENTS..., DecideStateComponent<COMPONENTS...>>;*/
 
       /// Get the number of heap providers (all dimensions)                   
       /// Needs to be public, because it's used in concept checks.            
@@ -250,7 +251,7 @@ namespace Langulus::Anyness
       /// A tag-dispatch constructor that forwards arguments to mStack.       
       /// Used in some niche container cases, like TOwn.                      
       constexpr Container(Inner::Stackwise, auto&&...arguments)
-         : mStack({LglsFwd(arguments)}...) {}
+         : mStack(StateComponent::GetDefaultState(), {LglsFwd(arguments)}...) {}
 
       /// Default destructor does nothing. Each container has to implement    
       /// it, most likely by calling this->Destroy(). This is needed, because 
@@ -675,13 +676,6 @@ namespace Langulus::Anyness
          }
       }
 
-      template<class SELF>
-      constexpr void ConstructDefault(this SELF&& self) noexcept {
-         ComponentList::ForEach([&]<class C>{
-            if_available_gcc(C::template ConstructDefault<SELF>)();
-         });
-      }
-
       /// Often used to clear global heap footers upon allocation             
       template<class SELF>
       constexpr void ConstructHeapRequestGlobal(this SELF&& self) noexcept {
@@ -696,6 +690,14 @@ namespace Langulus::Anyness
       constexpr void ConstructHeapRequestPerDimension(this SELF&& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             if_available_gcc(C::template ConstructHeapRequestPerDimension<SID, SELF>)();
+         });
+      }
+
+      /// Default-construct all components                                    
+      template<class SELF>
+      constexpr void ConstructDefault(this SELF&& self) noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
 
@@ -715,9 +717,13 @@ namespace Langulus::Anyness
       /// Call Destroy in all components that implement it.                   
       /// You have to call it manually in your container's destructor, so     
       /// that 'deducing this' works appropriately.                           
+      ///   @attention disowned containers are never destroyed                
       template<class SELF>
       constexpr void Destroy(this SELF& self) {
          if not consteval {
+            if (self.IsDisowned())
+               return;
+
             // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
                if_available_gcc(C::template Destroy<SELF>)();
@@ -727,9 +733,13 @@ namespace Langulus::Anyness
 
       /// Call Free in all components that implement it.                      
       /// Always do it in reverse order!                                      
+      ///   @attention disowned containers are never dereferenced             
       template<bool DEALLOCATE = true, class SELF>
       constexpr void Free(this SELF& self) {
          if not consteval {
+            if (self.IsDisowned())
+               return;
+
             // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
                if_available_gcc(C::template Free<DEALLOCATE, SELF>)();
@@ -738,9 +748,13 @@ namespace Langulus::Anyness
       }
 
       /// Call Keep in all components that implement it.                      
+      ///   @attention disowned containers are never referenced               
       template<class SELF>
       constexpr void Keep(this SELF& self) {
          if not consteval {
+            if (self.IsDisowned())
+               return;
+
             ComponentList::ForEach([&]<class C> {
                if_available_gcc(C::template Keep<SELF>)();
             });

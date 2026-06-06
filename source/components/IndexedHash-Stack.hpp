@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    /// Provides random element access by hashing a value of the provided ID.  
    /// Uses a modified Robin Hood algorithm to reuse table space and minimize 
    /// movement on rehash. Keeps a local pointer to the hash table for faster 
-   /// and more cache-friendly access. That also allows for disownment.       
+   /// and more cache-friendly access.                                        
    ///   @tparam ID the provider we're indexing                               
    ///   @tparam HASH type of the hash                                        
    ///   @tparam SHARED providers that share the same indexing scheme         

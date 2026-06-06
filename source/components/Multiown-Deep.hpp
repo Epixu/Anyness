@@ -90,24 +90,24 @@ namespace Langulus::Anyness::Component
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       template<class SELF>
-      constexpr void Destroy(this SELF& self) noexcept {
-         Subcomponents::Reverse::ForEach([&]<class C> noexcept {
+      constexpr void Destroy(this SELF& self) assumptious {
+         Subcomponents::Reverse::ForEach([&]<class C> assumptious{
             if_available_gcc(C::template Destroy<SELF>)();
          });
       }
 
       /// Reference all entries once.                                         
       template<class SELF>
-      constexpr void Keep(this SELF& self) noexcept {
-         Subcomponents::ForEach([&]<class C> noexcept {
+      constexpr void Keep(this SELF& self) assumptious {
+         Subcomponents::ForEach([&]<class C> assumptious{
             if_available_gcc(C::template Keep<SELF>)();
          });
       }
 
       /// Dereference all entries once, always deallocate fully dereferenced  
       template<bool DEALLOCATE = true, class SELF>
-      constexpr void Free(this SELF& self) noexcept {
-         Subcomponents::Reverse::ForEach([&]<class C> noexcept {
+      constexpr void Free(this SELF& self) assumptious {
+         Subcomponents::Reverse::ForEach([&]<class C> assumptious{
             if_available_gcc(C::template Free<DEALLOCATE, SELF>)();
          });
       }

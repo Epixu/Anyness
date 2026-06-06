@@ -91,7 +91,7 @@ namespace Langulus::Anyness::Component
       ///   @attention nothing is transferred when disowned, because hash     
       ///      must be kept in heap memory relative to the allocation         
       ///   @param intent the intent and container to transfer from           
-      template<class SELF, CT::Intent I>
+      /*template<class SELF, CT::Intent I> // TODO nothing to transfer here! make sure hash on the heap is transfered automatically by transferring the heap pointer. when cloned/copied, it is reset to zero on partial success or copied on full success by the heap component
       requires (CT::Container<I> and not (CT::Copied<I> or CT::Cloned<I> or CT::Disowned<I>))
       void ConstructFrom(this SELF& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
@@ -102,7 +102,7 @@ namespace Langulus::Anyness::Component
          if constexpr (I::ResetsOnMove()) {
             if_available(from.template SetHashInner<ID>(1));
          }
-      }
+      }*/
    };
 
    #undef ThisCom

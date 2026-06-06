@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "../states/Disowned.hpp"
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Contiguous.hpp>
 
@@ -28,7 +29,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
    template<class T, Cid ID, Cid...SHARED>
-   struct CountHeap {
+   struct CountHeap : State::Disowned<StateValue::Variable, ID, SHARED...> {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
       using Id = Values<ID, SHARED...>;
@@ -101,12 +102,16 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this SELF& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
-            ThisCom::SetCountInner(from.template GetCount<ID>());
-            if constexpr (I::IsMoved() and CT::OwnedStrong<I>) {
+            //ThisCom::SetCountInner(from.template GetCount<ID>()); //TODO nothing to really set here - the count on the heap is transferred the moment you transfer the heap pointer. when copied/cloned, it gets reset by the heap component, depending on full/partial success
+            /*if constexpr (I::IsMoved() and CT::OwnedStrong<I>) {
                // Moving/Abandoning                                     
                // Count is responsible for deep ownership, it has to    
                // be reset on move to disable destruction in 'from'.    
-               if_available(from.template SetCountInner<ID>(0));
+               //if_available(from.template SetCountInner<ID>(0));
+            }
+            else*/ if constexpr (CT::Disowned<I>) {
+               // Make sure to enable the disowned state                
+               ThisCom::EnableDisowned();
             }
          }
       }

@@ -175,13 +175,11 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if contained data is constant                                 
+      ///   @attention disowned containers are always constant                
       ///   @return true if the contents are constant                         
       template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsConstant(this auto const& self) noexcept {
-         if constexpr (requires { self.template GetAllocation<SID>(); })
-            return CT::Constant<TYPE> or not self.template GetAllocation<SID>();
-         else
-            return CT::Constant<TYPE>;
+         return CT::Constant<TYPE> or self.IsDisowned();
       }
 
       /// Check if container is made of other containers                      

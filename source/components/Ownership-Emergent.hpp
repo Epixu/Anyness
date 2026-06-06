@@ -21,7 +21,6 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Heap allocation will be searched on demand every time.                 
    /// Manage its ownership by referencing and dereferencing it, if enabled.  
-   /// Emergent ownership disallows disownment.                               
    ///   @tparam STYLE whether ownership will be automatically applied on     
    ///      construction, reassignment and destruction. Usually 0 if container
    ///      is just a view, or in other cases where you want to carry an      
@@ -70,8 +69,8 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID, CT::Container C>
       requires (CT::HeapAllocated<C> and Relevant<SID>)
       void TakeOwnership(this C& self) {
-         if (not self.template GetHeapInner<SID>()
-         or      self.template GetAllocation<SID>())
+         if (not self.template GetHeapInner<SID>() or not self.IsDisowned()
+         /*or      self.template GetAllocation<SID>()*/)
             return;
 
          // Shallow-copy all elements in a fresh allocation             
@@ -106,8 +105,16 @@ namespace Langulus::Anyness::Component
             // Abandon/Move                                             
             if constexpr (requires { from.template SetAllocationInner<ID>(nullptr); }) {
                if constexpr (from.Owned & OnCreateAndDestroy) {
-                  // We can transfer ownership                          
-                  from.template SetAllocationInner<ID>(nullptr);
+                  if (from.IsDisowned()) {
+                     // Right was never owned, now we own it            
+                     ThisCom::Keep();
+                  }
+                  else if constexpr (CT::Moved<I>) {
+                     // We can transfer ownership                       
+                     // No need to reset to zero on abandon, cuz        
+                     // this is done with EnableDisowned elsewhere.     
+                     from.template SetAllocationInner<ID>(nullptr);
+                  }
                }
                else ThisCom::Keep();
             }
@@ -117,11 +124,11 @@ namespace Langulus::Anyness::Component
                ThisCom::Keep();
             }
          }
-         else if constexpr (CT::Disowned<I>) {
+         /*else if constexpr (CT::Disowned<I>) {
             // Disown                                                   
             LglsAssert(not from.template GetAllocation<ID>(),
                "Emergent ownership doesn't allow disownment");
-         }
+         }*/
       }
 
       /// Called on container destruction                                     

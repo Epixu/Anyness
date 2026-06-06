@@ -245,6 +245,7 @@ void Common_CheckState_Default(const C& any, bool typed = false) {
    REQUIRE      (any.IsDefaultState());
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant());
+   REQUIRE_FALSE(any.IsDisowned());
    REQUIRE_FALSE(any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
    REQUIRE      (any.IsEmpty());
@@ -260,10 +261,12 @@ template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_Default(const C& any, bool typed = false) {
    Common_CheckState_Default<E>(any, typed);
 
-   if constexpr (requires { any.GetState(); }) {
+   if constexpr (requires { any.IsMissing(); }
+   or            requires { any.IsFuture();  }
+   or            requires { any.IsPast();    }) {
       REQUIRE_FALSE(any.IsMissing());
       REQUIRE_FALSE(any.IsFuture());
-      REQUIRE_FALSE(any.IsPast());      
+      REQUIRE_FALSE(any.IsPast());
    }
 }
 
@@ -274,6 +277,7 @@ void Any_CheckState_OwnedEmpty(const C& any) {
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant() == CT::Constant<E>);
    REQUIRE_FALSE(any.IsValid());
+   REQUIRE_FALSE(any.IsDisowned());
    REQUIRE      (any.GetAllocation());
    REQUIRE      (any.IsEmpty());
    REQUIRE      (any.GetCount() == 0);
@@ -292,6 +296,7 @@ void Any_CheckState_OwnedFull(const C& any) {
    REQUIRE      (any.IsConstant() == CT::Constant<E>);
    REQUIRE      (any.IsValid());
    REQUIRE      (any.GetAllocation());
+   REQUIRE_FALSE(any.IsDisowned());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
    REQUIRE      (any.GetReserved() > 0);
@@ -308,11 +313,12 @@ void Any_CheckState_DisownedFull(const C& any) {
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant());
    REQUIRE      (any.IsValid());
-   REQUIRE_FALSE(any.GetAllocation());
+   REQUIRE      (any.GetAllocation());
+   REQUIRE      (any.IsDisowned());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
-   REQUIRE      (any.GetReserved() == 0);
-   REQUIRE      (any.GetUses() == 0);
+   REQUIRE      (any.GetReserved() > 0);
+   REQUIRE      (any.GetUses() > 0);
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
    REQUIRE_FALSE(not any);
@@ -320,7 +326,8 @@ void Any_CheckState_DisownedFull(const C& any) {
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_Abandoned(const C& any) {
-   REQUIRE_FALSE(any.GetAllocation());
+   REQUIRE(any.IsDisowned());
+   //REQUIRE_FALSE(any.GetAllocation());
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
@@ -330,6 +337,7 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == uses);
    REQUIRE(pack.GetReserved() >= (uses ? 1 : 0));
+   REQUIRE(pack.IsDisowned() == CT::Disowned<I>);
 
    if constexpr (not CT::CustomPointer<E> or not CT::TypeErased<T>)
       REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));

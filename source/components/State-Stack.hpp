@@ -37,7 +37,6 @@ namespace Langulus::Anyness::Component
       template<CT::State S>
       static constexpr bool   HasState = HasStates and AkinAsOneOf<S, STATES...>;
 
-      //static_assert(StateCount > 0, "Has to have at least one state");
       static_assert(StateCount < 16, "Too many states");
 
       struct StateWrapper;
@@ -67,10 +66,6 @@ namespace Langulus::Anyness::Component
             return mState & StateStack::template GetStateBit<S>();
          }
          
-         /*constexpr bool operator == (DefineState::Default) const noexcept {
-            return mState == 0;
-         }*/
-         
          template<CT::State S>
          constexpr bool operator == (S) const noexcept {
             return mState == (mState & StateStack::template GetStateBit<S>());
@@ -95,14 +90,18 @@ namespace Langulus::Anyness::Component
 
       /// Get the relevant state when relaying one container to another.      
       /// Relevant states exclude size and type constraints, as well as       
-      /// tracking in order to avoid changes in behavior due to debugging.    
+      /// tracking and disownment in order to avoid changes in behavior due   
+      /// to debugging.                                                       
       ///   @return the current unconstrained container state                 
       constexpr auto GetUnconstrainedState(this auto const& self) noexcept
       -> StateWrapper requires HasStates {
          StateWrapper r = self.GetStateInner();
          StateList::ForEach([&r]<class S>{
-            if constexpr (S::UID == StateUid::Typed or S::UID == StateUid::Tracked)
+            if constexpr (S::UID == StateUid::Typed
+            or            S::UID == StateUid::Tracked
+            or            S::UID == StateUid::Disowned) {
                r -= S {};
+            }
          });
          return r;
       }
@@ -171,6 +170,7 @@ namespace Langulus::Anyness::Component
       LglsStateSorted(friend);
       LglsStateTracked(friend);
       LglsStateTyped(friend);
+      LglsStateDisowned(friend);
 
       /// Get the value of a specific state                                   
       template<CT::State B>

@@ -118,10 +118,10 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
-         if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.template GetAllocation<SID>(),
-               "Can't keep anything in a container without ownership");
-         }
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't keep anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
 
          auto entries = self.template GetEntriesInner<SID>();
          if (not entries)
@@ -197,6 +197,11 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointersEmergent(this C& self) assumptious {
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't keep anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
+
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             Allocation const* entry = nullptr;
          #endif
@@ -275,10 +280,10 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
-         if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.template GetAllocation<SID>(),
-               "Can't keep anything in a container without ownership");
-         }
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't keep anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
 
          // Check if disowned/outside authority                         
          auto entries = self.template GetEntriesInner<SID>();
@@ -346,6 +351,11 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointersEmergent(this C& self) assumptious {
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't keep anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
+
          if constexpr (CT::TypeErased<C>) {
             // Check if containing indirections                         
             auto T = self.template GetType<SID>();
@@ -431,7 +441,12 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't destroy anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't destroy anything in a container without ownership");
+
+         /*static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
 
          if constexpr (not CT::Handle<C>) {
@@ -441,14 +456,17 @@ namespace Langulus::Anyness::Component
                "Can't destroy data used from multiple locations");
             if (self.template IsEmpty<SID>())
                return;
-         }
+         }*/
 
          using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Destroying a type-erased element                         
             const auto T = self.template GetType<SID>();
-            if (T.IsSparse()) { //TODO this branch no longer required
+            LglsAssumeDev(T.IsSparse(),
+               "Don't call DestroyElementDeepStandardPointers if container isn't sparse");
+
+            //if (T.IsSparse()) { //TODO this branch no longer required
                auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
                   return;
@@ -513,7 +531,7 @@ namespace Langulus::Anyness::Component
                      mutable_entries->AddRef(-1);
                   //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
-            }
+            //}
             /*else if constexpr (FORCE_DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
                   // Call destructor of dense element                   
@@ -530,8 +548,10 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Destroying a statically-typed element                    
             using T = TypeOf<C, SID>;
-            
-            if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
+            static_assert(CT::Sparse<T>,
+               "Don't call DestroyElementDeepStandardPointers if container isn't sparse");
+
+            //if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
                using DT = Deptr<T>;
                auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
@@ -586,7 +606,7 @@ namespace Langulus::Anyness::Component
                      mutable_entries->AddRef(-1);
                   //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
-            }
+            //}
             /*else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
                // Call destructor of dense element                      
                auto& element = self.Get();
@@ -612,8 +632,13 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepStandardPointersEmergent(this C& self) assumptious {
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't destroy anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't destroy anything in a container without ownership");
+
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         Allocation const* entry = nullptr;
+            Allocation const* entry = nullptr;
          #endif
 
          using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
@@ -621,7 +646,10 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Destroying a type-erased element                         
             const auto T = self.template GetType<SID>();
-            if (T.IsSparse()) { //TODO this branch no longer required
+            LglsAssumeDev(T.IsSparse(),
+               "Don't call DestroyElementDeepStandardPointersEmergent if container isn't sparse");
+
+            //if (T.IsSparse()) { //TODO this branch no longer required
                const auto subT = T.GetDeptr();
                const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
@@ -680,7 +708,7 @@ namespace Langulus::Anyness::Component
                      DecvqAllCast(entry)->AddRef(-1);
                }
                #endif
-            }
+            //}
             /*else if constexpr (FORCE_DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
                   // Call destructor of dense element                   
@@ -697,8 +725,10 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Destroying a statically-typed element                    
             using T = TypeOf<C, SID>;
-            
-            if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
+            static_assert(CT::Sparse<T>,
+               "Don't call DestroyElementDeepStandardPointersEmergent if container isn't sparse");
+
+            //if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
                using DT = Deptr<T>;
                auto& ptr = *self.template GetRawAs<T, SID>();
                if (not ptr)
@@ -753,7 +783,7 @@ namespace Langulus::Anyness::Component
                      DecvqAllCast(entry)->AddRef(-1);
                }
                #endif
-            }
+            //}
             /*else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
                // Call destructor of dense element                      
                auto& element = self.Get();
@@ -778,7 +808,12 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't destroy anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't destroy anything in a container without ownership");
+
+         /*static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
 
          if constexpr (not CT::Handle<C>) {
@@ -788,12 +823,15 @@ namespace Langulus::Anyness::Component
                "Can't destroy data used from multiple locations");
             if (self.template IsEmpty<SID>())
                return;
-         }
+         }*/
 
          //                                                             
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
-         if (T.IsSparse()) { //TODO this branch no longer required
+         LglsAssumeDev(T.IsSparse(),
+            "Don't call DestroyElementDeepCustomPointers if container isn't sparse");
+
+         //if (T.IsSparse()) { //TODO this branch no longer required
             auto entries = self.template GetEntriesInner<SID>(); //TODO this needs to be GetEntries and it should account for entries for different types being in the same heap allocation
             if (not entries)
                return;
@@ -854,7 +892,7 @@ namespace Langulus::Anyness::Component
                T = nextT;
                ++entries;
             }
-         }
+         //}
          /*else if constexpr (FORCE_DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
@@ -881,10 +919,18 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void DestroyElementDeepCustomPointersEmergent(this C& self) assumptious {
+         LglsAssumeDev(not self.IsEmpty(),
+            "Can't destroy anything in an empty container");
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't destroy anything in a container without ownership");
+
          //                                                             
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
-         if (T.IsSparse()) { // TODO this branch no longer required
+         LglsAssumeDev(T.IsSparse(),
+            "Don't call DestroyElementDeepCustomPointersEmergent if container isn't sparse");
+
+         //if (T.IsSparse()) { // TODO this branch no longer required
             void const* src = self.template GetRaw<SID>();
 
             while (src and T.IsSparse()) {
@@ -937,7 +983,7 @@ namespace Langulus::Anyness::Component
                // Move to next indirection                              
                T = nextT;
             }
-         }
+         //}
          /*else if constexpr (FORCE_DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
@@ -1046,7 +1092,7 @@ namespace Langulus::Anyness::Component
                   memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
                }
             }
-            else if constexpr (requires { Deref<H>::Emergent; }) {
+            /*else if constexpr (requires { Deref<H>::Emergent; }) {
                // We are moving/abandoning, but since rhs is emergent,  
                // we need to zero the source pointer, so that we avoid  
                // them getting dereferenced later.                      
@@ -1054,7 +1100,7 @@ namespace Langulus::Anyness::Component
                   auto pointers_src = rhs.template GetRaw<SID>();
                   memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
                }
-            }
+            }*/
          }
          else if constexpr (CT::Sparse<Deint<I>>) {
             // Reference each indirection of a raw pointer              
@@ -1085,7 +1131,10 @@ namespace Langulus::Anyness::Component
       /// Reference all entries                                               
       ///   @attention operates on all relevant dimensions at once!           
       template<CT::Container C>
-      void Keep(this C& self) noexcept {
+      void Keep(this C& self) assumptious {
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
+
          if (self.IsEmpty())
             return;
 
@@ -1112,7 +1161,10 @@ namespace Langulus::Anyness::Component
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
       template<bool DEALLOCATE = true, CT::Container C>
-      void Free(this C& self) noexcept {
+      void Free(this C& self) assumptious {
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
+
          if (self.IsEmpty())
             return;
 
@@ -1169,7 +1221,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
       template<class SELF>
-      void Destroy(this SELF& self) noexcept requires ((STYLE & OnCreateAndDestroy) != 0) {
+      void Destroy(this SELF& self) assumptious requires ((STYLE & OnCreateAndDestroy) != 0) {
          ThisCom::Free();
       }
 
@@ -1217,35 +1269,38 @@ namespace Langulus::Anyness::Component
       }
 
       /// Refer all allocations pointed to by all indirections on absorption. 
-      ///   @note This does emergent referencing - disownement is not allowed.
-      ///      This method is replaced with conventional referencing in       
-      ///      derived components.                                            
+      ///   @note This does emergent referencing. This method is replaced     
+      ///      with cached referencing in derived components.                 
       ///   @param intent The intent and container to transfer from.          
       ///   @important Notice that Copy and Clone intents are not handled     
       ///      here. They're handled in heap components instead, in case      
       ///      something throws an exception while constructing.              
       template<class SELF, CT::Intent I>
-      requires (CT::Container<I> and (STYLE & OnCreateAndDestroy) != 0)
+      requires (CT::Container<I> and (STYLE & OnCreateAndDestroy) != 0
+           and not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>
+           and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>))
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>
-         and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>)) {
-            static_assert(not CT::Disowned<I>,
-               "Disownment is not allowed for emergent deep ownership");
-            decltype(auto) from = LglsFwd(intent.what);
+         decltype(auto) from = LglsFwd(intent.what);
 
-            if constexpr (CT::Referred<I>) {
-               // Refer                                                 
+         if constexpr (CT::Referred<I>) {
+            // Refer                                                    
+            ThisCom::Keep();
+         }
+         else if constexpr (I::IsMoved()) {
+            // Abandon/Move                                             
+            // We must reference only if we can't guarantee a transfer  
+            // of deep ownership. Such transfer can be guaranteed only  
+            // if container has count of zero after a move, and has     
+            // been referenced prior on construction.                   
+            if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
                ThisCom::Keep();
-            }
-            else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
-               // Abandon/Move                                          
-               // We must reference only if we can't guarantee a        
-               // transfer of deep ownership. Such transfer can be      
-               // guaranteed only if container has count of zero after  
-               // a move, and has been referenced prior on construction.
-               if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
+            else {
+               if (from.IsDisowned()) {
+                  // Remote was never owned, we own it now              
                   ThisCom::Keep();
-               else {
+               }
+
+               if constexpr (CT::Moved<I>) {
                   LglsAssumeDev(from.IsEmpty(),
                      "Remote count should've been reset after a move");
                }

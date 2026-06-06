@@ -96,20 +96,20 @@ namespace Langulus::Anyness
       constexpr TRef& operator = (A&& pointer) noexcept {
          if constexpr (CT::ContainsOne<A>)
             return this->AssignAbsorb(FWDIntent(pointer));
-         else if constexpr (CT::Sparse<A>) {
+         else {
+            static_assert(CT::Sparse<A>,
+               "A must be a pointer (intent is optional)");
+
             if (DeintCast(pointer) == this->GetHeapInner())
                return *this;
          
             if (DeintCast(pointer)) {
-               //this->Free();
                this->Destroy();
                this->SetHeapInner(DeintCast(pointer));
                if constexpr (not CT::Disowned<A>)
                   this->FindAllocationInner();
             }
-            //else this->AssignDefault();
          }
-         else static_assert(false, "A must be a pointer (intent is optional)");
          return *this;
       }
 

@@ -87,12 +87,13 @@ namespace Langulus::Anyness::Component
       ///   @param intent The intent and container to transfer from.          
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) noexcept {
-         if constexpr (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>)
+         // Always propagate entries no matter what                     
+         constexpr bool deeply_owned = CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>;
+         if constexpr (deeply_owned)
             ThisCom::SetEntriesInner(intent.what.template GetEntries<ID>());
 
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>
-         and (STYLE & OnCreateAndDestroy) != 0
-         and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>)) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>
+         and (STYLE & OnCreateAndDestroy) != 0 and deeply_owned) {
             decltype(auto) from = LglsFwd(intent.what);
 
             if constexpr (CT::Referred<I>) {
@@ -108,12 +109,18 @@ namespace Langulus::Anyness::Component
                if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
                   ThisCom::Keep();
                else {
-                  LglsAssumeDev(from.IsEmpty(),
-                     "Remote count should've been reset after a move");
+                  if (from.IsDisowned()) {
+                     // Remote was never owned, we own it now           
+                     ThisCom::Keep();
+                  }
+
+                  if constexpr (CT::Moved<I>) {
+                     LglsAssumeDev(from.IsEmpty(),
+                        "Remote count should've been reset after a move");
+                  }
                }
             }
          }
-
       }
    };
 

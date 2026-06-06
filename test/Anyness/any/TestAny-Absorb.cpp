@@ -214,12 +214,26 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
 
       T pack_referred1{Absorb,             piecewise1};
       T pack_referred2{Absorb,       Refer(piecewise1)};
+
+      if constexpr (CT::Referenced<Decay<E>>) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 7 : 1));
+      }
+
       T pack_copied   {Absorb,        Copy(piecewise1)};
+
+      if constexpr (CT::Referenced<Decay<E>>) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
+      }
+
       T pack_cloned   {Absorb,       Clone(piecewise1)};
       T pack_moved1   {Absorb, ::std::move(piecewise2)};
       T pack_moved2   {Absorb,        Move(piecewise3)};
       T pack_abandoned{Absorb,     Abandon(piecewise4)};
       T pack_disowned {Absorb,      Disown(piecewise1)};
+
+      if constexpr (CT::Referenced<Decay<E>>) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
+      }
 
       WHEN("Absorb-constructed") {
          Any_CheckState_OwnedFull<E>(pack_referred1);
@@ -237,7 +251,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          Any_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
          Any_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
          Any_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
-         Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 0);
+         Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
 
          if constexpr (CT::Referenced<Decay<E>>) {
             REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));

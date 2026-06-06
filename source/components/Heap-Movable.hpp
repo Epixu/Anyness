@@ -498,22 +498,26 @@ namespace Langulus::Anyness::Component
 
       /// Branch out the current container by doing a shallow copy.           
       /// Happens when you try to modify a container with strong ownership    
-      /// from somewhere else (when GetUses() > 1). Allocates a fresh         
-      /// allocation in the case we haven't allocated anything yet.           
+      /// from somewhere else (when GetUses() > 1), or when container is      
+      /// disowned. Allocates a fresh allocation in the case we haven't       
+      /// allocated anything yet.                                             
       ///   @param newReserve usually branching is accompanied by a resize,   
       ///      so specify it here                                             
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void BranchOut(this C& self, Count<C> newReserve) {
-         if (self.template GetUses<SID>() == 1) {
-            ThisCom::AllocateMore(newReserve);
-            return;
-         }
-
-         const C backup {Abandon{self}};
-         if (self.template IsEmpty<SID>())
+         if (self.template IsEmpty<SID>()) {
+            // Empty - do a fresh allocation                            
             ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
-         else
+         }
+         else if (not self.IsDisowned() and self.template GetUses<SID>() == 1) {
+            // No need to branch out - reuse the current allocation     
+            ThisCom::AllocateMore(newReserve);
+         }
+         else {
+            // Branch out by performing a shallow clone                 
+            const C backup {Abandon{self}};
             ThisCom::ConstructFrom(Copy(backup), newReserve);
+         }
       }
    };
 

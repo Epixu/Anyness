@@ -223,19 +223,10 @@ namespace Langulus::Anyness::Component
       ///   @return true if the contents are constant                         
       template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsConstant(this auto const& self) noexcept {
-         if constexpr (requires { self.template GetAllocation<ID>(); }) {
-            if constexpr (TypeErased) {
-               return not self.template GetAllocation<ID>()
-                       or ThisCom::GetTypeInner().IsConstant();
-            }
-            else return CT::Constant<TYPE> or not self.template GetAllocation<ID>();
-         }
-         else {
-            if constexpr (TypeErased)
-               return ThisCom::GetTypeInner().IsConstant();
-            else
-               return CT::Constant<TYPE>;
-         }
+         if constexpr (TypeErased)
+            return self.IsDisowned() or ThisCom::GetTypeInner().IsConstant();
+         else
+            return CT::Constant<TYPE> or self.IsDisowned();
       }
 
       /// Check if container is made of other containers                      

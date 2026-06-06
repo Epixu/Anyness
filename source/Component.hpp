@@ -211,7 +211,8 @@ namespace Langulus::Anyness
          Or,
          Sorted,
          Tracked,
-         Typed
+         Typed,
+         Disowned
       };
 
       template<class T>
@@ -464,6 +465,10 @@ namespace Langulus::Anyness
          template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Typed;
          #define LglsStateTyped(modifier) \
             template<StateValue, Cid, Cid...> modifier struct State::Typed
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Disowned;
+         #define LglsStateDisowned(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Disowned
       }
 
       namespace StateInner

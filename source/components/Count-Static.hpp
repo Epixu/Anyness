@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "../states/Disowned.hpp"
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Signed.hpp>
 #include <Langulus/CT/Integer.hpp>
@@ -33,7 +34,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
    template<auto COUNT, Cid ID, Cid...SHARED>
-   struct CountStatic {
+   struct CountStatic : State::Disowned<StateValue::Variable, ID, SHARED...> {
       using CTTI_Component  = Yes<>;
       using CTTI_ReflectAs  = void;
       using CTTI_Contiguous = Maybe<COUNT == 1>;
@@ -88,6 +89,32 @@ namespace Langulus::Anyness::Component
             return self.template GetRaw<SID>() ? COUNT : CountType {0};
          else
             return COUNT;
+      }
+
+      /// Doesn't transfer anything but still serves the purpose of checking  
+      /// whether count is compatible, and to enable disowned state           
+      ///   @attention this is noop when constructing from deep intents,      
+      ///      since element constructors might throw and stuff be partially  
+      ///      inserted. In those cases, count is set by the heap components. 
+      ///   @param intent the intent and container to transfer from           
+      template<class SELF, CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this SELF& self, I&& intent) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+            decltype(auto) from = LglsFwd(intent.what);
+            LglsAssumeDev(from.template GetCount<ID>() <= 1,
+               "Incompatible count");
+
+            if constexpr (I::IsMoved() and CT::OwnedStrong<I>) {
+               // Moving/Abandoning                                     
+               // Count is responsible for deep ownership, it has to    
+               // be reset on move to disable destruction in 'from'.    
+               if_available(from.template SetCountInner<ID>(0));
+            }
+            else if constexpr (CT::Disowned<I>) {
+               // Make sure to enable the disowned state                
+               ThisCom::EnableDisowned();
+            }
+         }
       }
 
       /// Reset count (inner)                                                 
