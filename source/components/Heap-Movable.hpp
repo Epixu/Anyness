@@ -182,26 +182,35 @@ namespace Langulus::Anyness::Component
             // Move/Refer/Abandon/Disown other                          
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
-            if constexpr (I::ResetsOnMove() and CT::OwnedStrong<I>) {
+            if constexpr (CT::Moved<I> /*and CT::OwnedStrong<I>*/) {
                // We are moving 'from' - it needs to be fully reset     
                from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
-               if_available(from.ResetState());
-               Id::ForEach([&from]<Cid D>{
+               //if_available(from.ResetState());
+               /*Id::ForEach([&from]<Cid D>{
                   (void) from;
                   if_available(from.template ResetType<D>());
-               });
+               });*/
             }
             else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
-               // We are abandoning 'from' - we need to reset only the  
-               // properties responsible for destruction.               
-               // This will be done in their respective components:     
+               // We are abandoning 'from'.                             
+               // First and foremost, if 'from' supports State::Disowned
+               // we do just that in the last ownership component.      
+               // If disownment is not supported, we need to reset all  
+               // properties responsible for dereferencing and          
+               // destruction. This will be done in their respective    
+               // components, if possible:                              
                //    1. Allocation responsible for shallow ownership    
                //    2. Count responsible for deep ownership            
-               // Some monocontainers have no variable count, and in    
-               // some cases the heap pointer is used to specify the    
-               // count of 1. In these cases, this component is         
-               // responsible to reset the pointer.                     
-               if constexpr (not requires { from.template SetCountInner<Id::First>(0); }) {
+               if constexpr (not from.CanBeDisowned
+               and (not requires { from.template SetCountInner<Id::First>(0); }
+                    or from.CountHeapRequests())
+               ) {
+                  // Some monocontainers have no variable count, and in 
+                  // some cases the heap pointer is used to specify the 
+                  // count of 1. In these cases, this component is      
+                  // responsible to reset the pointer. Same applies in  
+                  // the cases where vital properties are positioned on 
+                  // the heap (CountHeap/HashHeap/OwnershipDeepHeap)    
                   from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
                }
             }
@@ -259,6 +268,8 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Reallocate                                               
             C previous {Abandon {self}};
+            if_available(self.DisableDisowned());
+
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                auto reallocated = Allocator::Reallocate(self.template GetType<SID>(), request.mTotalBytes, al);
             #else
@@ -326,7 +337,8 @@ namespace Langulus::Anyness::Component
          if (not al) {
             //                                                          
             // We have to branch out                                    
-            const C backup{Abandon{self}};
+            const C backup {Abandon{self}};
+            if_available(self.DisableDisowned());
             ThisCom::AllocateFresh(ThisCom::RequestHeap(desiredReserve));
 
             // Reinsert only the relevant items                         
@@ -508,16 +520,27 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>()) {
             // Empty - do a fresh allocation                            
             ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
+            return;
          }
-         else if (not self.IsDisowned() and self.template GetUses<SID>() == 1) {
+         else if (self.template GetUses<SID>() == 1) {
             // No need to branch out - reuse the current allocation     
-            ThisCom::AllocateMore(newReserve);
+            // unless container was disowned                            
+            if constexpr (requires { self.IsDisowned(); }) {
+               if (not self.IsDisowned()) {
+                  ThisCom::AllocateMore(newReserve);
+                  return;
+               }
+            }
+            else {
+               ThisCom::AllocateMore(newReserve);
+               return;
+            }
          }
-         else {
-            // Branch out by performing a shallow clone                 
-            const C backup {Abandon{self}};
-            ThisCom::ConstructFrom(Copy(backup), newReserve);
-         }
+
+         // Branch out by performing a shallow clone                    
+         const C backup {Abandon{self}};
+         if_available(self.DisableDisowned()); //TODO redundant?
+         ThisCom::ConstructFrom(Copy(backup), newReserve);
       }
    };
 

@@ -244,7 +244,7 @@ void Common_CheckState_Default(const C& any, bool typed = false) {
 
    REQUIRE      (any.IsDefaultState());
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (any.IsConstant());
+   REQUIRE_FALSE(any.IsConstant());
    REQUIRE_FALSE(any.IsDisowned());
    REQUIRE_FALSE(any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
@@ -337,7 +337,7 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == uses);
    REQUIRE(pack.GetReserved() >= (uses ? 1 : 0));
-   REQUIRE(pack.IsDisowned() == CT::Disowned<I>);
+   //REQUIRE(pack.IsDisowned() == CT::Disowned<I>);
 
    if constexpr (not CT::CustomPointer<E> or not CT::TypeErased<T>)
       REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));

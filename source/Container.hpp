@@ -162,8 +162,7 @@ namespace Langulus::Anyness
    ///      build-time optimization: too many superficially different template
    ///      specializations will bloat code generation significantly and slow 
    ///      builds down a lot...                                              
-   template<CT::Component...COMPONENTS>
-   requires ValidComponentOrder<COMPONENTS...>
+   template<CT::Component...COMPONENTS> requires ValidComponentOrder<COMPONENTS...>
    struct LANGULUS_EBCO Container : DecideStateComponent<COMPONENTS...>, COMPONENTS... {
       using CTTI_Container = Yes<>;
       using StateComponent = DecideStateComponent<COMPONENTS...>;
@@ -176,7 +175,7 @@ namespace Langulus::Anyness
       //using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
       /// Check if container is valid                                         
-      constexpr bool IsValid() const noexcept {
+      /*constexpr bool IsValid() const noexcept {
          if (this->GetCount() > 0)
             return true;
 
@@ -185,13 +184,13 @@ namespace Langulus::Anyness
             if_available(for_other_reasons |= this->C::IsValid());
          });
          return for_other_reasons;
-      }
+      }*/
       
       /// Check if a component is included at compile-time                    
       /*template<class C>
       static constexpr bool HasComponent
          = AkinAsOneOf<C, COMPONENTS..., DecideStateComponent<COMPONENTS...>>;*/
-
+      
       /// Get the number of heap providers (all dimensions)                   
       /// Needs to be public, because it's used in concept checks.            
       template<CT::Typelist L = ComponentList>
@@ -251,13 +250,28 @@ namespace Langulus::Anyness
       /// A tag-dispatch constructor that forwards arguments to mStack.       
       /// Used in some niche container cases, like TOwn.                      
       constexpr Container(Inner::Stackwise, auto&&...arguments)
-         : mStack(StateComponent::GetDefaultState(), {LglsFwd(arguments)}...) {}
+         : mStack({LglsFwd(arguments)}...) {}
 
       /// Default destructor does nothing. Each container has to implement    
       /// it, most likely by calling this->Destroy(). This is needed, because 
       /// the destructor relies on properly deducing 'this'.                  
       constexpr ~Container() noexcept = default;
       
+      /// Get the total number of heap requests (all dimensions)              
+      template<CT::Typelist L = ComponentList>
+      static consteval size_t CountHeapRequests() {
+         size_t count = 0;
+         L::ForEach([&count]<class C> {
+            if constexpr (requires { typename C::Subcomponents; })
+               count += CountHeapRequests<typename C::Subcomponents>();
+            else if constexpr (requires { typename C::HeapRequest; }) {
+               if constexpr (CT::NotVoid<typename C::HeapRequest>)
+                  ++count;
+            }
+         });
+         return count;
+      }
+
       /// Get the number of heap requests in the footer for chosen heap ID    
       template<Cid SID, CT::Typelist L = ComponentList>
       static consteval size_t CountHeapFooterRequests() {
@@ -302,9 +316,9 @@ namespace Langulus::Anyness
          return offset;
       }
       
-      /// Get a reference to a heap/stack provider's data                     
+      /// Get the type of heap/stack provider for a given ID                  
       ///   @tparam ID provider ID                                            
-      ///   @return return a reference to the provider's data                 
+      ///   @return return type of the provider                               
       template<Cid SID, CT::Typelist L = ComponentList>
       static consteval auto FindProvider() {
          return L::ForEachConstOr([]<class C> {
@@ -324,6 +338,26 @@ namespace Langulus::Anyness
             }
             else return No {};
          });
+      }
+      
+      /// Get the set of providers for a list of IDs                          
+      ///   @param ids provider IDs                                           
+      ///   @return return the set of the providers, no duplicates            
+      template<CT::Typelist L = ComponentList, CT::Typelist CARRY = Types<>, Cid ID1, Cid...IDN>
+      static consteval auto FindProviders(Values<ID1, IDN...>&& ids) {
+         constexpr auto p1 = FindProvider<ID1, L>();
+         if constexpr (CARRY::template Contains<typename decltype(p1)::First>) {
+            if constexpr (sizeof...(IDN))
+               return FindProviders<L, CARRY>(Values<IDN...>{});
+            else
+               return CARRY {};
+         }
+         else {
+            if constexpr (sizeof...(IDN))
+               return FindProviders<L, decltype(CARRY{} + p1)>(Values<IDN...>{});
+            else
+               return CARRY{} + p1;
+         }
       }
 
       /// Go through all relevant components for the dimension 'SID' and      
@@ -708,10 +742,17 @@ namespace Langulus::Anyness
          static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
             "You can't absorb from containers with different contiguousness");
 
+         using I = IntentOf(from);
          ComponentList::ForEach([&]<class C>{
-                 if_available_gcc(C::template ConstructFrom<SELF, IntentOf(from)>)(FWDIntent(from));
+                 if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
             else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
+
+         // Make sure we disown an abandoned container at the end       
+         if constexpr (CT::Abandoned<I> and Decay<Deint<FROM>>::CanBeDisowned)
+            DeintCast(from).EnableDisowned();
+         else if constexpr (CT::Moved<I> and requires { DeintCast(from).ResetState(); })
+            DeintCast(from).ResetState();
       }
 
       /// Call Destroy in all components that implement it.                   
@@ -721,8 +762,10 @@ namespace Langulus::Anyness
       template<class SELF>
       constexpr void Destroy(this SELF& self) {
          if not consteval {
-            if (self.IsDisowned())
-               return;
+            if constexpr (requires { self.IsDisowned(); }) {
+               if (self.IsDisowned())
+                  return;
+            }
 
             // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
@@ -737,8 +780,10 @@ namespace Langulus::Anyness
       template<bool DEALLOCATE = true, class SELF>
       constexpr void Free(this SELF& self) {
          if not consteval {
-            if (self.IsDisowned())
-               return;
+            if constexpr (requires { self.IsDisowned(); }) {
+               if (self.IsDisowned())
+                  return;
+            }
 
             // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
@@ -752,8 +797,10 @@ namespace Langulus::Anyness
       template<class SELF>
       constexpr void Keep(this SELF& self) {
          if not consteval {
-            if (self.IsDisowned())
-               return;
+            if constexpr (requires { self.IsDisowned(); }) {
+               if (self.IsDisowned())
+                  return;
+            }
 
             ComponentList::ForEach([&]<class C> {
                if_available_gcc(C::template Keep<SELF>)();
@@ -899,13 +946,6 @@ namespace Langulus::Anyness
          }
       }
 
-   public:
-      ///                                                                     
-      /// THE UNIFYING INTERFACE                                              
-      ///                                                                     
-      /// All the following methods exist only if the appropriate method      
-      /// equivalents exist in one or more components.                        
-      
       /// Call AssignFrom in all components that implement it.                
       /// Fallback to AssignDefault otherwise.                                
       template<CT::Container LHS, CT::Container RHS>

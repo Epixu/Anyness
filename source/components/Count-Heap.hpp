@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../states/Disowned.hpp"
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Contiguous.hpp>
 
@@ -29,7 +28,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
    template<class T, Cid ID, Cid...SHARED>
-   struct CountHeap : State::Disowned<StateValue::Variable, ID, SHARED...> {
+   struct CountHeap {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
       using Id = Values<ID, SHARED...>;
@@ -84,42 +83,15 @@ namespace Langulus::Anyness::Component
       
       /// Set the number of initialized elements                              
       template<Cid SID = ID> requires Relevant<SID>
-      constexpr void SetCountInner(this auto& self, T c) noexcept {
+      constexpr void SetCountInner(this auto& self, T c) assumptious {
+         LglsAssumeDev(self.template GetUses<SID>() == 1);
          ThisCom::GetCountInner() = c;
-      }
-      
-      /// Default-initialize count to zero                                    
-      constexpr void ConstructDefault(this auto& self) noexcept {
-         ThisCom::SetCountInner(0);
-      }
-      
-      /// Transfer from any kind of container, respecting intents             
-      ///   @attention this is noop when constructing from deep intents,      
-      ///      since element constructors might throw and stuff be partially  
-      ///      inserted. In those cases, count is set by the heap components. 
-      ///   @param intent the intent and container to transfer from           
-      template<class SELF, CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
-            decltype(auto) from = LglsFwd(intent.what);
-            //ThisCom::SetCountInner(from.template GetCount<ID>()); //TODO nothing to really set here - the count on the heap is transferred the moment you transfer the heap pointer. when copied/cloned, it gets reset by the heap component, depending on full/partial success
-            /*if constexpr (I::IsMoved() and CT::OwnedStrong<I>) {
-               // Moving/Abandoning                                     
-               // Count is responsible for deep ownership, it has to    
-               // be reset on move to disable destruction in 'from'.    
-               //if_available(from.template SetCountInner<ID>(0));
-            }
-            else*/ if constexpr (CT::Disowned<I>) {
-               // Make sure to enable the disowned state                
-               ThisCom::EnableDisowned();
-            }
-         }
       }
 
       /// Reset count (inner)                                                 
       ///   @attention doesn't destroy elements, only resets hash and count   
       template<Cid SID = ID> requires Relevant<SID>
-      constexpr void ResetCount(this auto& self) noexcept {
+      constexpr void ResetCount(this auto& self) assumptious {
          ThisCom::SetCountInner(0);
          if_available(self.template SetHashInner<SID>(1));
       }

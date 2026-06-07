@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
 
-      static constexpr int    ComponentPrecedence = 8000;
+      static constexpr int    ComponentPrecedence = -8000;
       static constexpr size_t StateCount = sizeof...(STATES);
       static constexpr bool   HasStates = StateCount > 0;
       template<CT::State S>
@@ -108,21 +108,20 @@ namespace Langulus::Anyness::Component
 
    protected:
       /// Check if container has future/past linking point states             
-      static consteval bool CheckCanBeMissing() requires HasStates {
-         bool result = false;
-         StateList::ForEach([&result]<class S>{
-            if constexpr (requires { S::CanBeMissing; })
-               result = result or S::CanBeMissing;
+      template<StateUid...ID>
+      static consteval bool CheckStateSupport() {
+         return StateList::ForEachOr([]<class S> noexcept {
+            return ((S::UID == ID and (S::Dynamic or S::Enable)) or ...);
          });
-         return result;
       }
 
    public:
-      static constexpr bool CanBeMissing = CheckCanBeMissing();
+      static constexpr bool CanBeMissing  = CheckStateSupport<StateUid::Past, StateUid::Future>();
+      static constexpr bool CanBeDisowned = CheckStateSupport<StateUid::Disowned>();
 
       /// Check if container is marked as missing past/future                 
       ///   @return true if this container is marked as missing               
-      constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing {
+      constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing { //TODO dimensions?
          bool r = false;
          StateList::ForEachConstOr([&]<class S>{
             if constexpr (S::UID == StateUid::Past or S::UID == StateUid::Future) {
@@ -143,15 +142,47 @@ namespace Langulus::Anyness::Component
          return r;
       }
 
+      /// Check if container is marked as disowned                            
+      ///   @return true if this container is marked as disowned              
+      constexpr bool IsDisowned(this auto const& self) noexcept { //TODO dimensions?
+         if constexpr (CanBeDisowned) {
+            bool r = false;
+            StateList::ForEachConstOr([&]<class S>{
+               if constexpr (S::UID == StateUid::Disowned) {
+                  if constexpr (S::Static) {
+                     if constexpr (S::Enable) {
+                        r = true;
+                        return true;
+                     }
+                     else return No{};
+                  }
+                  else {
+                     r |= self.GetStateInner() & S {};
+                     return No{};
+                  }
+               }
+               else return No{};
+            });
+            return r;
+         }
+         else if constexpr (requires { self.GetAllocation(); })
+            return not self.IsEmpty() and self.GetAllocation() == nullptr;
+         else
+            return false;
+      }
+
       /// Check if container has either created elements, or a relevant state 
       ///   @return true if either contains state, or has stuff inserted      
-      constexpr bool IsValid(this auto const& self) noexcept requires HasStates {
-         return static_cast<bool>(self.GetUnconstrainedState());
+      constexpr bool IsValid(this auto const& self) noexcept { //TODO dimensions?
+         if constexpr (HasStates)
+            return not self.IsEmpty() or static_cast<bool>(self.GetUnconstrainedState());
+         else
+            return not self.IsEmpty();
       }
 
       /// Check if container is in the default state                          
       ///   @return true if either contains state, or has stuff inserted      
-      constexpr bool IsDefaultState(this auto const& self) noexcept {
+      constexpr bool IsDefaultState(this auto const& self) noexcept { //TODO dimensions?
          if constexpr (HasStates)
             return self.GetState().mState == GetDefaultState();
          else
@@ -224,8 +255,13 @@ namespace Langulus::Anyness::Component
          decltype(auto) from = LglsFwd(intent.what);
          if constexpr (requires { from.GetStateInner(); }) {
             self.SetStateInner(from.GetStateInner().mState);
-            if constexpr (I::ResetsOnMove())
-               from.ResetState();
+
+            // Don't propagate disowned state unless explicitly required
+            if constexpr (CanBeDisowned and not CT::Disowned<I>)
+               self.DisableDisowned();
+
+            //if constexpr (CT::Moved<I>)//must be done after all components are processed, so it is performed at the end of Container::Absorb
+            //   from.ResetState();
          }
          else self.SetStateInner(GetDefaultState());
       }

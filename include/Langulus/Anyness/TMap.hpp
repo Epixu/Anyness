@@ -14,6 +14,7 @@ namespace Langulus::Anyness::Inner
    template<CT::NotVoid K, CT::NotVoid V, StateValue SORT>
    requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TMapBase = Com::Container<
+      Com::State::Disowned<>,             // Allows disownment          
       Com::Multitype<Com::TypedStack<DMeta, K, true, 0>,
                      Com::TypedStack<DMeta, V, true, 1>>,
       Com::HeapMovable<8, 2, HeapEntry<0, K*>, HeapEntry<1, V*>>,

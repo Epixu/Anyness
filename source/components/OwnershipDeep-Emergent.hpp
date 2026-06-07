@@ -75,17 +75,18 @@ namespace Langulus::Anyness::Component
          AllocationPtr const* entries, CT::Sparse auto ptr,
          [[maybe_unused]] const DMeta& T = {},
          [[maybe_unused]] const DMeta& nextT = {}
-      ) noexcept {
-         static_assert(LANGULUS_FEATURE(MANAGED_MEMORY));
+      ) assumptious {
+         /*static_assert(LANGULUS_FEATURE(MANAGED_MEMORY));*/
          if (*entries)
             return;
 
+      #if LANGULUS(SAFE)
          // We can find the allocation behind the pointer but in order  
          // to save it, we must make sure that entry array resides in   
          // non-shared memory (when OwnershipDeepHeap is used)          
          auto entry_allocation = Allocator::Find(entries);
-         if (not entry_allocation or entry_allocation->GetUses() != 1)
-            return;
+         LglsAssumeDev(entry_allocation and entry_allocation->GetUses() == 1);
+      #endif
 
          auto& entry = DecvqAllCast(*entries);
          if constexpr (CT::TypeErased<C>) {
@@ -120,8 +121,10 @@ namespace Langulus::Anyness::Component
       void KeepElementDeepStandardPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't keep anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't keep anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
 
          auto entries = self.template GetEntriesInner<SID>();
          if (not entries)
@@ -199,8 +202,10 @@ namespace Langulus::Anyness::Component
       void KeepElementDeepStandardPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't keep anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't keep anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             Allocation const* entry = nullptr;
@@ -282,8 +287,10 @@ namespace Langulus::Anyness::Component
       void KeepElementDeepCustomPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't keep anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't keep anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
 
          // Check if disowned/outside authority                         
          auto entries = self.template GetEntriesInner<SID>();
@@ -353,8 +360,10 @@ namespace Langulus::Anyness::Component
       void KeepElementDeepCustomPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't keep anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't keep anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
 
          if constexpr (CT::TypeErased<C>) {
             // Check if containing indirections                         
@@ -443,8 +452,10 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't destroy anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't destroy anything in a container without ownership");
+         }
 
          /*static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
@@ -634,8 +645,10 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepStandardPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't destroy anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't destroy anything in a container without ownership");
+         }
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             Allocation const* entry = nullptr;
@@ -810,8 +823,10 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't destroy anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't destroy anything in a container without ownership");
+         }
 
          /*static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
@@ -921,8 +936,10 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepCustomPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't destroy anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't destroy anything in a container without ownership");
+         }
 
          //                                                             
          // Destroying a type-erased element                            
@@ -1056,8 +1073,9 @@ namespace Langulus::Anyness::Component
                " is not same as ", rhs.template GetType<SID>()
             );
 
-            if constexpr (not CT::Disowned<I>
-            and requires { rhs.template GetEntriesInner<SID>(); }) {
+            if constexpr (CT::Disowned<I>)
+               memset(DecvqAllCast(entries), 0, entries_size);
+            else if constexpr (requires { rhs.template GetEntriesInner<SID>(); }) {
                // We can copy entries from RHS handle                   
                auto entries_src = rhs.template GetEntriesInner<SID>();
                if (entries_src) {
@@ -1083,7 +1101,7 @@ namespace Langulus::Anyness::Component
             else if constexpr (CT::OwnedStrong<H> and REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
                // are referenced (even if they have no corresponding    
-               // entry), we need to zero the source pointer, so that   
+               // entry), we need to zero the source pointers, so that  
                // we avoid them getting dereferenced later.             
                if (rhs.IsSparse()) {
                   LglsAssumeDev(rhs.template GetUses<SID>() == 1,
@@ -1116,6 +1134,7 @@ namespace Langulus::Anyness::Component
             // because we can't abandon/move a raw pointer. Missing     
             // entries will be sought and referenced as well, unless    
             // inserted pointer is disowned.                            
+            memset(DecvqAllCast(entries), 0, entries_size);
             constexpr bool sought = not CT::Disowned<I>;
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (CT::CustomPointer<T>)
@@ -1132,8 +1151,10 @@ namespace Langulus::Anyness::Component
       ///   @attention operates on all relevant dimensions at once!           
       template<CT::Container C>
       void Keep(this C& self) assumptious {
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't keep anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
 
          if (self.IsEmpty())
             return;
@@ -1162,8 +1183,10 @@ namespace Langulus::Anyness::Component
       ///   @attention operates on all relevant dimensions at once!           
       template<bool DEALLOCATE = true, CT::Container C>
       void Free(this C& self) assumptious {
-         LglsAssumeDev(not self.IsDisowned(),
-            "Can't keep anything in a container without ownership");
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
 
          if (self.IsEmpty())
             return;
@@ -1278,31 +1301,36 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I>
       requires (CT::Container<I> and (STYLE & OnCreateAndDestroy) != 0
            and not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>
-           and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>))
+           and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>, ID>>))
       void ConstructFrom(this SELF& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
 
-         if constexpr (CT::Referred<I>) {
+         if constexpr (CT::Referred<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0) {
             // Refer                                                    
             ThisCom::Keep();
          }
-         else if constexpr (I::IsMoved()) {
-            // Abandon/Move                                             
-            // We must reference only if we can't guarantee a transfer  
-            // of deep ownership. Such transfer can be guaranteed only  
-            // if container has count of zero after a move, and has     
-            // been referenced prior on construction.                   
-            if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
+         else if constexpr (CT::Moved<I> or CT::Abandoned<I>) {
+            // Move/Abandon                                             
+            if (from.IsDisowned()) {
+               // Right was never owned, now we own it                  
                ThisCom::Keep();
+            }
             else {
-               if (from.IsDisowned()) {
-                  // Remote was never owned, we own it now              
-                  ThisCom::Keep();
+               if constexpr (CT::Abandoned<I> and from.CanBeDisowned) {
+                  // We can abandon by using the State::Disowned        
+                  //from.EnableDisowned(); // gonna get called in Container::Absorb to avoid calling it multiple times
                }
-
-               if constexpr (CT::Moved<I>) {
+               else if constexpr (CT::HasVariableCount<I>) {
                   LglsAssumeDev(from.IsEmpty(),
-                     "Remote count should've been reset after a move");
+                     "Remote count should've been reset prior to this call");
+               }
+               else if constexpr (requires { from.template SetEntriesInner<ID>(nullptr); }) {
+                  // We can transfer ownership                          
+                  from.template SetEntriesInner<ID>(nullptr);
+               }
+               else {
+                  // We can't transfer ownership, fallback to refer     
+                  ThisCom::Keep();
                }
             }
          }

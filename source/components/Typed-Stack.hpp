@@ -480,6 +480,9 @@ namespace Langulus::Anyness::Component
                   ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
             }
          }
+
+         if constexpr (CT::Moved<I> and CT::TypeErased<I>)
+            intent->template SetTypeInner<ID>(META{});
       }
    };
 

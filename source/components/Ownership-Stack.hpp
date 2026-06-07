@@ -134,8 +134,6 @@ namespace Langulus::Anyness::Component
       }
       
       /// Transfer from any kind of container, respecting intents             
-      ///   @attention this will not dereference previous allocation          
-      ///   @param self deduced this                                          
       ///   @param intent the intent and container to transfer from           
       ///   @important notice that Copy and Clone intents are not handled     
       ///      here. They're handled in heap components instead, in case      
@@ -145,12 +143,28 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
 
-            if constexpr (CT::Referred<I>) {
+            if constexpr (CT::Disowned<I>) {
+               // Disown                                                
+               // We are allowed to propagate the allocation pointer,   
+               // but we don't bother resetting it or searching for it. 
+               if constexpr (self.CanBeDisowned and requires { from.template GetAllocationInner<ID>(); })
+                  ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
+               else
+                  ThisCom::SetAllocationInner(nullptr);
+            }
+            else if constexpr (not requires { from.Owned; }) {
+               ThisCom::FindAllocationInner();
+            }
+            else if constexpr (CT::Referred<I> or 0 == (from.Owned & OnCreateAndDestroy)) {
                // Refer                                                 
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
                   const auto al = from.template GetAllocationInner<ID>();
                   if (al) {
                      ThisCom::SetAllocationInner(al);
+
+                     if constexpr (CT::Moved<I>)
+                        from.template SetAllocationInner<ID>(nullptr);
+
                      if constexpr (STYLE & OnCreateAndDestroy)
                         ThisCom::Keep();
                   }
@@ -158,43 +172,26 @@ namespace Langulus::Anyness::Component
                }
                else ThisCom::FindAllocationInner();
             }
-            else if constexpr (I::IsMoved()) {
+            else if constexpr (CT::Moved<I> or CT::Abandoned<I>) {
                // Abandon/Move                                          
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
                   const auto al = from.template GetAllocationInner<ID>();
                   if (al) {
                      ThisCom::SetAllocationInner(al);
-                     if constexpr (from.Owned & OnCreateAndDestroy) {
-                        if (from.IsDisowned()) {
-                           // Source was disowned, we now own it        
-                           ThisCom::Keep();
-                        }
-                        else if constexpr (CT::Moved<I>) {
-                           // We can transfer ownership                 
-                           // No need to reset to zero on abandon, cuz  
-                           // this is done with EnableDisowned          
-                           // elsewhere.                                
-                           from.template SetAllocationInner<ID>(nullptr);
-                        }
-                     }
-                     else if constexpr (STYLE & OnCreateAndDestroy) {
-                        // Contents were never referenced on the right  
-                        // It is time to do it now.                     
+
+                     if (STYLE & OnCreateAndDestroy and from.IsDisowned()) {
+                        // Source was disowned, we now own it           
                         ThisCom::Keep();
+                     }
+
+                     if constexpr (CT::Moved<I> or not from.CanBeDisowned) {
+                        // Transfer ownership in order to disown        
+                        from.template SetAllocationInner<ID>(nullptr);
                      }
                   }
                   else ThisCom::FindAllocationInner();
                }
                else ThisCom::FindAllocationInner();
-            }
-            else if constexpr (CT::Disowned<I>) {
-               // Disown                                                
-               // We are allowed to propagate the allocation pointer,   
-               // but we don't bother resetting it or searching for it. 
-               if constexpr (requires { from.template GetAllocationInner<ID>(); })
-                  ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
-               else
-                  ThisCom::SetAllocationInner(nullptr);
             }
          }
       }

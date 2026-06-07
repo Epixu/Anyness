@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../states/Disowned.hpp"
 #include <Langulus/CT/Index.hpp>
 
 
@@ -26,7 +25,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
    template<class T, Cid ID, Cid...SHARED>
-   struct CountStack : State::Disowned<StateValue::Variable, ID, SHARED...> {
+   struct CountStack {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
       using Id = Values<ID, SHARED...>;
@@ -101,15 +100,18 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
             ThisCom::SetCountInner(from.template GetCount<ID>());
-            if constexpr (I::IsMoved() and CT::OwnedStrong<I>) {
-               // Moving/Abandoning                                     
-               // Count is responsible for deep ownership, it has to    
-               // be reset on move to disable destruction in 'from'.    
+
+            // Count is responsible for deep ownership, it has to       
+            // be reset on move to disable destruction in 'from'.       
+            if constexpr (CT::Moved<I>) {
+               // Moving                                                
                if_available(from.template SetCountInner<ID>(0));
             }
-            else if constexpr (CT::Disowned<I>) {
-               // Make sure to enable the disowned state                
-               ThisCom::EnableDisowned();
+            else if constexpr (CT::Abandoned<I> and CT::OwnedDeepStrong<I>) {
+               // Abandoning                                            
+               // Note: EnableDisowned is called at end of absorption   
+               if constexpr (not from.CanBeDisowned)
+                  if_available(from.template SetCountInner<ID>(0));
             }
          }
       }

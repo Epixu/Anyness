@@ -39,6 +39,7 @@
 namespace Langulus::Anyness::Inner
 {
    using ManyBase = Com::Container<
+      Com::State::Disowned<>,          // Allows disownment             
       Com::TypedStack<DMeta>,          // Type-erased                   
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::CountStack<>,               // Dynamically sized             

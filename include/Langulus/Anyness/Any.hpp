@@ -25,12 +25,14 @@
 #include <source/states/Compressed.hpp>
 #include <source/states/Encrypted.hpp>
 #include <source/states/Tracked.hpp>
+#include <source/states/Disowned.hpp>
 #include "Handle.hpp"
 
 
 namespace Langulus::Anyness::Inner
 {
    using AnyBase = Com::Container<
+      Com::State::Disowned<>,          // Allows disownment             
       Com::TypedStack<DMeta>,          // Type-erased                   
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::CountStatic<1u>,            // Statically sized to 1         

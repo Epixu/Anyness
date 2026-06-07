@@ -204,43 +204,42 @@ namespace Langulus::Anyness::Component
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
 
-         C::ComponentList::ForEach([&]<class OWNER>{
-            if constexpr (requires { self.OWNER::GetAllocationInner(); }) {
-               using CommonIds = typename Id::template Intersect<typename OWNER::Id>;
-               if constexpr (not CommonIds::Empty) {
-                  constexpr Cid SID = CommonIds::First;
-                  auto& a = self.OWNER::GetAllocationInner();
-                  if (not a) {
-                     // Nothing was allocated. Could still be emergent! 
-                     self.Free();
-                     self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
-                     return;
-                  }
+         using PROVIDERS = decltype(C::FindProviders(Id{}));
+         static_assert(not PROVIDERS::Empty);
+         if (self.IsDisowned()) {
+            self.DisableDisowned();
+            PROVIDERS::ForEach([&]<class P> {
+               self.P::AllocateFresh(self.P::RequestHeap(1));
+            });
+            return;
+         }
 
-                  // If reached, then we have to free previous elements 
-                  LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
-                  if (a->GetUses() == 1) {
-                     // We don't deallocate the memory. We can reuse it.
-                     // But we have to destroy all shared elements.     
-                     //CommonIds::ForEach([&self]<Cid D> {
-                        //self.template DestroyAllElements<true/*, D*/>();
-                     //});
-                     self.template Free<false>();
-                     if constexpr (CT::ContainsMany<C>)
-                        self.template AllocateLess<SID>(1);
-                     return;
-                  }
+         const bool reusable = PROVIDERS::ForEachAnd([&]<class P> {
+            const auto a = self.template GetAllocation<P::Id::First>();
+            LglsAssumeDev(a, "Allocation should be valid");
+            LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+            return a->GetUses() == 1;
+         });
 
-                  // If reached we have a guarantee, that elements are  
-                  // referenced from elsewhere as well, so we can't     
-                  // afford to call any destructors. All we do is reset 
-                  // this container and allocate a new block, which     
-                  // will be exclusively ours.                          
-                  //self.OWNER::Free();
-                  self.Free();
-                  self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
-               }
+         if (reusable) {
+            // We don't deallocate the memory. We can reuse it.         
+            // But we have to destroy all shared elements.              
+            self.template Free<false>();
+            if constexpr (CT::ContainsMany<C>) {
+               PROVIDERS::ForEach([&]<class P> {
+                  self.P::AllocateLess(1);
+               });
             }
+            return;
+         }
+
+         // If reached we have a guarantee, that elements are referenced
+         // from elsewhere as well, so we can't afford to call any      
+         // destructors. All we do is reset this container and allocate 
+         // a new block, which will be exclusively ours.                
+         self.Free();
+         PROVIDERS::ForEach([&]<class P> {
+            self.P::AllocateFresh(self.P::RequestHeap(1));
          });
       }
 
@@ -250,32 +249,45 @@ namespace Langulus::Anyness::Component
       ///   @return true if first element is valid and can be assigned to     
       template<CT::HeapAllocated C>
       bool PrepareForReassignment(this C& self) {
+         self.PrepareForReconstruction(); //TODO temporary solution
+         return false;
+      }
+      /*template<CT::HeapAllocated C> //TODO this is too complex to implement, because each dimension can be of different sparseness, so we have to assign to dimensions that are dense, but deep free dimensions that are sparse
+      bool PrepareForReassignment(this C& self) {
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
 
-         auto& a = self.GetAllocationInner();
-         if (not a) {
-            // Nothing was allocated                                    
-            //TODO can still be emergent though?
-            self.AllocateFresh(self.RequestHeap(1));
+         using PROVIDERS = C::FindProviders(Id{});
+         static_assert(not PROVIDERS::Empty);
+         if (self.IsDisowned()) {
+            self.DisableDisowned();
+            PROVIDERS::ForEach([&]<class P> {
+               self.P::AllocateFresh(self.P::RequestHeap(1));
+            });
             return false;
          }
-         
-         // If reached, then we have to free previous elements          
-         LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
-         if (a->GetUses() == 1) {
-            // We don't deallocate the memory - we can reuse it         
+
+         const bool reusable = PROVIDERS::ForEachAnd([&]<class P> {
+            const auto a = self.template GetAllocation<P::Id::First>();
+            LglsAssumeDev(a, "Allocation should be valid");
+            LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+            return a->GetUses() == 1;
+         });
+
+         if (reusable) {
+            // We don't deallocate the memory. We can reuse it.         
             if constexpr (CT::ContainsMany<C>) {
                // But we have to destroy all trailing elements.         
                // Just make sure indirections are dereferenced for the  
                // first element, in case it's sparse.                   
                auto first = self.GetHandle();
-               auto item = first + (self.IsSparse() ? 0 : 1);
+               auto item = first + 1;
                auto const itemsEnd = first + self.GetCount();
                while (item.GetRaw() != itemsEnd.GetRaw()) {
                   item.template Free<false>();
                   ++item;
                }
+               if_available(first.template Free<false>());
                if_available(first.ResetAllEntries());
             }
             else if (self.IsSparse()) {
@@ -285,14 +297,16 @@ namespace Langulus::Anyness::Component
             return true;
          }
 
-         // If reached we have a guarantee, that elements are           
-         // referenced from elsewhere as well, so we can't afford to    
-         // call any destructors. All we do is reset this container and 
-         // allocate a new block, which will be exclusively ours.       
+         // If reached we have a guarantee, that elements are referenced
+         // from elsewhere as well, so we can't afford to call any      
+         // destructors. All we do is reset this container and allocate 
+         // a new block, which will be exclusively ours.                
          self.Free();
-         self.AllocateFresh(self.RequestHeap(1));
+         PROVIDERS::ForEach([&]<class P> {
+            self.P::AllocateFresh(self.P::RequestHeap(1));
+         });
          return false;
-      }
+      }*/
       
       /// Overwrite first element using an intent                             
       ///   @attention Assumes destination memory has been constructed,       

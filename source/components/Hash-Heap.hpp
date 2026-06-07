@@ -37,7 +37,7 @@ namespace Langulus::Anyness::Component
 
       /// Reset the hash. It will be recomputed on next comparison.           
       template<Cid SID = ID> requires Relevant<SID>
-      void ResetHash(this auto& self) noexcept {
+      void ResetHash(this auto& self) assumptious {
          ThisCom::SetHashInner(self.template IsEmpty<SID>() ? 1 : 0);
       }
 
@@ -46,6 +46,11 @@ namespace Langulus::Anyness::Component
       H GetHash(this auto const& self) assumptious {
          if (self.template IsEmpty<SID>())
             return H {1};
+
+         if constexpr (requires { self.IsDisowned(); }) {
+            if (self.IsDisowned())
+               return ThisCom::HashRecompute();
+         }
          else if (self.template GetUses<SID>() == 0)
             return ThisCom::HashRecompute();
 
@@ -65,6 +70,11 @@ namespace Langulus::Anyness::Component
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {
          if (self.template IsEmpty<SID>())
             return H {1};
+
+         if constexpr (requires { self.IsDisowned(); }) {
+            if (self.IsDisowned())
+               return H {0};
+         }
          else if (self.template GetUses<SID>() == 0)
             return H {0};
 
@@ -75,12 +85,20 @@ namespace Langulus::Anyness::Component
       /// Set the hash (inner)                                                
       ///   @attention will not work for disowned containers                  
       template<Cid SID = ID> requires Relevant<SID>
-      constexpr void SetHashInner(this auto& self, H h) noexcept {
-         if (self.template IsEmpty<SID>() or self.template GetUses<SID>() == 0)
+      constexpr void SetHashInner(this auto& self, H h) assumptious {
+         if (self.template IsEmpty<SID>())
+            return;
+
+         if constexpr (requires { self.IsDisowned(); }) {
+            if (self.IsDisowned())
+               return;
+         }
+         else if (self.template GetUses<SID>() == 0)
             return;
 
          const auto heap = self.template AccessHeap<HashHeap, SID>();
          LglsAssumeDev(heap, "Invalid heap");
+         LglsAssumeDev(self.template GetUses<SID>() == 1);
          const_cast<H&>(*heap) = h;
       }
       

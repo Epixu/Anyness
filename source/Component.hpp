@@ -122,7 +122,12 @@ namespace Langulus::CT
    template<class...T>
    concept OwnedDeep = Container<T...>
        and ((ShedDeref<T>::OwnedDeep != 0) and ...);
-       //and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
+
+   /// Check if listed containers are referenced upon construction/assignment 
+   /// and then automatically dereferenced on destruction                     
+   template<class...T>
+   concept OwnedDeepStrong = Container<T...>
+       and (((ShedDeref<T>::OwnedDeep & Anyness::Component::StrongOwnership) == Anyness::Component::StrongOwnership) and ...);
 
    /// Check if two containers/elements have the same dimensions              
    template<class LHS, class RHS>

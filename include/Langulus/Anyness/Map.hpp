@@ -36,6 +36,7 @@ namespace Langulus::Anyness::Inner
 {
    template<StateValue SORT>
    using MapBase = Com::Container<
+      Com::State::Disowned<>,             // Allows disownment          
       Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
                      Com::TypedStack<DMeta, void, false, 1>>,
       Com::HeapMovable<8, 2, HeapEntry<0>, HeapEntry<1>>,

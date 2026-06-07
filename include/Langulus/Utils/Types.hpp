@@ -178,7 +178,7 @@ namespace Langulus
       }
 
       template<class...N>
-      consteval auto operator + (Types<N...>&&) const -> Types<N...> { return {}; }
+      consteval auto operator + (Types<N...> const&) const -> Types<N...> { return {}; }
 
       template<class>
       static constexpr bool Contains = false;
@@ -314,7 +314,7 @@ namespace Langulus
       }
 
       template<class...N>
-      consteval auto operator + (Types<N...>&&) const -> Types<T, N...> { return {}; }
+      consteval auto operator + (Types<N...> const&) const -> Types<T, N...> { return {}; }
 
       template<class N>
       static constexpr bool Contains = ::std::same_as<N, T>;
@@ -538,7 +538,7 @@ namespace Langulus
       }
 
       template<class...N>
-      consteval auto operator + (Types<N...>&&) const -> Types<T1, T2, TN..., N...> { return {}; }
+      consteval auto operator + (Types<N...> const&) const -> Types<T1, T2, TN..., N...> { return {}; }
 
       template<class N>
       static constexpr bool Contains =  ::std::same_as<N, T1>

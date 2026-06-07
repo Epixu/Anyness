@@ -28,7 +28,7 @@ namespace Langulus::Anyness::Component::State
       static constexpr bool Static  = V != StateValue::Variable;
       static constexpr bool Dynamic = not Static;
       static constexpr bool Enable  = V == StateValue::Enabled;
-      static constexpr bool CanBeMissing = Dynamic or Enable;
+      //static constexpr bool CanBeMissing = Dynamic or Enable;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 

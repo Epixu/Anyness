@@ -88,7 +88,7 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) noexcept {
          // Always propagate entries no matter what                     
-         constexpr bool deeply_owned = CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<SELF>, ID>>;
+         constexpr bool deeply_owned = CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>, ID>>;
          if constexpr (deeply_owned)
             ThisCom::SetEntriesInner(intent.what.template GetEntries<ID>());
 
@@ -96,27 +96,32 @@ namespace Langulus::Anyness::Component
          and (STYLE & OnCreateAndDestroy) != 0 and deeply_owned) {
             decltype(auto) from = LglsFwd(intent.what);
 
-            if constexpr (CT::Referred<I>) {
+            if constexpr (CT::Referred<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0) {
                // Refer                                                 
                ThisCom::Keep();
             }
-            else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
-               // Abandon/Move                                          
-               // We must reference only if we can't guarantee a        
-               // transfer of deep ownership. Such transfer can be      
-               // guaranteed only if container has count of zero after  
-               // a move, and has been referenced prior on construction.
-               if constexpr (not CT::HasVariableCount<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0)
+            else if constexpr (CT::Moved<I> or CT::Abandoned<I>) {
+               // Move/Abandon                                          
+               if (from.IsDisowned()) {
+                  // Right was never owned, now we own it               
                   ThisCom::Keep();
+               }
                else {
-                  if (from.IsDisowned()) {
-                     // Remote was never owned, we own it now           
-                     ThisCom::Keep();
+                  if constexpr (CT::Abandoned<I> and from.CanBeDisowned) {
+                     // We can abandon by using the State::Disowned     
+                     //from.EnableDisowned(); // gonna get called in Container::Absorb to avoid calling it multiple times
                   }
-
-                  if constexpr (CT::Moved<I>) {
+                  else if constexpr (CT::HasVariableCount<I>) {
                      LglsAssumeDev(from.IsEmpty(),
-                        "Remote count should've been reset after a move");
+                        "Remote count should've been reset prior to this call");
+                  }
+                  else if constexpr (requires { from.template SetEntriesInner<ID>(nullptr); }) {
+                     // We can transfer ownership                       
+                     from.template SetEntriesInner<ID>(nullptr);
+                  }
+                  else {
+                     // We can't transfer ownership, fallback to refer  
+                     ThisCom::Keep();
                   }
                }
             }

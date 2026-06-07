@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../states/Disowned.hpp"
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Signed.hpp>
 #include <Langulus/CT/Integer.hpp>
@@ -34,7 +33,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID provider ID to keep count of                              
    ///   @tparam SHARED provider IDs that share the same count variable       
    template<auto COUNT, Cid ID, Cid...SHARED>
-   struct CountStatic : State::Disowned<StateValue::Variable, ID, SHARED...> {
+   struct CountStatic {
       using CTTI_Component  = Yes<>;
       using CTTI_ReflectAs  = void;
       using CTTI_Contiguous = Maybe<COUNT == 1>;
@@ -104,15 +103,20 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(from.template GetCount<ID>() <= 1,
                "Incompatible count");
 
-            if constexpr (I::IsMoved() and CT::OwnedStrong<I>) {
-               // Moving/Abandoning                                     
+            if constexpr (CT::Moved<I> /*and CT::OwnedStrong<I>*/) {
+               // Moving                                                
                // Count is responsible for deep ownership, it has to    
                // be reset on move to disable destruction in 'from'.    
                if_available(from.template SetCountInner<ID>(0));
             }
-            else if constexpr (CT::Disowned<I>) {
-               // Make sure to enable the disowned state                
-               ThisCom::EnableDisowned();
+            else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
+               // Abandoning                                            
+               // Count is responsible for deep ownership, it has to    
+               // be reset on move to disable destruction in 'from'.    
+               // If State::Disowned is supported, it will be employed  
+               // in the last ownership component instead.              
+               if constexpr (not from.CanBeDisowned)
+                  if_available(from.template SetCountInner<ID>(0));
             }
          }
       }

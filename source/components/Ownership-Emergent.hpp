@@ -87,7 +87,7 @@ namespace Langulus::Anyness::Component
       LglsComRemoval(friend);
       LglsComEmplacement(friend);
 
-      /// Emergent shallow ownership of STYLE has OnCreate                    
+      /// Emergent shallow ownership if STYLE has OnCreate                    
       ///   @param intent the intent and container to transfer from           
       ///   @important notice that Copy and Clone intents are not handled     
       ///      here. They're handled in heap components instead, in case      
@@ -97,50 +97,50 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this SELF& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
 
-         if constexpr (CT::Referred<I>) {
+         if constexpr (CT::Referred<I> or 0 == (from.Owned & OnCreateAndDestroy)) {
             // Refer                                                    
             ThisCom::Keep();
          }
-         else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
-            // Abandon/Move                                             
-            if constexpr (requires { from.template SetAllocationInner<ID>(nullptr); }) {
-               if constexpr (from.Owned & OnCreateAndDestroy) {
-                  if (from.IsDisowned()) {
-                     // Right was never owned, now we own it            
-                     ThisCom::Keep();
-                  }
-                  else if constexpr (CT::Moved<I>) {
-                     // We can transfer ownership                       
-                     // No need to reset to zero on abandon, cuz        
-                     // this is done with EnableDisowned elsewhere.     
-                     from.template SetAllocationInner<ID>(nullptr);
-                  }
-               }
-               else ThisCom::Keep();
-            }
-            else {
-               // We can't transfer ownership, because 'from' is likely 
-               // emergent.                                             
+         else if constexpr (CT::Moved<I> or CT::Abandoned<I>) {
+            // Move/Abandon                                             
+            if (from.IsDisowned()) {
+               // Right was never owned, now we own it                  
                ThisCom::Keep();
             }
+            else {
+               if constexpr (CT::Abandoned<I> and from.CanBeDisowned) {
+                  // We can abandon by using the State::Disowned        
+                  // in the last ownership component.                   
+                  //if constexpr (not CT::OwnedDeep<I>)
+                     //from.EnableDisowned(); // gonna get called in Container::Absorb to avoid calling it multiple times
+               }
+               else if constexpr (requires { from.template SetAllocationInner<ID>(nullptr); }) {
+                  // We can transfer ownership                          
+                  from.template SetAllocationInner<ID>(nullptr);
+               }
+               else {
+                  // We can't transfer ownership, fallback to refer     
+                  ThisCom::Keep();
+               }
+            }
          }
-         /*else if constexpr (CT::Disowned<I>) {
-            // Disown                                                   
-            LglsAssert(not from.template GetAllocation<ID>(),
-               "Emergent ownership doesn't allow disownment");
-         }*/
       }
 
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
       template<class SELF>
-      void Destroy(this SELF& self) noexcept requires ((STYLE & OnCreateAndDestroy) != 0) {
+      void Destroy(this SELF& self) assumptious requires ((STYLE & OnCreateAndDestroy) != 0) {
          ThisCom::Free();
       }
 
       /// Reference the allocation once                                       
-      void Keep(this auto& self) noexcept {
+      void Keep(this auto& self) assumptious {
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
+
          auto a = self.template GetAllocation<Id::First>();
          if (not a)
             return;
@@ -155,7 +155,12 @@ namespace Langulus::Anyness::Component
       ///   @attention this never modifies any state                          
       ///   @attention operates on all relevant dimensions at once!           
       template<bool DEALLOCATE = true, CT::Container C>
-      void Free(this C& self) noexcept {
+      void Free(this C& self) assumptious {
+         if constexpr (requires { self.IsDisowned(); }) {
+            LglsAssumeDev(not self.IsDisowned(),
+               "Can't keep anything in a container without ownership");
+         }
+
          auto a = self.template GetAllocation<Id::First>();
          if (not a)
             return;
