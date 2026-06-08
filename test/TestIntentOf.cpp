@@ -114,6 +114,230 @@ TEST_CASE("Testing IntentOf") {
    static_assert(::std::same_as<IntentOfT<NTS>,   Refer<NTS>>);
    static_assert(::std::same_as<IntentOfT<NTS&>,  Refer<NTS>>);
    static_assert(::std::same_as<IntentOfT<NTS&&>, Move<NTS>>);
+
+   int val = 55;
+
+   //                                                                   
+   {
+      auto test = [](int const& a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      test(val);
+   }
+   {
+      auto test = [](int& a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      test(val);
+   }
+   {
+      auto test = [](int const&& a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      test(555);
+   }
+   {
+      auto test = [](int a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      test(val);
+   }
+   {
+      auto test = [](Refer<int>&& a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      test(Refer{val});
+   }
+   {
+      auto test = [](Refer<int> a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      test(Refer{val});
+   }
+   {
+      auto test = [](Refer<int>& a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      Refer temp{val};
+      test(temp);
+   }
+   {
+      auto test = [](Refer<int> const& a) {
+         static_assert(::std::same_as<IntentOf(a), Refer<int>>);
+      };
+      test(Refer{val});
+   }
+
+   //                                                                   
+   {
+      auto test = [](int&& a) {
+         static_assert(::std::same_as<IntentOf(a), Move<int>>);
+      };
+      test(::std::move(val));
+   }
+   {
+      auto test = [](Move<int>&& a) {
+         static_assert(::std::same_as<IntentOf(a), Move<int>>);
+      };
+      test(Move{val});
+   }
+   {
+      auto test = [](Move<int> const&& a) {
+         static_assert(::std::same_as<IntentOf(a), Move<int>>);
+      };
+      test(Move{val});
+   }
+   {
+      auto test = [](Move<int>& a) {
+         static_assert(::std::same_as<IntentOf(a), Move<int>>);
+      };
+      Move temp{val};
+      test(temp);
+   }
+   {
+      auto test = [](Move<int> const& a) {
+         static_assert(::std::same_as<IntentOf(a), Move<int>>);
+      };
+      test(Move{val});
+   }
+   {
+      auto test = [](Move<int> a) {
+         static_assert(::std::same_as<IntentOf(a), Move<int>>);
+      };
+      test(Move(val));
+   }
+
+   //                                                                   
+   {
+      auto test = [](Abandon<int>&& a) {
+         static_assert(::std::same_as<IntentOf(a), Abandon<int>>);
+      };
+      test(Abandon{val});
+   }
+   {
+      auto test = [](Abandon<int> const&& a) {
+         static_assert(::std::same_as<IntentOf(a), Abandon<int>>);
+      };
+      test(Abandon{val});
+   }
+   {
+      auto test = [](Abandon<int>& a) {
+         static_assert(::std::same_as<IntentOf(a), Abandon<int>>);
+      };
+      Abandon temp{val};
+      test(temp);
+   }
+   {
+      auto test = [](Abandon<int> const& a) {
+         static_assert(::std::same_as<IntentOf(a), Abandon<int>>);
+      };
+      test(Abandon{val});
+   }
+   {
+      auto test = [](Abandon<int> a) {
+         static_assert(::std::same_as<IntentOf(a), Abandon<int>>);
+      };
+      test(Abandon(val));
+   }
+
+   //                                                                   
+   {
+      auto test = [](Clone<int>&& a) {
+         static_assert(::std::same_as<IntentOf(a), Clone<int>>);
+      };
+      test(Clone{val});
+   }
+   {
+      auto test = [](Clone<int> const&& a) {
+         static_assert(::std::same_as<IntentOf(a), Clone<int>>);
+      };
+      test(Clone{val});
+   }
+   {
+      auto test = [](Clone<int>& a) {
+         static_assert(::std::same_as<IntentOf(a), Clone<int>>);
+      };
+      Clone temp{val};
+      test(temp);
+   }
+   {
+      auto test = [](Clone<int> const& a) {
+         static_assert(::std::same_as<IntentOf(a), Clone<int>>);
+      };
+      test(Clone{val});
+   }
+   {
+      auto test = [](Clone<int> a) {
+         static_assert(::std::same_as<IntentOf(a), Clone<int>>);
+      };
+      test(Clone(val));
+   }
+
+   //                                                                   
+   {
+      auto test = [](Disown<int>&& a) {
+         static_assert(::std::same_as<IntentOf(a), Disown<int>>);
+      };
+      test(Disown{val});
+   }
+   {
+      auto test = [](Disown<int> const&& a) {
+         static_assert(::std::same_as<IntentOf(a), Disown<int>>);
+      };
+      test(Disown{val});
+   }
+   {
+      auto test = [](Disown<int>& a) {
+         static_assert(::std::same_as<IntentOf(a), Disown<int>>);
+      };
+      Disown temp{val};
+      test(temp);
+   }
+   {
+      auto test = [](Disown<int> const& a) {
+         static_assert(::std::same_as<IntentOf(a), Disown<int>>);
+      };
+      test(Disown{val});
+   }
+   {
+      auto test = [](Disown<int> a) {
+         static_assert(::std::same_as<IntentOf(a), Disown<int>>);
+      };
+      test(Disown(val));
+   }
+
+   //                                                                   
+   {
+      auto test = [](Copy<int>&& a) {
+         static_assert(::std::same_as<IntentOf(a), Copy<int>>);
+      };
+      test(Copy{val});
+   }
+   {
+      auto test = [](Copy<int> const&& a) {
+         static_assert(::std::same_as<IntentOf(a), Copy<int>>);
+      };
+      test(Copy{val});
+   }
+   {
+      auto test = [](Copy<int>& a) {
+         static_assert(::std::same_as<IntentOf(a), Copy<int>>);
+      };
+      Copy temp{val};
+      test(temp);
+   }
+   {
+      auto test = [](Copy<int> const& a) {
+         static_assert(::std::same_as<IntentOf(a), Copy<int>>);
+      };
+      test(Copy{val});
+   }
+   {
+      auto test = [](Copy<int> a) {
+         static_assert(::std::same_as<IntentOf(a), Copy<int>>);
+      };
+      test(Copy(val));
+   }
 }
 
 

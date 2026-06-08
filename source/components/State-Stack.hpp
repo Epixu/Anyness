@@ -229,7 +229,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Clear the state to the default value                                
-      constexpr void ResetState(this auto& self) noexcept requires HasStates {
+      constexpr void ResetState(this auto&& self) noexcept requires HasStates {
          self.SetStateInner(GetDefaultState());
       }
 

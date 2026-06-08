@@ -293,21 +293,32 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                auto misabsorb_refer = [&](T& a, int uses) {
                   REQUIRE_THROWS(a.AssignAbsorb(*element));
 
-                  if (uses == 0)
-                     Any_CheckState_DisownedFull<E>(a);
-                  else
-                     Any_CheckState_OwnedFull<E>(a);
                   Any_CheckState_ContainsOne(a, Refer(originalElement), uses);
                };
 
                misabsorb_refer(pack_referred1, 3);
+               Any_CheckState_OwnedFull<E>(pack_referred1);
+
                misabsorb_refer(pack_referred2, 3);
+               Any_CheckState_OwnedFull<E>(pack_referred2);
+
                misabsorb_refer(pack_copied,    1);
+               Any_CheckState_OwnedFull<E>(pack_copied);
+
                misabsorb_refer(pack_cloned,    1);
+               Any_CheckState_OwnedFull<E>(pack_cloned);
+
                misabsorb_refer(pack_moved1,    1);
+               Any_CheckState_OwnedFull<E>(pack_moved1);
+
                misabsorb_refer(pack_moved2,    1);
+               Any_CheckState_OwnedFull<E>(pack_moved2);
+
                misabsorb_refer(pack_abandoned, 1);
-               misabsorb_refer(pack_disowned,  0);
+               Any_CheckState_OwnedFull<E>(pack_abandoned);
+
+               misabsorb_refer(pack_disowned,  3);
+               Any_CheckState_DisownedFull<E>(pack_disowned);
                return;
             }
 
@@ -742,14 +753,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             REQUIRE(a.GetUses() == uses_before);
          };
 
-         /*assign_full_self(pack_referred1);
+         assign_full_self(pack_referred1);
          assign_full_self(pack_referred2);
-         assign_full_self(pack_copied);*/
+         assign_full_self(pack_copied);
          assign_full_self(pack_cloned);
-         /*assign_full_self(pack_moved1);
+         assign_full_self(pack_moved1);
          assign_full_self(pack_moved2);
          assign_full_self(pack_abandoned);
-         assign_full_self(pack_disowned);*/
+         assign_full_self(pack_disowned);
       }
 
       WHEN("Absorbed by referral") {
@@ -837,7 +848,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       }
       
       WHEN("Absorbed by disown") {
-         auto absorb_construct_disown = [&](T& a) {
+         auto absorb_construct_disown = [&](T& a, int uses) {
             T absorbed {Disown {a}};
 
             Any_CheckState_OwnedFull<E>(a);
@@ -848,16 +859,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             REQUIRE(absorbed.IsDeep() == a.IsDeep());
             REQUIRE(absorbed.IsConstant() != a.IsConstant());
             REQUIRE(absorbed.GetUnconstrainedState() == a.GetUnconstrainedState());
-            REQUIRE(absorbed.GetUses() == 0);
+            REQUIRE(absorbed.GetUses() == uses);
          };
 
-         absorb_construct_disown(pack_referred1);
-         absorb_construct_disown(pack_referred2);
-         absorb_construct_disown(pack_copied);
-         absorb_construct_disown(pack_cloned);
-         absorb_construct_disown(pack_moved1);
-         absorb_construct_disown(pack_moved2);
-         absorb_construct_disown(pack_abandoned);
+         absorb_construct_disown(pack_referred1, 3);
+         absorb_construct_disown(pack_referred2, 3);
+         absorb_construct_disown(pack_copied,    1);
+         absorb_construct_disown(pack_cloned,    1);
+         absorb_construct_disown(pack_moved1,    1);
+         absorb_construct_disown(pack_moved2,    1);
+         absorb_construct_disown(pack_abandoned, 1);
 
          T absorbed{Disown {pack_disowned}};
          Any_CheckState_DisownedFull<E>(pack_disowned);
@@ -868,7 +879,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          REQUIRE(absorbed.IsDeep() == pack_disowned.IsDeep());
          REQUIRE(absorbed.IsConstant() == pack_disowned.IsConstant());
          REQUIRE(absorbed.GetUnconstrainedState() == pack_disowned.GetUnconstrainedState());
-         REQUIRE(absorbed.GetUses() == 0);
+         REQUIRE(absorbed.GetUses() == 3);
       }
       
       WHEN("Absorbed by copy") {
@@ -876,12 +887,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) { //TODO this test is probably wrong - check TestSet-Absorb for comparison
             T absorbed {Copy {a}};
 
-            if (uses == 0)
-               Any_CheckState_DisownedFull<E>(a);
-            else
-               Any_CheckState_OwnedFull<E>(a);
             REQUIRE(a.GetUses() == uses);
-
             Any_CheckState_OwnedFull<E>(absorbed);
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
@@ -903,20 +909,35 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                else {
                   if constexpr (CT::Referenced<Decay<E>>) {
                      auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == 9 /*(managed_sparse ? 8 : 1)*/);
+                     REQUIRE(DenseCast(e).GetReferences() == 9);
                   }
                }
             }
          };
 
          absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3);
+         Any_CheckState_OwnedFull<E>(pack_referred1);
+
          absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3);
+         Any_CheckState_OwnedFull<E>(pack_referred2);
+
          absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3);
+         Any_CheckState_OwnedFull<E>(pack_copied);
+
          absorb_construct_copy(pack_cloned,    1, 2);
+         Any_CheckState_OwnedFull<E>(pack_cloned);
+
          absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1);
+         Any_CheckState_OwnedFull<E>(pack_moved1);
+
          absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1);
+         Any_CheckState_OwnedFull<E>(pack_moved2);
+
          absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1);
-         absorb_construct_copy(pack_disowned,  0, 0);
+         Any_CheckState_OwnedFull<E>(pack_abandoned);
+
+         absorb_construct_copy(pack_disowned,  3, 0);
+         Any_CheckState_DisownedFull<E>(pack_disowned);
       }
       
       WHEN("Absorbed by clone") {
@@ -980,12 +1001,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             }
          };
 
-         //emplace_overwrite(pack_referred1, "Refer");
+         emplace_overwrite(pack_referred1, "Refer");
          emplace_overwrite(pack_copied,    "Copy");
-         /*emplace_overwrite(pack_cloned,    "Clone");
+         emplace_overwrite(pack_cloned,    "Clone");
          emplace_overwrite(pack_moved1,    "Move");
          emplace_overwrite(pack_abandoned, "Abandon");
-         emplace_overwrite(pack_disowned,  "Disown");*/
+         emplace_overwrite(pack_disowned,  "Disown");
       }
 
       WHEN("Emplace (overwrite, describe)") {
@@ -1016,15 +1037,15 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          };
 
          emplace_overwrite_describe(pack_referred1, "Refer");
-         /*emplace_overwrite_describe(pack_copied,    "Copy");
+         emplace_overwrite_describe(pack_copied,    "Copy");
          emplace_overwrite_describe(pack_cloned,    "Clone");
          emplace_overwrite_describe(pack_moved1,    "Move");
          emplace_overwrite_describe(pack_abandoned, "Abandon");
-         emplace_overwrite_describe(pack_disowned,  "Disown");*/
+         emplace_overwrite_describe(pack_disowned,  "Disown");
       }
       
       WHEN("Cleared") {
-         auto clear_full = [&](T& a, [[maybe_unused]] const char* intent, int uses = 1) {
+         auto clear_full = [&](T& a, [[maybe_unused]] const char* intent) {
             BenchmarkAnyStd(
                std::string("Absorb/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                T temp = a,                      temp.Clear(),
@@ -1032,19 +1053,25 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             );
 
             a.Clear();
-
-            if (uses != 1)
-               Any_CheckState_Default<E>(a, true);
-            else
-               Any_CheckState_OwnedEmpty<E>(a);
          };
 
-         clear_full(pack_referred1, "Refer", 3);
+         clear_full(pack_referred1, "Refer");
+         Any_CheckState_Default<E>(pack_referred1, true);
+
          clear_full(pack_copied,    "Copy");
+         Any_CheckState_OwnedEmpty<E>(pack_copied);
+
          clear_full(pack_cloned,    "Clone");
+         Any_CheckState_OwnedEmpty<E>(pack_cloned);
+
          clear_full(pack_moved1,    "Move");
+         Any_CheckState_OwnedEmpty<E>(pack_moved1);
+
          clear_full(pack_abandoned, "Abandon");
-         clear_full(pack_disowned,  "Disown", 0);
+         Any_CheckState_OwnedEmpty<E>(pack_abandoned);
+
+         clear_full(pack_disowned,  "Disown");
+         Any_CheckState_Default<E>(pack_disowned, true);
       }
 
       WHEN("Reset") {

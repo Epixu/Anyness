@@ -82,7 +82,8 @@ namespace Langulus::Anyness::Component
       void Optimize(this C&);
 
       /// Destroy all elements but don't deallocate memory, unless we have to 
-      ///   @attention will never reset state or type                         
+      ///   @attention will never reset state except disownment               
+      ///   @attention will never reset type                                  
       void Clear(this auto& self) {
          const auto al = self.GetAllocation();
          if (self.IsEmpty()) {
@@ -94,6 +95,7 @@ namespace Langulus::Anyness::Component
                self.Free();
                self.ResetAllAllocations();
             }
+            if_available(self.DisableDisowned());
             return;
          }
          
@@ -105,6 +107,7 @@ namespace Langulus::Anyness::Component
             if_available(self.SetReservedInner(0));
             if_available(self.SetHashTableInner(nullptr));
             self.ResetCount();
+            if_available(self.DisableDisowned());
             return;
          }
 
@@ -120,14 +123,16 @@ namespace Langulus::Anyness::Component
             // If reached, then data is referenced from multiple places.
             // Don't call local destructors, just dereference and clear 
             // allocation, because it isn't ours. Indirections will     
-            // always get destroyed if they are fully dereferenced.     
+            // always get destroyed if they are fully dereferenced,     
+            // unless disowned.                                         
             self.Free();
             self.ResetAllAllocations();
          }
+
+         if_available(self.DisableDisowned());
       }
 
-      /// Destroy all elements, deallocate block and reset state and type,    
-      /// if type-erased.                                                     
+      /// Destroy all elements, deallocate block and reset state and type.    
       ///   @attention notice that heap pointer is not zeroed here, as it     
       ///      is not a requirement. It is UB if you GetRaw while count is 0! 
       void Reset(this auto& self) {

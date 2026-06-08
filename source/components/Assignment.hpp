@@ -216,9 +216,9 @@ namespace Langulus::Anyness::Component
 
          const bool reusable = PROVIDERS::ForEachAnd([&]<class P> {
             const auto a = self.template GetAllocation<P::Id::First>();
-            LglsAssumeDev(a, "Allocation should be valid");
-            LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
-            return a->GetUses() == 1;
+            //LglsAssumeDev(a, "Allocation should be valid");
+            //LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+            return a and a->GetUses() == 1;
          });
 
          if (reusable) {

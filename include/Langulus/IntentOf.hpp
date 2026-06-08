@@ -331,6 +331,11 @@ namespace Langulus
       }
       
       LANGULUS(ALWAYS_INLINED)
+      constexpr Move(Move const& value) noexcept : what {LglsFwd(value.what)} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+
+      LANGULUS(ALWAYS_INLINED)
       explicit constexpr Move(CT::Intent auto&& value) noexcept : what {LglsFwd(value.what)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
@@ -414,7 +419,12 @@ namespace Langulus
       explicit constexpr Abandon(T&& value) noexcept : what {LglsFwd(value)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
-      
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr Abandon(Abandon const& value) noexcept : what{LglsFwd(value.what)} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+
       LANGULUS(ALWAYS_INLINED)
       explicit constexpr Abandon(CT::Intent auto&& value) noexcept : what {LglsFwd(value.what)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
@@ -729,19 +739,11 @@ namespace Langulus
          >
       >;
 
-   template<class T> LANGULUS(ALWAYS_INLINED)
-   constexpr decltype(auto) DeduceIntent(T& arg) noexcept {
-      if constexpr (CT::Intent<T>)
-         return (arg);
-      else
-         return Refer {arg};
-   }
-
-   template<class T> LANGULUS(ALWAYS_INLINED)
-   constexpr decltype(auto) DeduceIntent(T&& arg) noexcept {
-      if constexpr (CT::Intent<T>)
+   template<class T, class V> LANGULUS(ALWAYS_INLINED)
+   constexpr auto DeduceIntent(V&& arg) noexcept {
+      if constexpr (CT::Intent<Deref<T>>)
          return LglsFwd(arg);
-      else if constexpr (CT::Mutable<T>)
+      else if constexpr (::std::is_rvalue_reference_v<T> and not ::std::is_const_v<Deref<T>>)
          return Move {LglsFwd(arg)};
       else
          return Refer {arg};
@@ -750,15 +752,15 @@ namespace Langulus
 
 //#define IntentOf(a) ::Langulus::IntentOfT<decltype(a)>
 //#define FWDIntent(a) IntentOf(a) {LglsFwd(a)} // for some reason this doesn't work on clang 22
-#define FWDIntent(a) ::Langulus::DeduceIntent(LglsFwd(a))
-#define IntentOf(a) ::Langulus::Deref<decltype(FWDIntent(a))>
-#define NestIntentOf(a, ...) ::Langulus::Deref<decltype(FWDIntent(a))>::Nest(__VA_ARGS__)
+#define FWDIntent(a) ::Langulus::DeduceIntent<decltype(a)>(LglsFwd(a))
+#define IntentOf(a) decltype(FWDIntent(a)) /*::Langulus::Deref<decltype(FWDIntent(a))>*/
+#define NestIntentOf(a, ...) IntentOf(a)::Nest(__VA_ARGS__) //::Langulus::Deref<decltype(FWDIntent(a))>::Nest(__VA_ARGS__)
 
 /// A handy constructor & assignment pattern that adds all possible intents   
 /// and collapses them for a given type. Useful when you don't want intents   
 /// to get in the way of simple types that need those reflected, but not      
 /// implemented in some particular way. Basically acts as "= default".        
-#define ignore_all_intents(FOR_TYPE) \
+/*#define ignore_all_intents(FOR_TYPE) \
    template<template<class> class I> requires ::Langulus::CT::Intent<I<FOR_TYPE>> \
    explicit constexpr FOR_TYPE(I<FOR_TYPE>&& meta) noexcept \
       : FOR_TYPE {*meta} {} \
@@ -766,7 +768,7 @@ namespace Langulus
    constexpr FOR_TYPE& operator = (I<FOR_TYPE>&& rhs) noexcept { \
       new (this) FOR_TYPE {*rhs}; \
       return *this; \
-   }
+   }*/
 
 
 namespace Langulus
