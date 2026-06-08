@@ -161,7 +161,9 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>) {
-            if constexpr (CT::Pair<AS>) {
+            const auto offset = self.SimplifyIndex(idx);
+            return self.template GetHandle<AS, SID>() + offset;
+            /*if constexpr (CT::Pair<AS>) {
                // User desires a pair, so we give them a pair           
                static_assert(Shared, "Indexing must be shared to access as a pair");
                using AS1 = typename AS::KeyHandle;
@@ -204,7 +206,7 @@ namespace Langulus::Anyness::Component
                   };
                }
                else return AS { self.template GetAt<void, SID>(LglsFwd(idx)) };
-            }
+            }*/
          }
          else {
             // Access directly or wrapped in a container                

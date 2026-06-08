@@ -351,7 +351,7 @@ namespace Langulus::Anyness
       ///   @param ids provider IDs                                           
       ///   @return return the set of the providers, no duplicates            
       template<CT::Typelist L = ComponentList, CT::Typelist CARRY = Types<>, Cid ID1, Cid...IDN>
-      static consteval auto FindProviders(Values<ID1, IDN...>&& ids) {
+      static consteval auto FindProviders(Values<ID1, IDN...>&&) {
          constexpr auto p1 = FindProvider<ID1, L>();
          if constexpr (CARRY::template Contains<typename decltype(p1)::First>) {
             if constexpr (sizeof...(IDN))
@@ -746,7 +746,7 @@ namespace Langulus::Anyness
       /// Fallback to ConstructDefault otherwise.                             
       template<CT::Container SELF, CT::Container FROM>
       constexpr void Absorb(this SELF& self, FROM&& from) {
-         static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+         static_assert(CT::ContainsOne<SELF> or CT::Contiguous<SELF> == CT::Contiguous<FROM>,
             "You can't absorb from containers with different contiguousness");
 
          using I = IntentOf(from);
@@ -853,7 +853,7 @@ namespace Langulus::Anyness
             "Must be dense");
 
          using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
-         return H {self};
+         return H {Disown{self}};
          /*if constexpr (CT::Pair<H>) {
             // User desires a pair, so we give them a pair              
             using H1 = typename H::KeyHandle;

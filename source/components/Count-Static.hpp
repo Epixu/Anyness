@@ -97,7 +97,7 @@ namespace Langulus::Anyness::Component
       ///      inserted. In those cases, count is set by the heap components. 
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this SELF& self, I&& intent) {
+      void ConstructFrom(this SELF&, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
             LglsAssumeDev(from.template GetCount<ID>() <= 1,

@@ -62,22 +62,26 @@ namespace Langulus::Anyness
       constexpr THandlePair(CT::Map auto&& other) noexcept {
          this->Absorb(Disown(other));
       }
+      
+      constexpr THandlePair(CT::Pair auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
 
-      /*constexpr THandlePair(Handle&& key, Handle&& val) noexcept {
+      constexpr THandlePair(Handle&& key, Handle&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
-      }*/
+      }
 
       /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
       Handle GetKey() noexcept {
-         return {*this};
+         return {Disown{*this}};
          /*return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
@@ -85,11 +89,11 @@ namespace Langulus::Anyness
          };*/
       }
       Handle GetKeyHandle() noexcept {
-         return {*this};// GetKey();
+         return {Disown{*this}};// GetKey();
       }
 
       Handle GetVal() noexcept {
-         return {Slice<1>, *this};
+         return {Slice<1>, Disown{*this}};
          /*return {
             this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
@@ -97,7 +101,7 @@ namespace Langulus::Anyness
          };*/
       }
       Handle GetValHandle() noexcept {
-         return {Slice<1>, *this}; //return GetVal();
+         return {Slice<1>, Disown{*this}}; //return GetVal();
       }
 
       /// Force the handle to become mutable, so that we have methods like    
@@ -166,21 +170,25 @@ namespace Langulus::Anyness
          this->Absorb(Disown(other));
       }
 
-      /*constexpr THandlePair(HandleMut&& key, HandleMut&& val) noexcept {
+      constexpr THandlePair(CT::Pair auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      constexpr THandlePair(HandleMut&& key, HandleMut&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
-      }*/
+      }
 
       /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
       HandleMut GetKey() noexcept {
-         return {*this};
+         return {Disown{*this}};
          /*return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
@@ -189,11 +197,11 @@ namespace Langulus::Anyness
       }
 
       HandleMut GetKeyHandle() noexcept {
-         return {*this}; //return GetKey();
+         return {Disown{*this}}; //return GetKey();
       }
 
       HandleMut GetVal() noexcept {
-         return {Slice<1>, *this};
+         return {Slice<1>, Disown{*this}};
          /*return {
             this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
@@ -202,7 +210,7 @@ namespace Langulus::Anyness
       }
 
       HandleMut GetValHandle() noexcept {
-         return {Slice<1>, *this}; //return GetVal();
+         return {Slice<1>, Disown{*this}}; //return GetVal();
       }
 
       /// Already as mutable as it gets                                       
@@ -270,21 +278,25 @@ namespace Langulus::Anyness
          this->Absorb(Disown(other));
       }
 
-      /*constexpr THandlePair(Handle&& key, HandleMut&& val) noexcept {
+      constexpr THandlePair(CT::Pair auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      constexpr THandlePair(Handle&& key, HandleMut&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
-      }*/
+      }
 
       /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
       Handle GetKey() noexcept {
-         return {*this};
+         return {Disown{*this}};
          /*return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
@@ -293,11 +305,11 @@ namespace Langulus::Anyness
       }
 
       Handle GetKeyHandle() noexcept {
-         return {*this}; //return GetKey();
+         return {Disown{*this}}; //return GetKey();
       }
 
       HandleMut GetVal() noexcept {
-         return {Slice<1>, *this};
+         return {Slice<1>, Disown{*this}};
          /*return {
             this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
@@ -306,7 +318,7 @@ namespace Langulus::Anyness
       }
 
       HandleMut GetValHandle() noexcept {
-         return {Slice<1>, *this};
+         return {Slice<1>, Disown{*this}};
          //return GetVal();
       }
 
@@ -379,10 +391,14 @@ namespace Langulus::Anyness
          this->Absorb(Disown(other));
       }
 
-      /*constexpr THandlePair(CT::Handle auto&& key, CT::Handle auto&& val) noexcept {
+      constexpr THandlePair(CT::Pair auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      constexpr THandlePair(CT::Handle auto&& key, CT::Handle auto&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(DeintCast(key).GetHeapInner());
          this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(DeintCast(val).GetHeapInner());
-      }*/
+      }
 
       /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
@@ -396,7 +412,7 @@ namespace Langulus::Anyness
       }
       KeyHandle GetKeyHandle() noexcept {
          return THandleEmergent<K> {
-            *this //this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
+            Disown{*this} //this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
          };
       }
 
@@ -408,7 +424,7 @@ namespace Langulus::Anyness
       }
       ValHandle GetValHandle() noexcept {
          return THandleEmergent<V> {
-            Slice<1>, *this //this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()
+            Slice<1>, Disown{*this} //this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()
          };
       }
 
@@ -487,22 +503,26 @@ namespace Langulus::Anyness
          this->Absorb(Disown(other));
       }
 
-      /*constexpr THandlePair(THandle<K>&& key, THandle<V>&& val) noexcept {
+      constexpr THandlePair(CT::Pair auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      constexpr THandlePair(THandle<K>&& key, THandle<V>&& val) noexcept {
          this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(key.GetHeapInner());
-         this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());*/
+         this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
 
          /*if constexpr (CT::Dense<K>)
             this->Com::OwnershipStack<Com::WeakOwnership, 0>::SetAllocationInner(key.GetAllocation());
          else*/
-         /*if constexpr (CT::Sparse<K>)
+         if constexpr (CT::Sparse<K>)
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntries());
 
-         if constexpr (CT::Dense<V>)
+         /*if constexpr (CT::Dense<V>)
             this->Com::OwnershipStack<Com::WeakOwnership, 1>::SetAllocationInner(val.GetAllocation());
          else*/
-         /*if constexpr (CT::Sparse<V>)
+         if constexpr (CT::Sparse<V>)
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntries());
-      }*/
+      }
 
       /// Assignment is disabled                                              
       THandlePair& operator = (THandlePair const& other) = delete;
@@ -528,7 +548,7 @@ namespace Langulus::Anyness
                this->Com::OwnershipStack<Com::WeakOwnership, 0>::GetAllocation()
             };
          }*/
-         return {*this};
+         return {Disown{*this}};
          /*if constexpr (CT::Sparse<K>) {
             return KeyHandle {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
@@ -562,7 +582,7 @@ namespace Langulus::Anyness
                this->Com::OwnershipStack<Com::WeakOwnership, 1>::GetAllocation()
             };
          }*/
-         return {Slice<1>, *this};
+         return {Slice<1>, Disown{*this}};
          /*if constexpr (CT::Sparse<V>) {
             return ValHandle {
                this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
@@ -665,7 +685,7 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair&& other) = delete;
 
       auto GetKey() noexcept -> KeyHandle {
-         return {*this};
+         return {Disown{*this}};
          /*if constexpr (CT::Sparse<K>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
@@ -676,11 +696,11 @@ namespace Langulus::Anyness
       }
 
       auto GetKeyHandle() noexcept -> KeyHandle {
-         return {*this}; //return GetKey();
+         return {Disown{*this}}; //return GetKey();
       }
 
       auto GetVal() noexcept -> ValHandle {
-         return {Slice<1>, *this};
+         return {Slice<1>, Disown{*this}};
          /*if constexpr (CT::Sparse<V>) {
             return THandle<V&> {
                this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
@@ -691,7 +711,7 @@ namespace Langulus::Anyness
       }
 
       auto GetValHandle() noexcept -> ValHandle {
-         return {Slice<1>, *this}; //return GetVal();
+         return {Slice<1>, Disown{*this}}; //return GetVal();
       }
 
       /// Force the handle to become mutable, so that we have methods like    

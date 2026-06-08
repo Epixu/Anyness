@@ -25,7 +25,48 @@ namespace Langulus::Anyness
 {
    namespace Inner
    {
-      //TODO define the type-erased bases for handles here as well??
+      using TypeErasedHandleMut = Com::Container<
+         Com::TypedStack<DMeta, void, true>,
+         Com::HeapReference<>,
+         Com::CountStatic<1u>,
+         //Com::ReserveEmergent<>,
+         Com::OwnershipDeepReference<Com::WeakOwnership>,
+         Com::HashEmergent<>,
+         Com::Assignment<>,
+         Com::Emplacement<>,
+         Com::Comparison<>,
+         Com::IterationOperators<>
+      >;
+
+      using TypeErasedHandleMutDisowned = Com::Container<
+         Com::TypedStack<DMeta, void, true>,
+         Com::HeapReference<>,
+         Com::CountStatic<1u>,
+         Com::HashEmergent<>,
+         Com::Assignment<>,
+         Com::Emplacement<>,
+         Com::Comparison<>,
+         Com::IterationOperators<>
+      >;
+
+      using TypeErasedHandle = Com::Container<
+         Com::TypedStack<DMeta, void, true>,
+         Com::HeapReference<>,
+         Com::CountStatic<1u>,
+         Com::OwnershipDeepReference<Com::NoOwnership>,
+         Com::HashEmergent<>,
+         Com::Comparison<>,
+         Com::IterationOperators<>
+      >;
+
+      using TypeErasedHandleDisowned = Com::Container<
+         Com::TypedStack<DMeta, void, true>,
+         Com::HeapReference<>,
+         Com::CountStatic<1u>,
+         Com::HashEmergent<>,
+         Com::Comparison<>,
+         Com::IterationOperators<>
+      >;
 
       /// Statically typed handle to a dense element held inside a container  
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
@@ -136,18 +177,7 @@ namespace Langulus::Anyness
    /// It refers to a picked element inside a type-erased container.          
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment                                
-   struct HandleMut : Com::Container<
-      Com::TypedStack<DMeta, void, true>,
-      Com::HeapReference<>,
-      Com::CountStatic<1u>,
-      //Com::ReserveEmergent<>,
-      Com::OwnershipDeepReference<Com::WeakOwnership>,
-      Com::HashEmergent<>,
-      Com::Assignment<>,
-      Com::Emplacement<>,
-      Com::Comparison<>,
-      Com::IterationOperators<>
-   > {
+   struct HandleMut : Inner::TypeErasedHandleMut {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
@@ -179,11 +209,8 @@ namespace Langulus::Anyness
          this->template SliceFrom<SID>(Disown(other));
       }
 
-      /*constexpr HandleMut(void* ptr, EntryPtr entry, DMeta type) noexcept {
-         this->SetHeapInner(ptr);
-         this->SetEntriesInner(entry);
-         this->SetTypeInner(type);
-      }*/
+      constexpr HandleMut(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::TypeErasedHandleMut {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
       HandleMut& operator = (HandleMut const& other) = delete;
@@ -208,16 +235,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased mutable handle without ownership.                        
    /// It refers to a picked element inside a type-erased container.          
-   struct HandleDisownedMut : Com::Container<
-      Com::TypedStack<DMeta, void, true>,
-      Com::HeapReference<>,
-      Com::CountStatic<1u>,
-      Com::HashEmergent<>,
-      Com::Assignment<>,
-      Com::Emplacement<>,
-      Com::Comparison<>,
-      Com::IterationOperators<>
-   > {
+   struct HandleDisownedMut : Inner::TypeErasedHandleMutDisowned {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
@@ -248,6 +266,10 @@ namespace Langulus::Anyness
       constexpr HandleDisownedMut(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
          this->template SliceFrom<SID>(Disown(other));
       }
+
+      constexpr HandleDisownedMut(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::TypeErasedHandleMutDisowned {Stackwise, LglsFwd(arguments)...} {}
+
 
       /*constexpr HandleDisownedMut(void* ptr, EntryPtr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
@@ -282,15 +304,7 @@ namespace Langulus::Anyness
    ///      mutable, this isn't possible either, however the handle still     
    ///      carries ownership information, so that it can be used on demand   
    ///      instead of sought from the memory manager every time.             
-   struct Handle : Com::Container<
-      Com::TypedStack<DMeta, void, true>,
-      Com::HeapReference<>,
-      Com::CountStatic<1u>,
-      Com::OwnershipDeepReference<Com::NoOwnership>,
-      Com::HashEmergent<>,
-      Com::Comparison<>,
-      Com::IterationOperators<>
-   > {
+   struct Handle : Inner::TypeErasedHandle {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
@@ -322,6 +336,9 @@ namespace Langulus::Anyness
          this->template SliceFrom<SID>(Disown(other));
       }
 
+      constexpr Handle(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::TypeErasedHandle {Stackwise, LglsFwd(arguments)...} {}
+
       /*constexpr Handle(void const* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
@@ -351,14 +368,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased immutable handle without ownership.                      
    /// It refers to a picked element inside a type-erased container.          
-   struct HandleDisowned : Com::Container<
-      Com::TypedStack<DMeta, void, true>,
-      Com::HeapReference<>,
-      Com::CountStatic<1u>,
-      Com::HashEmergent<>,
-      Com::Comparison<>,
-      Com::IterationOperators<>
-   > {
+   struct HandleDisowned : Inner::TypeErasedHandleDisowned {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
@@ -392,6 +402,9 @@ namespace Langulus::Anyness
       constexpr HandleDisowned(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
          this->template SliceFrom<SID>(Disown(other));
       }
+
+      constexpr HandleDisowned(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::TypeErasedHandleDisowned {Stackwise, LglsFwd(arguments)...} {}
 
       /*template<CT::Container C>
       constexpr HandleDisowned(Inner::Absorb, C&& argument) {
@@ -468,6 +481,9 @@ namespace Langulus::Anyness
          this->template SliceFrom<SID>(Disown(other));
       }
 
+      constexpr THandle(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::THandleEmbeddedDense<T> {Stackwise, LglsFwd(arguments)...} {}
+
       /*constexpr ~THandle() noexcept {
          this->Destroy();
       }*/
@@ -535,6 +551,9 @@ namespace Langulus::Anyness
       constexpr THandle(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
          this->template SliceFrom<SID>(Disown(other));
       }
+
+      constexpr THandle(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::THandleEmbeddedSparse<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /*constexpr ~THandle() noexcept {
          this->Destroy();
@@ -607,6 +626,9 @@ namespace Langulus::Anyness
          this->template SliceFrom<SID>(Disown(other));
       }
 
+      constexpr THandleEmergent(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::THandleEmbeddedDenseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
+
       /*constexpr ~THandleEmergent() noexcept {
          this->Destroy();
       }
@@ -671,6 +693,9 @@ namespace Langulus::Anyness
       constexpr THandleEmergent(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
          this->template SliceFrom<SID>(Disown(other));
       }
+
+      constexpr THandleEmergent(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::THandleEmbeddedSparseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /*constexpr ~THandleEmergent() noexcept {
          this->Destroy();
@@ -738,6 +763,9 @@ namespace Langulus::Anyness
       constexpr THandleDisowned(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
          this->template SliceFrom<SID>(Disown(other));
       }
+
+      constexpr THandleDisowned(Inner::Stackwise, auto&&...arguments) noexcept
+         : Inner::THandleDisownedEmbedded<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /*constexpr ~THandleDisowned() noexcept {
          this->Destroy();

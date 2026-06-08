@@ -121,10 +121,8 @@ namespace Langulus::Anyness::Component
       void KeepElementDeepStandardPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't keep anything in an empty container");
-         if constexpr (requires { self.IsDisowned(); }) {
-            LglsAssumeDev(not self.IsDisowned(),
-               "Can't keep anything in a container without ownership");
-         }
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
 
          auto entries = self.template GetEntriesInner<SID>();
          if (not entries)
@@ -149,7 +147,7 @@ namespace Langulus::Anyness::Component
 
             if (subT.IsSparse()) {
                // Pointer to pointer                                    
-               H temp {ptr, entries + 1, subT};
+               H temp {Stackwise, subT, ptr, entries + 1};
                temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
             }
             else if constexpr (REF_INDIVIDUAL) {
@@ -177,7 +175,7 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Sparse<DT>) {
                // Pointer to pointer                                    
-               typename H::Denser temp {ptr, entries + 1};
+               typename H::Denser temp {Stackwise, ptr, entries + 1};
                temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
             }
             else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {

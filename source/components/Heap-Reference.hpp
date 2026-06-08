@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "Iteration-Range.hpp"
+//#include "Iteration-Range.hpp"
 #include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/CT/MinAlloc.hpp>
 #include <Langulus/MetaOf.hpp>
@@ -220,7 +220,8 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>) {
-            if constexpr (CT::Pair<AS>) {
+            return self.template GetHandle<AS, SID>();
+            /*if constexpr (CT::Pair<AS>) {
                // User desires a pair, so we give them a pair           
                static_assert(Shared, "Indexing must be shared to access as a pair");
                using AS1 = typename AS::KeyHandle;
@@ -263,7 +264,7 @@ namespace Langulus::Anyness::Component
                   };
                }
                else return AS {ThisCom::template Get<void, SID>()};
-            }
+            }*/
          }
          else {
             // Access directly or wrapped in a container                
@@ -490,7 +491,8 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<class C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent, size_t = 0) noexcept {
-         ThisCom::SetHeapInner(intent.what.template GetHeapInner<Id::First>());
+         //ThisCom::SetHeapInner(intent.what.template GetHeapInner<Id::First>());
+         ThisCom::SetHeapInner(intent.what.template GetRaw<Id::First>());
       }
       
       /// Get a size based on reflected allocation page and count.            
