@@ -34,7 +34,7 @@ namespace Langulus::Anyness
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
-         //Com::OwnershipStack<Com::WeakOwnership>,
+         Com::OwnershipStack<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -58,7 +58,7 @@ namespace Langulus::Anyness
       
       /// Statically typed handle to a dense element held inside a container  
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleEmbeddedDenseEmergent = THandleEmbeddedDense<T>; /*Com::Container<
+      using THandleEmbeddedDenseEmergent = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<1u>,
@@ -69,7 +69,7 @@ namespace Langulus::Anyness
          Com::Emplacement<>,
          Com::Comparison<>,
          Com::IterationOperators<>
-      >;*/
+      >;
 
       /// Statically typed handle to a sparse element held inside a container 
       /// (with emergent deep ownership)                                      
@@ -156,25 +156,34 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      HandleMut(Inner::Piecewise, auto&&) = delete;
+      //HandleMut(Inner::Piecewise, auto&&) = delete;
 
       constexpr HandleMut() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr HandleMut(HandleMut const& other) {
-         this->Absorb(Refer(other));
+      constexpr HandleMut(HandleMut const& other) noexcept {
+         this->Absorb(Disown(other));
       }
 
       constexpr HandleMut(HandleMut&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
-      constexpr HandleMut(void* ptr, EntryPtr entry, DMeta type) noexcept {
+      constexpr HandleMut(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      template<Cid SID>
+      constexpr HandleMut(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr HandleMut(void* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       HandleMut& operator = (HandleMut const& other) = delete;
@@ -217,13 +226,13 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      HandleDisownedMut(Inner::Piecewise, auto&&) = delete;
+      //HandleDisownedMut(Inner::Piecewise, auto&&) = delete;
 
       constexpr HandleDisownedMut() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr HandleDisownedMut(HandleDisownedMut const& other) {
+      constexpr HandleDisownedMut(HandleDisownedMut const& other) noexcept {
          this->Absorb(Disown(other));
       }
 
@@ -231,10 +240,19 @@ namespace Langulus::Anyness
          this->Absorb(Disown(other));
       }
 
-      constexpr HandleDisownedMut(void* ptr, EntryPtr, DMeta type) noexcept {
+      constexpr HandleDisownedMut(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      template<Cid SID>
+      constexpr HandleDisownedMut(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr HandleDisownedMut(void* ptr, EntryPtr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       HandleDisownedMut& operator = (HandleDisownedMut const& other) = delete;
@@ -281,25 +299,34 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      Handle(Inner::Piecewise, auto&&) = delete;
+      //Handle(Inner::Piecewise, auto&&) = delete;
 
       constexpr Handle() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr Handle(Handle const& other) {
-         this->Absorb(Refer(other));
+      constexpr Handle(Handle const& other) noexcept {
+         this->Absorb(Disown(other));
       }
 
       constexpr Handle(Handle&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
-      constexpr Handle(void const* ptr, EntryPtr entry, DMeta type) noexcept {
+      constexpr Handle(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      template<Cid SID>
+      constexpr Handle(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr Handle(void const* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       Handle& operator = (Handle const& other) = delete;
@@ -340,14 +367,14 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      HandleDisowned(Inner::Piecewise, auto&&) = delete;
+      //HandleDisowned(Inner::Piecewise, auto&&) = delete;
 
       constexpr HandleDisowned() noexcept {
          this->ConstructDefault();
       }
 
       /// Refer constructor                                                   
-      constexpr HandleDisowned(HandleDisowned const& other) {
+      constexpr HandleDisowned(HandleDisowned const& other) noexcept {
          this->Absorb(Disown(other));
       }
 
@@ -357,12 +384,16 @@ namespace Langulus::Anyness
       }
 
       /// Construction that absorbs the provided container                    
-      template<CT::Container C>
-      constexpr HandleDisowned(C&& argument) {
-         this->Absorb(Disown(argument));
+      constexpr HandleDisowned(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
       }
 
-      template<CT::Container C>
+      template<Cid SID>
+      constexpr HandleDisowned(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*template<CT::Container C>
       constexpr HandleDisowned(Inner::Absorb, C&& argument) {
          this->Absorb(Disown(argument));
       }
@@ -371,7 +402,7 @@ namespace Langulus::Anyness
       constexpr HandleDisowned(void const* ptr, EntryPtr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       HandleDisowned& operator = (HandleDisowned const& other) = delete;
@@ -414,33 +445,42 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      THandle(Inner::Piecewise, auto&&) = delete;
+      //THandle(Inner::Piecewise, auto&&) = delete;
 
       constexpr THandle() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr THandle(THandle const& other) {
-         this->Absorb(Refer(other));
+      constexpr THandle(THandle const& other) noexcept {
+         this->Absorb(Disown(other));
       }
 
       constexpr THandle(THandle&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
-      constexpr ~THandle() noexcept {
-         this->Destroy();
+      constexpr THandle(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
       }
+
+      template<Cid SID>
+      constexpr THandle(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr ~THandle() noexcept {
+         this->Destroy();
+      }*/
 
       /*constexpr THandle(void const* ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
       }*/
 
-      constexpr THandle(void const* ptr, EntryPtr = nullptr) noexcept {
+      /*constexpr THandle(void const* ptr, EntryPtr = nullptr) noexcept {
          this->SetHeapInner(ptr);
          //this->SetAllocationInner(alloc);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
@@ -473,28 +513,37 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      THandle(Inner::Piecewise, auto&&) = delete;
+      //THandle(Inner::Piecewise, auto&&) = delete;
 
       constexpr THandle() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr THandle(THandle const& other) {
-         this->Absorb(Refer(other));
+      constexpr THandle(THandle const& other) noexcept {
+         this->Absorb(Disown(other));
       }
 
       constexpr THandle(THandle&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
-      constexpr ~THandle() noexcept {
+      constexpr THandle(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      template<Cid SID>
+      constexpr THandle(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr ~THandle() noexcept {
          this->Destroy();
-      }
+      }*/
 
-      constexpr THandle(Deref<T>* ptr, EntryPtr entry) noexcept {
+      /*constexpr THandle(Deref<T>* ptr, EntryPtr entry) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
@@ -535,27 +584,36 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      THandleEmergent(Inner::Piecewise, auto&&) = delete;
+      //THandleEmergent(Inner::Piecewise, auto&&) = delete;
 
       constexpr THandleEmergent() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr THandleEmergent(THandleEmergent const& other) {
-         this->Absorb(Refer(other));
+      constexpr THandleEmergent(THandleEmergent const& other) noexcept {
+         this->Absorb(Disown(other));
       }
 
       constexpr THandleEmergent(THandleEmergent&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
-      constexpr ~THandleEmergent() noexcept {
+      constexpr THandleEmergent(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      template<Cid SID>
+      constexpr THandleEmergent(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr ~THandleEmergent() noexcept {
          this->Destroy();
       }
 
       constexpr THandleEmergent(void const* ptr, EntryPtr = nullptr) noexcept {
          this->SetHeapInner(ptr);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       THandleEmergent& operator = (THandleEmergent const& other) = delete;
@@ -591,27 +649,36 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      THandleEmergent(Inner::Piecewise, auto&&) = delete;
+      //THandleEmergent(Inner::Piecewise, auto&&) = delete;
 
       constexpr THandleEmergent() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr THandleEmergent(THandleEmergent const& other) {
-         this->Absorb(Refer(other));
+      constexpr THandleEmergent(THandleEmergent const& other) noexcept {
+         this->Absorb(Disown(other));
       }
 
       constexpr THandleEmergent(THandleEmergent&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
-      constexpr ~THandleEmergent() noexcept {
+      constexpr THandleEmergent(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      template<Cid SID>
+      constexpr THandleEmergent(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr ~THandleEmergent() noexcept {
          this->Destroy();
       }
 
       constexpr THandleEmergent(Deref<T>* ptr, EntryPtr = nullptr) noexcept {
          this->SetHeapInner(ptr);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       THandleEmergent& operator = (THandleEmergent const& other) = delete;
@@ -649,13 +716,13 @@ namespace Langulus::Anyness
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
-      THandleDisowned(Inner::Piecewise, auto&&) = delete;
+      //THandleDisowned(Inner::Piecewise, auto&&) = delete;
 
       constexpr THandleDisowned() noexcept {
          this->ConstructDefault();
       }
 
-      constexpr THandleDisowned(THandleDisowned const& other) {
+      constexpr THandleDisowned(THandleDisowned const& other) noexcept {
          this->Absorb(Disown(other));
       }
 
@@ -663,13 +730,22 @@ namespace Langulus::Anyness
          this->Absorb(Disown(other));
       }
 
-      constexpr ~THandleDisowned() noexcept {
+      constexpr THandleDisowned(CT::Container auto&& other) noexcept {
+         this->Absorb(Disown(other));
+      }
+
+      template<Cid SID>
+      constexpr THandleDisowned(Inner::Slice<SID>, CT::Container auto&& other) noexcept {
+         this->template SliceFrom<SID>(Disown(other));
+      }
+
+      /*constexpr ~THandleDisowned() noexcept {
          this->Destroy();
       }
 
       constexpr THandleDisowned(Deref<T>* ptr, EntryPtr = nullptr) noexcept {
          this->SetHeapInner(ptr);
-      }
+      }*/
 
       /// Assignment is disabled                                              
       THandleDisowned& operator = (THandleDisowned const& other) = delete;

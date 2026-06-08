@@ -77,6 +77,11 @@ namespace Langulus::Anyness
       /// Often used to disambiguate and state clear intent.                  
       struct Absorb {};
 
+      /// Tag for calling container constructors that slice containers.       
+      /// Often used to disambiguate and state clear intent.                  
+      template<Cid>
+      struct Slice {};
+
       /// Inner function that picks the best possible handle type, depending  
       /// on a container's constness and type-erasedness, as well as member   
       /// types HandleType and HandleMutType. Guarantees to always result in  
@@ -145,6 +150,8 @@ namespace Langulus::Anyness
    constexpr Inner::Stackwise Stackwise {};
    constexpr Inner::Piecewise Piecewise {};
    constexpr Inner::Absorb    Absorb {};
+   template<Cid ID>
+   constexpr auto Slice = Inner::Slice<ID>{};
    
    template<CT::Container C>
    using DecideHandle = typename decltype(Inner::DecideHandleType<Deref<C>>())::First;
@@ -249,7 +256,7 @@ namespace Langulus::Anyness
 
       /// A tag-dispatch constructor that forwards arguments to mStack.       
       /// Used in some niche container cases, like TOwn.                      
-      constexpr Container(Inner::Stackwise, auto&&...arguments)
+      explicit constexpr Container(Inner::Stackwise, auto&&...arguments)
          : mStack({LglsFwd(arguments)}...) {}
 
       /// Default destructor does nothing. Each container has to implement    
@@ -755,6 +762,27 @@ namespace Langulus::Anyness
             DeintCast(from).ResetState();
       }
 
+      /// Call SliceFrom in all components that implement it.                 
+      /// Fallback to ConstructDefault otherwise.                             
+      template<Cid ID, CT::Container SELF, CT::Container FROM>
+      constexpr void SliceFrom(this SELF& self, FROM&& from) {
+         static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+            "You can't absorb from containers with different contiguousness");
+
+         using I = IntentOf(from);
+         static_assert(CT::Disowned<I>, "Slicing supports only disownment for now");
+         ComponentList::ForEach([&]<class C>{
+                 if_available_gcc(C::template SliceFrom<ID, SELF, I>)(FWDIntent(from));
+            else if_available_gcc(C::template ConstructDefault<SELF>)();
+         });
+
+         // Make sure we disown an abandoned container at the end       
+         /*if constexpr (CT::Abandoned<I> and Decay<Deint<FROM>>::CanBeDisowned)
+            DeintCast(from).EnableDisowned();
+         else if constexpr (CT::Moved<I> and requires { DeintCast(from).ResetState(); })
+            DeintCast(from).ResetState();*/
+      }
+
       /// Call Destroy in all components that implement it.                   
       /// You have to call it manually in your container's destructor, so     
       /// that 'deducing this' works appropriately.                           
@@ -825,7 +853,8 @@ namespace Langulus::Anyness
             "Must be dense");
 
          using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
-         if constexpr (CT::Pair<H>) {
+         return H {self};
+         /*if constexpr (CT::Pair<H>) {
             // User desires a pair, so we give them a pair              
             using H1 = typename H::KeyHandle;
             using H2 = typename H::ValHandle;
@@ -870,7 +899,7 @@ namespace Langulus::Anyness
                }
                else return H { self.template Get<void, SID>() };
             }
-         }
+         }*/
       }
 
       /// No-op in case C is already a handle                                 
