@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Iteration-Range.hpp"
 #include <Langulus/CT/Deep.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/Lambda.hpp>

@@ -742,14 +742,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       }
 
       WHEN("Assigned compatible full self") {
-         auto assign_full_self = [&](T& a) {
-            auto backup = a;
+         auto assign_full_self = [&](T& a, bool allow_change_in_constness = false) {
+            T backup = a;
             const auto uses_before = a.GetUses();
             LglsDisableWarningPush
             LglsDisableWarning_SelfAssign
                a = a;
             LglsDisableWarningPop
-            Any_Helper_TestSame(a, backup);
+            Any_Helper_TestSame(a, backup, not allow_change_in_constness);
             REQUIRE(a.GetUses() == uses_before);
          };
 
@@ -760,7 +760,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          assign_full_self(pack_moved1);
          assign_full_self(pack_moved2);
          assign_full_self(pack_abandoned);
-         assign_full_self(pack_disowned);
+         assign_full_self(pack_disowned, true);
       }
 
       WHEN("Absorbed by referral") {

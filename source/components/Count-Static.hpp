@@ -96,28 +96,27 @@ namespace Langulus::Anyness::Component
       ///      since element constructors might throw and stuff be partially  
       ///      inserted. In those cases, count is set by the heap components. 
       ///   @param intent the intent and container to transfer from           
-      template<class SELF, CT::Intent I> requires CT::Container<I>
+      template<class SELF, CT::Intent I> requires (CT::Container<I>
+      and not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>)
       void ConstructFrom(this SELF&, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
-            decltype(auto) from = LglsFwd(intent.what);
-            LglsAssumeDev(from.template GetCount<ID>() <= 1,
-               "Incompatible count");
+         decltype(auto) from = LglsFwd(intent.what);
+         LglsAssumeDev(from.template IsEmpty<ID>() or COUNT <= from.template GetCount<ID>(),
+            "Incompatible count");
 
-            if constexpr (CT::Moved<I> /*and CT::OwnedStrong<I>*/) {
-               // Moving                                                
-               // Count is responsible for deep ownership, it has to    
-               // be reset on move to disable destruction in 'from'.    
+         if constexpr (CT::Moved<I> /*and CT::OwnedStrong<I>*/) {
+            // Moving                                                   
+            // Count is responsible for deep ownership, it has to       
+            // be reset on move to disable destruction in 'from'.       
+            if_available(from.template SetCountInner<ID>(0));
+         }
+         else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
+            // Abandoning                                               
+            // Count is responsible for deep ownership, it has to       
+            // be reset on move to disable destruction in 'from'.       
+            // If State::Disowned is supported, it will be employed     
+            // in the last ownership component instead.                 
+            if constexpr (not from.CanBeDisowned)
                if_available(from.template SetCountInner<ID>(0));
-            }
-            else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
-               // Abandoning                                            
-               // Count is responsible for deep ownership, it has to    
-               // be reset on move to disable destruction in 'from'.    
-               // If State::Disowned is supported, it will be employed  
-               // in the last ownership component instead.              
-               if constexpr (not from.CanBeDisowned)
-                  if_available(from.template SetCountInner<ID>(0));
-            }
          }
       }
 

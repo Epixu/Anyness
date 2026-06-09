@@ -669,7 +669,7 @@ namespace Langulus::Anyness::Component
       ///   @param range sequence of items to search for                      
       ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if not found       
-      template<bool REVERSE = false, CT::ContainsMany C1, CT::Container C2>
+      /*template<bool REVERSE = false, CT::ContainsMany C1, CT::Container C2>
       requires CT::Contiguous<C1, C2>
       auto FindRange(this C1 const& self, C2 const& range, Count<C1> cookie = 0) noexcept {
          using strategy = IterateNoDeref<REVERSE, const C1>;
@@ -758,7 +758,7 @@ namespace Langulus::Anyness::Component
             // If this is reached, then no match was found              
             return Index::None;
          }
-      }
+      }*/
 
       /// Check if the container contains an element                          
       ///   @attention compares only the main dimension                       

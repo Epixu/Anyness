@@ -746,8 +746,8 @@ namespace Langulus::Anyness
       /// Fallback to ConstructDefault otherwise.                             
       template<CT::Container SELF, CT::Container FROM>
       constexpr void Absorb(this SELF& self, FROM&& from) {
-         static_assert(CT::ContainsOne<SELF> or CT::Contiguous<SELF> == CT::Contiguous<FROM>,
-            "You can't absorb from containers with different contiguousness");
+         /*static_assert(CT::ContainsOne<SELF> or CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+            "You can't absorb from containers with different contiguousness");*/
 
          using I = IntentOf(from);
          ComponentList::ForEach([&]<class C>{
@@ -766,8 +766,8 @@ namespace Langulus::Anyness
       /// Fallback to ConstructDefault otherwise.                             
       template<Cid ID, CT::Container SELF, CT::Container FROM>
       constexpr void SliceFrom(this SELF& self, FROM&& from) {
-         static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
-            "You can't absorb from containers with different contiguousness");
+         /*static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+            "You can't absorb from containers with different contiguousness");*/
 
          using I = IntentOf(from);
          static_assert(CT::Disowned<I>, "Slicing supports only disownment for now");
@@ -924,11 +924,10 @@ namespace Langulus::Anyness
       void Apply(this C& self, auto&& lambda, [[maybe_unused]] size_t cookie = 0) {
          LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
 
-         if constexpr (CT::ContainsOne<C>) {
-            //TODO GetHandle here is redundant, but most use cases      
-            // of Apply require it.                                     
+         if constexpr (CT::Handle<C>)
+            lambda(self);
+         else if constexpr (CT::ContainsOne<C>)
             lambda(self.GetHandle());
-         }
          else {
             auto item = self.GetHandle() + cookie;
 

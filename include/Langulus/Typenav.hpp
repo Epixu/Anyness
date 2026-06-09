@@ -76,7 +76,7 @@ namespace Langulus::CTTI
 
 /// Checks for reflection traits inside types themselves.                     
 /// Requires the TYPE to be complete in order to do that.                     
-#define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([] -> bool { \
+#define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([] consteval -> bool { \
       if constexpr (::std::is_class_v<TYPE>) { \
          static_assert(::Langulus::CT::Complete<TYPE>, \
             "Can't access `CTTI_" #NAME "` inside incomplete type " #TYPE); \
@@ -92,7 +92,7 @@ namespace Langulus::CTTI
 ///   before utilizing the Enabled member.                                    
 /// If CTTI struct has no Default member, it is assumed specialized, and no   
 ///   LANGULUS_CTTI_DELVE_IN is required, the Enabled member is used.         
-#define LANGULUS_CTTI_CHECK(TYPE,NAME) ([] -> bool { \
+#define LANGULUS_CTTI_CHECK(TYPE,NAME) ([] consteval -> bool { \
       using ctti = ::Langulus::CTTI::NAME<TYPE>; \
       if constexpr (::Langulus::CT::Complete<ctti>) { \
          if constexpr(requires { ctti::Default; }) { \

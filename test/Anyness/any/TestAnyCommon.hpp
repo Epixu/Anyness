@@ -214,14 +214,15 @@ void Any_Helper_TestType(const C& any) {
 }
 
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
-void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
+void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
    REQUIRE(lhs.GetCount() == rhs.GetCount());
    if (not lhs.IsEmpty())
       REQUIRE(lhs.GetRaw() == rhs.GetRaw()); // not really a requirement when containers are empty
    REQUIRE(lhs.IsExact(rhs.GetType()));
    REQUIRE(lhs == rhs);
    REQUIRE(lhs.IsDeep() == rhs.IsDeep());
-   REQUIRE(lhs.IsConstant() == rhs.IsConstant());
+   if (match_constness)
+      REQUIRE(lhs.IsConstant() == rhs.IsConstant());
    REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
 }
 
