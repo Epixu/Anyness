@@ -109,9 +109,11 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::Abandoned<I> and CT::OwnedDeepStrong<I>) {
                // Abandoning                                            
-               // Note: EnableDisowned is called at end of absorption   
-               if constexpr (not from.CanBeDisowned)
+               if constexpr (not from.CanBeDisowned) {
+                  // In case source is not disownable, this component   
+                  // must make sure to reset relevant properties.       
                   if_available(from.template SetCountInner<ID>(0));
+               }
             }
          }
       }

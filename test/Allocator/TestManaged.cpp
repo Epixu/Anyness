@@ -205,7 +205,7 @@ TEST_CASE_TEMPLATE("Testing pool functions", TestType,
             pool->Deallocate(entry);
             REQUIRE(entry->GetUses() == 0);
          }
-         REQUIRE_FALSE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
+         REQUIRE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
 
          // Test the integrity of the free entry chain                  
          Logger::Special("Testing free chain integrity...");

@@ -250,7 +250,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          Any_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
          Any_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
          Any_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
-         Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
+
+         if constexpr (Managed) {
+            // Entries are still propagated when absorbed
+            Any_CheckState_ContainsOne(pack_disowned,  Refer(originalElement), 3);
+         }
+         else Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
 
          if constexpr (CT::Referenced<Decay<E>>) {
             REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
@@ -884,7 +889,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) { //TODO this test is probably wrong - check TestSet-Absorb for comparison
+         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) {
             T absorbed {Copy {a}};
 
             REQUIRE(a.GetUses() == uses);
@@ -896,14 +901,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
 
             if constexpr (CT::Sparse<E>) {
                auto entry = *absorbed.GetEntries();
-               if ((entry_refs) == 0)
+               if (entry_refs == 0)
                   REQUIRE(entry == nullptr);
 
                if (entry) {
-                  REQUIRE(entry->GetUses() == (entry_refs));
+                  REQUIRE(entry->GetUses() == entry_refs);
                   if constexpr (CT::Referenced<Decay<E>>) {
                      auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == (entry_refs));
+                     REQUIRE(DenseCast(e).GetReferences() == entry_refs);
                   }
                }
                else {
@@ -936,7 +941,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1);
          Any_CheckState_OwnedFull<E>(pack_abandoned);
 
-         absorb_construct_copy(pack_disowned,  3, 0);
+         absorb_construct_copy(pack_disowned,  3, managed_sparse ? 9 : 0);
          Any_CheckState_DisownedFull<E>(pack_disowned);
       }
       

@@ -85,17 +85,13 @@ namespace Langulus::Anyness::Component
 
       /// Copy the pointer to the entries, and reference if we have to        
       ///   @param intent The intent and container to transfer from.          
-      template<class SELF, CT::Intent I> requires CT::Container<I>
+      template<class SELF, CT::Intent I>
+      requires (CT::Container<I> and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>, ID>>))
       void ConstructFrom(this SELF& self, I&& intent) noexcept {
-         // Always propagate entries no matter what                     
-         constexpr bool deeply_owned = CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>, ID>>;
-         if constexpr (deeply_owned)
-            ThisCom::SetEntriesInner(intent.what.template GetEntries<ID>());
+         decltype(auto) from = LglsFwd(intent.what);
+         ThisCom::SetEntriesInner(from.template GetEntries<ID>());
 
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>
-         and (STYLE & OnCreateAndDestroy) != 0 and deeply_owned) {
-            decltype(auto) from = LglsFwd(intent.what);
-
+         if constexpr ((STYLE & OnCreateAndDestroy) != 0) {
             if constexpr (CT::Referred<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0) {
                // Refer                                                 
                ThisCom::Keep();
@@ -106,23 +102,16 @@ namespace Langulus::Anyness::Component
                   // Right was never owned, now we own it               
                   ThisCom::Keep();
                }
-               else {
-                  if constexpr (CT::Abandoned<I> and from.CanBeDisowned) {
-                     // We can abandon by using the State::Disowned     
-                     //from.EnableDisowned(); // gonna get called in Container::Absorb to avoid calling it multiple times
-                  }
-                  else if constexpr (CT::HasVariableCount<I>) {
+               else if constexpr (CT::Moved<I> or not from.CanBeDisowned) {
+                  // Transfer ownership if we can, otherwise refer      
+                  // Deep ownership can be reset in two ways: either    
+                  // reset the entries pointer, or reset the count.     
+                  if constexpr (CT::HasVariableCount<I>) {
                      LglsAssumeDev(from.IsEmpty(),
                         "Remote count should've been reset prior to this call");
                   }
-                  else if constexpr (requires { from.template SetEntriesInner<ID>(nullptr); }) {
-                     // We can transfer ownership                       
-                     from.template SetEntriesInner<ID>(nullptr);
-                  }
-                  else {
-                     // We can't transfer ownership, fallback to refer  
-                     ThisCom::Keep();
-                  }
+                  else if_available(from.template SetEntriesInner<ID>(nullptr))
+                  else ThisCom::Keep();
                }
             }
          }

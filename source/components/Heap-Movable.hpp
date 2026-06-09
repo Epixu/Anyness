@@ -182,14 +182,9 @@ namespace Langulus::Anyness::Component
             // Move/Refer/Abandon/Disown other                          
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
-            if constexpr (CT::Moved<I> /*and CT::OwnedStrong<I>*/) {
+            if constexpr (CT::Moved<I>) {
                // We are moving 'from' - it needs to be fully reset     
                from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
-               //if_available(from.ResetState());
-               /*Id::ForEach([&from]<Cid D>{
-                  (void) from;
-                  if_available(from.template ResetType<D>());
-               });*/
             }
             else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
                // We are abandoning 'from'.                             

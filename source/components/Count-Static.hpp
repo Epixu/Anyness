@@ -103,20 +103,19 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(from.template IsEmpty<ID>() or COUNT <= from.template GetCount<ID>(),
             "Incompatible count");
 
-         if constexpr (CT::Moved<I> /*and CT::OwnedStrong<I>*/) {
+         // Count is responsible for deep ownership, it has to          
+         // be reset on move to disable destruction in 'from'.          
+         if constexpr (CT::Moved<I>) {
             // Moving                                                   
-            // Count is responsible for deep ownership, it has to       
-            // be reset on move to disable destruction in 'from'.       
             if_available(from.template SetCountInner<ID>(0));
          }
          else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
             // Abandoning                                               
-            // Count is responsible for deep ownership, it has to       
-            // be reset on move to disable destruction in 'from'.       
-            // If State::Disowned is supported, it will be employed     
-            // in the last ownership component instead.                 
-            if constexpr (not from.CanBeDisowned)
+            if constexpr (not from.CanBeDisowned) {
+               // In case source is not disownable, this component      
+               // must make sure to reset relevant properties.          
                if_available(from.template SetCountInner<ID>(0));
+            }
          }
       }
 

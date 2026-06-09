@@ -755,11 +755,16 @@ namespace Langulus::Anyness
             else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
 
-         // Make sure we disown an abandoned container at the end       
-         if constexpr (CT::Abandoned<I> and Decay<Deint<FROM>>::CanBeDisowned)
-            DeintCast(from).EnableDisowned();
-         else if constexpr (CT::Moved<I> and requires { DeintCast(from).ResetState(); })
-            DeintCast(from).ResetState();
+         if constexpr (CT::Abandoned<I>) {
+            // Make sure we disown an abandoned container at the end    
+            // If container is not disownable, it is every component's  
+            // responsibility to remain in a disowned state.            
+            if_available(DeintCast(from).EnableDisowned());
+         }
+         else if constexpr (CT::Moved<I>) {
+            // Make sure we reset state after all movement concludes    
+            if_available(DeintCast(from).ResetState());
+         }
       }
 
       /// Call SliceFrom in all components that implement it.                 
@@ -853,7 +858,7 @@ namespace Langulus::Anyness
             "Must be dense");
 
          using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
-         return H {Disown{self}};
+         return H {self};
          /*if constexpr (CT::Pair<H>) {
             // User desires a pair, so we give them a pair              
             using H1 = typename H::KeyHandle;

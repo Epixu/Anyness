@@ -147,7 +147,7 @@ namespace Langulus::Fractalloc
             // Immediately adapt threshold accordingly, by allowing     
             // ever smaller entries, as long the size of the new        
             // allocation doesn't prevent it                            
-            mThresholdMax >>= 1u;
+            --mThresholdMax.bit;// >>= 1u;
          }
       }
 
@@ -207,7 +207,7 @@ namespace Langulus::Fractalloc
             // Immediately adapt threshold accordingly, by allowing     
             // ever smaller entries, as long the size of the new        
             // allocation doesn't prevent it                            
-            mThresholdMax >>= 1u;
+            --mThresholdMax.bit;// >>= 1u;
          }
       }
       else {
@@ -416,7 +416,7 @@ namespace Langulus::Fractalloc
          
             //--trimmed;
             
-            if (::std::has_single_bit(trimmed) /*entry - entry_gap < mAllocationData*/) {
+            if (::std::has_single_bit(trimmed + 1) /*entry - entry_gap < mAllocationData*/) {
                // It is now safe to increase mThresholdMax (may unclog) 
                ++mThresholdMax.bit;
             

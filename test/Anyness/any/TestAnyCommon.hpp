@@ -357,22 +357,23 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
    }
 
    if constexpr (CT::OwnedDeep<T>) {
+      auto entries = pack.GetEntries();
       if constexpr (CT::Dense<E>)
-         REQUIRE(pack.GetEntries() == nullptr);
+         REQUIRE(entries == nullptr);
       else if (uses) {
-         REQUIRE(pack.GetEntries() != nullptr);
+         REQUIRE(entries != nullptr);
 
          if constexpr (not CT::Disowned<I>) {
             for (size_t i = 0; i < IndirectsOf<E>; ++i) {
                if constexpr (CT::Cloned<I>)
-                  REQUIRE(pack.GetEntries()[i] != e.entries[i + 1]);
+                  REQUIRE(entries[i] != e.entries[i + 1]);
                else
-                  REQUIRE(pack.GetEntries()[i] == e.entries[i + 1]);
+                  REQUIRE(entries[i] == e.entries[i + 1]);
             }
          }
          else {
             for (size_t i = 0; i < IndirectsOf<E>; ++i)
-               REQUIRE(pack.GetEntries()[i] == nullptr);
+               REQUIRE(entries[i] == nullptr);
          }
       }
    }

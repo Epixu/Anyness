@@ -144,8 +144,14 @@ namespace Langulus::Anyness::Component
 
       /// Check if container is marked as disowned                            
       ///   @return true if this container is marked as disowned              
-      constexpr bool IsDisowned(this auto const& self) noexcept { //TODO dimensions?
-         if constexpr (CanBeDisowned) {
+      template<class C>
+      constexpr bool IsDisowned(this C const& self) noexcept { //TODO dimensions?
+         if constexpr (CT::Handle<C>) {
+            // Handles can't be disown, they have exclusive rights      
+            return false;
+         }
+         else if constexpr (CanBeDisowned) {
+            // Disown state component exists in the container           
             bool r = false;
             StateList::ForEachConstOr([&]<class S>{
                if constexpr (S::UID == StateUid::Disowned) {
@@ -165,10 +171,12 @@ namespace Langulus::Anyness::Component
             });
             return r;
          }
-         else if constexpr (requires { self.GetAllocation(); })
+         else if constexpr (requires { self.GetAllocation(); }) {
+            // We can consider full containers without owned memory     
+            // to be disowned.                                          
             return not self.IsEmpty() and self.GetAllocation() == nullptr;
-         else
-            return false;
+         }
+         else return false;
       }
 
       /// Check if container has either created elements, or a relevant state 

@@ -145,26 +145,31 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Disowned<I>) {
                // Disown                                                
-               // We are allowed to propagate the allocation pointer,   
-               // but we don't bother resetting it or searching for it. 
-               if constexpr (self.CanBeDisowned and requires { from.template GetAllocationInner<ID>(); })
-                  ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>());
-               else
+               if constexpr (not self.CanBeDisowned and STYLE & OnCreateAndDestroy) {
+                  // This container can't be marked as disowned - we    
+                  // must reset ownership unless it's weak.             
                   ThisCom::SetAllocationInner(nullptr);
+               }
+               else {
+                  // We are allowed to propagate the allocation pointer,
+                  // but don't bother resetting or searching!           
+                  // If it's there, it's there...                       
+                  if_available(ThisCom::SetAllocationInner(from.template GetAllocationInner<ID>()))
+                  else ThisCom::SetAllocationInner(nullptr);
+               }
             }
             else if constexpr (not requires { from.Owned; }) {
+               // No ownership on the right side - we must search the   
+               // memory allocation ourselves.                          
                ThisCom::FindAllocationInner();
             }
-            else if constexpr (CT::Referred<I> or 0 == (from.Owned & OnCreateAndDestroy)) {
+            else if constexpr (CT::Referred<I>) {
                // Refer                                                 
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {
                   const auto al = from.template GetAllocationInner<ID>();
                   if (al) {
                      ThisCom::SetAllocationInner(al);
-
-                     if constexpr (CT::Moved<I>)
-                        from.template SetAllocationInner<ID>(nullptr);
-
+                     
                      if constexpr (STYLE & OnCreateAndDestroy)
                         ThisCom::Keep();
                   }

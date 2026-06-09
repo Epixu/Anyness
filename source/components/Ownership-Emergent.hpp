@@ -107,21 +107,10 @@ namespace Langulus::Anyness::Component
                // Right was never owned, now we own it                  
                ThisCom::Keep();
             }
-            else {
-               if constexpr (CT::Abandoned<I> and from.CanBeDisowned) {
-                  // We can abandon by using the State::Disowned        
-                  // in the last ownership component.                   
-                  //if constexpr (not CT::OwnedDeep<I>)
-                     //from.EnableDisowned(); // gonna get called in Container::Absorb to avoid calling it multiple times
-               }
-               else if constexpr (requires { from.template SetAllocationInner<ID>(nullptr); }) {
-                  // We can transfer ownership                          
-                  from.template SetAllocationInner<ID>(nullptr);
-               }
-               else {
-                  // We can't transfer ownership, fallback to refer     
-                  ThisCom::Keep();
-               }
+            else if constexpr (CT::Moved<I> or not from.CanBeDisowned) {
+               // Transfer ownership if we can, otherwise refer         
+               if_available(from.template SetAllocationInner<ID>(nullptr))
+               else ThisCom::Keep();
             }
          }
       }

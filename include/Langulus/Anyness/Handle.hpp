@@ -29,7 +29,6 @@ namespace Langulus::Anyness
          Com::TypedStack<DMeta, void, true>,
          Com::HeapReference<>,
          Com::CountStatic<1u>,
-         //Com::ReserveEmergent<>,
          Com::OwnershipDeepReference<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,

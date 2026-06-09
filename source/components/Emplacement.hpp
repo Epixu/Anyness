@@ -145,7 +145,7 @@ namespace Langulus::Anyness::Component
                // We're allowed to reuse the memory.                    
                // Need to destroy and overwrite only the first element. 
                auto item = self.GetHandle();
-               item.Free();
+               item.template Free<false>();
                if_available(item.ResetAllEntries());
                //TODO clear the correspnding hash table spot?
 
@@ -164,7 +164,7 @@ namespace Langulus::Anyness::Component
                      item += 1;
                      const auto itemsEnd = self.GetHandle() + self.template GetCount<SID>();
                      while (item.GetRaw() != itemsEnd.GetRaw()) {
-                        item.Free();
+                        item.template Free<false>();
                         //item.template DestroyElement<true, SID>();
                         ++item;
                      }

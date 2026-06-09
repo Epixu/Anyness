@@ -81,7 +81,7 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair&& other) = delete;
 
       Handle GetKey() noexcept {
-         return {Disown{*this}};
+         return {*this};
          /*return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
@@ -89,7 +89,7 @@ namespace Langulus::Anyness
          };*/
       }
       Handle GetKeyHandle() noexcept {
-         return {Disown{*this}};// GetKey();
+         return {*this};// GetKey();
       }
 
       Handle GetVal() noexcept {
@@ -188,7 +188,7 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair&& other) = delete;
 
       HandleMut GetKey() noexcept {
-         return {Disown{*this}};
+         return {*this};
          /*return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
@@ -197,7 +197,7 @@ namespace Langulus::Anyness
       }
 
       HandleMut GetKeyHandle() noexcept {
-         return {Disown{*this}}; //return GetKey();
+         return {*this}; //return GetKey();
       }
 
       HandleMut GetVal() noexcept {
@@ -296,7 +296,7 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair&& other) = delete;
 
       Handle GetKey() noexcept {
-         return {Disown{*this}};
+         return {*this};
          /*return {
             this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
@@ -305,7 +305,7 @@ namespace Langulus::Anyness
       }
 
       Handle GetKeyHandle() noexcept {
-         return {Disown{*this}}; //return GetKey();
+         return {*this}; //return GetKey();
       }
 
       HandleMut GetVal() noexcept {
@@ -412,7 +412,7 @@ namespace Langulus::Anyness
       }
       KeyHandle GetKeyHandle() noexcept {
          return THandleEmergent<K> {
-            Disown{*this} //this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
+            *this //this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
          };
       }
 
@@ -548,7 +548,7 @@ namespace Langulus::Anyness
                this->Com::OwnershipStack<Com::WeakOwnership, 0>::GetAllocation()
             };
          }*/
-         return {Disown{*this}};
+         return {*this};
          /*if constexpr (CT::Sparse<K>) {
             return KeyHandle {
                this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
@@ -685,7 +685,7 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair&& other) = delete;
 
       auto GetKey() noexcept -> KeyHandle {
-         return {Disown{*this}};
+         return {*this};
          /*if constexpr (CT::Sparse<K>) {
             return THandle<K&> {
                this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
@@ -696,7 +696,7 @@ namespace Langulus::Anyness
       }
 
       auto GetKeyHandle() noexcept -> KeyHandle {
-         return {Disown{*this}}; //return GetKey();
+         return {*this}; //return GetKey();
       }
 
       auto GetVal() noexcept -> ValHandle {
