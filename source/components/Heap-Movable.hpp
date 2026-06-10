@@ -72,11 +72,6 @@ namespace Langulus::Anyness::Component
          IT from = LglsFwd(intent.what);
 
          size_t count = from.template GetCount<Id::First>();
-         if (0 == count) {
-            self.template ResetAllocationInner<Id::First>();
-            return;
-         }
-
          if constexpr (CT::Copied<I> or CT::Cloned<I>) {
             // Do a copy or clone.                                      
             // When copying, we're cloning just the first layer, so we  

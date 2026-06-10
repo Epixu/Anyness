@@ -75,18 +75,13 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this SELF& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
-
-            if constexpr (requires { from.template GetReserved<ID>(); }) {
-               // Always propagate custom reserve if available          
-               ThisCom::SetReservedInner(from.template GetReserved<ID>());
-               if constexpr (I::ResetsOnMove()) {
-                  if_available(from.template SetReservedInner<ID>(0));
-               }
-            }
+         
+            // Always propagate custom reserve if available             
+            if_available(ThisCom::SetReservedInner(from.template GetReserved<ID>()))
             else {
                // Otherwise derive reserve from current heap pointer,   
                // the start of the allocation, and by element size.     
-               // This is the same as if 'I' has a Com::ReserveEmergent.
+               // Note: Same as Com::ReserveEmergent::GetReserved.      
                if constexpr (requires { from.template GetAllocation<ID>(); }) {
                   const auto al = from.template GetAllocation<ID>();
                   if (not al) {
@@ -101,15 +96,17 @@ namespace Langulus::Anyness::Component
                      ThisCom::SetReservedInner((al->GetSize() - header) / self.template GetStride<ID>());
                   }
                }
-               else if constexpr (CT::ContainsOne<I>)
-                  ThisCom::SetReservedInner(1);
                else {
-                  static_assert(false,
+                  static_assert(CT::ContainsOne<I>,
                      "Can't derive the amount of reserved items from source container, "
                      "because it has neither a reserve, nor ownership components"
                   );
+                  ThisCom::SetReservedInner(1);
                }
             }
+
+            if constexpr (I::ResetsOnMove())
+               if_available(from.template SetReservedInner<ID>(0));
          }
       }
    };

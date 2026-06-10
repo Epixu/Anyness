@@ -749,8 +749,23 @@ namespace Langulus::Anyness
          /*static_assert(CT::ContainsOne<SELF> or CT::Contiguous<SELF> == CT::Contiguous<FROM>,
             "You can't absorb from containers with different contiguousness");*/
 
+         decltype(auto) source = DeintCast(from);
          using I = IntentOf(from);
-         ComponentList::ForEach([&]<class C>{
+
+         if (source.IsEmpty()) {
+            // If source is empty, we copy only the type and the        
+            // unconstrained state. Everything else is defaulted.       
+            ComponentList::ForEach([&self,&from]<class C>{
+               if constexpr (requires { &C::template GetState<SELF>; }
+                         or  requires { &C::template GetType<0, SELF>; }) {
+                  if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
+               }
+               else if_available_gcc(C::template ConstructDefault<SELF>)();
+            });
+            return;
+         }
+
+         ComponentList::ForEach([&self,&from]<class C>{
                  if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
             else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
@@ -759,11 +774,11 @@ namespace Langulus::Anyness
             // Make sure we disown an abandoned container at the end    
             // If container is not disownable, it is every component's  
             // responsibility to remain in a disowned state.            
-            if_available(DeintCast(from).EnableDisowned());
+            if_available(source.EnableDisowned());
          }
          else if constexpr (CT::Moved<I>) {
             // Make sure we reset state after all movement concludes    
-            if_available(DeintCast(from).ResetState());
+            if_available(source.ResetState());
          }
       }
 

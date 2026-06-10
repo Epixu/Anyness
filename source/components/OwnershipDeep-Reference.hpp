@@ -89,6 +89,7 @@ namespace Langulus::Anyness::Component
       requires (CT::Container<I> and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>, ID>>))
       void ConstructFrom(this SELF& self, I&& intent) noexcept {
          decltype(auto) from = LglsFwd(intent.what);
+
          ThisCom::SetEntriesInner(from.template GetEntries<ID>());
 
          if constexpr ((STYLE & OnCreateAndDestroy) != 0) {

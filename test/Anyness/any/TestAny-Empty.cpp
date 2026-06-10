@@ -339,8 +339,8 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
             pack.AssignAbsorb(::std::move(movable));
 
-            if constexpr (CT::Container<E>)
-               Any_CheckState_Default<TypeOf<E>>(movable);
+            //if constexpr (CT::Container<E>)
+            Any_CheckState_Default<TypeOf<E>>(movable);
             Any_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
@@ -430,6 +430,8 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             }
 
             pack.AssignAbsorb(Clone(*element));
+            Any_CheckState_OwnedFull<int>(*element);
+            Any_CheckState_OwnedFull<int>(pack);
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -438,7 +440,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE_FALSE(pack.IsConstant());
             REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
             REQUIRE(pack.GetUses() == 1);
-            REQUIRE(pack.GetAllocation());
+            REQUIRE(pack.GetAllocation() != element->GetAllocation());
 
             [[maybe_unused]] ::std::any src_std = *element;
             BenchmarkAnyStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
@@ -477,15 +479,19 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             }
 
             pack.AssignAbsorb(Disown(*element));
+            Any_CheckState_OwnedFull<int>(*element);
+            Any_CheckState_DisownedFull<int>(pack);
+            Any_Helper_TestSame(pack, *element, false);
+            REQUIRE(pack.IsConstant());
 
-            REQUIRE(pack.GetRaw() == element->GetRaw());
-            REQUIRE(pack.IsExact(element->GetType()));
-            REQUIRE(pack == *element);
-            REQUIRE(pack.IsDeep() == element->IsDeep());
-            REQUIRE(pack.IsConstant() != element->IsConstant());
-            REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
-            REQUIRE(pack.GetUses() == 0);
-            REQUIRE_FALSE(pack.GetAllocation());
+            //REQUIRE(pack.GetRaw() == element->GetRaw());
+            //REQUIRE(pack.IsExact(element->GetType()));
+            //REQUIRE(pack == *element);
+            //REQUIRE(pack.IsDeep() == element->IsDeep());
+            //REQUIRE(pack.IsConstant() != element->IsConstant());
+            //REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
+            //REQUIRE(pack.GetUses() == 0);
+            //REQUIRE_FALSE(pack.GetAllocation());
 
             [[maybe_unused]] ::std::any src_std = *element;
             BenchmarkAnyStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,
@@ -530,8 +536,8 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
             pack.AssignAbsorb(Abandon(movable));
 
-            if constexpr (CT::Container<E>)
-               Any_CheckState_Abandoned<E>(movable);
+            //if constexpr (CT::Container<E>)
+            Any_CheckState_Abandoned<E>(movable);
             Any_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());

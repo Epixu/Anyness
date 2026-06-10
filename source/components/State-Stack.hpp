@@ -261,15 +261,13 @@ namespace Langulus::Anyness::Component
       template<class C, CT::Intent I> requires (HasStates and CT::Container<I>)
       void ConstructFrom(this C& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
+         
          if constexpr (requires { from.GetStateInner(); }) {
             self.SetStateInner(from.GetStateInner().mState);
 
             // Don't propagate disowned state unless explicitly required
             if constexpr (CanBeDisowned and not CT::Disowned<I>)
                self.DisableDisowned();
-
-            //if constexpr (CT::Moved<I>)//must be done after all components are processed, so it is performed at the end of Container::Absorb
-            //   from.ResetState();
          }
          else self.SetStateInner(GetDefaultState());
       }

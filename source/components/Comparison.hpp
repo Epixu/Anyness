@@ -92,6 +92,19 @@ namespace Langulus::Anyness::Component
                using LT = TypeOf<LHS>;
                using RT = TypeOf<RHS>;
 
+               const auto lhs_count = lhs.GetCount();
+               const auto rhs_count = rhs.GetCount();
+               if (lhs_count != rhs_count) {
+                  // Early failure if count differs, no point in        
+                  // comparing anything at all                          
+                  LglsVerbose(Logger::Red, "Different count (typed): ",
+                     lhs.GetCount(), " != ", rhs.GetCount());
+                  return false;
+               }
+
+               if (not lhs_count)
+                  return true;   // Both empty                          
+
                if constexpr (not Same<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
                   // Types are different                                
                   LglsVerbose(Logger::Red, "Types differ (typed): ",
@@ -99,21 +112,6 @@ namespace Langulus::Anyness::Component
                   return false;
                }
                else {
-                  //                                                    
-                  // Types are similar if reached                       
-                  const auto lhs_count = lhs.GetCount();
-                  const auto rhs_count = rhs.GetCount();
-                  if (lhs_count != rhs_count) {
-                     // Early failure if count differs, no point in     
-                     // comparing anything at all                       
-                     LglsVerbose(Logger::Red, "Different count (typed): ",
-                        lhs.GetCount(), " != ", rhs.GetCount());
-                     return false;
-                  }
-
-                  if (not lhs_count)
-                     return true;   // Both empty                       
-
                   if constexpr (CT::ComparableEqual<LT, LT>) {
                      const auto raw1 = lhs.GetRaw();
                      const auto raw2 = rhs.GetRaw();
@@ -190,17 +188,6 @@ namespace Langulus::Anyness::Component
                //                                                       
                // Both containers are type-erased - all we can do is    
                // call the reflected comparison functions               
-               const DMeta LT = lhs.template GetType<SID>();
-               const DMeta RT = rhs.template GetType<SID>();
-
-               if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
-                  LglsVerbose(Logger::Red, "Types differ (type-erased): ",
-                     LT, " != ", RT);
-                  return false;
-               }
-
-               //                                                       
-               // Types are similar if reached                          
                const auto lhs_count = lhs.GetCount();
                const auto rhs_count = rhs.GetCount();
                if (lhs_count != rhs_count) {
@@ -211,6 +198,14 @@ namespace Langulus::Anyness::Component
 
                if (not lhs_count)
                   return true;   // Both empty                          
+
+               const DMeta LT = lhs.template GetType<SID>();
+               const DMeta RT = rhs.template GetType<SID>();
+               if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
+                  LglsVerbose(Logger::Red, "Types differ (type-erased): ",
+                     LT, " != ", RT);
+                  return false;
+               }
 
                const auto comparer = LT.GetComparerEqual();
                if (not comparer) {
@@ -305,17 +300,6 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Both container are type-erased - all we can do is call   
             // the reflected comparison functions                       
-            const DMeta LT = lhs.GetType();
-            const DMeta RT = rhs.GetType();
-
-            if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
-               LglsVerbose(Logger::Red, "Types differ (type-erased): ",
-                  LT, " != ", RT);
-               return Compared::Unordered;
-            }
-            
-            //                                                          
-            // Types are similar if reached                             
             const auto lhs_count = lhs.GetCount();
             const auto rhs_count = rhs.GetCount();
             if (lhs_count != rhs_count) {
@@ -327,6 +311,14 @@ namespace Langulus::Anyness::Component
             if (not lhs_count)
                return Compared::Equal;    // Both empty                 
 
+            const DMeta LT = lhs.GetType();
+            const DMeta RT = rhs.GetType();
+            if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
+               LglsVerbose(Logger::Red, "Types differ (type-erased): ",
+                  LT, " != ", RT);
+               return Compared::Unordered;
+            }
+            
             const auto comparer = LT.GetComparer();
             if (comparer) {
                auto t1 = lhs.template GetRawAs<uint8_t>();
@@ -366,9 +358,23 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Both blocks are statically-typed - leverage it by using  
             // static comparisons                                       
+            const auto lhs_count = lhs.GetCount();
+            const auto rhs_count = rhs.GetCount();
+            if (lhs_count != rhs_count) {
+               // Early failure if count differs, no point in        
+               // comparing anything at all                          
+               LglsVerbose(Logger::Red, "Different count (typed): ",
+                  lhs_count, " != ", rhs_count);
+               return ::std::partial_ordering::unordered;
+            }
+
+            if (not lhs_count) {
+               // Both empty                                         
+               return ::std::partial_ordering::equivalent;
+            }
+
             using LT = TypeOf<LHS>;
             using RT = TypeOf<RHS>;
-
             if constexpr (not Same<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
                // Types are different                                   
                LglsVerbose(Logger::Red, "Types differ (typed): ",
@@ -376,23 +382,6 @@ namespace Langulus::Anyness::Component
                return ::std::partial_ordering::unordered;
             }
             else {
-               //                                                       
-               // Types are similar if rached                           
-               const auto lhs_count = lhs.GetCount();
-               const auto rhs_count = rhs.GetCount();
-               if (lhs_count != rhs_count) {
-                  // Early failure if count differs, no point in        
-                  // comparing anything at all                          
-                  LglsVerbose(Logger::Red, "Different count (typed): ",
-                     lhs_count, " != ", rhs_count);
-                  return ::std::partial_ordering::unordered;
-               }
-
-               if (not lhs_count) {
-                  // Both empty                                         
-                  return ::std::partial_ordering::equivalent;
-               }
-               
                if constexpr (CT::Comparable<LT, LT>) {
                   auto t1 = lhs.GetRaw();
                   auto t2 = rhs.GetRaw();

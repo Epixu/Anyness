@@ -256,6 +256,7 @@ void Common_CheckState_Default(const C& any, bool typed = false) {
    //REQUIRE      (any.GetRaw() == nullptr); // not really a requirement for the default state. Count being 0 is enough in most cases
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
+   REQUIRE      (any == C{});
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
@@ -287,6 +288,7 @@ void Any_CheckState_OwnedEmpty(const C& any) {
    //REQUIRE      (any.GetRaw() == nullptr); // not really a requirement for the owned-empty state. Count being 0 is enough in most cases
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
+   REQUIRE      (any == C{});
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
@@ -305,6 +307,7 @@ void Any_CheckState_OwnedFull(const C& any) {
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
    REQUIRE_FALSE(not any);
+   REQUIRE      (any != C{});
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
@@ -323,6 +326,7 @@ void Any_CheckState_DisownedFull(const C& any) {
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
    REQUIRE_FALSE(not any);
+   REQUIRE      (any != C{});
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>

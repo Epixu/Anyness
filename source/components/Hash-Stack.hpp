@@ -75,13 +75,15 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>
-         and requires { intent.what.template GetHashInner<ID>(); }) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
+            
             // Notice only the inner hash gets copied, to avoid         
             // precomputation if rhs doesn't cache it. It will be       
             // recomputed on demand on comparison either way.           
-            ThisCom::SetHashInner(from.template GetHashInner<ID>());
+            if_available(ThisCom::SetHashInner(from.template GetHashInner<ID>()))
+            else ThisCom::SetHashInner(0);
+
             if constexpr (I::ResetsOnMove())
                if_available(from.template SetHashInner<ID>(1));
          }

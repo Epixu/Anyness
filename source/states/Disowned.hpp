@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component::State
    /// If enabled, allocations and entries will never be referenced or        
    /// dereferenced, neither at construction/destruction, nor on assignment.  
    /// Enabled when a container is absorbed using the Disown intent. Useful   
-   /// for creating data views and temporary containers.                      
+   /// for creating data views, temporary containers, or handles.             
    ///   @tparam V decides whether state is dynamic or static                 
    ///   @tparam ID, SHARED - affected dimensions                             
    template<StateValue V, Cid ID, Cid...SHARED>
@@ -27,7 +27,7 @@ namespace Langulus::Anyness::Component::State
       using CTTI_Component = Yes<>;
       using CTTI_State     = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int  ComponentPrecedence = -4000;
       static constexpr bool Static  = V != StateValue::Variable;
@@ -42,28 +42,20 @@ namespace Langulus::Anyness::Component::State
       // when template arguments are different                          
       static constexpr StateUid UID = StateUid::Disowned;
 
-      /*template<Cid SID = ID> requires Relevant<SID>
-      constexpr bool IsDisowned() const requires Static {
-         return Enable;
-      }
-
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
-      constexpr bool IsDisowned(this const C& self) noexcept requires Dynamic {
-         return self.GetStateInner() & Disowned<V, ID, SHARED...> {};
-      }*/
-
    protected:
       LglsComHeapMovable(friend);
-      //template<CT::Component...> friend struct Container;
+      
       template<CT::Component...COMPONENTS> requires ValidComponentOrder<COMPONENTS...>
       friend struct Component::Container;
 
+      /// Enable the dynamic disowned state                                   
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto EnableDisowned(this C&& self) noexcept -> C&& requires Dynamic {
          self.GetStateInner() += Disowned<V, ID, SHARED...> {};
          return LglsFwd(self);
       }
 
+      /// Disable the dynamic disowned state                                  
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto DisableDisowned(this C&& self) noexcept -> C&& requires Dynamic {
          self.GetStateInner() -= Disowned<V, ID, SHARED...> {};
