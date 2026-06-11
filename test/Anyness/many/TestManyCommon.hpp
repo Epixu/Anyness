@@ -96,8 +96,8 @@ void Many_Helper_TestType(const C& many) {
 }
 
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
-void Many_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
-   Any_Helper_TestSame(lhs, rhs);
+void Many_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
+   Any_Helper_TestSame(lhs, rhs, match_constness);
 }
 
 ///                                                                           
@@ -126,7 +126,8 @@ void Many_CheckState_OwnedFull(const C& many) {
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Many_CheckState_DisownedFull(const C& many) {
-   Any_Helper_TestType<E>(many);
+   Any_CheckState_DisownedFull<E>(many);
+   /*Any_Helper_TestType<E>(many);
 
    REQUIRE(many.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE(many.IsConstant());
@@ -138,7 +139,7 @@ void Many_CheckState_DisownedFull(const C& many) {
    REQUIRE(many.GetUses() == 0);
    REQUIRE(many.GetRaw());
    REQUIRE(many);
-   REQUIRE_FALSE(not many);
+   REQUIRE_FALSE(not many);*/
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>

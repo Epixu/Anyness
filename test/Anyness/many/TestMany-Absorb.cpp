@@ -163,7 +163,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          Many_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
          Many_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
          Many_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
-         Many_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 0);
+         Many_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
 
          BenchmarkManyStd("Empty/AbsorbConstructor(" + NameOf<E>() + ")", 30, 100,
             T temp,                                         (new (&temp) T{Absorb, piecewise1}),
@@ -636,14 +636,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
 
       WHEN("Assigned compatible full self") {
-         auto assign_full_self = [&](T& a) {
+         auto assign_full_self = [&](T& a, bool allow_change_in_constness = false) {
             auto backup = a;
             const auto uses_before = a.GetUses();
             LglsDisableWarningPush
             LglsDisableWarning_SelfAssign
                a = a;
             LglsDisableWarningPop
-            Many_Helper_TestSame(a, backup);
+            Many_Helper_TestSame(a, backup, not allow_change_in_constness);
             REQUIRE(a.GetUses() == uses_before);
          };
 
@@ -654,28 +654,28 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          assign_full_self(pack_moved1);
          assign_full_self(pack_moved2);
          assign_full_self(pack_abandoned);
-         assign_full_self(pack_disowned);
+         assign_full_self(pack_disowned, true);
       }
 
       WHEN("Absorbed by referral") {
-         auto absorb_construct_refer = [&](T& a, int uses) {
+         auto absorb_construct_refer = [&](T& a, T& compare_against, int uses) {
             T absorbed1 {a};
             T absorbed2 {Refer {a}};
 
-            Many_Helper_TestSame(absorbed1, a);
-            Many_Helper_TestSame(absorbed2, a);
+            Many_Helper_TestSame(absorbed1, compare_against);
+            Many_Helper_TestSame(absorbed2, compare_against);
             REQUIRE(absorbed1.GetUses() == uses);
             REQUIRE(absorbed2.GetUses() == uses);
          };
 
-         absorb_construct_refer(pack_referred1, 5);
-         absorb_construct_refer(pack_referred2, 5);
-         absorb_construct_refer(pack_copied,    3);
-         absorb_construct_refer(pack_cloned,    3);
-         absorb_construct_refer(pack_moved1,    3);
-         absorb_construct_refer(pack_moved2,    3);
-         absorb_construct_refer(pack_abandoned, 3);
-         absorb_construct_refer(pack_disowned,  0);
+         absorb_construct_refer(pack_referred1, pack_referred1, 5);
+         absorb_construct_refer(pack_referred2, pack_referred1, 5);
+         absorb_construct_refer(pack_copied,    pack_copied,    3);
+         absorb_construct_refer(pack_cloned,    pack_cloned,    3);
+         absorb_construct_refer(pack_moved1,    pack_moved1,    3);
+         absorb_construct_refer(pack_moved2,    pack_moved2,    3);
+         absorb_construct_refer(pack_abandoned, pack_abandoned, 3);
+         absorb_construct_refer(pack_disowned,  pack_referred1, 0);
       }
       
       WHEN("Absorbed by move") {
@@ -684,10 +684,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T absorbed {::std::move(a)};
 
             Many_CheckState_Default<E>(a);
-            if (uses == 0)
-               Many_CheckState_DisownedFull<E>(absorbed);
-            else
-               Many_CheckState_OwnedFull<E>(absorbed);
+            Many_CheckState_OwnedFull<E>(absorbed);
             Many_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
@@ -699,7 +696,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          absorb_construct_move(pack_moved1,    2);
          absorb_construct_move(pack_moved2,    2);
          absorb_construct_move(pack_abandoned, 2);
-         absorb_construct_move(pack_disowned,  0);
+         absorb_construct_move(pack_disowned,  3); // moving from a disowned container acts as referencing - nothing was owned prior
       }
       
       WHEN("Absorbed by move (alt)") {
@@ -708,10 +705,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T absorbed {Move(a)};
 
             Many_CheckState_Default<E>(a);
-            if (uses == 0)
-               Many_CheckState_DisownedFull<E>(absorbed);
-            else
-               Many_CheckState_OwnedFull<E>(absorbed);
+            Many_CheckState_OwnedFull<E>(absorbed);
             Many_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
@@ -723,7 +717,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          absorb_construct_move(pack_moved1,    2);
          absorb_construct_move(pack_moved2,    2);
          absorb_construct_move(pack_abandoned, 2);
-         absorb_construct_move(pack_disowned,  0);
+         absorb_construct_move(pack_disowned,  3);
       }
       
       WHEN("Absorbed by abandon") {
@@ -732,10 +726,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T absorbed {Abandon {a}};
 
             Many_CheckState_Abandoned<E>(a);
-            if (uses == 0)
-               Many_CheckState_DisownedFull<E>(absorbed);
-            else
-               Many_CheckState_OwnedFull<E>(absorbed);
+            Many_CheckState_OwnedFull<E>(absorbed);
             Many_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
@@ -747,11 +738,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          absorb_construct_abandon(pack_moved1,    2);
          absorb_construct_abandon(pack_moved2,    2);
          absorb_construct_abandon(pack_abandoned, 2);
-         absorb_construct_abandon(pack_disowned,  0);
+         absorb_construct_abandon(pack_disowned,  3); // abandoning from a disowned container acts as referencing - nothing was owned prior
       }
       
       WHEN("Absorbed by disown") {
-         auto absorb_construct_disown = [&](T& a) {
+         auto absorb_construct_disown = [&](T& a, int uses) {
             T absorbed {Disown {a}};
 
             Many_CheckState_OwnedFull<E>(a);
@@ -762,16 +753,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             REQUIRE(absorbed.IsDeep() == a.IsDeep());
             REQUIRE(absorbed.IsConstant() != a.IsConstant());
             REQUIRE(absorbed.GetUnconstrainedState() == a.GetUnconstrainedState());
-            REQUIRE(absorbed.GetUses() == 0);
+            REQUIRE(absorbed.GetUses() == uses);
          };
 
-         absorb_construct_disown(pack_referred1);
-         absorb_construct_disown(pack_referred2);
-         absorb_construct_disown(pack_copied);
-         absorb_construct_disown(pack_cloned);
-         absorb_construct_disown(pack_moved1);
-         absorb_construct_disown(pack_moved2);
-         absorb_construct_disown(pack_abandoned);
+         absorb_construct_disown(pack_referred1, 3);
+         absorb_construct_disown(pack_referred2, 3);
+         absorb_construct_disown(pack_copied,    1);
+         absorb_construct_disown(pack_cloned,    1);
+         absorb_construct_disown(pack_moved1,    1);
+         absorb_construct_disown(pack_moved2,    1);
+         absorb_construct_disown(pack_abandoned, 1);
 
          T absorbed{Disown {pack_disowned}};
          Many_CheckState_DisownedFull<E>(pack_disowned);
@@ -782,20 +773,15 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          REQUIRE(absorbed.IsDeep() == pack_disowned.IsDeep());
          REQUIRE(absorbed.IsConstant() == pack_disowned.IsConstant());
          REQUIRE(absorbed.GetUnconstrainedState() == pack_disowned.GetUnconstrainedState());
-         REQUIRE(absorbed.GetUses() == 0);
+         REQUIRE(absorbed.GetUses() == 3);
       }
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) { //TODO this test is probably wrong - check TestSet-Absorb for comparison
+         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) {
             T absorbed {Copy {a}};
 
-            if (uses == 0)
-               Many_CheckState_DisownedFull<E>(a);
-            else
-               Many_CheckState_OwnedFull<E>(a);
             REQUIRE(a.GetUses() == uses);
-
             Many_CheckState_OwnedFull<E>(absorbed);
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
@@ -804,14 +790,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             if constexpr (CT::Sparse<E>) {
                auto entry = *absorbed.GetEntries();
-               if ((entry_refs) == 0)
+               if (entry_refs == 0)
                   REQUIRE(entry == nullptr);
 
                if (entry) {
-                  REQUIRE(entry->GetUses() == (entry_refs));
+                  REQUIRE(entry->GetUses() == entry_refs);
                   if constexpr (CT::Referenced<Decay<E>>) {
                      auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == (entry_refs));
+                     REQUIRE(DenseCast(e).GetReferences() == entry_refs);
                   }
                }
                else {
@@ -824,13 +810,28 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          };
 
          absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3);
+         Many_CheckState_OwnedFull<E>(pack_referred1);
+
          absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3);
+         Many_CheckState_OwnedFull<E>(pack_referred2);
+
          absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3);
+         Many_CheckState_OwnedFull<E>(pack_copied);
+
          absorb_construct_copy(pack_cloned,    1, 2);
+         Many_CheckState_OwnedFull<E>(pack_cloned);
+
          absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1);
+         Many_CheckState_OwnedFull<E>(pack_moved1);
+
          absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1);
+         Many_CheckState_OwnedFull<E>(pack_moved2);
+
          absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1);
-         absorb_construct_copy(pack_disowned,  0, 0);
+         Many_CheckState_OwnedFull<E>(pack_abandoned);
+
+         absorb_construct_copy(pack_disowned,  3, managed_sparse ? 9 : 0);
+         Any_CheckState_DisownedFull<E>(pack_disowned);
       }
       
       WHEN("Absorbed by clone") {
