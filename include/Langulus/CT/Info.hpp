@@ -43,7 +43,7 @@ namespace Langulus
       
       if constexpr (CT::Complete<CTTI::Info<DT>>)
          return CTTI::Info<DT>::Text;
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Info))
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Info, false))
          return DT::CTTI_Info::Constant;
       else
          return Literal {};

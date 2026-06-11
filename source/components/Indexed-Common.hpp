@@ -223,16 +223,18 @@ namespace Langulus::Anyness::Component
             else if constexpr (CT::TypeErased<C>) {
                auto type = self.template GetType<SID>();
                auto requested = MetaDataOf<AS>();
+               LglsAssert(type.Is(requested),
+                  "Type mismatch", ": ", type, " not akin to ", requested);
 
-               if (type.Is(requested)) {
+               //if (type.Is(requested)) {
                   // Access directly                                    
-                  if constexpr (CT::DeepDense<AS>)
+                  /*if constexpr (CT::DeepDense<AS>)
                      return Decvq<AS> {Absorb, *self.template GetAt<AS, SID>(LglsFwd(idx))};
-                  else if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
+                  else*/ if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS, SID>(LglsFwd(idx));
                   else
                      return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
-               }
+               /*}
                else if constexpr (CT::DeepDense<AS>) {
                   // Wrap in a container                                
                   using H = DecideHandle<C>;
@@ -254,7 +256,7 @@ namespace Langulus::Anyness::Component
                      return *self.template GetAt<AS, SID>(LglsFwd(idx));
                   else
                      return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
-               }
+               }*/
             }
             else {
                using T = TypeOf<C, SID>;

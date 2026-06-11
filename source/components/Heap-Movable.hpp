@@ -90,7 +90,7 @@ namespace Langulus::Anyness::Component
                   "Inconsistent reserve across dimensions");
 
                if constexpr (CT::TypeErased<IT>) {
-                  auto type = self.template GetType<D>();
+                  auto type = from.template GetType<D>();
                   if constexpr (CT::Copied<I>) {
                      LglsAssert(type.GetReferConstructor(),
                         "Can't refer-construct elements"
@@ -108,11 +108,11 @@ namespace Langulus::Anyness::Component
                }
                else {
                   if constexpr (CT::Copied<I>) {
-                     static_assert(CT::ReferConstructible<TypeOf<C, D>>,
+                     static_assert(CT::ReferConstructible<TypeOf<IT, D>>,
                         "Contained type is not refer-constructible");
                   }
                   else {
-                     static_assert(CT::CloneConstructible<TypeOf<C, D>>,
+                     static_assert(CT::CloneConstructible<TypeOf<IT, D>>,
                         "Contained type is not clone-constructible");
                   }
                }

@@ -81,25 +81,31 @@ using namespace Anyness;
    #include "../../TestTypes/PackedPointers.hpp"
 #endif
 
+/// Reports on a container, compares it to its std equivalent, makes sure it  
+/// is tightly packed, properly sized, etc.                                   
 template<class T, class COMPARE_WITH>
 void Common_GapTest() {
+   // Make sure the container is tightly packed with no padding         
    alignas(T) char unininitialized[sizeof(T)];
-   memset(unininitialized, 254, sizeof(unininitialized));
+   memset(unininitialized, 0xff, sizeof(unininitialized));
    new (unininitialized) T {};
+   size_t matched_bytes = 0;
    for (auto b : unininitialized) {
-      REQUIRE(b != 254);
+      if (b != 0xff)
+         break;
+      ++matched_bytes;
    }
-   Logger::Info("Size of ", NameOf<COMPARE_WITH>(), " container is: ",
-      sizeof(COMPARE_WITH), " bytes");
-   auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ",
-      sizeof(T), " bytes");
+   REQUIRE(matched_bytes == sizeof(T));
 
+   Logger::Info("Size of ", NameOf<COMPARE_WITH>(), " container is: ", sizeof(COMPARE_WITH), " bytes");
+   auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
    size_t size = 0;
    size_t stack_size = 0;
    size_t heap_size = 0;
    size_t heap_size_per_element = 0;
    size_t heap_size_per_indirection = 0;
    size_t heap_size_per_element_times_indirection = 0;
+
    T::ComponentList::ForEach([&]<class C> {
       if constexpr (requires { typename C::StackRequest; }) {
          // Scan all stack requests                                     
@@ -172,6 +178,7 @@ void Common_GapTest() {
 
 namespace doctest
 {
+   /// doctest stringifiers for Any and TAny                                  
    template<>
    struct StringMaker<Any> {
       static String convert(Any const& value) {
@@ -191,6 +198,7 @@ namespace doctest
    };
 }
 
+/// Tests if a container is of a particular type                              
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_Helper_TestType(const C& any) {
    if constexpr (CT::Void<E>) {
@@ -213,22 +221,29 @@ void Any_Helper_TestType(const C& any) {
    REQUIRE(any.IsTyped());
 }
 
+/// Tests if two containers point to the same memory the same way             
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
 void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
    REQUIRE(lhs.GetCount() == rhs.GetCount());
-   if (not lhs.IsEmpty())
-      REQUIRE(lhs.GetRaw() == rhs.GetRaw()); // not really a requirement when containers are empty
    REQUIRE(lhs.IsExact(rhs.GetType()));
    REQUIRE(lhs == rhs);
    REQUIRE(lhs.IsDeep() == rhs.IsDeep());
+
+   if (not lhs.IsEmpty())
+      REQUIRE(lhs.GetRaw() == rhs.GetRaw());
+
    if (match_constness)
       REQUIRE(lhs.IsConstant() == rhs.IsConstant());
-   REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
+
+   if constexpr (requires { lhs.GetUnconstrainedState(); rhs.GetUnconstrainedState(); })
+      REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
+   else if constexpr (requires { lhs.GetUnconstrainedState(); })
+      REQUIRE(lhs.IsDefaultState());
+   else if constexpr (requires { rhs.GetUnconstrainedState(); })
+      REQUIRE(rhs.IsDefaultState());
 }
 
-
-///                                                                           
-/// Possible state test implementations                                       
+/// Tests whether a container is in its default-constructed state             
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Common_CheckState_Default(const C& any, bool typed = false) {
    if constexpr (CT::Typed<C>) {
@@ -253,7 +268,6 @@ void Common_CheckState_Default(const C& any, bool typed = false) {
    REQUIRE      (any.GetCount() == 0);
    REQUIRE      (any.GetReserved() == 0);
    REQUIRE      (any.GetUses() == 0);
-   //REQUIRE      (any.GetRaw() == nullptr); // not really a requirement for the default state. Count being 0 is enough in most cases
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
    REQUIRE      (any == C{});
@@ -285,7 +299,6 @@ void Any_CheckState_OwnedEmpty(const C& any) {
    REQUIRE      (any.GetCount() == 0);
    REQUIRE      (any.GetReserved() > 0);
    REQUIRE      (any.GetUses() == 1);
-   //REQUIRE      (any.GetRaw() == nullptr); // not really a requirement for the owned-empty state. Count being 0 is enough in most cases
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
    REQUIRE      (any == C{});
@@ -332,7 +345,6 @@ void Any_CheckState_DisownedFull(const C& any) {
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_Abandoned(const C& any) {
    REQUIRE(any.IsDisowned());
-   //REQUIRE_FALSE(any.GetAllocation());
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
@@ -342,7 +354,6 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == uses);
    REQUIRE(pack.GetReserved() >= (uses ? 1 : 0));
-   //REQUIRE(pack.IsDisowned() == CT::Disowned<I>);
 
    if constexpr (not CT::CustomPointer<E> or not CT::TypeErased<T>)
       REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));

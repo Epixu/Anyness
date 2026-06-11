@@ -77,6 +77,19 @@ struct CustomUntypedType : CustomTypedType { using CTTI_Typed = void; };
 enum TypedEnum : int64_t {one1, two2};
 enum class TypedEnumClass : int64_t {one1, two2};
 
+
+/// Proper type, reflected as abstract                                        
+struct ForcedDeepExternally {};
+struct ForcedDeepInternally {
+   using CTTI_Deep = Yes<>;
+};
+
+/// Types that can inherit deepness                                           
+struct InheritedDeep1 : ForcedDeepInternally {};
+struct InheritedDeep1Disabled : ForcedDeepInternally { using CTTI_Deep = No; };
+struct InheritedDeep1ButPrivate : private ForcedDeepInternally {};
+struct InheritedDeepExternally : ForcedDeepExternally {};
+
 namespace Langulus::CTTI
 {
    template<>
@@ -88,6 +101,9 @@ namespace Langulus::CTTI
    struct ReflectAs<ReflectableExtern> {
       using Type = char;
    };
+
+   template<>
+   struct Deep<ForcedDeepExternally> {};
 }
 
 namespace Langulus::Tags

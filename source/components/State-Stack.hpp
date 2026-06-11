@@ -40,9 +40,9 @@ namespace Langulus::Anyness::Component
       static_assert(StateCount < 16, "Too many states");
 
       struct StateWrapper;
-      using StateList      = Types<STATES...>;
-      using StateType      = Tif<StateCount < 8, uint8_t, uint16_t>;
-      using StackRequest   = Tif<HasStates, StateWrapper, void>;
+      using  StateList    = Types<STATES...>;
+      using  StateType    = Tif<StateCount < 8, uint8_t, uint16_t>;
+      using  StackRequest = Tif<HasStates, StateWrapper, void>;
 
       ///                                                                     
       /// The bitfield capable of containing all variable states              
@@ -90,8 +90,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the relevant state when relaying one container to another.      
       /// Relevant states exclude size and type constraints, as well as       
-      /// tracking and disownment in order to avoid changes in behavior due   
-      /// to debugging.                                                       
+      /// tracking and disownment.                                            
       ///   @return the current unconstrained container state                 
       constexpr auto GetUnconstrainedState(this auto const& self) noexcept
       -> StateWrapper requires HasStates {

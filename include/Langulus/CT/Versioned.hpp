@@ -51,7 +51,7 @@ namespace Langulus
       using ST = Shed<T>;
       if constexpr (CT::Complete<CTTI::Versioned<ST>>)
          return CTTI::Versioned<ST> {};
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Versioned))
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Versioned, false))
          return typename Decay<ST>::CTTI_Versioned {};
       else
          return Version<1, 0> {};

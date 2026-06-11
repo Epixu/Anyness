@@ -99,7 +99,7 @@ namespace Langulus
             "Suffix must begin with an alphabetical symbol");
          return s;
       }
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Suffix)) {
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Suffix, false)) {
          constexpr auto s = DT::CTTI_Suffix::Constant;
          static_assert(IsASCII(s), "Suffix must be ASCII");
          static_assert(s == "" or IsAlphabetical(s[0]),

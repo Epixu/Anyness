@@ -33,7 +33,7 @@ namespace Langulus::CT
             = Roof2(static_cast<size_t>(CTTI::MinAlloc<ST>::Value));
          return minalloc < MinimalAllocation ? MinimalAllocation : minalloc;
       }
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, MinAlloc)) {
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, MinAlloc, false)) {
          constexpr size_t minalloc
             = Roof2(static_cast<size_t>(Decay<ST>::CTTI_MinAlloc::Constant));
          return minalloc < MinimalAllocation ? MinimalAllocation : minalloc;

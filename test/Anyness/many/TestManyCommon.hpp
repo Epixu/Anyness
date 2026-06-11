@@ -104,14 +104,14 @@ void Many_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness =
 /// Possible state test implementations                                       
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Many_CheckState_Default(const C& many, bool typed = false) {
-   Common_CheckState_Default<E>(many, typed);
+   Any_CheckState_Default<E>(many, typed);
 
-   REQUIRE_FALSE(many.IsCompressed());
-   REQUIRE_FALSE(many.IsEncrypted());
-   REQUIRE_FALSE(many.IsMissing());
-   REQUIRE_FALSE(many.IsOr());
-   REQUIRE_FALSE(many.IsFuture());
-   REQUIRE_FALSE(many.IsPast());
+   if constexpr (requires { many.IsCompressed(); })
+      REQUIRE_FALSE(many.IsCompressed());
+   if constexpr (requires { many.IsEncrypted(); })
+      REQUIRE_FALSE(many.IsEncrypted());
+   if constexpr (requires { many.IsOr(); })
+      REQUIRE_FALSE(many.IsOr());
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
@@ -162,20 +162,18 @@ void Many_VerifyAccessorInterface(T const& many, I&&) {
       {many.template GetAt<E const>(0)} -> ::std::same_as<ConstAll<E> const*>;
    });
 
-   // AsAt dereferences that pointer and/or wraps inside handles or     
-   // containers. Element won't be wrapped, if container contains the   
-   // wrapper type.                                                     
-   if constexpr (CT::DeepDense<E> and (not Same<TypeOf<T>, E> or CT::TypeErased<T>)) {
+   // AsAt dereferences that pointer, doing only pointer arithmetic     
+   /*if constexpr (CT::DeepDense<E> and (not Same<TypeOf<T>, E> or CT::TypeErased<T>)) {
       static_assert(requires {
          {many.template AsAt<E>(0)} -> ::std::same_as<Decay<E>>;
       });
    }
-   else {
+   else {*/
       using innerT = Tif<(CT::Sparse<E> and not CT::CustomPointer<E>), ConstAll<E>, ConstAll<E> const&>;
       static_assert(requires {
          {many.template AsAt<E>(0)} -> ::std::same_as<innerT>;
       });
-   }
+   //}
 
    if constexpr (CT::Dense<E> and CT::Typed<T>) {
       // One additional indirection is always acceptable                

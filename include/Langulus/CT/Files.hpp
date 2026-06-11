@@ -38,7 +38,7 @@ namespace Langulus
          static_assert(IsASCII(s), "File extensions must be ASCII");
          return s;
       }
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Files)) {
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Files, false)) {
          constexpr auto s = DT::CTTI_Files::Constant;
          static_assert(IsASCII(s), "File extensions must be ASCII");
          return s;

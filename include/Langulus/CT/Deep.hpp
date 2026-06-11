@@ -35,5 +35,5 @@ namespace Langulus::CT
    /// CT::Deep works regardless if T are sparse or not. This makes sure      
    /// T are dense as well.                                                   
    template<class...T>
-   concept DeepDense = Deep<T...> and Dense<T...>;
+   concept DeepDense = ((Deep<T> and Dense<T>) and ...);
 }

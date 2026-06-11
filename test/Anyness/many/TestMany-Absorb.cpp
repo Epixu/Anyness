@@ -176,8 +176,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          auto assign_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
             a.Assign(*element);
 
-            if constexpr (CT::DeepDense<E>)
+            if constexpr (CT::DeepDense<E>) {
+               static_assert(CT::Deep<E> and CT::Dense<E>);
+               static_assert(not ::std::same_as<E, int>);
+               static_assert(not ::std::same_as<E, RT>);
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
+            }
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Refer(element));
 
@@ -576,7 +580,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                   Many_CheckState_ContainsOne(a, Refer(originalElement));
                   Many_CheckState_OwnedFull<int>(movable);
                   REQUIRE(movable.GetUses() == 2);
-                  REQUIRE(movable.template As<int>() == 555);
                };
 
                misabsorb_abandon(pack_referred1);

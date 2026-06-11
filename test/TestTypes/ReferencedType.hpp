@@ -89,3 +89,5 @@ struct RT : Langulus::Referenced {
       return Langulus::HashOf(data);
    }
 };
+
+static_assert(not Langulus::CT::Deep<RT>);

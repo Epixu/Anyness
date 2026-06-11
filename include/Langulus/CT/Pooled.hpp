@@ -100,7 +100,7 @@ namespace Langulus::CT
          constexpr size_t minpool = Roof2(CTTI::Pooled<ST>::MinPool);
          return minpool < MinimalPoolSize ? MinimalPoolSize : minpool;
       }
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled)) {
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled, false)) {
          constexpr size_t minpool = Roof2(Decay<ST>::CTTI_Pooled::MinPool);
          return minpool < MinimalPoolSize ? MinimalPoolSize : minpool;
       }
@@ -116,7 +116,7 @@ namespace Langulus::CT
       PoolTactic result = PoolTactic::Default;
       if constexpr (Complete<CTTI::Pooled<ST>>)
          result = CTTI::Pooled<ST>::Tactic;
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled))
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled, false))
          result = Decay<ST>::CTTI_Pooled::Tactic;
 
       if (result == PoolTactic::Main
