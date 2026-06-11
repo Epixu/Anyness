@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "../Container.hpp"
 #include "../rtti/MetaData.hpp"
 #include <Langulus/HashOf.hpp>
 #include <vector>

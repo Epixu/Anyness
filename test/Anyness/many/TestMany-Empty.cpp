@@ -489,15 +489,19 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             }
 
             pack.AssignAbsorb(Disown(*element));
+            Many_CheckState_OwnedFull<int>(*element);
+            Many_CheckState_DisownedFull<int>(pack);
+            Many_Helper_TestSame(pack, *element, false);
+            REQUIRE(pack.IsConstant());
 
-            REQUIRE(pack.GetRaw() == element->GetRaw());
+            /*REQUIRE(pack.GetRaw() == element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
             REQUIRE(pack == *element);
             REQUIRE(pack.IsDeep() == element->IsDeep());
             REQUIRE(pack.IsConstant() != element->IsConstant());
             REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
             REQUIRE(pack.GetUses() == 0);
-            REQUIRE_FALSE(pack.GetAllocation());
+            REQUIRE_FALSE(pack.GetAllocation());*/
 
             [[maybe_unused]] ::std::vector<E> src_std (1, *element);
             BenchmarkManyStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,

@@ -8,6 +8,11 @@
 #pragma once
 #include <Langulus/Utils/Tuple.hpp>
 #include <Langulus/CT/Contiguous.hpp>
+#include <Langulus/CT/Akin.hpp>
+#include <Langulus/Utils/Pot.hpp>
+#include <Langulus/Utils/Values.hpp>
+#include <Langulus/TypeOf.hpp>
+#include <Langulus/HashOf.hpp>
 
 
 namespace Langulus::CTTI

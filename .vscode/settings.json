@@ -43,8 +43,13 @@
       {
         "scope": "variable.other.constant",
         "settings": {
-          "foreground": "#ffffff",
-          "fontStyle": "underline"
+          "foreground": "#ffffff"
+        }
+      },
+      {
+        "scope": "variable.other.readwrite",
+        "settings": {
+          "foreground": "#a09f9f"
         }
       },
       {

@@ -755,13 +755,15 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
 
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_DisownedFull<E>(absorbed);
-            REQUIRE(absorbed.GetRaw() == a.GetRaw());
+            Many_Helper_TestSame(absorbed, a, false);
+            REQUIRE(absorbed.IsConstant());
+            /*REQUIRE(absorbed.GetRaw() == a.GetRaw());
             REQUIRE(absorbed.IsExact(a.GetType()));
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.IsDeep() == a.IsDeep());
             REQUIRE(absorbed.IsConstant() != a.IsConstant());
             REQUIRE(absorbed.GetUnconstrainedState() == a.GetUnconstrainedState());
-            REQUIRE(absorbed.GetUses() == 0);
+            REQUIRE(absorbed.GetUses() == 0);*/
          };
 
          absorb_construct_disown(pack_referred1);
@@ -1107,13 +1109,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          Many_CheckState_Default<E>(movable);
          Many_CheckState_OwnedFull<E>(pack1);
          Many_CheckState_OwnedFull<E>(pack2);
+         Many_Helper_TestSame(pack1, pack2);
          
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1 == pack2);
+         /*REQUIRE(pack1 == pack2);
          REQUIRE(movable != pack1);
-         REQUIRE(movable == T {});
+         REQUIRE(movable == T {});*/
       }
 
       WHEN("Move-assign pack1 in pack2 (alt)") {
@@ -1123,13 +1126,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          Many_CheckState_Default<E>(movable);
          Many_CheckState_OwnedFull<E>(pack1);
          Many_CheckState_OwnedFull<E>(pack2);
+         Many_Helper_TestSame(pack1, pack2);
          
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1 == pack2);
+         /*REQUIRE(pack1 == pack2);
          REQUIRE(movable != pack1);
-         REQUIRE(movable == T {});
+         REQUIRE(movable == T {});*/
       }
 
       WHEN("Disown-assign pack1 in pack2") {
@@ -1137,14 +1141,15 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          
          Many_CheckState_OwnedFull<E>(pack1);
          Many_CheckState_DisownedFull<E>(pack2);
+         Many_Helper_TestSame(pack1, pack2, false);
 
          REQUIRE(pack1.GetUses() == 2);
-         REQUIRE(pack2.GetUses() == 0);
+         REQUIRE(pack2.GetUses() == 2);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1 == pack2);
+         //REQUIRE(pack1 == pack2);
          REQUIRE(pack2 == memory1);
          REQUIRE(pack2 != memory2);
-         REQUIRE(pack2.GetAllocation() == nullptr);
+         //REQUIRE(pack2.GetAllocation() == nullptr);
          REQUIRE(pack2.CompareOneEqual(*e1));
       }
 

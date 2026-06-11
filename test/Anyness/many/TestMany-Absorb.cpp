@@ -38,9 +38,10 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
+   , Types<Many, int,    ScopedElement<int>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Many, Text,   ScopedElement<Text>>
-   , Types<Many, int,    ScopedElement<int>>
    , Types<Many, Many,   ScopedElement<Many>>
    , Types<Many, RT,     ScopedElement<RT>>
    , Types<Many, char,   ScopedElement<char>>
@@ -163,7 +164,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          Many_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
          Many_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
          Many_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
-         Many_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
+
+         if constexpr (Managed) {
+            // Entries are still propagated when absorbed
+            Many_CheckState_ContainsOne(pack_disowned,  Refer(originalElement), 3);
+         }
+         else Many_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
+
+         if constexpr (CT::Referenced<Decay<E>>) {
+            REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
+         }
 
          BenchmarkManyStd("Empty/AbsorbConstructor(" + NameOf<E>() + ")", 30, 100,
             T temp,                                         (new (&temp) T{Absorb, piecewise1}),
@@ -182,6 +192,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                static_assert(not ::std::same_as<E, RT>);
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             }
+
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Refer(element));
 
@@ -206,21 +217,32 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                auto misabsorb_refer = [&](auto& a, int uses) {
                   REQUIRE_THROWS(a.AssignAbsorb(*element));
 
-                  if (uses == 0)
-                     Many_CheckState_DisownedFull<E>(a);
-                  else
-                     Many_CheckState_OwnedFull<E>(a);
                   Many_CheckState_ContainsOne(a, Refer(originalElement), uses);
                };
 
                misabsorb_refer(pack_referred1, 3);
+               Many_CheckState_OwnedFull<E>(pack_referred1);
+
                misabsorb_refer(pack_referred2, 3);
+               Many_CheckState_OwnedFull<E>(pack_referred2);
+
                misabsorb_refer(pack_copied,    1);
+               Many_CheckState_OwnedFull<E>(pack_copied);
+
                misabsorb_refer(pack_cloned,    1);
+               Many_CheckState_OwnedFull<E>(pack_cloned);
+
                misabsorb_refer(pack_moved1,    1);
+               Many_CheckState_OwnedFull<E>(pack_moved1);
+
                misabsorb_refer(pack_moved2,    1);
+               Many_CheckState_OwnedFull<E>(pack_moved2);
+
                misabsorb_refer(pack_abandoned, 1);
-               misabsorb_refer(pack_disowned,  0);
+               Many_CheckState_OwnedFull<E>(pack_abandoned);
+
+               misabsorb_refer(pack_disowned,  3);
+               Any_CheckState_DisownedFull<E>(pack_disowned);
                return;
             }
 
@@ -678,7 +700,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          absorb_construct_refer(pack_moved1,    pack_moved1,    3);
          absorb_construct_refer(pack_moved2,    pack_moved2,    3);
          absorb_construct_refer(pack_abandoned, pack_abandoned, 3);
-         absorb_construct_refer(pack_disowned,  pack_referred1, 0);
+         absorb_construct_refer(pack_disowned,  pack_referred1, 5);
       }
       
       WHEN("Absorbed by move") {

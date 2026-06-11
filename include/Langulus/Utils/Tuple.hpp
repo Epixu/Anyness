@@ -144,7 +144,7 @@ namespace Langulus::Inner
    struct cons_alignment<Align, Acc, std::tuple<Head, Tail...>>
       : cons_alignment<
       Align,
-      Tif<alignof_indexed<Head>::value == Align, Cons<Head, Acc>, Acc>,
+      ::std::conditional_t<alignof_indexed<Head>::value == Align, Cons<Head, Acc>, Acc>,
       std::tuple<Tail...>> {};
    
    template<size_t Align, class Acc, class List>
@@ -252,7 +252,7 @@ namespace Langulus
    /// Please add it to 'std', please!                                        
    template<class...T>
    struct compact_tuple : private Inner::OptimalStorage<T...> {
-      using CTTI_Tuple   = Yes<>;
+      using CTTI_Tuple   = ::std::true_type;
       using storage_type = Inner::OptimalStorage<T...>;
       using to_interface = Inner::MapToInterface<T...>;
       using to_storage   = Inner::MapToStorage<T...>;

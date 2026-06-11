@@ -752,17 +752,19 @@ namespace Langulus::Anyness
          decltype(auto) source = DeintCast(from);
          using I = IntentOf(from);
 
-         if (source.IsEmpty()) {
-            // If source is empty, we copy only the type and the        
-            // unconstrained state. Everything else is defaulted.       
-            ComponentList::ForEach([&self,&from]<class C>{
-               if constexpr (requires { &C::template GetState<SELF>; }
-                         or  requires { &C::template GetType<0, SELF>; }) {
-                  if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
-               }
-               else if_available_gcc(C::template ConstructDefault<SELF>)();
-            });
-            return;
+         if constexpr (not CT::Handle<SELF>) {
+            if (source.IsEmpty()) {
+               // If source is empty, we copy only the type and the     
+               // unconstrained state. Everything else is defaulted.    
+               ComponentList::ForEach([&self,&from]<class C>{
+                  if constexpr (requires { &C::template GetState<SELF>; }
+                           or  requires { &C::template GetType<0, SELF>; }) {
+                     if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
+                  }
+                  else if_available_gcc(C::template ConstructDefault<SELF>)();
+               });
+               return;
+            }
          }
 
          ComponentList::ForEach([&self,&from]<class C>{

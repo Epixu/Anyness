@@ -6,13 +6,14 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Container.hpp"
-#include "../states/Typed.hpp"
+#include "../Component.hpp"
+#include <Langulus/IntentOf.hpp>
+/*#include "../states/Typed.hpp"
 #include "../states/Past.hpp"
 #include "../states/Future.hpp"
 #if LANGULUS(DEBUG)
    #include "../states/Tracked.hpp"
-#endif
+#endif*/
 #include <Langulus/Sequence.hpp>
 
 
