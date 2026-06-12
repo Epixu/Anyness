@@ -130,6 +130,8 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    using E2 = typename TestType::template At<3>;
    using ScopedE1 = typename TestType::template At<2>;
    using ScopedE2 = typename TestType::template At<4>;
+   constexpr bool Managed = ScopedE1::Managed;
+   static_assert(ScopedE1::Managed == ScopedE2::Managed);
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              

@@ -136,17 +136,27 @@ void Map_Helper_TestType(C const& map) {
 }
 
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
-void Map_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
+void Map_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
    REQUIRE(lhs.GetCount() == rhs.GetCount());
+
    if (not lhs.IsEmpty())
-      REQUIRE(lhs.GetRaw() == rhs.GetRaw()); // not really a requirement when containers are empty
+      REQUIRE(lhs.GetRaw() == rhs.GetRaw());
+
    REQUIRE(lhs.IsKeyExact(rhs.GetKeyType()));
    REQUIRE(lhs.IsValExact(rhs.GetValType()));
    REQUIRE(lhs == rhs);
    REQUIRE(lhs.IsKeyDeep() == rhs.IsKeyDeep());
    REQUIRE(lhs.IsValDeep() == rhs.IsValDeep());
-   REQUIRE(lhs.IsConstant() == rhs.IsConstant());
-   REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
+
+   if (match_constness)
+      REQUIRE(lhs.IsConstant() == rhs.IsConstant());
+
+   if constexpr (requires { lhs.GetUnconstrainedState(); rhs.GetUnconstrainedState(); })
+      REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
+   else if constexpr (requires { lhs.GetUnconstrainedState(); })
+      REQUIRE(lhs.IsDefaultState());
+   else if constexpr (requires { rhs.GetUnconstrainedState(); })
+      REQUIRE(rhs.IsDefaultState());
 }
 
 ///                                                                           
@@ -179,7 +189,7 @@ void Map_CheckState_Default(C const& map, bool typed = false) {
    REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
    REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
    REQUIRE      (map.IsKeyConstant());
-   REQUIRE      (map.IsValConstant());
+   REQUIRE_FALSE(map.IsValConstant());
    REQUIRE_FALSE(map.IsValid());
    REQUIRE_FALSE(map.GetAllocation());
    REQUIRE      (map.IsEmpty());
@@ -251,14 +261,15 @@ void Map_CheckState_DisownedFull(C const& map) {
    REQUIRE      (map.IsKeyConstant());
    REQUIRE      (map.IsValConstant());
    REQUIRE      (map.IsValid());
-   REQUIRE_FALSE(map.GetAllocation());
+   REQUIRE      (map.GetAllocation());
    REQUIRE_FALSE(map.IsEmpty());
    REQUIRE      (map.GetCount() > 0);
-   REQUIRE      (map.GetReserved() > 0); // Many keeps its reserved count as a member, so it's allowed to be absorbed and passed around
-   REQUIRE      (map.GetUses() == 0);
+   REQUIRE      (map.GetReserved() > 0);
+   REQUIRE      (map.GetUses() > 0);
    REQUIRE      (map.GetRaw());
    REQUIRE      (map);
    REQUIRE_FALSE(not map);
+   REQUIRE      (map != C{});
 
    //TODO Many_CheckState_DisownedFull<K>(map.GetKeys());
    //TODO Many_CheckState_DisownedFull<V>(map.GetVals());
@@ -266,7 +277,7 @@ void Map_CheckState_DisownedFull(C const& map) {
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_Abandoned(C const& map) {
-   REQUIRE_FALSE(map.GetAllocation());
+   REQUIRE(map.IsDisowned());
 
    //TODO Many_CheckState_Abandoned<K>(map.GetKeys());
    //TODO Many_CheckState_Abandoned<V>(map.GetVals());

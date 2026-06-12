@@ -516,11 +516,11 @@ namespace Langulus::Anyness::Component
       ///      so specify it here                                             
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void BranchOut(this C& self, Count<C> newReserve) {
-         if (self.template IsEmpty<SID>()) {
+         /*if (self.template IsEmpty<SID>()) {
             // Empty - do a fresh allocation                            
             ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
             return;
-         }
+         }*/
          
          if (not self.IsDisowned() and self.template GetUses<SID>() == 1) {
             // No need to branch out - reuse the current allocation     
@@ -529,10 +529,17 @@ namespace Langulus::Anyness::Component
             return;
          }
 
-         // Branch out by performing a shallow clone                    
-         const C backup {Abandon{self}};
-         if_available(self.DisableDisowned()); //TODO redundant?
-         ThisCom::ConstructFrom(Copy(backup), newReserve);
+         if (self.template IsEmpty<SID>()) {
+            // Empty - do a fresh allocation                            
+            ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
+            return;
+         }
+         else {
+            // Branch out by performing a shallow clone                 
+            const C backup {Abandon{self}};
+            if_available(self.DisableDisowned()); //TODO redundant?
+            ThisCom::ConstructFrom(Copy(backup), newReserve);
+         }
       }
    };
 

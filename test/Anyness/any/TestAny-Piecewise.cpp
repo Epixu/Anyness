@@ -846,10 +846,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
 
             if constexpr (CT::Sparse<E>) {
                auto entry = *absorbed.GetEntries();
-               if ((entry_refs) == 0)
-                  REQUIRE(entry == nullptr);
                if (entry)
-                  REQUIRE(entry->GetUses() == (entry_refs));
+                  REQUIRE(entry->GetUses() == entry_refs);
                if constexpr (CT::Referenced<Decay<E>>) {
                   auto e = absorbed.template As<E>();
                   REQUIRE(DenseCast(e).GetReferences() == indi_refs);
@@ -864,7 +862,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
          absorb_construct_copy(pack_moved1,    managed_sparse ? 8 : 1, 9);
          absorb_construct_copy(pack_moved2,    managed_sparse ? 8 : 1, 9);
          absorb_construct_copy(pack_abandoned, managed_sparse ? 8 : 1, 9);
-         absorb_construct_copy(pack_disowned,  0, 9);
+         absorb_construct_copy(pack_disowned,  managed_sparse ? 8 : 3, 9);
       }
       
       WHEN("Absorbed by clone") {

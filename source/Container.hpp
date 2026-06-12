@@ -746,8 +746,8 @@ namespace Langulus::Anyness
       /// Fallback to ConstructDefault otherwise.                             
       template<CT::Container SELF, CT::Container FROM>
       constexpr void Absorb(this SELF& self, FROM&& from) {
-         /*static_assert(CT::ContainsOne<SELF> or CT::Contiguous<SELF> == CT::Contiguous<FROM>,
-            "You can't absorb from containers with different contiguousness");*/
+         /*static_assert(CT::Handle<SELF> or CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+            "You can't absorb from containers with different contiguousness");*/ //TODO causes circular dependency due to ::std::contiguous_range and IterateRange
 
          decltype(auto) source = DeintCast(from);
          using I = IntentOf(from);

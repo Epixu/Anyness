@@ -97,8 +97,8 @@ void Set_Helper_TestType(const C& set) {
 }
 
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
-void Set_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
-   Many_Helper_TestSame(lhs, rhs);
+void Set_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
+   Many_Helper_TestSame(lhs, rhs, match_constness);
 }
 
 ///                                                                           

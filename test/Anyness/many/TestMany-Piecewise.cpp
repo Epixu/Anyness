@@ -757,13 +757,6 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             Many_CheckState_DisownedFull<E>(absorbed);
             Many_Helper_TestSame(absorbed, a, false);
             REQUIRE(absorbed.IsConstant());
-            /*REQUIRE(absorbed.GetRaw() == a.GetRaw());
-            REQUIRE(absorbed.IsExact(a.GetType()));
-            REQUIRE(absorbed == a);
-            REQUIRE(absorbed.IsDeep() == a.IsDeep());
-            REQUIRE(absorbed.IsConstant() != a.IsConstant());
-            REQUIRE(absorbed.GetUnconstrainedState() == a.GetUnconstrainedState());
-            REQUIRE(absorbed.GetUses() == 0);*/
          };
 
          absorb_construct_disown(pack_referred1);
@@ -778,7 +771,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int entry_refs, int indi_refs) { //TODO this test is probably wrong - check TestSet-Absorb for comparison
+         auto absorb_construct_copy = [&](T& a, int entry_refs, int indi_refs) {
             T absorbed {Copy {a}};
 
             Many_CheckState_OwnedFull<E>(a);
@@ -792,10 +785,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
 
             if constexpr (CT::Sparse<E>) {
                auto entry = *absorbed.GetEntries();
-               if ((entry_refs) == 0)
-                  REQUIRE(entry == nullptr);
                if (entry)
-                  REQUIRE(entry->GetUses() == (entry_refs));
+                  REQUIRE(entry->GetUses() == entry_refs);
                if constexpr (CT::Referenced<Decay<E>>) {
                   auto e = absorbed.template As<E>();
                   REQUIRE(DenseCast(e).GetReferences() == indi_refs);
@@ -810,7 +801,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          absorb_construct_copy(pack_moved1,    managed_sparse ? 8 : 1, 9);
          absorb_construct_copy(pack_moved2,    managed_sparse ? 8 : 1, 9);
          absorb_construct_copy(pack_abandoned, managed_sparse ? 8 : 1, 9);
-         absorb_construct_copy(pack_disowned,  0, 9);
+         absorb_construct_copy(pack_disowned,  managed_sparse ? 8 : 1, 9);
       }
       
       WHEN("Absorbed by clone") {
@@ -1114,9 +1105,6 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
-         /*REQUIRE(pack1 == pack2);
-         REQUIRE(movable != pack1);
-         REQUIRE(movable == T {});*/
       }
 
       WHEN("Move-assign pack1 in pack2 (alt)") {
@@ -1131,9 +1119,6 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
-         /*REQUIRE(pack1 == pack2);
-         REQUIRE(movable != pack1);
-         REQUIRE(movable == T {});*/
       }
 
       WHEN("Disown-assign pack1 in pack2") {
@@ -1146,10 +1131,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 2);
          REQUIRE(memory2.GetUses() == 1);
-         //REQUIRE(pack1 == pack2);
          REQUIRE(pack2 == memory1);
          REQUIRE(pack2 != memory2);
-         //REQUIRE(pack2.GetAllocation() == nullptr);
          REQUIRE(pack2.CompareOneEqual(*e1));
       }
 

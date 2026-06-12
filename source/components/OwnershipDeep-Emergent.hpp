@@ -1046,6 +1046,7 @@ namespace Langulus::Anyness::Component
          const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
          const auto entries = self.template GetEntriesInner<SID>();
+         constexpr bool sought = not CT::Disowned<I>;
 
          if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 
@@ -1064,7 +1065,7 @@ namespace Langulus::Anyness::Component
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (CT::OwnedStrong<H> and I::IsMoved()) {
+                  if constexpr (CT::OwnedDeepStrong<H> and I::IsMoved()) {
                      // We are moving/abandoning, and we have to make   
                      // sure that source entries are zeroes, because    
                      // otherwise they will be dereferenced when H goes 
@@ -1076,12 +1077,12 @@ namespace Langulus::Anyness::Component
                }
             }
 
-            if constexpr (not I::IsMoved()) {
-               // We are not moving, so we have to reference all        
-               // elements.                                             
-               ThisCom::template KeepElementDeep<false, SID>();
+            if constexpr (not I::IsMoved() or not requires { rhs.template GetEntriesInner<SID>(); }) {
+               // We are not moving or rhs is emergent, so we have to   
+               // reference all elements.                               
+               ThisCom::template KeepElementDeep<sought, SID>();
             }
-            else if constexpr (CT::OwnedStrong<H> and REF_INDIVIDUAL) {
+            else if constexpr (CT::OwnedDeepStrong<H> and REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
                // are referenced (even if they have no corresponding    
                // entry), we need to zero the source pointers, so that  
@@ -1118,7 +1119,6 @@ namespace Langulus::Anyness::Component
             // entries will be sought and referenced as well, unless    
             // inserted pointer is disowned.                            
             memset(DecvqAllCast(entries), 0, entries_size);
-            constexpr bool sought = not CT::Disowned<I>;
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (CT::CustomPointer<T>)
                   ThisCom::template KeepElementDeepCustomPointers<sought, SID>();

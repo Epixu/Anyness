@@ -658,6 +658,12 @@ namespace Langulus::Fractalloc
             static_cast<int>(stats.mBytesAllocatedByFrontend) - static_cast<int>(with.mBytesAllocatedByFrontend));
       }
 
+      if (stats.mEntries != with.mEntries) {
+         Logger::Info(Logger::Purple,
+            "Entries difference: ", static_cast<int>(stats.mEntries) - static_cast<int>(with.mEntries)
+         );
+      }
+
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       if (stats.mDataDefinitions != with.mDataDefinitions) {
          const auto scope = Logger::InfoScoped(Logger::Purple,
@@ -679,12 +685,6 @@ namespace Langulus::Fractalloc
 
          for (auto& type : gTypePoolChain)
             type.second.DiffPools(with, type.first);
-      }
-
-      if (stats.mEntries != with.mEntries) {
-         const auto scope = Logger::InfoScoped(Logger::Purple,
-            "Entries difference: ", static_cast<int>(stats.mEntries) - static_cast<int>(with.mEntries)
-         );
       }
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)

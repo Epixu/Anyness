@@ -126,7 +126,7 @@ namespace Langulus::Fractalloc
 
          if (pool->mNextEntry) {
             const auto escope = Logger::Section("Entries: ",
-               Logger::PushGreen, pool->mNextEntry, Logger::Pop
+               Logger::PushGreen, pool->mValidEntries, " (of max reached ", pool->mNextEntry, ")", Logger::Pop
             );
 
             size_t consecutiveEmpties = 0;

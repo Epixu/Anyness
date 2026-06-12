@@ -130,6 +130,62 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
    
+   GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(*element2);
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Refer(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (copied), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Copy(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (cloned), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Clone(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (move), and then destroyed") {
+      const ScopedE element1{555};
+      ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(::std::move(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (move using intent), and then destroyed") {
+      const ScopedE element1{555};
+      ScopedE element2{112};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Move(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (abandon), and then destroyed") {
+      const ScopedE element1{555};
+      ScopedE element2{112};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Abandon(*element2));
+   }
+
+   GIVEN("Piecewise-constructed container, assigned (disown), and then destroyed") {
+      const ScopedE element1{555};
+      const ScopedE element2{111};
+      T piecewise1{Piecewise, *element1};
+      piecewise1.Assign(Disown(*element2));
+   }
+
    GIVEN("Absorb-constructed container") {
       const ScopedE originalElement {556};
       const ScopedE element {555};
@@ -438,7 +494,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          assign_move(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed moved container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_move = [&](T& a) {
@@ -513,7 +569,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          assign_disown(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed disowned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_disown = [&](T& a) {
@@ -803,7 +859,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) {
+         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs, int indi_refs) {
             T absorbed {Copy {a}};
 
             REQUIRE(a.GetUses() == uses);
@@ -815,48 +871,40 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             if constexpr (CT::Sparse<E>) {
                auto entry = *absorbed.GetEntries();
-               if (entry_refs == 0)
-                  REQUIRE(entry == nullptr);
 
-               if (entry) {
+               if (entry)
                   REQUIRE(entry->GetUses() == entry_refs);
-                  if constexpr (CT::Referenced<Decay<E>>) {
-                     auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == entry_refs);
-                  }
-               }
-               else {
-                  if constexpr (CT::Referenced<Decay<E>>) {
-                     auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == 9);
-                  }
+               
+               if constexpr (CT::Referenced<Decay<E>>) {
+                  auto e = absorbed.template As<E>();
+                  REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
             }
          };
 
-         absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3);
+         absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3, 9);
          Many_CheckState_OwnedFull<E>(pack_referred1);
 
-         absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3);
+         absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3, 9);
          Many_CheckState_OwnedFull<E>(pack_referred2);
 
-         absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3);
+         absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3, 9);
          Many_CheckState_OwnedFull<E>(pack_copied);
 
-         absorb_construct_copy(pack_cloned,    1, 2);
+         absorb_construct_copy(pack_cloned,    1, 2, 2);
          Many_CheckState_OwnedFull<E>(pack_cloned);
 
-         absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1);
+         absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1, 9);
          Many_CheckState_OwnedFull<E>(pack_moved1);
 
-         absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1);
+         absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1, 9);
          Many_CheckState_OwnedFull<E>(pack_moved2);
 
-         absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1);
+         absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1, 9);
          Many_CheckState_OwnedFull<E>(pack_abandoned);
 
-         absorb_construct_copy(pack_disowned,  3, managed_sparse ? 9 : 0);
-         Any_CheckState_DisownedFull<E>(pack_disowned);
+         absorb_construct_copy(pack_disowned,  3, managed_sparse ? 9 : 0, 9);
+         Many_CheckState_DisownedFull<E>(pack_disowned);
       }
       
       WHEN("Absorbed by clone") {
