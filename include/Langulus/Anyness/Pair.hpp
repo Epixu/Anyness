@@ -87,15 +87,14 @@ namespace Langulus::Anyness
       constexpr ~Pair() noexcept {
          this->Destroy();
       }
-
-      constexpr Pair(auto&& a1, auto&& a2) {
-         this->template EmplaceConstruct<0>(LglsFwd(a1));
-         this->template EmplaceConstruct<1>(LglsFwd(a2));
+      
+      /// Construction that either absorbs the provided pair                  
+      constexpr Pair(CT::Pair auto&& p) {
+         this->Absorb(LglsFwd(p));
       }
       
-      /// Construction that absorbs the provided pair                         
-      constexpr Pair(Inner::Absorb, CT::Pair auto&& pair) {
-         this->Absorb(LglsFwd(pair));
+      constexpr Pair(Inner::Absorb, CT::Pair auto&& p) {
+         this->Absorb(LglsFwd(p));
       }
       
       /// Construction that emplaces A inside, leaves value as default        
@@ -103,7 +102,12 @@ namespace Langulus::Anyness
          this->template EmplaceConstruct<0>(LglsFwd(a1));
          this->template EmplaceDefault<1>();
       }
-      
+
+      constexpr Pair(auto&& a1, auto&& a2) {
+         this->template EmplaceConstruct<0>(LglsFwd(a1));
+         this->template EmplaceConstruct<1>(LglsFwd(a2));
+      }
+
       /// Assignment                                                          
       constexpr Pair& operator = (Pair const& other) {
          return this->AssignAbsorb(Refer(other));

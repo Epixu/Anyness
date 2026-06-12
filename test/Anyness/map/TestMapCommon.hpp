@@ -127,8 +127,8 @@ void Map_CheckState_DisownedFull(C const& pack) {
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Map_CheckState_Abandoned(C const& map) {
-   REQUIRE(map.IsDisowned());
+void Map_CheckState_Abandoned(C const& pack) {
+   Pair_CheckState_Abandoned<K, V>(pack);
 
    //TODO Many_CheckState_Abandoned<K>(map.GetKeys());
    //TODO Many_CheckState_Abandoned<V>(map.GetVals());
