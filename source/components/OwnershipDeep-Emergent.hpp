@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "source/Component.hpp"
 #include <Langulus/Assume.hpp>
 #include <Langulus/Allocator.hpp>
 #include <Langulus/MetaOf.hpp>
@@ -446,18 +447,6 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(not self.IsDisowned(),
             "Can't destroy anything in a container without ownership");
 
-         /*static_assert(CT::ContainsOne<C>,
-            "Destroying only first element in a container with many. GetHandle() first?");
-
-         if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.template GetAllocation<SID>(),
-               "Can't destroy anything in a container without ownership");
-            LglsAssumeDev(not FORCE_DESTROY or self.template GetUses<SID>() == 1,
-               "Can't destroy data used from multiple locations");
-            if (self.template IsEmpty<SID>())
-               return;
-         }*/
-
          using H = Decay<decltype(LglsFake(DecideHandle<C>).template PickDimension<SID>())>;
          if constexpr (CT::TypeErased<C>) {
             //                                                          
@@ -466,83 +455,70 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(T.IsSparse(),
                "Don't call DestroyElementDeepStandardPointers if container isn't sparse");
 
-            //if (T.IsSparse()) { //TODO this branch no longer required
-               auto entries = self.template GetEntriesInner<SID>();
-               if (not entries)
-                  return;
+            auto entries = self.template GetEntriesInner<SID>();
+            if (not entries)
+               return;
 
-               // If T is Text**, subT is Text*                         
-               const auto subT = T.GetDeptr();
-               // If T is Text**, ptr becomes Text**                    
-               const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
-               LglsAssumeDevAndOptimize(ptr, "Null pointer");
+            // If T is Text**, subT is Text*                            
+            const auto subT = T.GetDeptr();
+            // If T is Text**, ptr becomes Text**                       
+            const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
+            LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
-               if (*entries and 1 == (*entries)->GetUses()) {
-                  if (subT.IsSparse()) {
-                     // Pointer to pointer.                             
-                     // Destroy all nested indirection layers.          
-                     if (auto subEntry = entries + 1) {
-                        H temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
-                     }
+            if (*entries and 1 == (*entries)->GetUses()) {
+               if (subT.IsSparse()) {
+                  // Pointer to pointer.                                
+                  // Destroy all nested indirection layers.             
+                  if (auto subEntry = entries + 1) {
+                     H temp {ptr, subEntry, subT};
+                     temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                   }
-                  else if (auto destructor = subT.GetDestructor()) {
-                     // Pointer to a complete, destroyable dense.       
-                     // Call the destructor.                            
-                     if constexpr (REF_INDIVIDUAL) {
-                        if (const auto referencer = subT.GetReferencer()) {
-                           if (referencer(ptr, -1) == 0)
-                              destructor(ptr);
-                        }
-                        else destructor(ptr);
+               }
+               else if (auto destructor = subT.GetDestructor()) {
+                  // Pointer to a complete, destroyable dense.          
+                  // Call the destructor.                               
+                  if constexpr (REF_INDIVIDUAL) {
+                     if (const auto referencer = subT.GetReferencer()) {
+                        if (referencer(ptr, -1) == 0)
+                           destructor(ptr);
                      }
                      else destructor(ptr);
                   }
+                  else destructor(ptr);
                }
-               else {
-                  if (subT.IsSparse()) {
-                     // Pointer to pointer.                             
-                     // Dereference all indirection layers.             
-                     if (auto subEntry = entries + 1) {
-                        H temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
-                     }
-                  }
-                  else if constexpr (REF_INDIVIDUAL) {
-                     if (const auto referencer = subT.GetReferencer()) {
-                        // This element occurs in more than one place.  
-                        // We're not allowed to deallocate the memory   
-                        // behind it, but we must call destructors if T 
-                        // is referencable and its individual references
-                        // have reached 0. This can happen when hive    
-                        // elements are dereferenced, for example.      
-                        if (referencer(ptr, -1) == 0)
-                           subT.GetDestructor()(ptr);
-                     }
+            }
+            else {
+               if (subT.IsSparse()) {
+                  // Pointer to pointer.                                
+                  // Dereference all indirection layers.                
+                  if (auto subEntry = entries + 1) {
+                     H temp {ptr, subEntry, subT};
+                     temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                   }
                }
+               else if constexpr (REF_INDIVIDUAL) {
+                  if (const auto referencer = subT.GetReferencer()) {
+                     // This element occurs in more than one place.     
+                     // We're not allowed to deallocate the memory      
+                     // behind it, but we must call destructors if T    
+                     // is referencable and its individual references   
+                     // have reached 0. This can happen when hive       
+                     // elements are dereferenced, for example.         
+                     if (referencer(ptr, -1) == 0)
+                        subT.GetDestructor()(ptr);
+                  }
+               }
+            }
 
-               // Deallocate or dereference                             
-               if (*entries) {
-                  auto& mutable_entries = DecvqAllCast(*entries);
-                  if (1 == (*entries)->GetUses())
-                     Allocator::Deallocate(mutable_entries);
-                  else
-                     mutable_entries->AddRef(-1);
-                  //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
-               }
-            //}
-            /*else if constexpr (FORCE_DESTROY) {
-               if (const auto destructor = T.GetDestructor()) {
-                  // Call destructor of dense element                   
-                  const auto ptr = self.template GetRaw<SID>();
-                  if constexpr (REF_INDIVIDUAL) {
-                     IF_SAFE(if (const auto referencer = T.GetReferencer())
-                        referencer(ptr, -1));
-                  }
-                  destructor(ptr);
-               }
-            }*/
+            // Deallocate or dereference                                
+            if (*entries) {
+               auto& mutable_entries = DecvqAllCast(*entries);
+               if (1 == (*entries)->GetUses())
+                  Allocator::Deallocate(mutable_entries);
+               else
+                  mutable_entries->AddRef(-1);
+               //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
+            }
          }
          else {
             //                                                          
@@ -551,69 +527,60 @@ namespace Langulus::Anyness::Component
             static_assert(CT::Sparse<T>,
                "Don't call DestroyElementDeepStandardPointers if container isn't sparse");
 
-            //if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
-               using DT = Deptr<T>;
-               auto entries = self.template GetEntriesInner<SID>();
-               if (not entries)
-                  return;
+            using DT = Deptr<T>;
+            auto entries = self.template GetEntriesInner<SID>();
+            if (not entries)
+               return;
 
-               auto& ptr = *self.template GetRawAs<T, SID>();
-               if (not ptr)
-                  return;
+            auto& ptr = *self.template GetRawAs<T, SID>();
+            if (not ptr)
+               return;
 
-               if (*entries and 1 == (*entries)->GetUses()) {
-                  if constexpr (CT::Sparse<DT>) {
-                     // Pointer to pointer.                             
-                     // Destroy all nested indirection layers.          
-                     typename H::Denser temp{ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
-                  }
-                  else if constexpr (CT::Destroyable<DT>) {
-                     // Pointer to a complete, destroyable dense.       
-                     // Call the destructor.                            
-                     if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
-                        if (ptr->Reference(-1) == 0)
-                           ptr->~DT();
-                     }
-                     else ptr->~DT();
-                  }
+            if (*entries and 1 == (*entries)->GetUses()) {
+               if constexpr (CT::Sparse<DT>) {
+                  // Pointer to pointer.                                
+                  // Destroy all nested indirection layers.             
+                  typename H::Denser temp{ptr, entries + 1};
+                  temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                }
-               else {
-                  if constexpr (CT::Sparse<DT>) {
-                     // Pointer to pointer.                             
-                     // Destroy all nested indirection layers.          
-                     typename H::Denser temp {ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
-                  }
-                  else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
-                     // This element occurs in more than one place.     
-                     // We're not allowed to deallocate the memory      
-                     // behind it, but we must call destructors if T is 
-                     // referencable and its individual references have 
-                     // reached 0. This can happen when hive elements   
-                     // are dereferenced.                               
+               else if constexpr (CT::Destroyable<DT>) {
+                  // Pointer to a complete, destroyable dense.          
+                  // Call the destructor.                               
+                  if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
                      if (ptr->Reference(-1) == 0)
                         ptr->~DT();
                   }
+                  else ptr->~DT();
                }
+            }
+            else {
+               if constexpr (CT::Sparse<DT>) {
+                  // Pointer to pointer.                                
+                  // Destroy all nested indirection layers.             
+                  typename H::Denser temp {ptr, entries + 1};
+                  temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
+               }
+               else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+                  // This element occurs in more than one place.        
+                  // We're not allowed to deallocate the memory         
+                  // behind it, but we must call destructors if T is    
+                  // referencable and its individual references have    
+                  // reached 0. This can happen when hive elements      
+                  // are dereferenced.                                  
+                  if (ptr->Reference(-1) == 0)
+                     ptr->~DT();
+               }
+            }
 
-               // Deallocate or dereference                             
-               if (*entries) {
-                  auto& mutable_entries = DecvqAllCast(*entries);
-                  if (1 == (*entries)->GetUses())
-                     Allocator::Deallocate(mutable_entries);
-                  else
-                     mutable_entries->AddRef(-1);
-                  //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
-               }
-            //}
-            /*else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
-               // Call destructor of dense element                      
-               auto& element = self.Get();
-               IF_SAFE(if constexpr (REF_INDIVIDUAL and CT::Referenced<T>)
-                  element.Reference(-1));
-               element.~T();
-            }*/
+            // Deallocate or dereference                                
+            if (*entries) {
+               auto& mutable_entries = DecvqAllCast(*entries);
+               if (1 == (*entries)->GetUses())
+                  Allocator::Deallocate(mutable_entries);
+               else
+                  mutable_entries->AddRef(-1);
+               //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
+            }
          }
       }
 
@@ -649,77 +616,64 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(T.IsSparse(),
                "Don't call DestroyElementDeepStandardPointersEmergent if container isn't sparse");
 
-            //if (T.IsSparse()) { //TODO this branch no longer required
-               const auto subT = T.GetDeptr();
-               const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
-               LglsAssumeDevAndOptimize(ptr, "Null pointer");
+            const auto subT = T.GetDeptr();
+            const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
+            LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               entry = Allocator::Find(ptr);
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            entry = Allocator::Find(ptr);
 
-               if (entry and 1 == entry->GetUses()) {
-                  if (subT.IsSparse()) {
-                     // Pointer to pointer.                             
-                     // Destroy all nested indirection layers.          
-                     H temp {ptr, nullptr, subT};
-                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
-                  }
-                  else if (auto destructor = subT.GetDestructor()) {
-                     // Pointer to a complete, destroyable dense.       
-                     // Call the destructor.                            
-                     if constexpr (REF_INDIVIDUAL) {
-                        if (const auto referencer = subT.GetReferencer()) {
-                           if (referencer(ptr, -1) == 0)
-                              destructor(ptr);
-                        }
-                        else destructor(ptr);
+            if (entry and 1 == entry->GetUses()) {
+               if (subT.IsSparse()) {
+                  // Pointer to pointer.                                
+                  // Destroy all nested indirection layers.             
+                  H temp {ptr, nullptr, subT};
+                  temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
+               }
+               else if (auto destructor = subT.GetDestructor()) {
+                  // Pointer to a complete, destroyable dense.          
+                  // Call the destructor.                               
+                  if constexpr (REF_INDIVIDUAL) {
+                     if (const auto referencer = subT.GetReferencer()) {
+                        if (referencer(ptr, -1) == 0)
+                           destructor(ptr);
                      }
                      else destructor(ptr);
                   }
+                  else destructor(ptr);
                }
-               else {
-               #endif
-                  if (subT.IsSparse()) {
-                     // Pointer to pointer.                             
-                     // Dereference all indirection layers.             
-                     H temp {ptr, nullptr, subT};
-                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
-                  }
-                  else if constexpr (REF_INDIVIDUAL) {
-                     if (const auto referencer = subT.GetReferencer()) {
-                        // This element occurs in more than one place.  
-                        // We're not allowed to deallocate the memory   
-                        // behind it, but we must call destructors if T 
-                        // is referencable and its individual references
-                        // have reached 0. This can happen when hive    
-                        // elements are dereferenced, for example.      
-                        if (referencer(ptr, -1) == 0)
-                           subT.GetDestructor()(ptr);
-                     }
-                  }
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            }
+            else {
+            #endif
+               if (subT.IsSparse()) {
+                  // Pointer to pointer.                                
+                  // Dereference all indirection layers.                
+                  H temp {ptr, nullptr, subT};
+                  temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
                }
+               else if constexpr (REF_INDIVIDUAL) {
+                  if (const auto referencer = subT.GetReferencer()) {
+                     // This element occurs in more than one place.     
+                     // We're not allowed to deallocate the memory      
+                     // behind it, but we must call destructors if T    
+                     // is referencable and its individual references   
+                     // have reached 0. This can happen when hive       
+                     // elements are dereferenced, for example.         
+                     if (referencer(ptr, -1) == 0)
+                        subT.GetDestructor()(ptr);
+                  }
+               }
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            }
 
-               // Deallocate or dereference                             
-               if (entry) {
-                  if (1 == entry->GetUses())
-                     Allocator::Deallocate(DecvqAllCast(entry));
-                  else
-                     DecvqAllCast(entry)->AddRef(-1);
-               }
-               #endif
-            //}
-            /*else if constexpr (FORCE_DESTROY) {
-               if (const auto destructor = T.GetDestructor()) {
-                  // Call destructor of dense element                   
-                  const auto ptr = self.template GetRaw<SID>();
-                  if constexpr (REF_INDIVIDUAL) {
-                     IF_SAFE(if (const auto referencer = T.GetReferencer())
-                        referencer(ptr, -1));
-                  }
-                  destructor(ptr);
-               }
-            }*/
+            // Deallocate or dereference                                
+            if (entry) {
+               if (1 == entry->GetUses())
+                  Allocator::Deallocate(DecvqAllCast(entry));
+               else
+                  DecvqAllCast(entry)->AddRef(-1);
+            }
+            #endif
          }
          else {
             //                                                          
@@ -728,69 +682,60 @@ namespace Langulus::Anyness::Component
             static_assert(CT::Sparse<T>,
                "Don't call DestroyElementDeepStandardPointersEmergent if container isn't sparse");
 
-            //if constexpr (CT::Sparse<T>) { //TODO this branch no longer required
-               using DT = Deptr<T>;
-               auto& ptr = *self.template GetRawAs<T, SID>();
-               if (not ptr)
-                  return;
+            using DT = Deptr<T>;
+            auto& ptr = *self.template GetRawAs<T, SID>();
+            if (not ptr)
+               return;
 
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               entry = Allocator::Find(ptr);
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            entry = Allocator::Find(ptr);
 
-               if (entry and 1 == entry->GetUses()) {
-                  if constexpr (CT::Sparse<DT>) {
-                     // Pointer to pointer.                             
-                     // Destroy all nested indirection layers.          
-                     typename H::Denser temp{ptr, nullptr};
-                     temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
-                  }
-                  else if constexpr (CT::Destroyable<DT>) {
-                     // Pointer to a complete, destroyable dense.       
-                     // Call the destructor.                            
-                     if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
-                        if (ptr->Reference(-1) == 0)
-                           ptr->~DT();
-                     }
-                     else ptr->~DT();
-                  }
-               }
-               else {
-               #endif
+            if (entry and 1 == entry->GetUses()) {
                if constexpr (CT::Sparse<DT>) {
-                  // Pointer to pointer.                             
-                  // Destroy all nested indirection layers.          
-                  typename H::Denser temp {ptr, nullptr};
+                  // Pointer to pointer.                                
+                  // Destroy all nested indirection layers.             
+                  typename H::Denser temp{ptr, nullptr};
                   temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
                }
-               else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
-                  // This element occurs in more than one place.     
-                  // We're not allowed to deallocate the memory      
-                  // behind it, but we must call destructors if T is 
-                  // referencable and its individual references have 
-                  // reached 0. This can happen when hive elements   
-                  // are dereferenced.                               
-                  if (ptr->Reference(-1) == 0)
-                     ptr->~DT();
+               else if constexpr (CT::Destroyable<DT>) {
+                  // Pointer to a complete, destroyable dense.          
+                  // Call the destructor.                               
+                  if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+                     if (ptr->Reference(-1) == 0)
+                        ptr->~DT();
+                  }
+                  else ptr->~DT();
                }
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               }
+            }
+            else {
+            #endif
+            if constexpr (CT::Sparse<DT>) {
+               // Pointer to pointer.                                
+               // Destroy all nested indirection layers.             
+               typename H::Denser temp {ptr, nullptr};
+               temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
+            }
+            else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
+               // This element occurs in more than one place.        
+               // We're not allowed to deallocate the memory         
+               // behind it, but we must call destructors if T is    
+               // referencable and its individual references have    
+               // reached 0. This can happen when hive elements      
+               // are dereferenced.                                  
+               if (ptr->Reference(-1) == 0)
+                  ptr->~DT();
+            }
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            }
 
-               // Deallocate or dereference                             
-               if (entry) {
-                  if (1 == entry->GetUses())
-                     Allocator::Deallocate(DecvqAllCast(entry));
-                  else
-                     DecvqAllCast(entry)->AddRef(-1);
-               }
-               #endif
-            //}
-            /*else if constexpr (FORCE_DESTROY and CT::Destroyable<T>) {
-               // Call destructor of dense element                      
-               auto& element = self.Get();
-               IF_SAFE(if constexpr (REF_INDIVIDUAL and CT::Referenced<T>)
-                  element.Reference(-1));
-               element.~T();
-            }*/
+            // Deallocate or dereference                             
+            if (entry) {
+               if (1 == entry->GetUses())
+                  Allocator::Deallocate(DecvqAllCast(entry));
+               else
+                  DecvqAllCast(entry)->AddRef(-1);
+            }
+            #endif
          }
       }
       
@@ -813,97 +758,72 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(not self.IsDisowned(),
             "Can't destroy anything in a container without ownership");
 
-         /*static_assert(CT::ContainsOne<C>,
-            "Destroying only first element in a container with many. GetHandle() first?");
-
-         if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.template GetAllocation<SID>(),
-               "Can't destroy anything in a container without ownership");
-            LglsAssumeDev(not FORCE_DESTROY or self.template GetUses<SID>() == 1,
-               "Can't destroy data used from multiple locations");
-            if (self.template IsEmpty<SID>())
-               return;
-         }*/
-
          //                                                             
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
          LglsAssumeDev(T.IsSparse(),
             "Don't call DestroyElementDeepCustomPointers if container isn't sparse");
 
-         //if (T.IsSparse()) { //TODO this branch no longer required
-            auto entries = self.template GetEntriesInner<SID>(); //TODO this needs to be GetEntries and it should account for entries for different types being in the same heap allocation
-            if (not entries)
-               return;
-            
-            void const* src = self.template GetRaw<SID>();
-            while (src and T.IsSparse()) {
-               auto nextT = T.GetDeptr();
-               const bool nextDense = nextT.IsDense();
-               if (not nextDense) {
-                  // Pointer T -> Pointer nextT                         
-                  T.GetDereffer()(const_cast<void*>(src), &src);
-               }
-               else if (*entries and 1 == (*entries)->GetUses()) {
-                  // Pointer T -> Dense nextT, with license to destroy  
-                  if (auto destructor = nextT.GetDestructor()) {
-                     // Pointer to a complete, destroyable dense.       
-                     // Call the destructor.                            
-                     src = UnpackPointer(T, nextT, src);
-                     if constexpr (REF_INDIVIDUAL) {
-                        if (const auto referencer = nextT.GetReferencer()) {
-                           if (referencer(const_cast<void*>(src), -1) == 0)
-                              destructor(const_cast<void*>(src));
-                        }
-                        else destructor(const_cast<void*>(src));
+         auto entries = self.template GetEntriesInner<SID>();
+         if (not entries)
+            return;
+         
+         void const* src = self.template GetRaw<SID>();
+         while (src and T.IsSparse()) {
+            auto nextT = T.GetDeptr();
+            const bool nextDense = nextT.IsDense();
+            if (not nextDense) {
+               // Pointer T -> Pointer nextT                            
+               T.GetDereffer()(const_cast<void*>(src), &src);
+            }
+            else if (*entries and 1 == (*entries)->GetUses()) {
+               // Pointer T -> Dense nextT, with license to destroy     
+               if (auto destructor = nextT.GetDestructor()) {
+                  // Pointer to a complete, destroyable dense.          
+                  // Call the destructor.                               
+                  src = UnpackPointer(T, nextT, src);
+                  if constexpr (REF_INDIVIDUAL) {
+                     if (const auto referencer = nextT.GetReferencer()) {
+                        if (referencer(const_cast<void*>(src), -1) == 0)
+                           destructor(const_cast<void*>(src));
                      }
                      else destructor(const_cast<void*>(src));
                   }
+                  else destructor(const_cast<void*>(src));
                }
-               else if constexpr (REF_INDIVIDUAL) {
-                  // Pointer T -> Dense nextT, destroy only if deref    
-                  if (const auto referencer = nextT.GetReferencer()) {
-                     // This element occurs in more than one place.     
-                     // We're not allowed to deallocate the memory      
-                     // behind it, but we must call destructors if T is 
-                     // referencable and its individual references have 
-                     // reached 0. This can happen when hive elements   
-                     // are dereferenced.                               
-                     src = UnpackPointer(T, nextT, src);
-                     if (src and referencer(const_cast<void*>(src), -1) == 0)
-                        nextT.GetDestructor()(const_cast<void*>(src));
-                  }
-               }
-
-               // Deallocate or dereference                             
-               if (*entries) {
-                  auto& mutable_entries = DecvqAllCast(*entries);
-                  if (1 == (*entries)->GetUses()) {
-                     Allocator::Deallocate(mutable_entries);
-                     //mutable_entries = nullptr; //TODO allowed, but probably not necessary?
-                  }
-                  else {
-                     mutable_entries->AddRef(-1);
-                     //mutable_entries = nullptr; //not allowed!
-                  }
-               }
-
-               // Move to next indirection                              
-               T = nextT;
-               ++entries;
             }
-         //}
-         /*else if constexpr (FORCE_DESTROY) {
-            if (const auto destructor = T.GetDestructor()) {
-               // Call destructor of dense element                      
-               void* const ptr = self.template GetRawVoid<SID>();
-               if constexpr (REF_INDIVIDUAL) {
-                  IF_SAFE(if (const auto referencer = T.GetReferencer())
-                     referencer(ptr, -1));
+            else if constexpr (REF_INDIVIDUAL) {
+               // Pointer T -> Dense nextT, destroy only if deref       
+               if (const auto referencer = nextT.GetReferencer()) {
+                  // This element occurs in more than one place.        
+                  // We're not allowed to deallocate the memory         
+                  // behind it, but we must call destructors if T is    
+                  // referencable and its individual references have    
+                  // reached 0. This can happen when hive elements      
+                  // are dereferenced.                                  
+                  src = UnpackPointer(T, nextT, src);
+                  if (src and referencer(const_cast<void*>(src), -1) == 0)
+                     nextT.GetDestructor()(const_cast<void*>(src));
                }
-               destructor(ptr);
             }
-         }*/
+
+            // Deallocate or dereference                                
+            if (*entries) {
+               auto& mutable_entries = DecvqAllCast(*entries);
+               if (1 == (*entries)->GetUses()) {
+                  Allocator::Deallocate(mutable_entries);
+                  //mutable_entries = nullptr; //TODO allowed, but probably not necessary?
+               }
+               else {
+                  mutable_entries->AddRef(-1);
+                  //mutable_entries = nullptr; //not allowed!
+               }
+            }
+
+            // Move to next indirection                                 
+            T = nextT;
+            ++entries;
+         }
       }
 
       /// Nests through all indirection layers and destroys elements and      
@@ -930,71 +850,57 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(T.IsSparse(),
             "Don't call DestroyElementDeepCustomPointersEmergent if container isn't sparse");
 
-         //if (T.IsSparse()) { // TODO this branch no longer required
-            void const* src = self.template GetRaw<SID>();
-
-            while (src and T.IsSparse()) {
-               auto entry = Allocator::Find(src);
-               auto nextT = T.GetDeptr();
-               const bool nextDense = nextT.IsDense();
-               if (not nextDense) {
-                  // Pointer T -> Pointer nextT                         
-                  T.GetDereffer()(const_cast<void*>(src), &src);
-               }
-               else if (entry and 1 == entry->GetUses()) {
-                  // Pointer T -> Dense nextT, with license to destroy  
-                  if (auto destructor = nextT.GetDestructor()) {
-                     // Pointer to a complete, destroyable dense.       
-                     // Call the destructor.                            
-                     src = UnpackPointer(T, nextT, src);
-                     if constexpr (REF_INDIVIDUAL) {
-                        if (const auto referencer = nextT.GetReferencer()) {
-                           if (referencer(const_cast<void*>(src), -1) == 0)
-                              destructor(const_cast<void*>(src));
-                        }
-                        else destructor(const_cast<void*>(src));
+         void const* src = self.template GetRaw<SID>();
+         while (src and T.IsSparse()) {
+            auto entry = Allocator::Find(src);
+            auto nextT = T.GetDeptr();
+            const bool nextDense = nextT.IsDense();
+            if (not nextDense) {
+               // Pointer T -> Pointer nextT                            
+               T.GetDereffer()(const_cast<void*>(src), &src);
+            }
+            else if (entry and 1 == entry->GetUses()) {
+               // Pointer T -> Dense nextT, with license to destroy     
+               if (auto destructor = nextT.GetDestructor()) {
+                  // Pointer to a complete, destroyable dense.          
+                  // Call the destructor.                               
+                  src = UnpackPointer(T, nextT, src);
+                  if constexpr (REF_INDIVIDUAL) {
+                     if (const auto referencer = nextT.GetReferencer()) {
+                        if (referencer(const_cast<void*>(src), -1) == 0)
+                           destructor(const_cast<void*>(src));
                      }
                      else destructor(const_cast<void*>(src));
                   }
+                  else destructor(const_cast<void*>(src));
                }
-               else if constexpr (REF_INDIVIDUAL) {
-                  // Pointer T -> Dense nextT, destroy only if deref    
-                  if (const auto referencer = nextT.GetReferencer()) {
-                     // This element occurs in more than one place.     
-                     // We're not allowed to deallocate the memory      
-                     // behind it, but we must call destructors if T is 
-                     // referencable and its individual references have 
-                     // reached 0. This can happen when hive elements   
-                     // are dereferenced.                               
-                     src = UnpackPointer(T, nextT, src);
-                     if (src and referencer(const_cast<void*>(src), -1) == 0)
-                        nextT.GetDestructor()(const_cast<void*>(src));
-                  }
-               }
-
-               // Deallocate or dereference                             
-               if (entry) {
-                  if (1 == entry->GetUses())
-                     Allocator::Deallocate(DecvqAllCast(entry));
-                  else
-                     DecvqAllCast(entry)->AddRef(-1);
-               }
-
-               // Move to next indirection                              
-               T = nextT;
             }
-         //}
-         /*else if constexpr (FORCE_DESTROY) {
-            if (const auto destructor = T.GetDestructor()) {
-               // Call destructor of dense element                      
-               void* const ptr = self.template GetRawVoid<SID>();
-               if constexpr (REF_INDIVIDUAL) {
-                  IF_SAFE(if (const auto referencer = T.GetReferencer())
-                     referencer(ptr, -1));
+            else if constexpr (REF_INDIVIDUAL) {
+               // Pointer T -> Dense nextT, destroy only if deref       
+               if (const auto referencer = nextT.GetReferencer()) {
+                  // This element occurs in more than one place.        
+                  // We're not allowed to deallocate the memory         
+                  // behind it, but we must call destructors if T is    
+                  // referencable and its individual references have    
+                  // reached 0. This can happen when hive elements      
+                  // are dereferenced.                                  
+                  src = UnpackPointer(T, nextT, src);
+                  if (src and referencer(const_cast<void*>(src), -1) == 0)
+                     nextT.GetDestructor()(const_cast<void*>(src));
                }
-               destructor(ptr);
             }
-         }*/
+
+            // Deallocate or dereference                                
+            if (entry) {
+               if (1 == entry->GetUses())
+                  Allocator::Deallocate(DecvqAllCast(entry));
+               else
+                  DecvqAllCast(entry)->AddRef(-1);
+            }
+
+            // Move to next indirection                                 
+            T = nextT;
+         }
       }
    #endif
 
@@ -1094,15 +1000,6 @@ namespace Langulus::Anyness::Component
                   memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
                }
             }
-            /*else if constexpr (requires { Deref<H>::Emergent; }) {
-               // We are moving/abandoning, but since rhs is emergent,  
-               // we need to zero the source pointer, so that we avoid  
-               // them getting dereferenced later.                      
-               if (rhs.IsSparse()) {
-                  auto pointers_src = rhs.template GetRaw<SID>();
-                  memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
-               }
-            }*/
          }
          else if constexpr (CT::Sparse<Deint<I>>) {
             // Reference each indirection of a raw pointer              
@@ -1186,10 +1083,11 @@ namespace Langulus::Anyness::Component
             }
          });
 
-         if constexpr (not CT::Owned<C>) {
+         if constexpr (not CT::Owned<C> and CT::HeapAllocated<C>) {
             // The container has deep ownership, but no shallow         
             // ownership. We are allowed to destroy immediate elements  
-            // here, because it won't happen otherwise.                 
+            // here, because it won't happen otherwise, as long as the  
+            // elements are on the heap.                                
             Id::ForEach([&self]<Cid D> {
                if constexpr (CT::TypeErased<C>) {
                   const auto T = self.template GetType<D>();

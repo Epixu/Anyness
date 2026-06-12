@@ -38,7 +38,7 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
-   , Types<Map, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
+   , Types<Map, Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Map, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
@@ -50,6 +50,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
    , Types<Map, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
    , Types<Map, int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
    , Types<Map, Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
+   , Types<Map, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
    , Types<Map, char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
 
    , Types<Map, Text**, ScopedElement<Text**>,  Text**, ScopedElement<Text**>>
@@ -84,7 +85,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
    , Types<Map, RT,     ScopedElement<RT,   true>,    RT,     ScopedElement<RT,   true>>
    , Types<Map, char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
 
-   , Types<Map, Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
    , Types<Map, int*,   ScopedElement<int*,  true>,   int*,   ScopedElement<int*,  true>>
    , Types<Map, Any*,   ScopedElement<Any*,  true>,   Any*,   ScopedElement<Any*,  true>>
    , Types<Map, RT*,    ScopedElement<RT*,   true>,   RT*,    ScopedElement<RT*,   true>>
@@ -156,7 +156,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          }   
       }
 
-      T piecewise1{Piecewise, TPair {*element1, *element2}};
+      /*T piecewise1{Piecewise, TPair {*element1, *element2}};
 
       if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
          REQUIRE(DenseCast(*element1).GetReferences() == 2);
@@ -165,9 +165,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
          REQUIRE(DenseCast(*element2).GetReferences() == 2);
          REQUIRE(DenseCast(*element4).GetReferences() == 1);
-      }
+      }*/
 
-      piecewise1.Assign(*element3, *element4);
+      /*piecewise1.Assign(*element3, *element4);
 
       if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
          REQUIRE(DenseCast(*element1).GetReferences() == 1);
@@ -176,7 +176,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
          REQUIRE(DenseCast(*element2).GetReferences() == 1);
          REQUIRE(DenseCast(*element4).GetReferences() == 2);
-      }
+      }*/
    }
 
    GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {

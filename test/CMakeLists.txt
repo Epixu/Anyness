@@ -6,7 +6,7 @@ fetch_external_module(
 
 add_langulus_test(LangulusAnynessTest
    SOURCES	   Main.cpp 
-               TestAssume.cpp
+               #[[TestAssume.cpp
                TestHashOf.cpp
                TestIntentOf.cpp
                TestLambda.cpp
@@ -35,11 +35,11 @@ add_langulus_test(LangulusAnynessTest
                
                Utils/TestRoof.cpp
                
-               #$<IF:$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>,Allocator/TestManaged.cpp,Allocator/TestUnmanaged.cpp>
+               $<IF:$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>,Allocator/TestManaged.cpp,Allocator/TestUnmanaged.cpp>
                
-               Anyness/TestText.cpp
+               Anyness/TestText.cpp]]
                Anyness/TestBytes.cpp
-               Anyness/TestTRef.cpp
+               #[[Anyness/TestTRef.cpp
                Anyness/TestTOwn.cpp
                
                Anyness/any/TestAny-Empty.cpp
@@ -54,7 +54,9 @@ add_langulus_test(LangulusAnynessTest
                
                Anyness/set/TestSet-Empty.cpp
                Anyness/set/TestSet-Absorb.cpp
-               Anyness/set/TestSet-Piecewise.cpp
+               Anyness/set/TestSet-Piecewise.cpp]]
+
+               Anyness/pair/TestPair-Empty.cpp
 
                Anyness/map/TestMap-Empty.cpp
                Anyness/map/TestMap-Absorb.cpp

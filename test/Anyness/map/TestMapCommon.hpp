@@ -6,14 +6,13 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../set/TestSetCommon.hpp"
+#include "../pair/TestPairCommon.hpp"
 #include <Langulus/Anyness/Map.hpp>
 #include <Langulus/Anyness/TMap.hpp>
-#include <Langulus/Anyness/Pair.hpp>
-#include <Langulus/Anyness/TPair.hpp>
-#include <unordered_map>
 
 #if LANGULUS(BENCHMARK)
+   #include <unordered_map>
+
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkMap(func, tolerance, my_init, my) { \
       const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
@@ -96,183 +95,35 @@ namespace doctest
 
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Map_Helper_TestType(C const& map) {
-   if constexpr (CT::Void<K>) {
-      REQUIRE(    map.template IsKeySame<int>());
-      REQUIRE(    map.template IsKeyExact<int>());
-      REQUIRE(    map.template IsKey<int>());
-      REQUIRE(not map.IsKeySparse());
-      REQUIRE(not map.IsKeyDeep());
-      REQUIRE(    map.GetKeyType() == MetaDataOf<int>());
-   }
-   else {
-      REQUIRE(    map.template IsKeySame<K>());
-      REQUIRE(    map.template IsKeyExact<K>());
-      REQUIRE(    map.template IsKey<K>());
-      REQUIRE(    map.IsKeySparse() == CT::Sparse<K>);
-      REQUIRE(    map.IsKeyDeep() == CT::Deep<K>);
-      REQUIRE(    map.GetKeyType() == MetaDataOf<K>());      
-   }
-   
-   if constexpr (CT::Void<V>) {
-      REQUIRE(    map.template IsValSame<int>());
-      REQUIRE(    map.template IsValExact<int>());
-      REQUIRE(    map.template IsVal<int>());
-      REQUIRE(not map.IsValSparse());
-      REQUIRE(not map.IsValDeep());
-      REQUIRE(    map.GetValType() == MetaDataOf<int>());
-   }
-   else {
-      REQUIRE(    map.template IsValSame<V>());
-      REQUIRE(    map.template IsValExact<V>());
-      REQUIRE(    map.template IsVal<V>());
-      REQUIRE(    map.IsValSparse() == CT::Sparse<V>);
-      REQUIRE(    map.IsValDeep() == CT::Deep<V>);
-      REQUIRE(    map.GetValType() == MetaDataOf<V>());      
-   }
-   
-   REQUIRE(map.IsKeyTyped());
-   REQUIRE(map.IsValTyped());
+void Map_Helper_TestType(C const& pack) {
+   Pair_Helper_TestType<K, V>(pack);
 }
 
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
 void Map_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
-   REQUIRE(lhs.GetCount() == rhs.GetCount());
-
-   if (not lhs.IsEmpty())
-      REQUIRE(lhs.GetRaw() == rhs.GetRaw());
-
-   REQUIRE(lhs.IsKeyExact(rhs.GetKeyType()));
-   REQUIRE(lhs.IsValExact(rhs.GetValType()));
-   REQUIRE(lhs == rhs);
-   REQUIRE(lhs.IsKeyDeep() == rhs.IsKeyDeep());
-   REQUIRE(lhs.IsValDeep() == rhs.IsValDeep());
-
-   if (match_constness)
-      REQUIRE(lhs.IsConstant() == rhs.IsConstant());
-
-   if constexpr (requires { lhs.GetUnconstrainedState(); rhs.GetUnconstrainedState(); })
-      REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
-   else if constexpr (requires { lhs.GetUnconstrainedState(); })
-      REQUIRE(lhs.IsDefaultState());
-   else if constexpr (requires { rhs.GetUnconstrainedState(); })
-      REQUIRE(rhs.IsDefaultState());
+   Pair_Helper_TestSame(lhs, rhs, match_constness);
 }
 
 ///                                                                           
 /// Possible state test implementations                                       
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Map_CheckState_Default(C const& map, bool typed = false) {
-   if constexpr (CT::Typed<C>) {
-      static_assert(Exact<TypeOf<C, 0>, K>);
-      static_assert(Exact<TypeOf<C, 1>, V>);
-      static_assert(Exact<typename C::Key, K>);
-      static_assert(Exact<typename C::Val, V>);
-      Map_Helper_TestType<K, V>(map);
-   }
-   else if (not typed) {
-      REQUIRE_FALSE(map.IsKeyTyped());
-      REQUIRE      (map.GetKeyType() == nullptr);
-      REQUIRE_FALSE(map.IsKeySparse());
-      REQUIRE_FALSE(map.IsKeyDeep());
-
-      REQUIRE_FALSE(map.IsValTyped());
-      REQUIRE      (map.GetValType() == nullptr);
-      REQUIRE_FALSE(map.IsValSparse());
-      REQUIRE_FALSE(map.IsValDeep());
-   }
-   else {
-      Map_Helper_TestType<K, V>(map);
-   }
-
-   REQUIRE      (map.IsDefaultState());
-   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsKeyConstant());
-   REQUIRE_FALSE(map.IsValConstant());
-   REQUIRE_FALSE(map.IsValid());
-   REQUIRE_FALSE(map.GetAllocation());
-   REQUIRE      (map.IsEmpty());
-   REQUIRE      (map.GetCount() == 0);
-   REQUIRE      (map.GetReserved() == 0);
-   REQUIRE      (map.GetUses() == 0);
-   //REQUIRE      (map.GetRaw() == nullptr); // not really a requirement for the default state. Count being 0 is enough in most cases
-   REQUIRE_FALSE(map);
-   REQUIRE      (not map);
-
-   //TODO Many_CheckState_Default<K>(map.GetKeys());
-   //TODO Many_CheckState_Default<V>(map.GetVals());
-
-   REQUIRE_FALSE(map.IsCompressed());
-   REQUIRE_FALSE(map.IsEncrypted());
-   REQUIRE_FALSE(map.IsSorted());
+void Map_CheckState_Default(C const& pack, bool typed = false) {
+   Pair_CheckState_Default<K, V>(pack, typed);
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Map_CheckState_OwnedEmpty(C const& map) {
-   Map_Helper_TestType<K, V>(map);
-
-   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsKeyConstant());
-   REQUIRE      (map.IsValConstant() == CT::Constant<V>);
-   REQUIRE_FALSE(map.IsValid());
-   REQUIRE      (map.GetAllocation());
-   REQUIRE      (map.IsEmpty());
-   REQUIRE      (map.GetCount() == 0);
-   REQUIRE      (map.GetReserved() > 0);
-   REQUIRE      (map.GetUses() == 1);
-   //REQUIRE      (map.GetRaw() == nullptr); // not really a requirement for the owned-empty state. Count being 0 is enough in most cases
-   REQUIRE_FALSE(map);
-   REQUIRE      (not map);
-
-   //TODO Many_CheckState_OwnedEmpty<K>(map.GetKeys());
-   //TODO Many_CheckState_OwnedEmpty<V>(map.GetVals());
+void Map_CheckState_OwnedEmpty(C const& pack) {
+   Pair_CheckState_OwnedEmpty<K, V>(pack);
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Map_CheckState_OwnedFull(C const& map) {
-   Map_Helper_TestType<K, V>(map);
-
-   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsKeyConstant());
-   REQUIRE      (map.IsValConstant() == CT::Constant<V>);
-   REQUIRE      (map.IsValid());
-   REQUIRE      (map.GetAllocation());
-   REQUIRE_FALSE(map.IsEmpty());
-   REQUIRE      (map.GetCount() > 0);
-   REQUIRE      (map.GetReserved() > 0);
-   REQUIRE      (map.GetUses() > 0);
-   REQUIRE      (map.GetRaw());
-   REQUIRE      (map);
-   REQUIRE_FALSE(not map);
-
-   //TODO Many_CheckState_OwnedFull<K>(map.GetKeys());
-   //TODO Many_CheckState_OwnedFull<V>(map.GetVals());
+void Map_CheckState_OwnedFull(C const& pack) {
+   Pair_CheckState_OwnedFull<K, V>(pack);
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Map_CheckState_DisownedFull(C const& map) {
-   Map_Helper_TestType<K, V>(map);
-
-   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsKeyConstant());
-   REQUIRE      (map.IsValConstant());
-   REQUIRE      (map.IsValid());
-   REQUIRE      (map.GetAllocation());
-   REQUIRE_FALSE(map.IsEmpty());
-   REQUIRE      (map.GetCount() > 0);
-   REQUIRE      (map.GetReserved() > 0);
-   REQUIRE      (map.GetUses() > 0);
-   REQUIRE      (map.GetRaw());
-   REQUIRE      (map);
-   REQUIRE_FALSE(not map);
-   REQUIRE      (map != C{});
-
-   //TODO Many_CheckState_DisownedFull<K>(map.GetKeys());
-   //TODO Many_CheckState_DisownedFull<V>(map.GetVals());
+void Map_CheckState_DisownedFull(C const& pack) {
+   Pair_CheckState_DisownedFull<K, V>(pack);
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
