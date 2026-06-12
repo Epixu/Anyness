@@ -61,6 +61,15 @@ namespace Langulus::Anyness::Component
          ThisCom::SetHeapInner(nullptr);
       }
       
+      /// Transfer from any kind of container, respecting intents.            
+      /// Do it for a particular dimension.                                   
+      ///   @param intent The intent and container to transfer from.          
+      template<Cid D, class C, CT::Intent I> requires CT::Container<I>
+      void SliceFrom(this C& self, I&& intent) {
+         static_assert(CT::Disowned<I>);
+         ThisCom::SetHeapInner(intent->template GetRaw<D>());
+      }
+
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent The intent and container to transfer from.          
       ///   @param reserve Optional reserve override, which is taken into     
@@ -512,19 +521,12 @@ namespace Langulus::Anyness::Component
             ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
             return;
          }
-         else if (self.template GetUses<SID>() == 1) {
+         
+         if (not self.IsDisowned() and self.template GetUses<SID>() == 1) {
             // No need to branch out - reuse the current allocation     
             // unless container was disowned                            
-            if constexpr (requires { self.IsDisowned(); }) {
-               if (not self.IsDisowned()) {
-                  ThisCom::AllocateMore(newReserve);
-                  return;
-               }
-            }
-            else {
-               ThisCom::AllocateMore(newReserve);
-               return;
-            }
+            ThisCom::AllocateMore(newReserve);
+            return;
          }
 
          // Branch out by performing a shallow clone                    

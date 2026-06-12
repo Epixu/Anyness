@@ -140,5 +140,6 @@
   "terminal.integrated.fontSize": 10,
   "diffEditor.renderGutterMenu": true,
   "scm.diffDecorations": "none",
-  "debug.console.fontFamily": "'Cascadia Code', Consolas, 'Courier New', monospace"
+  "debug.console.fontFamily": "'Cascadia Code', Consolas, 'Courier New', monospace",
+  "editor.autoIndentOnPaste": true
 }

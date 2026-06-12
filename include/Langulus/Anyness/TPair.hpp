@@ -14,13 +14,12 @@ namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid K, CT::NotVoid V> requires CT::NotHandle<K, V>
    using TPairBase = Com::Container<
-      Com::Multitype<Com::TypedStatic<DMeta, Deref<K>, 0>,
-                     Com::TypedStatic<DMeta, Deref<V>, 1>>,
+      Com::Multitype    <Com::TypedStatic<DMeta, Deref<K>, 0>,
+                         Com::TypedStatic<DMeta, Deref<V>, 1>>,
       Com::Multiprovider<Com::Stack<K, 0>,
                          Com::Stack<V, 1>>,
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
-      //Com::OwnershipEmergent<Com::NoOwnership, 0, 1>,
       Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>,
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         
@@ -44,9 +43,6 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_MapsTo    = Text;
 
-      //static constexpr bool TypeErased = false;
-      //static constexpr bool Emergent   = true;
-
       using Base     = Inner::TPairBase<K, V>;
       using DeepType = Any;
       using KeyType  = K;
@@ -66,34 +62,35 @@ namespace Langulus::Anyness
       constexpr TPair(TPair&& other) noexcept requires CT::NotReference<K, V> {
          this->Absorb(Move(other));
       }
-      constexpr ~TPair() noexcept /*requires CT::NotReference<K, V>*/ {
+      constexpr ~TPair() noexcept {
          this->Destroy();
       }
-      //constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
 
       /// Manual constructor                                                  
       constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
-         //this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
 
+      /// Construct from handles                                              
       constexpr TPair(CT::Handle auto&& a1, CT::Handle auto&& a2) {
          this->template EmplaceWithIntent<0>(FWDIntent(a1));
          this->template EmplaceWithIntent<1>(FWDIntent(a2));
       }
+
+      /// Piecewise constructor                                               
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
          : Base{Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
-         //this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
+
+      /// Piecewise constructor that defaults the second value                
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1)
          : Base{Stackwise, LglsFwd(a1), {}} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
-         //this->Com::OwnershipEmergent<Com::NoOwnership, 0, 1>::Keep();
       }
 
       /// Construction that absorbs the provided pair                         
@@ -108,7 +105,6 @@ namespace Langulus::Anyness
       constexpr TPair& operator = (TPair&& other) noexcept {
          return this->AssignAbsorb(Move(other));
       }
-      
       constexpr TPair& operator = (CT::Pair auto&& pair) {
          return this->AssignAbsorb(LglsFwd(pair));
       }
@@ -123,11 +119,18 @@ namespace Langulus::Anyness
          return *self.Com::template Stack<V, 1>::Get();
       }
 
-      decltype(auto) GetKeyHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetKeyHandle(); //TODO use PickDimension instead?
+      auto GetKeyHandle() const noexcept -> typename HandleType::KeyHandle {
+         return {*this};
       }
-      decltype(auto) GetValHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetValHandle(); //TODO use PickDimension instead?
+      auto GetKeyHandle() noexcept -> typename HandleMutType::KeyHandle {
+         return {*this};
+      }
+
+      auto GetValHandle() const noexcept -> typename HandleType::ValHandle {
+         return {Slice<1>, *this};
+      }
+      auto GetValHandle() noexcept -> typename HandleMutType::ValHandle {
+         return {Slice<1>, *this};
       }
    };
 

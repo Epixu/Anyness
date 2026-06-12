@@ -40,10 +40,6 @@ namespace Langulus::Anyness
       using KeyHandle = Handle;
       using ValHandle = Handle;
 
-      //static constexpr bool TypeErased    = true;
-      //static constexpr bool DeeplyOwned   = true;
-      //static constexpr bool HeapCanBeNull = true;
-
       /// Handles can't be piecewise-initialized                              
       //THandlePair(Inner::Piecewise, auto&&) = delete;
 
@@ -80,29 +76,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      Handle GetKey() noexcept {
-         return {*this};
-         /*return {
-            this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
-            this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
-         };*/
-      }
-      Handle GetKeyHandle() noexcept {
-         return {*this};// GetKey();
-      }
+      Handle GetKey()       noexcept { return {*this}; }
+      Handle GetKeyHandle() noexcept { return {*this}; }
 
-      Handle GetVal() noexcept {
-         return {Slice<1>, Disown{*this}};
-         /*return {
-            this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
-            this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
-         };*/
-      }
-      Handle GetValHandle() noexcept {
-         return {Slice<1>, Disown{*this}}; //return GetVal();
-      }
+      Handle GetVal()       noexcept { return {Slice<1>, *this}; }
+      Handle GetValHandle() noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -113,7 +91,7 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKeyHandle();
+         if constexpr      (SID == 0)  return self.GetKeyHandle();
          else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
@@ -146,10 +124,6 @@ namespace Langulus::Anyness
       using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = HandleMut;
       using ValHandle = HandleMut;
-
-      //static constexpr bool TypeErased    = true;
-      //static constexpr bool DeeplyOwned   = true;
-      //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       //THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -187,31 +161,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      HandleMut GetKey() noexcept {
-         return {*this};
-         /*return {
-            this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
-            this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
-         };*/
-      }
+      HandleMut GetKey()       noexcept { return {*this}; }
+      HandleMut GetKeyHandle() noexcept { return {*this}; }
 
-      HandleMut GetKeyHandle() noexcept {
-         return {*this}; //return GetKey();
-      }
-
-      HandleMut GetVal() noexcept {
-         return {Slice<1>, Disown{*this}};
-         /*return {
-            this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
-            this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
-         };*/
-      }
-
-      HandleMut GetValHandle() noexcept {
-         return {Slice<1>, Disown{*this}}; //return GetVal();
-      }
+      HandleMut GetVal()       noexcept { return {Slice<1>, *this}; }
+      HandleMut GetValHandle() noexcept { return {Slice<1>, *this}; }
 
       /// Already as mutable as it gets                                       
       decltype(auto) ForceMutable(this auto&& self) noexcept {
@@ -221,7 +175,7 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKeyHandle();
+         if constexpr      (SID == 0)  return self.GetKeyHandle();
          else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
@@ -254,10 +208,6 @@ namespace Langulus::Anyness
       using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = Handle;
       using ValHandle = HandleMut;
-
-      //static constexpr bool TypeErased    = true;
-      //static constexpr bool DeeplyOwned   = true;
-      //static constexpr bool HeapCanBeNull = true;
 
       /// Handles can't be piecewise-initialized                              
       //THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -295,32 +245,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      Handle GetKey() noexcept {
-         return {*this};
-         /*return {
-            this->Com::HeapReference<HeapEntry<0>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner(),
-            this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
-         };*/
-      }
+      Handle    GetKey()       noexcept { return {*this}; }
+      Handle    GetKeyHandle() noexcept { return {*this}; }
 
-      Handle GetKeyHandle() noexcept {
-         return {*this}; //return GetKey();
-      }
-
-      HandleMut GetVal() noexcept {
-         return {Slice<1>, Disown{*this}};
-         /*return {
-            this->Com::HeapReference<HeapEntry<1>>::GetHeapInner(),
-            this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner(),
-            this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
-         };*/
-      }
-
-      HandleMut GetValHandle() noexcept {
-         return {Slice<1>, Disown{*this}};
-         //return GetVal();
-      }
+      HandleMut GetVal()       noexcept { return {Slice<1>, *this}; }
+      HandleMut GetValHandle() noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -331,7 +260,7 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKeyHandle();
+         if constexpr      (SID == 0)  return self.GetKeyHandle();
          else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
@@ -360,17 +289,11 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
-      //using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
 
       using Denser    = THandlePair<typename THandleEmergent<K>::Denser, typename THandleEmergent<V>::Denser>;
       using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = THandleEmergent<K>;
       using ValHandle = THandleEmergent<V>;
-
-      //static constexpr bool Emergent      = true;
-      //static constexpr bool HeapCanBeNull = true;
-      //static constexpr uint Owned         = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
-      //static constexpr bool DeeplyOwned   = CT::Sparse<K> or CT::Sparse<V>;
 
       /// Handles can't be piecewise-initialized                              
       //THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -410,11 +333,8 @@ namespace Langulus::Anyness
          else
             return GetKeyHandle();
       }
-      KeyHandle GetKeyHandle() noexcept {
-         return THandleEmergent<K> {
-            *this //this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
-         };
-      }
+
+      KeyHandle GetKeyHandle() noexcept { return {*this}; }
 
       decltype(auto) GetVal() noexcept {
          if constexpr (CT::Constant<V>)
@@ -422,11 +342,8 @@ namespace Langulus::Anyness
          else
             return GetValHandle();
       }
-      ValHandle GetValHandle() noexcept {
-         return THandleEmergent<V> {
-            Slice<1>, Disown{*this} //this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()
-         };
-      }
+
+      ValHandle GetValHandle() noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -440,7 +357,7 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0) return self.GetKeyHandle();
+         if constexpr      (SID == 0) return self.GetKeyHandle();
          else if constexpr (SID == 1) return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
@@ -471,18 +388,13 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
-      //using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
 
       using Denser    = THandlePair<typename THandle<K>::Denser, typename THandle<V>::Denser>;
       using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = THandle<K>;
       using ValHandle = THandle<V>;
 
-      //static constexpr bool TypeErased        = false;
-      //static constexpr uint Owned             = CT::Dense<K> or CT::Dense<V> ? Com::WeakOwnership : 0;
-      //static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
-      //static constexpr bool HeapCanBeNull     = true;
 
       /// Handles can't be piecewise-initialized                              
       //THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -511,15 +423,9 @@ namespace Langulus::Anyness
          this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::SetHeapInner(key.GetHeapInner());
          this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::SetHeapInner(val.GetHeapInner());
 
-         /*if constexpr (CT::Dense<K>)
-            this->Com::OwnershipStack<Com::WeakOwnership, 0>::SetAllocationInner(key.GetAllocation());
-         else*/
          if constexpr (CT::Sparse<K>)
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntries());
 
-         /*if constexpr (CT::Dense<V>)
-            this->Com::OwnershipStack<Com::WeakOwnership, 1>::SetAllocationInner(val.GetAllocation());
-         else*/
          if constexpr (CT::Sparse<V>)
             this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntries());
       }
@@ -535,32 +441,7 @@ namespace Langulus::Anyness
             return GetKeyHandle();
       }
 
-      KeyHandle GetKeyHandle() noexcept {
-         /*if constexpr (CT::Dense<K, V>) {
-            return KeyHandle {
-               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
-            };
-         }
-         else if constexpr (CT::Dense<K>) {
-            return KeyHandle {
-               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<Com::WeakOwnership, 0>::GetAllocation()
-            };
-         }*/
-         return {*this};
-         /*if constexpr (CT::Sparse<K>) {
-            return KeyHandle {
-               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner(),
-               this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::GetEntriesInner()
-            };
-         }
-         else {
-            return KeyHandle {
-               this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::GetHeapInner()
-            };
-         }*/
-      }
+      KeyHandle GetKeyHandle() noexcept { return {*this}; }
 
       decltype(auto) GetVal() noexcept {
          if constexpr (CT::Constant<V>)
@@ -569,32 +450,7 @@ namespace Langulus::Anyness
             return GetValHandle();
       }
 
-      ValHandle GetValHandle() noexcept {
-         /*if constexpr (CT::Dense<K, V>) {
-            return ValHandle {
-               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<Com::WeakOwnership, 0, 1>::GetAllocation()
-            };
-         }
-         else if constexpr (CT::Dense<V>) {
-            return ValHandle {
-               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
-               this->Com::OwnershipStack<Com::WeakOwnership, 1>::GetAllocation()
-            };
-         }*/
-         return {Slice<1>, Disown{*this}};
-         /*if constexpr (CT::Sparse<V>) {
-            return ValHandle {
-               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner(),
-               this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::GetEntriesInner()
-            };
-         }
-         else {
-            return ValHandle {
-               this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::GetHeapInner()
-            };
-         }*/
-      }
+      ValHandle GetValHandle() noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -608,7 +464,7 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKeyHandle();
+         if constexpr      (SID == 0)  return self.GetKeyHandle();
          else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }
@@ -643,18 +499,13 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
-      //using CTTI_Typed     = Types<Deref<K>, Deref<V>>;
 
       using Denser    = THandlePair<typename THandle<K>::Denser, typename THandle<V>::Denser>;
       using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = Tif<CT::Sparse<K>, THandle<K&>, THandleEmergent<K&>>;
       using ValHandle = Tif<CT::Sparse<V>, THandle<V&>, THandleEmergent<V&>>;
 
-      //static constexpr bool TypeErased        = false;
-      //static constexpr uint Owned             = CT::Sparse<K> or CT::Sparse<V> ? Com::StrongOwnership : 0;
-      //static constexpr bool DeeplyOwned       = CT::Sparse<K> or CT::Sparse<V>;
       static constexpr bool ReferenceElements = true;
-      //static constexpr bool HeapCanBeNull     = DeeplyOwned;
 
       /// Handles can't be piecewise-initialized                              
       //THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -684,35 +535,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      auto GetKey() noexcept -> KeyHandle {
-         return {*this};
-         /*if constexpr (CT::Sparse<K>) {
-            return THandle<K&> {
-               this->Com::HeapMovable<0, 0, HeapEntry<0, K*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0>::GetEntriesInner()
-            };
-         }
-         else return THandleEmergent<K&> {this->Com::Stack<K, 0>::GetRaw()};*/
-      }
+      auto GetKey()       noexcept -> KeyHandle { return {*this}; }
+      auto GetKeyHandle() noexcept -> KeyHandle { return {*this}; }
 
-      auto GetKeyHandle() noexcept -> KeyHandle {
-         return {*this}; //return GetKey();
-      }
-
-      auto GetVal() noexcept -> ValHandle {
-         return {Slice<1>, Disown{*this}};
-         /*if constexpr (CT::Sparse<V>) {
-            return THandle<V&> {
-               this->Com::HeapMovable<0, 0, HeapEntry<1, V*>>::GetRaw(),
-               this->Com::OwnershipDeepHeap<Com::StrongOwnership, true, 1>::GetEntriesInner()
-            };
-         }
-         else return THandleEmergent<V&> {this->Com::Stack<V, 1>::GetRaw()};*/
-      }
-
-      auto GetValHandle() noexcept -> ValHandle {
-         return {Slice<1>, Disown{*this}}; //return GetVal();
-      }
+      auto GetVal()       noexcept -> ValHandle { return {Slice<1>, *this}; }
+      auto GetValHandle() noexcept -> ValHandle { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -723,7 +550,7 @@ namespace Langulus::Anyness
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
-              if constexpr (SID == 0)  return self.GetKeyHandle();
+         if constexpr      (SID == 0)  return self.GetKeyHandle();
          else if constexpr (SID == 1)  return self.GetValHandle();
          else static_assert(false, "No such dimension");
       }

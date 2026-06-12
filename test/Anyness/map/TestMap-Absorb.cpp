@@ -142,8 +142,41 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       const ScopedE2 element2{111};
       const ScopedE1 element3{556};
       const ScopedE2 element4{112};
+
+      {
+         TPair test {*element1, *element2};
+
+         if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
+            REQUIRE(DenseCast(*element1).GetReferences() == 2);
+            REQUIRE(DenseCast(*element3).GetReferences() == 1);
+         }
+         if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
+            REQUIRE(DenseCast(*element2).GetReferences() == 2);
+            REQUIRE(DenseCast(*element4).GetReferences() == 1);
+         }   
+      }
+
       T piecewise1{Piecewise, TPair {*element1, *element2}};
+
+      if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
+         REQUIRE(DenseCast(*element1).GetReferences() == 2);
+         REQUIRE(DenseCast(*element3).GetReferences() == 1);
+      }
+      if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
+         REQUIRE(DenseCast(*element2).GetReferences() == 2);
+         REQUIRE(DenseCast(*element4).GetReferences() == 1);
+      }
+
       piecewise1.Assign(*element3, *element4);
+
+      if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
+         REQUIRE(DenseCast(*element1).GetReferences() == 1);
+         REQUIRE(DenseCast(*element3).GetReferences() == 2);
+      }
+      if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
+         REQUIRE(DenseCast(*element2).GetReferences() == 1);
+         REQUIRE(DenseCast(*element4).GetReferences() == 1);
+      }
    }
 
    GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {

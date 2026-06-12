@@ -132,7 +132,16 @@ namespace Langulus::Anyness::Component
       constexpr void ConstructDefault(this auto& self) noexcept {
          ThisCom::SetAllocationInner(nullptr);
       }
-      
+
+      /// Transfer from any kind of container, respecting intents.            
+      /// Do it for a particular dimension.                                   
+      ///   @param intent The intent and container to transfer from.          
+      template<Cid D, class SELF, CT::Intent I> requires CT::Container<I>
+      void SliceFrom(this SELF& self, I&& intent) {
+         static_assert(CT::Disowned<I>);
+         ThisCom::SetAllocationInner(intent->template GetAllocation<D>());
+      }
+
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
       ///   @important notice that Copy and Clone intents are not handled     

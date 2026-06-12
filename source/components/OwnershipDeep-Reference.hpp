@@ -83,6 +83,15 @@ namespace Langulus::Anyness::Component
          ThisCom::SetEntriesInner(nullptr);
       }
 
+      /// Transfer from any kind of container, respecting intents.            
+      /// Do it for a particular dimension.                                   
+      ///   @param intent The intent and container to transfer from.          
+      template<Cid D, class SELF, CT::Intent I> requires CT::Container<I>
+      void SliceFrom(this SELF& self, I&& intent) {
+         static_assert(CT::Disowned<I>);
+         ThisCom::SetEntriesInner(intent->template GetEntries<D>());
+      }
+
       /// Copy the pointer to the entries, and reference if we have to        
       ///   @param intent The intent and container to transfer from.          
       template<class SELF, CT::Intent I>

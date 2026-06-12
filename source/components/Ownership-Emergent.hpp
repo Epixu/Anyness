@@ -125,10 +125,8 @@ namespace Langulus::Anyness::Component
 
       /// Reference the allocation once                                       
       void Keep(this auto& self) assumptious {
-         if constexpr (requires { self.IsDisowned(); }) {
-            LglsAssumeDev(not self.IsDisowned(),
-               "Can't keep anything in a container without ownership");
-         }
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
 
          auto a = self.template GetAllocation<Id::First>();
          if (not a)
@@ -145,10 +143,8 @@ namespace Langulus::Anyness::Component
       ///   @attention operates on all relevant dimensions at once!           
       template<bool DEALLOCATE = true, CT::Container C>
       void Free(this C& self) assumptious {
-         if constexpr (requires { self.IsDisowned(); }) {
-            LglsAssumeDev(not self.IsDisowned(),
-               "Can't keep anything in a container without ownership");
-         }
+         LglsAssumeDev(not self.IsDisowned(),
+            "Can't keep anything in a container without ownership");
 
          auto a = self.template GetAllocation<Id::First>();
          if (not a)

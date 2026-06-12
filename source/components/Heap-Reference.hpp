@@ -447,9 +447,18 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<class C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent, size_t = 0) noexcept {
-         ThisCom::SetHeapInner(intent.what.template GetRaw<Id::First>());
+         ThisCom::SetHeapInner(intent->template GetRaw<Id::First>());
       }
-      
+
+      /// Transfer from any kind of container, respecting intents.            
+      /// Do it for a particular dimension.                                   
+      ///   @param intent The intent and container to transfer from.          
+      template<Cid D, class C, CT::Intent I> requires CT::Container<I>
+      void SliceFrom(this C& self, I&& intent) {
+         static_assert(CT::Disowned<I>);
+         ThisCom::SetHeapInner(intent->template GetRaw<D>());
+      }
+
       /// Get a size based on reflected allocation page and count.            
       /// This will allocate memory for relevant headers, footers, and types  
       /// across all dimensions used in this heap component.                  

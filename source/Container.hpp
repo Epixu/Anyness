@@ -788,21 +788,13 @@ namespace Langulus::Anyness
       /// Fallback to ConstructDefault otherwise.                             
       template<Cid ID, CT::Container SELF, CT::Container FROM>
       constexpr void SliceFrom(this SELF& self, FROM&& from) {
-         /*static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
-            "You can't absorb from containers with different contiguousness");*/
-
          using I = IntentOf(from);
+         static_assert(CT::Handle<SELF>);
          static_assert(CT::Disowned<I>, "Slicing supports only disownment for now");
          ComponentList::ForEach([&]<class C>{
                  if_available_gcc(C::template SliceFrom<ID, SELF, I>)(FWDIntent(from));
             else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
-
-         // Make sure we disown an abandoned container at the end       
-         /*if constexpr (CT::Abandoned<I> and Decay<Deint<FROM>>::CanBeDisowned)
-            DeintCast(from).EnableDisowned();
-         else if constexpr (CT::Moved<I> and requires { DeintCast(from).ResetState(); })
-            DeintCast(from).ResetState();*/
       }
 
       /// Call Destroy in all components that implement it.                   
@@ -812,10 +804,8 @@ namespace Langulus::Anyness
       template<class SELF>
       constexpr void Destroy(this SELF& self) {
          if not consteval {
-            if constexpr (requires { self.IsDisowned(); }) {
-               if (self.IsDisowned())
-                  return;
-            }
+            if (self.IsDisowned())
+               return;
 
             // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
@@ -830,10 +820,8 @@ namespace Langulus::Anyness
       template<bool DEALLOCATE = true, class SELF>
       constexpr void Free(this SELF& self) {
          if not consteval {
-            if constexpr (requires { self.IsDisowned(); }) {
-               if (self.IsDisowned())
-                  return;
-            }
+            if (self.IsDisowned())
+               return;
 
             // Notice it executes in reverse                            
             ComponentList::Reverse::ForEach([&]<class C> {
@@ -847,10 +835,8 @@ namespace Langulus::Anyness
       template<class SELF>
       constexpr void Keep(this SELF& self) {
          if not consteval {
-            if constexpr (requires { self.IsDisowned(); }) {
-               if (self.IsDisowned())
-                  return;
-            }
+            if (self.IsDisowned())
+               return;
 
             ComponentList::ForEach([&]<class C> {
                if_available_gcc(C::template Keep<SELF>)();
@@ -869,59 +855,13 @@ namespace Langulus::Anyness
       decltype(auto) GetHandle(this C&& self) {
          static_assert(CT::Handle<AS> or CT::Void<AS>,
             "Must be either a handle or void (which will use DecideHandle");
-         static_assert(not CT::Reference<AS>,
-            "Strip references first");
-         static_assert(CT::Dense<AS>,
-            "Must be dense");
+         static_assert(not CT::Reference<AS>, "Strip references first");
+         static_assert(CT::Dense<AS>,         "Must be dense");
 
-         using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
-         return H {self};
-         /*if constexpr (CT::Pair<H>) {
-            // User desires a pair, so we give them a pair              
-            using H1 = typename H::KeyHandle;
-            using H2 = typename H::ValHandle;
-            return H {
-               self.template GetHandle<H1, SID + 0>(),
-               self.template GetHandle<H2, SID + 1>()
-            };
-         }
-         else {
-            // User desires a simple handle                             
-            if constexpr (CT::TypeErased<H>) {
-               // Type-erased handle                                    
-               if constexpr (requires { self.template GetEntries<SID>(); }) {
-                  return H {
-                     self.template Get<void, SID>(),
-                     self.template GetEntries<SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-               else return H {
-                  self.template Get<void, SID>(),
-                  self.template GetType<SID>()
-               };
-            }
-            else {
-               // Statically typed handle                               
-               using HT = Deref<TypeOf<H>>;
-
-               if constexpr (CT::TypeErased<C>) {
-                  LglsAssert(self.template GetType<SID>().IsSame(MetaDataOf<HT>()),
-                     "Type mismatch", ": ", self.template GetType<SID>(),
-                     " not same as ", MetaDataOf<HT>()
-                  );
-               }
-               else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
-
-               if constexpr (requires { self.template GetEntries<SID>(); }) {
-                  return H {
-                     self.template Get<void, SID>(),
-                     self.template GetEntries<SID>()
-                  };
-               }
-               else return H { self.template Get<void, SID>() };
-            }
-         }*/
+         if constexpr (CT::Void<AS>)
+            return DecideHandle<C> {self};
+         else
+            return AS {self};
       }
 
       /// No-op in case C is already a handle                                 
@@ -973,6 +913,8 @@ namespace Langulus::Anyness
                const auto tableBeg = self.GetHashTableInner() + cookie;
                const auto tableEnd = tableBeg + (self.GetReserved() - cookie);
                auto table = tableBeg;
+               [[maybe_unused]] size_t scanned = 0;
+               [[maybe_unused]] const size_t scannedMax = self.GetCount();
                while (table != tableEnd) {
                   if (*table) {
                      if constexpr (CT::Bool<decltype(lambda(item))>) {
@@ -980,6 +922,12 @@ namespace Langulus::Anyness
                            return;
                      }
                      else lambda(item);
+
+                     if constexpr (SKIP_EMPTY) {
+                        ++scanned;
+                        if (scanned == scannedMax)
+                           return;
+                     }
                   }
                   else if constexpr (not SKIP_EMPTY) {
                      if constexpr (CT::Bool<decltype(lambda(Unsupported{}))>) {

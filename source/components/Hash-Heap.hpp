@@ -47,11 +47,10 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>())
             return H {1};
 
-         if constexpr (requires { self.IsDisowned(); }) {
-            if (self.IsDisowned())
-               return ThisCom::HashRecompute();
-         }
-         else if (self.template GetUses<SID>() == 0)
+         if (self.IsDisowned())
+            return ThisCom::HashRecompute();
+
+         if (self.template GetUses<SID>() == 0)
             return ThisCom::HashRecompute();
 
          const auto heap = self.template AccessHeap<HashHeap, SID>();
@@ -71,11 +70,9 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>())
             return H {1};
 
-         if constexpr (requires { self.IsDisowned(); }) {
-            if (self.IsDisowned())
-               return H {0};
-         }
-         else if (self.template GetUses<SID>() == 0)
+         if (self.IsDisowned())
+            return H {0};
+         if (self.template GetUses<SID>() == 0)
             return H {0};
 
          const auto heap = self.template AccessHeap<HashHeap, SID>();
@@ -89,11 +86,9 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>())
             return;
 
-         if constexpr (requires { self.IsDisowned(); }) {
-            if (self.IsDisowned())
-               return;
-         }
-         else if (self.template GetUses<SID>() == 0)
+         if (self.IsDisowned())
+            return;
+         if (self.template GetUses<SID>() == 0)
             return;
 
          const auto heap = self.template AccessHeap<HashHeap, SID>();

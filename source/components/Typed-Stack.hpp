@@ -433,20 +433,42 @@ namespace Langulus::Anyness::Component
          ThisCom::GetTypeInner() = type;
       }
 
+      /// Transfer from any kind of container, respecting intents.            
+      /// Do it for a particular dimension.                                   
+      ///   @param intent The intent and container to transfer from.          
+      template<Cid D, class SELF, CT::Intent I> requires CT::Container<I>
+      void SliceFrom(this SELF& self, I&& intent) {
+         static_assert(CT::Disowned<I>);
+         if constexpr (TypeErased) {
+            ThisCom::SetType(intent->template GetType<D>());
+
+            // While we are interfacing external memory, we have to     
+            // keep the type-constrained state, otherwise we risk       
+            // interpreting static memory the wrong way.                
+            if constexpr (not CONSTRAIN) {
+               if constexpr (not CT::TypeErased<I>)
+                  // From statically-typed to dynamically-typed         
+                  ThisCom::EnableTypeConstrained();
+               else if (intent->template IsTypeConstrained<D>())
+                  // From dynamically-typed to dynamically-typed        
+                  ThisCom::EnableTypeConstrained();
+            }
+         }
+         else {
+            // These are called just to do compile-time type safety     
+            if constexpr (CT::TypeErased<I>)
+               ThisCom::SetType(intent->template GetType<D>());
+            else
+               ThisCom::template SetType<TypeOf<Deint<I>, D>>();
+         }
+      }
+
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
          if constexpr (TypeErased) {
-            META type = intent->template GetType<ID>();
-            if constexpr (CT::Copied<I> or CT::Cloned<I>) {
-               // When copying, we're cloning just the first layer, so  
-               // we guarantee that data is no longer static or constant
-               // at the first level of indirection.                    
-               //type = type.GetDecvq();
-            }
-
-            ThisCom::SetType(type);
+            ThisCom::SetType(intent->template GetType<ID>());
 
             // While we are interfacing external memory, we have to     
             // keep the type-constrained state, otherwise we risk       
@@ -462,23 +484,10 @@ namespace Langulus::Anyness::Component
          }
          else {
             // These are called just to do compile-time type safety     
-            if constexpr (CT::TypeErased<I>) {
-               META type = intent->template GetType<ID>();
-               if constexpr (CT::Copied<I> or CT::Cloned<I>) {
-                  // When copying, we're cloning just the first layer,  
-                  // so we guarantee that data is no longer static or   
-                  // constant at the first level of indirection.        
-                  //type = type.GetDecvq();
-               }
-
-               ThisCom::SetType(type);
-            }
-            else {
-               //if constexpr (CT::Copied<I> or CT::Cloned<I>)
-               //   ThisCom::template SetType<Decvq<TypeOf<Deint<I>, ID>>>();
-               //else
-                  ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
-            }
+            if constexpr (CT::TypeErased<I>)
+               ThisCom::SetType(intent->template GetType<ID>());
+            else
+               ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
          }
 
          if constexpr (CT::Moved<I> and CT::TypeErased<I>)

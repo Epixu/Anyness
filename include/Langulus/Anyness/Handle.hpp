@@ -269,12 +269,6 @@ namespace Langulus::Anyness
       constexpr HandleDisownedMut(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::TypeErasedHandleMutDisowned {Stackwise, LglsFwd(arguments)...} {}
 
-
-      /*constexpr HandleDisownedMut(void* ptr, EntryPtr, DMeta type) noexcept {
-         this->SetHeapInner(ptr);
-         this->SetTypeInner(type);
-      }*/
-
       /// Assignment is disabled                                              
       HandleDisownedMut& operator = (HandleDisownedMut const& other) = delete;
       HandleDisownedMut& operator = (HandleDisownedMut&& other) = delete;
@@ -338,12 +332,6 @@ namespace Langulus::Anyness
       constexpr Handle(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::TypeErasedHandle {Stackwise, LglsFwd(arguments)...} {}
 
-      /*constexpr Handle(void const* ptr, EntryPtr entry, DMeta type) noexcept {
-         this->SetHeapInner(ptr);
-         this->SetEntriesInner(entry);
-         this->SetTypeInner(type);
-      }*/
-
       /// Assignment is disabled                                              
       Handle& operator = (Handle const& other) = delete;
       Handle& operator = (Handle&& other) = delete;
@@ -405,17 +393,6 @@ namespace Langulus::Anyness
       constexpr HandleDisowned(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::TypeErasedHandleDisowned {Stackwise, LglsFwd(arguments)...} {}
 
-      /*template<CT::Container C>
-      constexpr HandleDisowned(Inner::Absorb, C&& argument) {
-         this->Absorb(Disown(argument));
-      }
-
-      /// Manual constructor for some niche uses, like iterators              
-      constexpr HandleDisowned(void const* ptr, EntryPtr, DMeta type) noexcept {
-         this->SetHeapInner(ptr);
-         this->SetTypeInner(type);
-      }*/
-
       /// Assignment is disabled                                              
       HandleDisowned& operator = (HandleDisowned const& other) = delete;
       HandleDisowned& operator = (HandleDisowned&& other) = delete;
@@ -435,10 +412,6 @@ namespace Langulus::Anyness
       }
    };
 
-
-
-
-
    
    ///                                                                        
    /// When T is a reference, then element is embedded inside container       
@@ -449,7 +422,6 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleEmbeddedDense<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle;
       using DeepType       = HandleDisowned; //TODO why disowned??
@@ -483,20 +455,6 @@ namespace Langulus::Anyness
       constexpr THandle(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::THandleEmbeddedDense<T> {Stackwise, LglsFwd(arguments)...} {}
 
-      /*constexpr ~THandle() noexcept {
-         this->Destroy();
-      }*/
-
-      /*constexpr THandle(void const* ptr, AllocationPtr alloc) noexcept {
-         this->SetHeapInner(ptr);
-         this->SetAllocationInner(alloc);
-      }*/
-
-      /*constexpr THandle(void const* ptr, EntryPtr = nullptr) noexcept {
-         this->SetHeapInner(ptr);
-         //this->SetAllocationInner(alloc);
-      }*/
-
       /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
@@ -520,7 +478,6 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleEmbeddedSparse<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned; //TODO why disowned??
@@ -554,15 +511,6 @@ namespace Langulus::Anyness
       constexpr THandle(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::THandleEmbeddedSparse<T> {Stackwise, LglsFwd(arguments)...} {}
 
-      /*constexpr ~THandle() noexcept {
-         this->Destroy();
-      }*/
-
-      /*constexpr THandle(Deref<T>* ptr, EntryPtr entry) noexcept {
-         this->SetHeapInner(ptr);
-         this->SetEntriesInner(entry);
-      }*/
-
       /// Assignment is disabled                                              
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
@@ -592,12 +540,9 @@ namespace Langulus::Anyness
    struct THandleEmergent<T> : Inner::THandleEmbeddedDenseEmergent<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandleEmergent;
       using DeepType       = HandleDisowned; //TODO why disowned??
-
-      //static constexpr bool Emergent = true;
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
@@ -627,14 +572,6 @@ namespace Langulus::Anyness
 
       constexpr THandleEmergent(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::THandleEmbeddedDenseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
-
-      /*constexpr ~THandleEmergent() noexcept {
-         this->Destroy();
-      }
-
-      constexpr THandleEmergent(void const* ptr, EntryPtr = nullptr) noexcept {
-         this->SetHeapInner(ptr);
-      }*/
 
       /// Assignment is disabled                                              
       THandleEmergent& operator = (THandleEmergent const& other) = delete;
@@ -696,14 +633,6 @@ namespace Langulus::Anyness
       constexpr THandleEmergent(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::THandleEmbeddedSparseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
 
-      /*constexpr ~THandleEmergent() noexcept {
-         this->Destroy();
-      }
-
-      constexpr THandleEmergent(Deref<T>* ptr, EntryPtr = nullptr) noexcept {
-         this->SetHeapInner(ptr);
-      }*/
-
       /// Assignment is disabled                                              
       THandleEmergent& operator = (THandleEmergent const& other) = delete;
       THandleEmergent& operator = (THandleEmergent&& other) = delete;
@@ -732,7 +661,6 @@ namespace Langulus::Anyness
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
@@ -765,14 +693,6 @@ namespace Langulus::Anyness
 
       constexpr THandleDisowned(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::THandleDisownedEmbedded<T> {Stackwise, LglsFwd(arguments)...} {}
-
-      /*constexpr ~THandleDisowned() noexcept {
-         this->Destroy();
-      }
-
-      constexpr THandleDisowned(Deref<T>* ptr, EntryPtr = nullptr) noexcept {
-         this->SetHeapInner(ptr);
-      }*/
 
       /// Assignment is disabled                                              
       THandleDisowned& operator = (THandleDisowned const& other) = delete;
