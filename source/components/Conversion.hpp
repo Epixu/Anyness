@@ -32,6 +32,7 @@ namespace Langulus::Anyness::Component
    public:
       //TODO add dimensionality
 
+      /// MARK: Public                                                        
       /// Convert block's first element into another block of size 1.         
       ///   @param out What are we converting to?                             
       ///   @return 1 on success                                              

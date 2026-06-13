@@ -40,6 +40,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
+      // MARK: Protected                                                
       LglsComIterationOperators(friend);
       LglsComReserveEmergent(friend);
       LglsComInsertion(friend);
@@ -187,7 +188,8 @@ namespace Langulus::Anyness::Component
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
             if constexpr (CT::Moved<I>) {
-               // We are moving 'from' - it needs to be fully reset     
+               // We are moving 'from' - it needs to be fully reset,    
+               // unless it's on the stack                              
                from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
             }
             else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {

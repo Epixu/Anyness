@@ -21,6 +21,7 @@
 
 namespace Langulus
 {
+   /// MARK: Hash type                                                        
    ///                                                                        
    /// Type that holds a hash.                                                
    /// Size is configurable using LANGULUS_HASHSIZE.                          
@@ -70,6 +71,7 @@ namespace Langulus
 
    namespace Inner
    {
+      /// MARK: MurmurHash3                                                   
       ///                                                                     
       /// MurmurHash3 was written by Austin Appleby, and is placed in the     
       /// public domain                                                       
@@ -183,6 +185,7 @@ namespace Langulus
    template<bool FAKE = false, Hash SEED = DefaultHashSeed, class T, class...MORE>
    constexpr auto HashOf(T&&, MORE&&...);
 
+   /// MARK: Concepts                                                         
    namespace CT
    {
       /// Check if the origin T can be hashed using HashOf                    
@@ -209,6 +212,7 @@ namespace Langulus
    }
 
 
+   /// MARK: HashOf                                                           
    /// Hash any hashable data, including fundamental/POD/range types          
    ///   @tparam FORCE_RUNTIME for internal use - if FORCE_RUNTIME and        
    ///      evaluated to fail, it will return CT::Unsupported; otherwise it   
@@ -383,6 +387,7 @@ namespace Langulus
 
 namespace std
 {
+   /// MARK: {std}                                                            
    /// Extend std to be capable of hashing anything with a GetHash method     
    template<::Langulus::CT::HasGetHashMethod H>
    struct hash<H> {

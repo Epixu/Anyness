@@ -24,6 +24,7 @@
 namespace Langulus
 {
    #if LANGULUS(STACKTRACE)
+      /// MARK: Stacktracing                                                  
       /// Dump the stack                                                      
       ///   @param depth - the number of stack entries to log                 
       ///   @param skip - the number of stack entries to skip. These are      
@@ -67,6 +68,7 @@ namespace Langulus
       }
    #endif
 
+   /// MARK: Error                                                            
    /// Will throw an exception                                                
    ///   @param m1 optional main error message                                
    ///   @param location optional location of the error                       
@@ -97,6 +99,7 @@ namespace Langulus
 
    #define LglsError(...) ::Langulus::ErrorInner(HERE() __VA_OPT__(,) __VA_ARGS__)
    
+   /// MARK: Assert                                                           
    /// Assertion that works both at runtime and at compile-time.              
    /// Will throw an exception if condition isn't met at runtime.             
    ///   @param condition the condition that must hold true                   
@@ -164,6 +167,7 @@ namespace Langulus
    #define LglsAssertWarn(...) ::Langulus::AssertWarnInner(HERE(), __VA_ARGS__)
 
    #if LANGULUS(SAFE) > 0
+   /// MARK: User assumes                                                     
    /// User assumption that works both at runtime and at compile-time.        
    /// Tested only if LANGULUS(SAFE) >= 1.                                    
    /// Will throw an exception if condition isn't met at runtime.             
@@ -244,6 +248,7 @@ namespace Langulus
    #endif
 
    #if LANGULUS(SAFE) > 1
+   /// MARK: Dev assumes                                                      
    /// Developer assumption that works both at runtime and at compile-time.   
    /// Tested only if LANGULUS(SAFE) >= 2.                                    
    /// Will throw an exception if condition isn't met at runtime.             
@@ -322,6 +327,7 @@ namespace Langulus
       #define LglsAssumeDevAndOptimize(...)  LglsCompilerSpecificAssume(__VA_ARGS__)
    #endif
 
+   /// MARK: Custom assume                                                    
    /// Custom assumption that works both at runtime and at compile-time.      
    /// Tested only if LANGULUS(SAFE) >= LEVEL.                                
    /// Will throw an exception if condition isn't met at runtime.             
@@ -407,6 +413,7 @@ namespace Langulus
 
 namespace fmt
 {
+   /// MARK: {fmt}                                                            
    /// @note global qualifier specializations don't work on GCC :(            
    /// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66892                     
 

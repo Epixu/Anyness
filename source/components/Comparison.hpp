@@ -65,6 +65,7 @@ namespace Langulus::Anyness::Component
       using Ordering = Tif<CT::TypeErased<C>, Compared, ::std::partial_ordering>;
 
    public:
+      /// MARK: Public                                                        
       /// Compare two containers for equality.                                
       /// This has much greater performance when hashed.                      
       ///   @attention compares all shared dimensions at once                 
@@ -821,7 +822,8 @@ namespace Langulus::Anyness::Component
          else return lhs.CompareOneEqual(rhs);
       }
 
-   protected:      
+   protected:
+      /// MARK: Protected                                                     
       /// Find a single element's index inside container (inner)              
       ///   @tparam REVERSE true to perform search in reverse                 
       ///   @attention assumes container is not empty                         

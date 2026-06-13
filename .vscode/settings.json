@@ -114,7 +114,7 @@
       }
    ]},
    "highlight.regexes": {
-      "(/{2}.*)": [{
+      "(/{2}(?!TODO).*)": [{
          "filterLanguageRegex": "c",
          "backgroundColor": "#88ff8820",
          "color": "#ffffff"
@@ -123,6 +123,11 @@
          "filterLanguageRegex": "c",
          "backgroundColor": "#b0ffb040",
          "color": "#ffffff"
+      }],
+      "(/{2}TODO.*)": [{
+        "filterLanguageRegex": "c",
+        "backgroundColor": "orange",
+        "color": "black"
       }]
    },
    "workbench.editor.wrapTabs": true,
@@ -139,12 +144,15 @@
   "debug.console.fontSize": 10,
   "terminal.integrated.fontSize": 10,
   "diffEditor.renderGutterMenu": true,
-  "scm.diffDecorations": "none",
+  "scm.diffDecorations": "minimap",
   "debug.console.fontFamily": "'Cascadia Code', Consolas, 'Courier New', monospace",
   "editor.autoIndentOnPaste": true,
   "cmake.configureOnEdit": false,
   "cmake.configureOnOpen": false,
   "cmake.automaticReconfigure": false,
   "editor.inlineSuggest.enabled": false,
-  "editor.suggestOnTriggerCharacters": false
+  "editor.suggestOnTriggerCharacters": false,
+  "editor.minimap.scale": 1,
+  "editor.minimap.maxColumn": 90,
+  "editor.minimap.renderCharacters": false
 }

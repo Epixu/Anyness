@@ -54,6 +54,7 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 
+      /// MARK: Public                                                        
       /// Generic emplacement that constructs/overwrites specific element.    
       /// Any overwritten element will be dereferenced/destroyed first.       
       ///   @tparam E Sets the type of the container if empty. Ignored if     
@@ -182,6 +183,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      /// MARK: Protected                                                     
       LglsComHeapMovable(friend);
       LglsComInsertion(friend);
       LglsComMerging(friend);

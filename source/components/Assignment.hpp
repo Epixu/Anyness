@@ -89,7 +89,8 @@ namespace Langulus::Anyness::Component
 
       //template<CT::Container C, class A>
       //void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
-      
+
+      /// MARK: Public                                                        
       /// Assign a value to the first element, if that element is initialized.
       /// If the element isn't initialized yet it will be constructed.        
       ///   @param argument the argument to assign                            
@@ -192,6 +193,7 @@ namespace Langulus::Anyness::Component
       }*/
 
    protected:
+      /// MARK: Protected                                                     
       LglsComIndexedCommonHashed(friend);
       LglsComConversion(friend);
 

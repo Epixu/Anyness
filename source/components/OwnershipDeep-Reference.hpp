@@ -38,7 +38,9 @@ namespace Langulus::Anyness::Component
 
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
+      static constexpr bool Shared   = sizeof...(SHARED) > 0;
 
+      /// MARK: Public                                                        
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
@@ -62,7 +64,22 @@ namespace Langulus::Anyness::Component
          return nullptr;
       }
 
+      auto GetKeyEntries(this auto&& self) assumptious -> AllocationPtr const* requires Shared {
+         return ThisCom::template GetEntries<Id::First>();
+      }
+      auto GetValEntries(this auto&& self) assumptious -> AllocationPtr const* requires Shared {
+         return ThisCom::template GetEntries<Id::Second>();
+      }
+
+      auto GetKeyEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious requires Shared {
+         return ThisCom::template GetEntriesAt<Id::First>(LglsFwd(idx));
+      }
+      auto GetValEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious requires Shared {
+         return ThisCom::template GetEntriesAt<Id::Second>(LglsFwd(idx));
+      }
+
    protected:
+      /// MARK: Protected                                                     
       LglsComOwnershipDeepEmergent(friend);
       LglsComEmplacement(friend);
       LglsComIterationOperators(friend);

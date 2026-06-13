@@ -33,6 +33,7 @@ namespace Langulus::CT
 ///                                                                           
 namespace Langulus::Logger
 {
+   /// MARK: Color                                                            
    /// Color codes, consistent with ANSI/VT100 escapes.                       
    /// Also consistent with fmt::terminal_color.                              
    enum class Color : uint {
@@ -76,6 +77,7 @@ namespace Langulus::Logger
       WhiteBgr
    };
 
+   /// MARK: Emphasis                                                         
    /// Some formatting styles, consistent with fmt::emphasis                  
    enum class Emphasis : uint8_t {
       Default     = 0,			
@@ -94,6 +96,7 @@ namespace Langulus::Logger
           ==  static_cast<uint8_t>(rhs);
    }
 
+   /// MARK: Command                                                          
    /// Console commands                                                       
    enum class Command : uint8_t {
       Clear,		// Clear the console                                  
@@ -103,6 +106,7 @@ namespace Langulus::Logger
       ExactTime 	// Write an exhaustive timestamp                      
    };
    
+   /// MARK: Intent                                                           
    /// Types of predefined messages, each with its unique style and search    
    /// patterns.                                                              
    enum class Intent {
@@ -231,6 +235,7 @@ namespace Langulus::Logger
       return result;
    }
    
+   /// MARK: Raw logging                                                      
    /// A general new-line write function that continues the last style        
    template<class...T> LANGULUS(INLINED)
    constexpr void LineRaw(T&&...arguments) noexcept {
@@ -472,6 +477,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Size                                                             
    /// Gets a size stringified in a human readable way as KB, MB, GB, etc.    
    struct Size {
       size_t bytes;
@@ -581,6 +587,7 @@ namespace Langulus::Logger
 #if LANGULUS_FEATURE(LOGGING)
 namespace fmt
 {
+   /// MARK: {fmt}                                                            
    ///                                                                        
    /// Extend FMT to be capable of logging Logger::Color                      
    ///                                                                        

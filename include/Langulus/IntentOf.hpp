@@ -22,6 +22,7 @@ namespace Langulus::CTTI
 
 LANGULUS_CTTI_CONCEPT_UNSHEDDABLE_DECVQ(Intent);
 
+/// MARK: Concepts                                                            
 namespace Langulus::CT
 {
    /// Check if all T are NOT sheddable intents                               
@@ -150,6 +151,7 @@ namespace Langulus
    }
 
 
+   /// MARK: Refer                                                            
    ///                                                                        
    /// Referred value intermediate type, used in constructors and assignments 
    /// to refer to data explicitly                                            
@@ -229,6 +231,7 @@ namespace Langulus
    Refer(T&&) -> Refer<Decq<Deref<TypeOf<T>>>>;
    
    
+   /// MARK: Copy                                                             
    ///                                                                        
    /// Copied value intermediate type, used in constructors and assignments   
    /// to shallow-copy container explicitly                                   
@@ -303,6 +306,7 @@ namespace Langulus
    Copy(T&&) -> Copy<Decq<Deref<TypeOf<T>>>>;
 
 
+   /// MARK: Move                                                             
    ///                                                                        
    /// Moved value intermediate type, used in constructors and assignments    
    /// to move data explicitly                                                
@@ -388,6 +392,7 @@ namespace Langulus
    Move(T&&) -> Move<Decq<Deref<TypeOf<T>>>>;
 
 
+   /// MARK: Abandon                                                          
    ///                                                                        
    /// Abandoned value intermediate type can be used in constructors and      
    /// assignments to provide a guarantee, that the value shall not be used   
@@ -478,6 +483,7 @@ namespace Langulus
    Abandon(T&&) -> Abandon<Decq<Deref<TypeOf<T>>>>;
 
 
+   /// MARK: Disown                                                           
    ///                                                                        
    /// Disowned value intermediate type, used in constructors and assignments 
    /// to copy container without gaining ownership                            
@@ -552,6 +558,7 @@ namespace Langulus
    Disown(T&&) -> Disown<Decq<Deref<TypeOf<T>>>>;
 
 
+   /// MARK: Clone                                                            
    ///                                                                        
    /// Cloned value intermediate type, used in constructors and assignments   
    /// to clone container, doing a deep copy instead of default shallow one   
@@ -611,6 +618,7 @@ namespace Langulus
    Clone(T&&) -> Clone<Decq<Deref<TypeOf<T>>>>;
 
 
+   /// MARK: CT::Has*                                                         
    namespace CT
    {
       ///                                                                     
@@ -773,6 +781,7 @@ namespace Langulus
 
 namespace Langulus
 {   
+   /// MARK: IntentNew                                                        
    /// Create an instance of T at the provided memory using placement new     
    /// which considers the intent and checks if T's constructors support it.  
    /// All intent-related construction concepts are defined in terms of this  
@@ -890,6 +899,7 @@ namespace Langulus
       else static_assert(false, "Intent wasn't recognized");
    }
 
+   /// MARK: IntentAssign                                                     
    /// Assign new value to an instance of T, using the provided intent        
    ///   @attention when S is a deep intent (like Clone) this function        
    ///      will DenseCast 'lhs' and 'rhs', and copy only dense data          
@@ -1022,6 +1032,7 @@ namespace Langulus
       concept AssignableFrom = requires (T t, A&&...a) { ((t = LglsFwd(a)), ...); };
 
 
+      /// MARK: CT::Constructible                                             
       ///                                                                     
       ///   Constructibles                                                    
       ///                                                                     
@@ -1107,6 +1118,7 @@ namespace Langulus
           and (IntentConstructible<Langulus::Move, T> and ...);
 
 
+      /// MARK: CT::Assignable                                                
       ///                                                                     
       ///   Assignables                                                       
       ///                                                                     

@@ -20,6 +20,7 @@
 
 namespace Langulus::Logger
 {
+   /// MARK: CommandExt                                                       
    /// Additional commands                                                    
    enum class CommandExt : uint8_t {
       Pop,	   // Pop the style, and apply previous style               
@@ -31,6 +32,7 @@ namespace Langulus::Logger
    };
    using enum CommandExt;
    
+   /// MARK: ColorExt                                                         
    /// Colors combined with pushes and pop commands, for shorter code         
    enum class ColorExt : uint {
       // Bits that dictate how to mix the colors                        
@@ -166,6 +168,7 @@ namespace Langulus::Logger
    };
    using enum ColorExt;
    
+   /// MARK: Tabs                                                             
    /// Tabulation marker (can be pushed to log)                               
    struct Tabs {
       int mTabs = 0;
@@ -210,6 +213,7 @@ namespace Langulus::Logger
    };
 
 
+   /// MARK: State                                                            
    ///                                                                        
    ///   The global logger state                                              
    ///                                                                        
@@ -312,6 +316,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Section                                                          
    /// Write a section on a new line, tab all consecutive lines, underline it,
    /// and return the scoped tabs, that will be	untabbed automatically at the 
    /// scope's end. Section color is context dependent on the current intent  
@@ -343,6 +348,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Fatal                                                            
    /// Write a new-line fatal error                                           
    template<class...T> LANGULUS(INLINED)
    constexpr void Fatal([[maybe_unused]] T&&...arguments) noexcept {
@@ -389,6 +395,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Error                                                            
    /// Write a new-line error                                                 
    template<class...T> LANGULUS(INLINED)
    constexpr void Error([[maybe_unused]] T&&...arguments) noexcept {
@@ -435,6 +442,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Warning                                                          
    /// Write a new-line warning                                               
    template<class...T> LANGULUS(INLINED)
    constexpr void Warning([[maybe_unused]] T&&...arguments) noexcept {
@@ -481,6 +489,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Verbose                                                          
    /// Write a new-line with verbose information                              
    template<class...T> LANGULUS(INLINED)
    constexpr void Verbose([[maybe_unused]] T&&...arguments) noexcept {
@@ -527,6 +536,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Info                                                             
    /// Write a new-line with information                                      
    template<class...T> LANGULUS(INLINED)
    constexpr void Info([[maybe_unused]] T&&...arguments) noexcept {
@@ -573,6 +583,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Message                                                          
    /// Write a new-line with a personal message                               
    template<class...T> LANGULUS(INLINED)
    constexpr void Message([[maybe_unused]] T&&...arguments) noexcept {
@@ -619,6 +630,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Special                                                          
    /// Write a new-line with special text                                     
    template<class...T> LANGULUS(INLINED)
    constexpr void Special([[maybe_unused]] T&&...arguments) noexcept {
@@ -665,6 +677,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Flow                                                             
    /// Write a new-line with flow information                                 
    template<class...T> LANGULUS(INLINED)
    constexpr void Flow([[maybe_unused]] T&&...arguments) noexcept {
@@ -711,6 +724,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Input                                                            
    /// Write a new-line on user input                                         
    template<class...T> LANGULUS(INLINED)
    constexpr void Input([[maybe_unused]] T&&...arguments) noexcept {
@@ -757,6 +771,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Network                                                          
    /// Write a new-line with network message                                  
    template<class...T> LANGULUS(INLINED)
    constexpr void Network([[maybe_unused]] T&&...arguments) noexcept {
@@ -803,6 +818,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: OS                                                               
    /// Write a new-line with a message from OS                                
    template<class...T> LANGULUS(INLINED)
    constexpr void OS([[maybe_unused]] T&&...arguments) noexcept {
@@ -849,6 +865,7 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// MARK: Prompt                                                           
    /// Write a new-line with an input prompt                                  
    template<class...T> LANGULUS(INLINED)
    constexpr void Prompt([[maybe_unused]] T&&...arguments) noexcept {
@@ -895,6 +912,7 @@ namespace Langulus::Logger
       #endif
    }
    
+   /// MARK: Attachments                                                      
    inline void AttachDuplicator(Interface* d) noexcept {
       GlobalState.AttachDuplicator(d);
       Logger::Info("Logging duplicator attached: ", d->GetFilename());

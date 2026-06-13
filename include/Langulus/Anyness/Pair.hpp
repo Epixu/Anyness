@@ -31,6 +31,7 @@
 
 namespace Langulus::Anyness::Inner
 {
+   /// Type-erased heap-based pair container                                  
    using PairBase = Com::Container<
       Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
                      Com::TypedStack<DMeta, void, false, 1>>,
@@ -54,8 +55,7 @@ namespace Langulus::Anyness::Inner
 namespace Langulus::Anyness
 {
    ///                                                                        
-   /// A type-erased pair.                                                    
-   ///   @attention not binary-compatible with its templated equivalent TPair 
+   /// A type-erased pair                                                     
    struct Pair : Inner::PairBase {
       using CTTI_ReflectAs = Pair;
       using CTTI_Deep      = Yes<>;
@@ -66,11 +66,9 @@ namespace Langulus::Anyness
 
       using Base     = Inner::PairBase;
       using DeepType = Any;
-      using KeyType  = void;
-      using ValType  = void;
 
       using HandleType    = THandlePair<Handle, Handle>;
-      using HandleMutType = THandlePair<Handle, HandleMut>;
+      using HandleMutType = THandlePair<HandleMut, HandleMut>;
       using Pick          = HandleType;
       using PickMut       = HandleMutType;
 
@@ -87,7 +85,6 @@ namespace Langulus::Anyness
          this->Destroy();
       }
       
-      /// Construction that either absorbs the provided pair                  
       constexpr Pair(CT::Pair auto&& p) {
          this->Absorb(LglsFwd(p));
       }

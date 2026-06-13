@@ -26,6 +26,7 @@
 ///      they should have additional documentation alongside them             
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Can be used in two ways to satisfy CT::Array<T>:                       
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Array = Yes<count>;` in T                  
@@ -327,6 +328,7 @@ namespace Langulus
    template<class T>
    using Decay = ::std::remove_pointer_t<decltype(Inner::NestedDecay<T>())>;
    
+   /// MARK: CT                                                               
    namespace CT
    {
       /// Check if all T are bounded arrays                                   
@@ -656,7 +658,7 @@ namespace Langulus
    }
 }
 
-
+/// MARK: CTTI Macros                                                         
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>.         
 /// Used to reduce boilerplate. Removes only references.                      

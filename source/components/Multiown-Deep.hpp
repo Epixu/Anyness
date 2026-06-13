@@ -48,11 +48,12 @@ namespace Langulus::Anyness::Component
 
       #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
 
+      /// MARK: Public                                                        
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
       template<Cid SID = 0>
-      auto GetEntries(this auto const& self) assumptious -> Allocation const* const* {
+      auto GetEntries(this auto const& self) assumptious -> AllocationPtr const* {
          using C = typename Subcomponents::template At<SID>;
          return self.C::GetEntries();
       }
@@ -60,12 +61,31 @@ namespace Langulus::Anyness::Component
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
       template<Cid SID = 0>
-      auto GetEntriesAt(this auto const& self, auto const& idx) assumptious -> Allocation const* const* {
+      auto GetEntriesAt(this auto const& self, auto const& idx) assumptious -> AllocationPtr const* {
          using C = typename Subcomponents::template At<SID>;
          return self.C::GetEntriesAt(idx);
       }
+      
+      auto GetKeyEntries(this auto&& self) assumptious -> AllocationPtr const* {
+         using C = typename Subcomponents::template At<0>;
+         return self.C::GetEntries();
+      }
+      auto GetValEntries(this auto&& self) assumptious -> AllocationPtr const* {
+         using C = typename Subcomponents::template At<1>;
+         return self.C::GetEntries();
+      }
+
+      auto GetKeyEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious {
+         using C = typename Subcomponents::template At<0>;
+         return self.C::GetEntriesAt(LglsFwd(idx));
+      }
+      auto GetValEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious {
+         using C = typename Subcomponents::template At<1>;
+         return self.C::GetEntriesAt(LglsFwd(idx));
+      }
 
    protected:
+      /// MARK: Protected                                                     
       LglsComHeapMovable(friend);
       LglsComRemoval(friend);
       LglsComOwnershipDeepEmergent(friend);

@@ -54,6 +54,7 @@ namespace Langulus::Anyness::Component
       static_assert(CT::Integer<CountType> and not CT::Signed<CountType>,
          "Count type must be an unsigned integer");
 
+      /// MARK: Public                                                        
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated - zero otherwise. If no heap component exists, then the   
       /// count is always COUNT.                                              
@@ -74,6 +75,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      /// MARK: Protected                                                     
       LglsComRemoval(friend);
       LglsComEmplacement(friend);
       LglsComInsertion(friend);

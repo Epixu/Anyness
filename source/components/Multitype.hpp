@@ -33,6 +33,9 @@ namespace Langulus::Anyness::Component
       using Id             = decltype(Subcomponents::Extract([]<class C> static { return typename C::Id{}; }));
       using CTTI_Typed     = decltype(Subcomponents::Extract([]<class C> static { return Types<TypeOf<C>>{}; }));
 
+      using Key = CTTI_Typed::First;
+      using Val = CTTI_Typed::Second;
+
       static_assert(Subcomponents::ForEachIndexedAnd([]<class C, size_t I> {
          return C::Id::Count == 1 and C::Id::First == I; }),
          "Each enabled subcomponent needs to be dedicated to their single dimension, "

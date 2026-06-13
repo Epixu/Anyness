@@ -53,7 +53,6 @@ namespace Langulus::Anyness
       using CTTI_Map       = Yes<>;
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
-      //using CTTI_Typed     = Types<K, V>;
 
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;
@@ -63,12 +62,7 @@ namespace Langulus::Anyness
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 
-      //static constexpr bool TypeErased = false;
-      //static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
-
-      using Key = K;
-      using Val = V;
 
       constexpr TMap() noexcept {
          this->ConstructDefault();

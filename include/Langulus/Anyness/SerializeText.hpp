@@ -11,6 +11,7 @@
 #include "TAny.hpp"
 #include "TMany.hpp"
 #include "TSet.hpp"
+#include "TPair.hpp"
 #include "TMap.hpp"
 
 
@@ -254,7 +255,38 @@ namespace Langulus::CTTI
    }
 
 
-   
+
+   ///                                                                        
+   /// Pair/TPair                                                             
+   ///                                                                        
+
+   /// Convert Pair -> Text                                                   
+   constexpr auto Converter<Anyness::Pair, Anyness::Text>::Convert(
+      Anyness::Pair const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+
+   /// Convert TPair -> Text                                                  
+   template<class K, class V>
+   constexpr auto Converter<Anyness::TPair<K, V>, Anyness::Text>::Convert(
+      Anyness::TPair<K, V> const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+
+
+
    ///                                                                        
    /// Map/TMap                                                               
    ///                                                                        

@@ -30,6 +30,7 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 
+      /// MARK: Public                                                        
       /// Reset the hash. It will be recomputed on next comparison.           
       template<Cid SID = ID> requires Relevant<SID>
       void ResetHash(this auto& self) noexcept {
@@ -46,6 +47,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      /// MARK: Protected                                                     
       LglsComHeapMovable(friend);
       LglsComConversion(friend);
 

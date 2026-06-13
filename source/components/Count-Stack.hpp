@@ -43,6 +43,7 @@ namespace Langulus::Anyness::Component
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Count type must be an unsigned integer");
 
+      /// MARK: Public                                                        
       /// Check if there are no initialized elements                          
       template<Cid SID = ID> requires Relevant<SID>
       constexpr bool IsEmpty(this auto const& self) noexcept {
@@ -64,6 +65,7 @@ namespace Langulus::Anyness::Component
       T GetCountItemsDeep() const noexcept;
 
    protected:
+      /// MARK: Protected                                                     
       LglsComRemoval(friend);
       LglsComEmplacement(friend);
       LglsComInsertion(friend);

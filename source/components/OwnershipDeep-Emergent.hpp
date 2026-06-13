@@ -54,27 +54,29 @@ namespace Langulus::Anyness::Component
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 
+      /// MARK: Public                                                        
       /// Emergent deep ownership can't provide an array of entries           
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetEntries() const noexcept -> AllocationPtr const* {
          return nullptr;
       }
       
-      constexpr auto GetKeyEntries(this auto&& self) noexcept -> AllocationPtr const* requires Shared {
-         return self.template GetEntries<0>();
+      constexpr auto GetKeyEntries() const noexcept -> AllocationPtr const* requires Shared {
+         return nullptr;
       }
-      constexpr auto GetValEntries(this auto&& self) noexcept -> AllocationPtr const* requires Shared {
-         return self.template GetEntries<1>();
+      constexpr auto GetValEntries() const noexcept -> AllocationPtr const* requires Shared {
+         return nullptr;
       }
 
-      auto GetKeyEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious requires Shared {
-         return self.template GetEntriesAt<0>(LglsFwd(idx));
+      constexpr auto GetKeyEntriesAt(CT::Index auto&&) const noexcept requires Shared {
+         return nullptr;
       }
-      auto GetValEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious requires Shared {
-         return self.template GetEntriesAt<1>(LglsFwd(idx));
+      constexpr auto GetValEntriesAt(CT::Index auto&&) const noexcept requires Shared {
+         return nullptr;
       }
 
    protected:
+      /// MARK: Protected                                                     
       LglsComHeapReference(friend);
       LglsComHeapMovable(friend);
       LglsComRemoval(friend);
@@ -122,6 +124,7 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
+      /// MARK: Keep                                                          
       /// Nests through all indirection layers of the first contained element.
       /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
       ///   @tparam FIND_MISSING if an entry is missing, we attempt at finding
@@ -443,6 +446,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: Destroy                                                       
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
       /// Relies on predeclared array of GetEntriesInner (i.e. not emergent). 
@@ -938,6 +942,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: Services                                                      
       /// Emplace on top of the first element using an intent                 
       ///   @attention Works in one dimension at a time!                      
       ///   @attention This overwrites previous entries without dereferencing 

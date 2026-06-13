@@ -18,6 +18,7 @@
 
 namespace Langulus
 {
+   /// MARK: Concepts                                                         
    namespace CT
    {
       /// Check if all T are Literal types                                    
@@ -53,6 +54,7 @@ namespace Langulus
    using Token = ::std::string_view;
 
 
+   /// MARK: Literal                                                          
    ///                                                                        
    /// Acts as both a single value, or string literal. You can use it as a    
    /// template parameter. The string implementation should be introduced in  
@@ -459,6 +461,7 @@ namespace Langulus
       }
    };
 
+   /// MARK: CTAD                                                             
    Literal() -> Literal<>;
 
    template<class T>
@@ -477,6 +480,7 @@ namespace Langulus
 
    ///                                                                        
    /// Literal == Literal                                                     
+   /// MARK: Comparison                                                       
    template<CT::Literal LHS, CT::Literal RHS>
    constexpr bool operator == (const LHS& lhs, const RHS& rhs) {
       if constexpr (CT::LiteralString<LHS, RHS>) {
@@ -612,6 +616,7 @@ namespace Langulus
    }
    
 
+   /// MARK: Concatenation                                                    
    ///                                                                        
    /// Concatenation                                                          
    ///                                                                        
@@ -651,6 +656,7 @@ namespace Langulus
    }
 
    
+   /// MARK: Yes/No/Maybe                                                     
    /// Equivalent to ::std::true_type, but without the silly nomenclature     
    /// Can carry a constant with itself                                       
    template<Literal VALUE = 0>
@@ -679,6 +685,7 @@ namespace Langulus
 
 namespace std
 {
+   /// MARK: {std}                                                            
    ///                                                                        
    /// Hash support                                                           
    ///                                                                        

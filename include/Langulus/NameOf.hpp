@@ -15,6 +15,7 @@
 
 namespace Langulus::CTTI
 {
+   /// MARK: Builtin names                                                    
    ///                                                                        
    /// The following are some manual overrides that make stuff consistent     
    /// across different compilers                                             
@@ -66,6 +67,7 @@ namespace Langulus::RTTI
 
    namespace Inner
    {
+      /// MARK: Details                                                       
       /// Reserved keywords - you're not allowed to name types after them     
       constexpr Token ReservedKeywords[] = {
          "null", "notype", "notag", "noverb", "novalue", "const"
@@ -572,6 +574,7 @@ namespace Langulus::RTTI
 
 namespace Langulus
 {
+   /// MARK: CppNameOf                                                        
    /// Get the name of a type, templated or not, with consistently named      
    /// template arguments, even if nested, at compile-time                    
    ///   @tparam T the type to get the name of                                
@@ -595,6 +598,7 @@ namespace Langulus
       return RTTI::Inner::IsolateConstant<E, NORMALIZE, false>();
    }
 
+   /// MARK: LastCppNameOf                                                    
    /// Same as CppNameOf, but removes all namespaces at compile-time          
    ///   @tparam T the type to get the name of                                
    ///   @tparam NORMALIZE whether to normalize name so that it is the same   
@@ -623,6 +627,7 @@ namespace Langulus
       return fullName.substr(lastName);
    }
 
+   /// MARK: NameOf                                                           
    /// Get the name of a type at compile-time.                                
    /// Considers CTTI::Named, or fallbacks to the C++ name.                   
    /// If you want to avoid custom names, use CppNameOf directly instead.     

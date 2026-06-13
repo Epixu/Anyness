@@ -26,6 +26,7 @@
 /// in case it's used with a non-reference.                                   
 #define LglsFwd(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 
+/// MARK: CMake options                                                       
 /// Safe mode enables assumption checks all over the code                     
 /// High overhead, usually enabled only when testing in debug builds          
 #if defined(LANGULUS_OPTION_SAFE_MODE) or defined(LANGULUS_ASSERTION_LEVEL)
@@ -224,6 +225,7 @@
    #define IF_NOT_LANGULUS_LOGGING(a)  a
 #endif
 
+/// MARK: Compiler                                                            
 /// Detect compiler                                                           
 #if defined(__GNUC__) and not defined(__clang__)
    // We're on a GNUC Compiler!                                         
@@ -326,6 +328,7 @@
 
 #define LANGULUS_OS(a) LANGULUS_OS_##a()
 
+/// MARK: OS                                                                  
 /// Detect operating system                                                   
 #if defined(_WIN32) or defined(__CYGWIN__)
    #define LANGULUS_OS_WINDOWS() 1
@@ -412,7 +415,7 @@
 /// obscure errors                                                            
 #define LANGULUS_NOOP() ((void)0)
 
-
+/// MARK: Pragmas                                                             
 #if LANGULUS_COMPILER(MSVC)
    #define LglsNoSideEffects
    #define LglsPure
@@ -515,6 +518,7 @@
 #define LANGULUS_BOUNDARY(a) namespace Langulus { const char* Boundary = a; }
 
 
+/// MARK: Utilities                                                           
 ///                                                                           
 ///   The all-encompassing Langulus namespace                                 
 ///                                                                           
@@ -581,8 +585,7 @@ namespace Langulus
    
    /// I don't like how long ::std::conditional_t is to write.                
    /// Also, std::conditional_t must instantiate both paths, which is a big   
-   /// design flaw. This one adds an additional indirection to compensate.    
-   /// https://reddit.com/r/cpp_questions/comments/lujzhu/template_is_instantiated_in_false_branch_of/
+   /// design flaw.                                                           
    template<bool CONDITION, class YES, class NO>
    using Tif = typename ::std::conditional_t<CONDITION,
          ::std::type_identity<YES>,

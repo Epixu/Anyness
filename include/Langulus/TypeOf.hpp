@@ -11,6 +11,7 @@
 
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Can be used in two ways to satisfy CT::Typed<T>:                       
    /// 1. Specialize for T/concept having non-void Type                       
    /// 2. Add a public `using CTTI_Typed = <non void type/typelist>;` in T    
@@ -20,6 +21,7 @@ namespace Langulus::CTTI
 
 namespace Langulus::CT::Inner
 {
+   /// MARK: Details                                                          
    /// Helper function to extract underlying type                             
    ///   @tparam T the type to inspect                                        
    ///   @tparam INDEX used in case inner type is a Types<...> typelist, in   
@@ -92,6 +94,7 @@ namespace Langulus::CT::Inner
 
 namespace Langulus
 {
+   /// MARK: TypeOf                                                           
    /// Get the type that wraps std::underlying_type_t<T> for enums,           
    /// as well as any bounded array, or anything with CTTI::Typed::Type or    
    /// T::CTTI_Typed/T::value_type that isn't 'void'. Will result in a type   
@@ -120,6 +123,7 @@ namespace Langulus
       concept Untyped = PartialValidate<T...> and (Void<TypeOf<Deref<T>>> and ...);
    }
 
+   /// MARK: Casts                                                            
    /// Downcasts a typed wrapper to the contained element, if cast operator   
    /// to TypeOf<T> is available                                              
    ///  - if T isn't typed, just return itself                                
