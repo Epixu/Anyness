@@ -109,6 +109,9 @@ void Map_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_Default(C const& pack, bool typed = false) {
    Pair_CheckState_Default<K, V>(pack, typed);
+
+   REQUIRE_FALSE(pack.IsCompressed());
+   REQUIRE_FALSE(pack.IsSorted());
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>

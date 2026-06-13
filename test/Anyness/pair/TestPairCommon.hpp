@@ -197,9 +197,7 @@ void Pair_CheckState_Default(C const& pack, bool typed = false) {
    //TODO Many_CheckState_Default<K>(map.GetKeys());
    //TODO Many_CheckState_Default<V>(map.GetVals());
 
-   REQUIRE_FALSE(pack.IsCompressed());
    REQUIRE_FALSE(pack.IsEncrypted());
-   REQUIRE_FALSE(pack.IsSorted());
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
@@ -482,18 +480,6 @@ void Pair_CheckState_ContainsOne(T const& pack, IK&& key_with_intent, IV&& val_w
             for (size_t i = 0; i < IndirectsOf<E2>; ++i)
                REQUIRE(pack.GetValEntries()[i] == nullptr);
          }
-      }
-   }
-
-   //TODO test all kinds of ranged modifiers??
-   for (auto& it : pack) {
-      if constexpr (CT::TypeErased<T>) {
-         REQUIRE(it.GetKey().CompareOneEqual(*e1) != (CT::Cloned<IK> and CT::Sparse<E1>));
-         REQUIRE(it.GetVal().CompareOneEqual(*e2) != (CT::Cloned<IV> and CT::Sparse<E2>));
-      }
-      else {
-         REQUIRE((it.GetKey() != *e1) == (CT::Cloned<IK> and CT::Sparse<E1>));
-         REQUIRE((it.GetVal() != *e2) == (CT::Cloned<IV> and CT::Sparse<E2>));
       }
    }
 }

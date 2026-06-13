@@ -169,16 +169,16 @@ namespace Langulus::Anyness
          return true;
       }
 
-      template<CT::NotVoid AS>
+      /*template<CT::NotVoid AS>
       decltype(auto) KeyAsAt(this auto&& self, CT::Index auto&& idx) {
          return self.template AsAt<AS, 0>(LglsFwd(idx));
       }
       template<CT::NotVoid AS>
       decltype(auto) ValAsAt(this auto&& self, CT::Index auto&& idx) {
          return self.template AsAt<AS, 1>(LglsFwd(idx));
-      }
+      }*/
 
-      constexpr auto GetKeyEntries() const noexcept requires CT::Sparse<K> {
+      /*constexpr auto GetKeyEntries() const noexcept requires CT::Sparse<K> {
          return this->template GetEntries<0>();
       }
       constexpr auto GetValEntries() const noexcept requires CT::Sparse<V> {
@@ -190,7 +190,7 @@ namespace Langulus::Anyness
       }
       auto GetValEntriesAt(CT::Index auto&& idx) const assumptious requires CT::Sparse<V> {
          return this->template GetEntriesAt<1>(LglsFwd(idx));
-      }
+      }*/
    };
 
    template<CT::NotVoid K, CT::NotVoid V>

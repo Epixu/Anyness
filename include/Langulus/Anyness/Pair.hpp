@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Inner
       Com::CountStatic<1u, 0, 1>,         // Statically sized to 1      
       Com::ReserveStatic<1u, 0, 1>,       // Statically reserved to 1   
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
-      Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>, // Deep ownership             
+      Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>,
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         
       Com::Assignment<0, 1>,              // Allows assignment          
@@ -46,7 +46,8 @@ namespace Langulus::Anyness::Inner
       Com::Conversion<0, 1>,              // Allows conversion          
       Com::Comparison<true, 0, 1>,        // Allows comparisons         
       Com::State::Future<>,               // Toggle future linking      
-      Com::State::Past<>                  // Toggle past linking        
+      Com::State::Past<>,                 // Toggle past linking        
+      Com::State::Encrypted<>             // Toggle encryption          
    >;
 }
 
@@ -61,8 +62,6 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_MapsTo    = Text;
 
-      //static constexpr bool TypeErased = true;
-      //static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
 
       using Base     = Inner::PairBase;
@@ -115,9 +114,16 @@ namespace Langulus::Anyness
       constexpr Pair& operator = (Pair&& other) noexcept {
          return this->AssignAbsorb(Move(other));
       }
-      
       constexpr Pair& operator = (CT::Pair auto&& pair) {
          return this->AssignAbsorb(LglsFwd(pair));
+      }
+      
+      /// Clear the map and assign a key and a value                          
+      constexpr Pair& Assign(auto&& a1, auto&& a2) {
+         this->Clear();
+         this->template EmplaceConstruct<0>(LglsFwd(a1));
+         this->template EmplaceConstruct<1>(LglsFwd(a2));
+         return *this;
       }
 
       using Com::Comparison<true, 0, 1>::operator <=>;

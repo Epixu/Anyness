@@ -207,6 +207,14 @@ namespace Langulus::Anyness::Component
             }
          }
       }
+      template<CT::NotVoid AS>
+      auto* GetKey(this auto&& self) requires Shared {
+         return ThisCom::template Get<AS, 0>();
+      }
+      template<CT::NotVoid AS>
+      auto* GetVal(this auto&& self) requires Shared {
+         return ThisCom::template Get<AS, 1>();
+      }
 
       /// Get first element as a handle, or any desired wrapping type.        
       /// Conversion or copying may occur, depending on type.                 
@@ -298,6 +306,15 @@ namespace Langulus::Anyness::Component
                }
             }
          }
+      }
+
+      template<CT::NotVoid AS>
+      decltype(auto) KeyAs(this auto&& self) requires Shared {
+         return ThisCom::template As<AS, 0>();
+      }
+      template<CT::NotVoid AS>
+      decltype(auto) ValAs(this auto&& self) requires Shared {
+         return ThisCom::template As<AS, 1>();
       }
 
       /// A safe way to get the first sparse entry after being resolved to    

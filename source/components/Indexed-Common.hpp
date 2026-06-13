@@ -286,6 +286,15 @@ namespace Langulus::Anyness::Component
             }
          }
       }
+      
+      template<CT::NotVoid AS>
+      decltype(auto) KeyAsAt(this auto&& self, CT::Index auto&& idx) requires Shared {
+         return self.template AsAt<AS, 0>(LglsFwd(idx));
+      }
+      template<CT::NotVoid AS>
+      decltype(auto) ValAsAt(this auto&& self, CT::Index auto&& idx) requires Shared {
+         return self.template AsAt<AS, 1>(LglsFwd(idx));
+      }
 
       /// Get Nth deep item using a deep index                                
       ///   @attention ignores sparseness                                     

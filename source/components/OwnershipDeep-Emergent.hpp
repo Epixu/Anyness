@@ -49,6 +49,7 @@ namespace Langulus::Anyness::Component
 
       static constexpr uint OwnedDeep = STYLE;
       static constexpr bool ReferenceElements = REF_INDIVIDUAL;
+      static constexpr bool Shared = sizeof...(SHARED) > 0;
       static constexpr int  ComponentPrecedence = 2000;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
@@ -57,6 +58,20 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetEntries() const noexcept -> AllocationPtr const* {
          return nullptr;
+      }
+      
+      constexpr auto GetKeyEntries(this auto&& self) noexcept -> AllocationPtr const* requires Shared {
+         return self.template GetEntries<0>();
+      }
+      constexpr auto GetValEntries(this auto&& self) noexcept -> AllocationPtr const* requires Shared {
+         return self.template GetEntries<1>();
+      }
+
+      auto GetKeyEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious requires Shared {
+         return self.template GetEntriesAt<0>(LglsFwd(idx));
+      }
+      auto GetValEntriesAt(this auto&& self, CT::Index auto&& idx) assumptious requires Shared {
+         return self.template GetEntriesAt<1>(LglsFwd(idx));
       }
 
    protected:

@@ -78,8 +78,6 @@ namespace Langulus::Anyness::Inner
       using Pick          = HandleType;
       using PickMut       = HandleMutType;
 
-      //static constexpr bool TypeErased = true;
-      //static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
 
       constexpr Map() noexcept {
@@ -204,29 +202,6 @@ namespace Langulus::Anyness::Inner
 
       constexpr bool IsKeyConstant() const noexcept {
          return true;
-      }
-
-      template<CT::NotVoid AS>
-      decltype(auto) KeyAsAt(this auto&& self, CT::Index auto&& idx) {
-         return self.template AsAt<AS, 0>(LglsFwd(idx));
-      }
-      template<CT::NotVoid AS>
-      decltype(auto) ValAsAt(this auto&& self, CT::Index auto&& idx) {
-         return self.template AsAt<AS, 1>(LglsFwd(idx));
-      }
-
-      constexpr auto GetKeyEntries() const noexcept {
-         return this->template GetEntries<0>();
-      }
-      constexpr auto GetValEntries() const noexcept {
-         return this->template GetEntries<1>();
-      }
-
-      auto GetKeyEntriesAt(CT::Index auto&& idx) const assumptious {
-         return this->template GetEntriesAt<0>(LglsFwd(idx));
-      }
-      auto GetValEntriesAt(CT::Index auto&& idx) const assumptious {
-         return this->template GetEntriesAt<1>(LglsFwd(idx));
       }
    };
 }

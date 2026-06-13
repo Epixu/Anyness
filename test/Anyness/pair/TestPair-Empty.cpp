@@ -202,8 +202,10 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
       static_assert(    requires (T pack)         { pack.template As<E1, 0>(); });
       static_assert(    requires (T pack)         { pack.template As<E2, 1>(); });
       //static_assert(not requires (T pack)         { pack.GetDeep(); });
-      static_assert(not requires (T pack)         { pack.GetResolved(); });
-      static_assert(not requires (T pack)         { pack.GetDense(); });
+      static_assert(    requires (T pack)         { pack.template GetResolved<0>(); });
+      static_assert(    requires (T pack)         { pack.template GetResolved<1>(); });
+      static_assert(    requires (T pack)         { pack.template GetDense<0>(); });
+      static_assert(    requires (T pack)         { pack.template GetDense<1>(); });
       static_assert(not requires (T pack)         { pack + pack; });
       static_assert(    CT::TextRange<E1> or not requires (T pack, E1 item){  pack + item; });
       static_assert(    CT::TextRange<E2> or not requires (T pack, E2 item){  pack + item; });
