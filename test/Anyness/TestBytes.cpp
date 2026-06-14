@@ -44,7 +44,7 @@ namespace
 
 /// Possible states:                                                          
 void Bytes_CheckState_Default(const CT::Container auto& bytes) {
-   REQUIRE      (bytes.IsConstant());
+   REQUIRE_FALSE(bytes.IsConstant());
    REQUIRE_FALSE(bytes.IsDeep());
    REQUIRE_FALSE(bytes.IsSparse());
    REQUIRE      (bytes.IsTyped());

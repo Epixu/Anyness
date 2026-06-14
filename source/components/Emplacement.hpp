@@ -33,6 +33,12 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
+   enum class AllocationStrategy {
+      DontAllocate,
+      FreshAllocate,
+      Reallocate
+   };
+
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
    #define ThisCom self.Emplacement<ID, SHARED...>
@@ -85,9 +91,9 @@ namespace Langulus::Anyness::Component
             // No ownership, just fresh-allocate                        
             try {
                if constexpr (sizeof...(arguments) > 0)
-                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::FreshAllocate, E>(LglsFwd(arguments)...);
                else
-                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
+                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::FreshAllocate, E>();
             }
             catch (...) {
                // Reset heap count in case 'self' was disowned          
@@ -106,9 +112,9 @@ namespace Langulus::Anyness::Component
 
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::FreshAllocate, E>(LglsFwd(arguments)...);
                   else
-                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
+                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::FreshAllocate, E>();
                }
                catch (...) {
                   self.ResetAllAllocations();
@@ -119,9 +125,9 @@ namespace Langulus::Anyness::Component
                // Emplace a new element on the first position.          
                // We're allowed to reuse the memory.                    
                if constexpr (sizeof...(arguments) > 0)
-                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndReallocate, E>(LglsFwd(arguments)...);
+                  ThisCom::template EmplaceConstruct<SID, AllocationStrategy::Reallocate, E>(LglsFwd(arguments)...);
                else
-                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndReallocate, E>();
+                  ThisCom::template EmplaceDefault<SID, AllocationStrategy::Reallocate, E>();
             }
          }
          else {
@@ -133,9 +139,9 @@ namespace Langulus::Anyness::Component
 
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::FreshAllocate, E>(LglsFwd(arguments)...);
                   else
-                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
+                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::FreshAllocate, E>();
                }
                catch (...) {
                   self.ResetAllAllocations();
@@ -154,9 +160,9 @@ namespace Langulus::Anyness::Component
                // Any state change is forbidden - container is full.    
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
+                     ThisCom::template EmplaceConstruct<SID, AllocationStrategy::DontAllocate, E>(LglsFwd(arguments)...);
                   else
-                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::NoStateChange, E>();
+                     ThisCom::template EmplaceDefault<SID, AllocationStrategy::DontAllocate, E>();
                }
                catch (...) {
                   // If emplacement fails, we are forced to destroy     
@@ -602,12 +608,6 @@ namespace Langulus::Anyness::Component
             if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
       }
-
-      enum class AllocationStrategy {
-         DontAllocate,
-         FreshAllocate,
-         Reallocate
-      };
       
       /// Emplace a new default-constructed item at the first position.       
       ///   @attention This overwrites previous handle without dereferencing  

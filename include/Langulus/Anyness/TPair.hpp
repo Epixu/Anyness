@@ -90,6 +90,9 @@ namespace Langulus::Anyness
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 
+      static constexpr bool OnStack = not CT::NotReference<K, V>;
+      static constexpr bool OnHeap  = not OnStack;
+
       constexpr TPair() noexcept requires CT::NotReference<K, V> {
          this->ConstructDefault();
       }
@@ -113,37 +116,45 @@ namespace Langulus::Anyness
 
       /// Stack-based constructors                                            
       constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
-      requires (not CT::NotReference<K, V>)
+      requires OnStack
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
       
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
-      requires (not CT::NotReference<K, V>)
+      requires OnStack
          : Base{Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
 
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1)
-      requires (not CT::NotReference<K, V>)
+      requires OnStack
          : Base{Stackwise, LglsFwd(a1), {}} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
 
       /// Construct from handles                                              
-      constexpr TPair(CT::Handle auto&& a1, CT::Handle auto&& a2) {
-         this->template EmplaceWithIntent<0>(FWDIntent(a1));
-         this->template EmplaceWithIntent<1>(FWDIntent(a2));
+      constexpr TPair(auto&& a1, auto&& a2) {
+         if constexpr (OnHeap) {
+            this->AllocateFresh(this->RequestHeap(1));
+            this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(FWDIntent(a1));
+            this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(FWDIntent(a2));
+         }
+         else {
+            this->template EmplaceWithIntent<0>(FWDIntent(a1));
+            this->template EmplaceWithIntent<1>(FWDIntent(a2));
+         }
       }
 
-      constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
+      /*constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
       requires CT::NotReference<K, V> {
-         this->template EmplaceWithIntent<0>(FWDIntent(a1));
-         this->template EmplaceWithIntent<1>(FWDIntent(a2));
-      }
+         this->AllocateFresh(this->RequestHeap(1));
+         this->template EmplaceConstruct<0, AllocationStrategy::DontAllocate>(FWDIntent(a1));
+         this->template EmplaceConstruct<1, AllocationStrategy::DontAllocate>(FWDIntent(a2));
+      }*/
      
       /// Assignment                                                          
       constexpr TPair& operator = (TPair const& other) {
@@ -158,9 +169,16 @@ namespace Langulus::Anyness
 
       /// Clear the pair and assign a key and a value                         
       constexpr TPair& Assign(auto&& a1, auto&& a2) {
-         this->Clear();
-         this->template EmplaceConstruct<0>(LglsFwd(a1));
-         this->template EmplaceConstruct<1>(LglsFwd(a2));
+         if constexpr (OnHeap) {
+            this->Reset();
+            this->AllocateFresh(this->RequestHeap(1));
+            this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
+            this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
+         }
+         else {
+            this->template AssignWithIntent<0>(FWDIntent(a1));
+            this->template AssignWithIntent<1>(FWDIntent(a2));
+         }
          return *this;
       }
 

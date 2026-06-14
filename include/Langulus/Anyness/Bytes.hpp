@@ -56,6 +56,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A continuous byte container of variable size                           
    ///                                                                        
+   #pragma pack(push, 4)
    struct Bytes : Inner::BytesBase {
       using CTTI_ReflectAs = Bytes;
       using CTTI_MapsTo    = Text;
@@ -185,6 +186,7 @@ namespace Langulus::Anyness
          }
       };
    };
+   #pragma pack(pop)
 }
 
 namespace Langulus::CTTI

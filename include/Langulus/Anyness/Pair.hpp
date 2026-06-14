@@ -96,8 +96,8 @@ namespace Langulus::Anyness
       constexpr Pair(auto&& a1, auto&& a2) {
          this->DeduceType(a1, a2);
          this->AllocateFresh(this->RequestHeap(1));
-         this->template EmplaceConstruct<0, AllocationStrategy::DontAllocate>(LglsFwd(a1));
-         this->template EmplaceConstruct<1, AllocationStrategy::DontAllocate>(LglsFwd(a2));
+         this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
+         this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
       }
 
       /// Assignment                                                          
@@ -117,8 +117,8 @@ namespace Langulus::Anyness
          this->Reset();
          this->DeduceType(a1, a2);
          this->AllocateFresh(this->RequestHeap(1));
-         this->template EmplaceConstruct<0, AllocationStrategy::DontAllocate>(LglsFwd(a1));
-         this->template EmplaceConstruct<1, AllocationStrategy::DontAllocate>(LglsFwd(a2));
+         this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
+         this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
          return *this;
       }
 

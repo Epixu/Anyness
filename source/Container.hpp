@@ -762,7 +762,7 @@ namespace Langulus::Anyness
                // unconstrained state. Everything else is defaulted.    
                ComponentList::ForEach([&self,&from]<class C>{
                   if constexpr (requires { &C::template GetState<SELF>; }
-                           or  requires { &C::template GetType<0, SELF>; }) {
+                            or  requires { &C::template GetType<0, SELF>; }) {
                      if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
                   }
                   else if_available_gcc(C::template ConstructDefault<SELF>)();

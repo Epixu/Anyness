@@ -11,6 +11,7 @@
 #include <Langulus/Anyness/TPair.hpp>
 
 #if LANGULUS(BENCHMARK)
+   /// MARK: Benchmarking                                                     
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkPair(func, tolerance, my_init, my) { \
       const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
@@ -70,6 +71,7 @@
 
 namespace doctest
 {
+   /// MARK: {doctest}                                                        
    template<>
    struct StringMaker<Anyness::Pair> {
       static String convert(Anyness::Pair const& value) {
@@ -89,9 +91,7 @@ namespace doctest
    };
 }
 
-
-
-
+/// MARK: TestType                                                            
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Pair_Helper_TestType(C const& pack) {
    if constexpr (CT::Void<K>) {
@@ -132,6 +132,7 @@ void Pair_Helper_TestType(C const& pack) {
    REQUIRE(pack.IsValTyped());
 }
 
+/// MARK: TestSame                                                            
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
 void Pair_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
    REQUIRE(lhs.GetCount() == rhs.GetCount());
@@ -156,8 +157,7 @@ void Pair_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness =
       REQUIRE(rhs.IsDefaultState());
 }
 
-///                                                                           
-/// Possible state test implementations                                       
+/// MARK: Default                                                             
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Pair_CheckState_Default(C const& pack, bool typed = false) {
    if constexpr (CT::Typed<C>) {
@@ -183,7 +183,7 @@ void Pair_CheckState_Default(C const& pack, bool typed = false) {
    REQUIRE      (pack.IsDefaultState());
    REQUIRE      (pack.IsKeyTypeConstrained() == CT::Typed<C>);
    REQUIRE      (pack.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (pack.IsKeyConstant());
+   REQUIRE_FALSE(pack.IsKeyConstant());
    REQUIRE_FALSE(pack.IsValConstant());
    REQUIRE_FALSE(pack.IsValid());
    REQUIRE_FALSE(pack.GetAllocation());
@@ -200,13 +200,14 @@ void Pair_CheckState_Default(C const& pack, bool typed = false) {
    REQUIRE_FALSE(pack.IsEncrypted());
 }
 
+/// MARK: OwnedEmpty                                                          
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Pair_CheckState_OwnedEmpty(C const& pack) {
    Pair_Helper_TestType<K, V>(pack);
 
    REQUIRE      (pack.IsKeyTypeConstrained() == CT::Typed<C>);
    REQUIRE      (pack.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (pack.IsKeyConstant());
+   REQUIRE      (pack.IsKeyConstant() == CT::Constant<K>);
    REQUIRE      (pack.IsValConstant() == CT::Constant<V>);
    REQUIRE_FALSE(pack.IsValid());
    REQUIRE      (pack.GetAllocation());
@@ -221,13 +222,14 @@ void Pair_CheckState_OwnedEmpty(C const& pack) {
    //TODO Many_CheckState_OwnedEmpty<V>(map.GetVals());
 }
 
+/// MARK: OwnedFull                                                           
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Pair_CheckState_OwnedFull(C const& pack) {
    Pair_Helper_TestType<K, V>(pack);
 
    REQUIRE      (pack.IsKeyTypeConstrained() == CT::Typed<C>);
    REQUIRE      (pack.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (pack.IsKeyConstant());
+   REQUIRE      (pack.IsKeyConstant() == CT::Constant<K>);
    REQUIRE      (pack.IsValConstant() == CT::Constant<V>);
    REQUIRE      (pack.IsValid());
    REQUIRE      (pack.GetAllocation());
@@ -243,6 +245,7 @@ void Pair_CheckState_OwnedFull(C const& pack) {
    //TODO Many_CheckState_OwnedFull<V>(map.GetVals());
 }
 
+/// MARK: DisownedFull                                                        
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Pair_CheckState_DisownedFull(C const& pack) {
    Pair_Helper_TestType<K, V>(pack);
@@ -266,6 +269,7 @@ void Pair_CheckState_DisownedFull(C const& pack) {
    //TODO Many_CheckState_DisownedFull<V>(map.GetVals());
 }
 
+/// MARK: Abandoned                                                           
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Pair_CheckState_Abandoned(C const& pack) {
    REQUIRE(pack.IsDisowned());
@@ -274,6 +278,7 @@ void Pair_CheckState_Abandoned(C const& pack) {
    //TODO Many_CheckState_Abandoned<V>(map.GetVals());
 }
 
+/// MARK: Accessors                                                           
 template<CT::Container T, CT::Intent I1, CT::Intent I2> requires CT::NoIntent<T>
 void Pair_VerifyAccessorInterface(T const& pack, I1&&, I2&&) {
    using E1 = typename Decay<Deint<I1>>::Type;
@@ -397,6 +402,7 @@ void Pair_VerifyAccessorInterface(T const& pack, I1&&, I2&&) {
    }
 }
 
+/// MARK: ContainsOne                                                         
 template<CT::Container T, CT::Intent IK, CT::Intent IV> requires CT::NoIntent<T>
 void Pair_CheckState_ContainsOne(T const& pack, IK&& key_with_intent, IV&& val_with_intent, int uses = 1) {
    Pair_VerifyAccessorInterface(pack, LglsFwd(key_with_intent), LglsFwd(val_with_intent));
@@ -484,6 +490,7 @@ void Pair_CheckState_ContainsOne(T const& pack, IK&& key_with_intent, IV&& val_w
    }
 }
 
+/// MARK: CompareOne                                                          
 template<CT::Container T, class E1, class E2> requires CT::NoIntent<T>
 void Pair_Helper_CompareOne(const T&, const E1&, const E2&) {
    //TODO Many_Helper_CompareOne(map, e);

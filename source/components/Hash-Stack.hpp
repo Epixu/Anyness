@@ -65,7 +65,6 @@ namespace Langulus::Anyness::Component
 
       /// Hash is default-initialized to 1, because that's a universal value  
       /// for an empty container. Prevents rehash until something is pushed.  
-      template<Cid SID = ID> requires Relevant<SID>
       constexpr void ConstructDefault(this auto& self) noexcept {
          ThisCom::SetHashInner(1);
       }
