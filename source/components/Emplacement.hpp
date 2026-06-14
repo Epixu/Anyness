@@ -777,7 +777,7 @@ namespace Langulus::Anyness::Component
                   else {
                      // The type we're describing isn't known statically
                      auto T = self.template GetTypeInner<SID>();
-                     LglsAssert(T,
+                     LglsAssert((bool) T,
                         "Unknown type for describe-construction");
                      LglsAssert(T.IsDense(),
                         "Describe-construction works only for dense data");

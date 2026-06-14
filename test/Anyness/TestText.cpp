@@ -44,7 +44,7 @@ struct StringifiableConst {
 
 /// Possible states:                                                          
 void Text_CheckState_Default(const CT::Container auto& text) {
-   REQUIRE      (text.IsConstant());
+   REQUIRE_FALSE(text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE      (text.IsTyped());
