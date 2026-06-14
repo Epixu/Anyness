@@ -51,6 +51,11 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Pair);
 LANGULUS_CTTI_CONCEPT_DECVQ(Handle);
 LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
+namespace Langulus
+{
+   struct Describe;
+}
+
 namespace Langulus::Anyness
 {
    /// A component ID                                                         

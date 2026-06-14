@@ -37,6 +37,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool Sparse     = CT::Sparse<TYPE>;
       static constexpr bool Dense      = CT::Dense<TYPE>;
 
+      /// MARK: Public                                                        
       /// Get the reflected type definition                                   
       template<Cid SID = ID> requires (SID == ID)
       META GetType() const noexcept {
@@ -179,12 +180,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if the contents are constant                         
       template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsConstant(this auto const& self) noexcept {
-         //if constexpr (requires { self.IsDisowned(); })
-            return CT::Constant<TYPE> or self.IsDisowned();
-         /*else if constexpr (requires { self.template GetAllocation<ID>(); })
-            return CT::Constant<TYPE> or not self.template GetAllocation<ID>();
-         else
-            return CT::Constant<TYPE>;*/
+         return CT::Constant<TYPE> or self.IsDisowned();
       }
 
       /// Check if container is made of other containers                      
@@ -270,6 +266,21 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires (SID == ID)
       void SetType(META type) {
          LglsAssert(GetType().IsExact(type), "Type mismatch");
+      }
+
+      /// Deduce type of the container from provided argument. Statically     
+      /// typed container can't change their type, so this acts like a static 
+      /// assertion, if the argument is compatible with the contained type.   
+      ///   @param a The argument. Accepts intents, handles, arrays etc.      
+      template<Cid SID = ID, class A> requires (SID == ID)
+      constexpr void DeduceType(A const& a) noexcept {
+         if constexpr (CT::Handle<A>) {
+            if constexpr (CT::TypeErased<A>)
+               SetType(DeintCast(a).template GetType<SID>());
+            else
+               SetType<TypeOf<Deint<A>, SID>>();
+         }
+         else SetType<Decvq<Deext<Deref<Deint<A>>>>>();
       }
    };
 }

@@ -441,7 +441,7 @@ namespace Langulus
    private:
       template<uint I> LANGULUS(ALWAYS_INLINED)
       static consteval auto AtInner() {
-              if constexpr (I == 0)    return Types<T1> {};
+         if      constexpr (I == 0)    return Types<T1> {};
          else if constexpr (I == 1)    return Types<T2> {};
          else if constexpr (I < Count) return Types<typename Types<TN...>::template At<I - 2>> {};
          else return Types<> {};

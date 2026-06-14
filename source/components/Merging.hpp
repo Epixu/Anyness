@@ -36,6 +36,7 @@ namespace Langulus::Anyness::Component
       using Deep = typename C::DeepType;
 
    public:
+      /// MARK: Public                                                        
       /// Merging at specific index                                           
       template<class A1, class...AN, CT::IndexedLinearly C>
       auto MergeAt(this C&, CT::Index auto, A1&&, AN&&...)
@@ -59,6 +60,7 @@ namespace Langulus::Anyness::Component
       auto MergeRange(this C&, CT::Container auto&&) -> Count<C>;
       
    protected:
+      /// MARK: Protected                                                     
       /// Helper struct for returning insertion status                        
       struct MergeResult {
          size_t itemsInserted = 0;

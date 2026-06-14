@@ -26,7 +26,7 @@
 #include <source/states/Compressed.hpp>
 #include <source/states/Encrypted.hpp>
 #include <source/states/Tracked.hpp>
-#include "Handle.hpp"
+#include "HandlePair.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -92,16 +92,12 @@ namespace Langulus::Anyness
       constexpr Pair(Inner::Absorb, CT::Pair auto&& p) {
          this->Absorb(LglsFwd(p));
       }
-      
-      /// Construction that emplaces A inside, leaves value as default        
-      constexpr Pair(Inner::Piecewise, auto&& a1) {
-         this->template EmplaceConstruct<0>(LglsFwd(a1));
-         this->template EmplaceDefault<1>();
-      }
 
       constexpr Pair(auto&& a1, auto&& a2) {
-         this->template EmplaceConstruct<0>(LglsFwd(a1));
-         this->template EmplaceConstruct<1>(LglsFwd(a2));
+         this->DeduceType(a1, a2);
+         this->AllocateFresh(this->RequestHeap(1));
+         this->template EmplaceConstruct<0, AllocationStrategy::DontAllocate>(LglsFwd(a1));
+         this->template EmplaceConstruct<1, AllocationStrategy::DontAllocate>(LglsFwd(a2));
       }
 
       /// Assignment                                                          
@@ -115,22 +111,34 @@ namespace Langulus::Anyness
          return this->AssignAbsorb(LglsFwd(pair));
       }
       
-      /// Clear the map and assign a key and a value                          
+      /// Clear the pair and assign a new key and value.                      
+      /// It is safe to use different types.                                  
       constexpr Pair& Assign(auto&& a1, auto&& a2) {
-         this->Clear();
-         this->template EmplaceConstruct<0>(LglsFwd(a1));
-         this->template EmplaceConstruct<1>(LglsFwd(a2));
+         this->Reset();
+         this->DeduceType(a1, a2);
+         this->AllocateFresh(this->RequestHeap(1));
+         this->template EmplaceConstruct<0, AllocationStrategy::DontAllocate>(LglsFwd(a1));
+         this->template EmplaceConstruct<1, AllocationStrategy::DontAllocate>(LglsFwd(a2));
          return *this;
       }
 
       using Com::Comparison<true, 0, 1>::operator <=>;
       using Com::Comparison<true, 0, 1>::operator ==;
 
-      decltype(auto) GetKeyHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetKeyHandle(); //TODO use PickDimension instead?
+      auto GetKeyHandle() const noexcept -> typename HandleType::KeyHandle {
+         return {*this};
       }
-      decltype(auto) GetValHandle(this auto&& self) noexcept {
-         return self.GetHandle().GetValHandle(); //TODO use PickDimension instead?
+
+      auto GetKeyHandle() noexcept -> typename HandleMutType::KeyHandle {
+         return {*this};
+      }
+
+      auto GetValHandle() const noexcept -> typename HandleType::ValHandle {
+         return {Slice<1>, *this};
+      }
+
+      auto GetValHandle() noexcept -> typename HandleMutType::ValHandle {
+         return {Slice<1>, *this};
       }
    };
 

@@ -167,7 +167,7 @@ namespace Langulus::Anyness
       using Com::Comparison<true, 0, 1>::operator <=>;
       using Com::Comparison<true, 0, 1>::operator ==;
 
-      auto& GetKey(this auto&& self) noexcept {
+      /*auto& GetKey(this auto&& self) noexcept {
          if constexpr (CT::NotReference<K, V>)
             return *self.Com::template HeapMovable<0, 0, HeapEntry<0, K*>, HeapEntry<1, V*>>::template Get<void, 0>();
          else
@@ -179,7 +179,7 @@ namespace Langulus::Anyness
             return *self.Com::template HeapMovable<0, 0, HeapEntry<0, K*>, HeapEntry<1, V*>>::template Get<void, 1>();
          else
             return *self.Com::template Stack<V, 1>::Get();
-      }
+      }*/
 
       auto GetKeyHandle() const noexcept -> typename HandleType::KeyHandle {
          return {*this};

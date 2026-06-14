@@ -47,6 +47,7 @@ namespace Langulus::Anyness::Component
       /// @attention valid only if not TypeErased                             
       static constexpr bool Dense  = not TypeErased and CT::Dense<TYPE>;
 
+      /// MARK: Public                                                        
       /// Get the contained type - not possible at compile-time yet           
       ///   @tparam SID - type selector                                       
       template<Cid SID = ID> requires (SID == ID)
@@ -394,8 +395,26 @@ namespace Langulus::Anyness::Component
                " is not exactly ", type);
          }
       }
-      
+
+      /// Deduce type of the container from provided argument                 
+      ///   @param a The argument. Accepts intents, handles, arrays etc.      
+      template<Cid SID = ID, class A> requires (SID == ID)
+      constexpr void DeduceType(this auto& self, A const& a) {
+         static_assert(not Same<A, Describe>,
+            "Can't deduce type from a describe intent. "
+            "You have to set it up manually.");
+
+         if constexpr (CT::Handle<A>) {
+            if constexpr (CT::TypeErased<A>)
+               ThisCom::SetType(DeintCast(a).template GetType<SID>());
+            else
+               ThisCom::template SetType<TypeOf<Deint<A>, SID>>();
+         }
+         else ThisCom::template SetType<Decvq<Deext<Deref<Deint<A>>>>>();
+      }
+
    protected:
+      /// MARK: Protected                                                     
       LglsComRemoval(friend);
       LglsComHeapMovable(friend);
       LglsComIndexedCommon(friend);

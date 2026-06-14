@@ -8,12 +8,6 @@
 #pragma once
 #include "../Component.hpp"
 #include <Langulus/IntentOf.hpp>
-/*#include "../states/Typed.hpp"
-#include "../states/Past.hpp"
-#include "../states/Future.hpp"
-#if LANGULUS(DEBUG)
-   #include "../states/Tracked.hpp"
-#endif*/
 #include <Langulus/Sequence.hpp>
 
 
@@ -82,7 +76,7 @@ namespace Langulus::Anyness::Component
          }
       };
 
-      
+      /// MARK: Public                                                        
       /// Get the current state of the container                              
       constexpr auto GetState(this auto const& self) noexcept
       -> StateWrapper requires HasStates {
@@ -198,6 +192,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      /// MARK: Protected                                                     
       LglsComEmplacement(friend);
       LglsComRemoval(friend);
 

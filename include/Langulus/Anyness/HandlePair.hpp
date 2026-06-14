@@ -15,6 +15,7 @@
 
 namespace Langulus::Anyness
 {
+   /// MARK: Handle/Handle                                                    
    ///                                                                        
    /// Type-erased immutable handle                                           
    ///                                                                        
@@ -484,8 +485,6 @@ namespace Langulus::Anyness
                          EnableComponentIf<CT::Sparse<V>, Com::HeapMovable<0, 0, HeapEntry<1, V*>>>>,
       Com::CountStatic<1u, 0, 1>,
       Com::ReserveStatic<1u, 0, 1>,
-      //EnableComponentIf<CT::Sparse<K>, Com::ReserveEmergent<size_t, 0>>,
-      //EnableComponentIf<CT::Sparse<V>, Com::ReserveEmergent<size_t, 1>>,
       Com::Multiown    <EnableComponentIf<CT::Sparse<K>, Com::OwnershipStack<Com::StrongOwnership, 0>>,
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipStack<Com::StrongOwnership, 1>>>,
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0>>,

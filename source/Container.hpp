@@ -30,6 +30,7 @@
 
 namespace Langulus::Anyness
 {
+   /// MARK: Predeclarations                                                  
    struct Handle;
    struct HandleMut;
    struct HandleDisowned;
@@ -62,6 +63,7 @@ namespace Langulus::Anyness
 
    namespace Inner
    {
+      /// MARK: Details                                                       
       template<StateValue SORT = StateValue::Variable> struct Map;
       template<StateValue SORT = StateValue::Variable> struct Set;
 
@@ -161,6 +163,7 @@ namespace Langulus::Anyness
 
    namespace Component
    {
+   /// MARK: Container                                                        
    ///                                                                        
    /// A container definition using composition                               
    ///   @tparam COMPONENTS list of components that define the container      
@@ -264,6 +267,7 @@ namespace Langulus::Anyness
       /// the destructor relies on properly deducing 'this'.                  
       constexpr ~Container() noexcept = default;
       
+      /// MARK: Providers                                                     
       /// Get the total number of heap requests (all dimensions)              
       template<CT::Typelist L = ComponentList>
       static consteval size_t CountHeapRequests() {
@@ -872,6 +876,7 @@ namespace Langulus::Anyness
       }
       
    public: // public because it is used from serialization routines
+      /// MARK: Apply                                                         
       /// Visit all element's handles and perform a function on them.         
       /// Handles both linear and non-linear containers gracefully.           
       ///   @tparam SKIP_EMPTY whether or not to skip empty elements inside   
@@ -987,6 +992,7 @@ namespace Langulus::Anyness
 
 namespace Langulus
 {
+   /// MARK: Loop control                                                     
    /// Loop controls from inside ForEach lambdas when iterating containers    
    struct LoopControl {
       enum Command : int {

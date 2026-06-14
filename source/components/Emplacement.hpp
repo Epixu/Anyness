@@ -604,17 +604,18 @@ namespace Langulus::Anyness::Component
       }
 
       enum class AllocationStrategy {
-         NoStateChange,
-         TypeAndFreshAllocate,
-         TypeAndReallocate
+         DontAllocate,
+         FreshAllocate,
+         Reallocate
       };
       
       /// Emplace a new default-constructed item at the first position.       
       ///   @attention This overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
       ///   @attention Doesn't modify count                                   
-      ///   @attention Works in one dimension at a time!                      
-      template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C>
+      ///   @attention Works in one dimension at a time! Beware when dealing  
+      ///      with multiple dimensions!                                      
+      template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::FreshAllocate, class E = void, CT::Container C>
       requires Relevant<SID>
       void EmplaceDefault(this C& self) {
          static_assert(CT::ContainsOne<C>,
@@ -622,14 +623,22 @@ namespace Langulus::Anyness::Component
             "GetHandle() first?"
          );
 
-         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+         if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
             if_available(self.ResetState());
          }
 
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // This container is type-erased                            
-            if constexpr (STRAT != AllocationStrategy::NoStateChange) {
+            if constexpr (STRAT != AllocationStrategy::DontAllocate) {
+               static_assert(not Shared,
+                  "Can't EmplaceDefault one dimension at a time in a "
+                  "type-erased container. All types need to be set "
+                  "prior to allocating for this to work. You have to "
+                  "manually call SetType and AllocateFresh prior to "
+                  "calling this function with STRAT == DontAllocate"
+               );
+   
                if constexpr (CT::NotVoid<E>)
                   self.template SetType<E, SID>();
             }
@@ -641,9 +650,9 @@ namespace Langulus::Anyness::Component
                LglsAssumeDev((self.template IsSame<E, SID>()), "Type mismatch");
 
                // Allocate if we have to                                
-               if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+               if constexpr (STRAT == AllocationStrategy::FreshAllocate)
                   self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
-               else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+               else if constexpr (STRAT == AllocationStrategy::Reallocate)
                   self.template AllocateMore<SID>(1);
 
                // Construct the first element                           
@@ -655,15 +664,17 @@ namespace Langulus::Anyness::Component
             else {
                // The type we're constructing isn't statically known    
                auto T = self.template GetTypeInner<SID>();
+               LglsAssert(T,
+                  "Unknown type for default-construction");
                auto constructor = T.GetDefaultConstructor();
                LglsAssert(constructor,
                   "Contained type is not default-constructible");
 
                // Allocate if we have to. Do it only after we're sure   
                // that construction is possible                         
-               if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+               if constexpr (STRAT == AllocationStrategy::FreshAllocate)
                   self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
-               else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+               else if constexpr (STRAT == AllocationStrategy::Reallocate)
                   self.template AllocateMore<SID>(1);
 
                // Construct the first element                           
@@ -679,12 +690,10 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
-            if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-               self.template GetType<SID>();
+            if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
                self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
             }
-            else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate) {
-               self.template GetType<SID>();
+            else if constexpr (STRAT == AllocationStrategy::Reallocate) {
                self.template AllocateMore<SID>(1);
             }
 
@@ -698,10 +707,10 @@ namespace Langulus::Anyness::Component
          }
 
          // Update count                                                
-         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+         if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
             if_available(self.template SetCountInner<SID>(1));
          }
-         else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate
+         else if constexpr (STRAT == AllocationStrategy::Reallocate
          and requires { self.template SetCountInner<SID>(1); }) {
             if (self.template IsEmpty<SID>())
                self.template SetCountInner<SID>(1);
@@ -714,39 +723,36 @@ namespace Langulus::Anyness::Component
       /// Emplace a new manually constructed item at the first position.      
       /// If zero arguments were provided, this will EmplaceDefault.          
       /// Supports describe-construction and handles.                         
-      ///   @attention this overwrites previous handle without dereferencing  
-      ///      it, and without destroying anything                            
-      ///   @attention Works in one dimension at a time!                      
-      template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C, class...A>
+      ///   @attention This overwrites previous handle without dereferencing  
+      ///      it, and without destroying anything!                           
+      ///   @attention Works in one dimension at a time! Beware when dealing  
+      ///      with multiple dimensions!                                      
+      template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::FreshAllocate, class E = void, CT::Container C, class...A>
       requires Relevant<SID>
       void EmplaceConstruct(this C& self, A&&...arguments) {
-         /*static_assert(STRAT != AllocationStrategy::NoStateChange or CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. "
-            "GetHandle() first?"
-         );*/
          static_assert(sizeof...(A) > 0,
             "No arguments - use EmplaceDefault instead");
 
-         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+         if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
             if_available(self.ResetState());
          }
 
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // This container is type-erased                            
+            if constexpr (STRAT != AllocationStrategy::DontAllocate) {
+               static_assert(not Shared,
+                  "Can't EmplaceConstruct one dimension at a time in a "
+                  "type-erased container. All types need to be set "
+                  "prior to allocating for this to work. You have to "
+                  "manually call SetType and AllocateFresh prior to "
+                  "calling this function with STRAT == DontAllocate"
+               );
+            }
+
             if constexpr (sizeof...(A) == 1) {
                using A1 = typename Types<A...>::First;
-
-               // Set type if we have to                                
-               if constexpr (STRAT != AllocationStrategy::NoStateChange) {
-                  if constexpr (CT::NotVoid<E>)
-                     self.template SetType<E, SID>();
-                  else if constexpr (CT::Handle<A1>)
-                     self.template SetType<SID>(DeintCast(arguments...).template GetType<SID>());
-                  else if constexpr (not Same<A1, Describe>)
-                     self.template SetType<SID>(MetaDataOf<Decvq<Deref<Deint<A1>>>>());
-               }
-
+               
                if constexpr (Same<A1, Describe>) {
                   // Describe-construct first element                   
                   if constexpr (CT::NotVoid<E>) {
@@ -755,12 +761,15 @@ namespace Langulus::Anyness::Component
                         "Describe-construction works only for dense data");
                      static_assert(CT::DescribeConstructible<E>,
                         "Contained type is not describe-constructible");
+
+                     if constexpr (STRAT != AllocationStrategy::DontAllocate)
+                        self.template SetType<E, SID>();
                      LglsAssumeDev((self.template IsSame<E, SID>()), "Type mismatch");
 
                      // Allocate if we have to                          
-                     if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+                     if constexpr (STRAT == AllocationStrategy::FreshAllocate)
                         self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
-                     else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+                     else if constexpr (STRAT == AllocationStrategy::Reallocate)
                         self.template AllocateMore<SID>(1);
 
                      new (self.template GetRaw<SID>()) E {LglsFwd(arguments)...};
@@ -768,6 +777,8 @@ namespace Langulus::Anyness::Component
                   else {
                      // The type we're describing isn't known statically
                      auto T = self.template GetTypeInner<SID>();
+                     LglsAssert(T,
+                        "Unknown type for describe-construction");
                      LglsAssert(T.IsDense(),
                         "Describe-construction works only for dense data");
                      auto constructor = T.GetDescribeConstructor();
@@ -776,9 +787,9 @@ namespace Langulus::Anyness::Component
 
                      // Allocate if we have to. Do it only after we're  
                      // sure that construction is possible              
-                     if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+                     if constexpr (STRAT == AllocationStrategy::FreshAllocate)
                         self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
-                     else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+                     else if constexpr (STRAT == AllocationStrategy::Reallocate)
                         self.template AllocateMore<SID>(1);
 
                      // Describe-construct the first element            
@@ -786,10 +797,13 @@ namespace Langulus::Anyness::Component
                   }
                }
                else {
+                  if constexpr (STRAT != AllocationStrategy::DontAllocate)
+                     self.template DeduceType<SID>(arguments...);
+
                   // Allocate if we have to                             
-                  if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+                  if constexpr (STRAT == AllocationStrategy::FreshAllocate)
                      self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
-                  else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+                  else if constexpr (STRAT == AllocationStrategy::Reallocate)
                      self.template AllocateMore<SID>(1);
 
                   // Construct the first element                        
@@ -799,33 +813,30 @@ namespace Langulus::Anyness::Component
                      ThisCom::template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
                }
             }
-            else if constexpr (CT::NotVoid<E>) {
+            else {
+               static_assert(CT::NotVoid<E>,
+                  "Too many arguments for emplacing in a type-erased container. "
+                  "You should provide an 'E' type.");
+               static_assert(CT::Dense<E>,
+                  "Too many arguments for emplacing a sparse instance");
+
                // Set type if we have to                                
-               if constexpr (STRAT != AllocationStrategy::NoStateChange)
+               if constexpr (STRAT != AllocationStrategy::DontAllocate)
                   self.template SetType<E, SID>();
+               LglsAssumeDev((self.template IsSame<E, SID>()), "Type mismatch");
 
                // Construct the first element                           
-               if constexpr (CT::Dense<E>)
-                  ThisCom::template EmplaceWithIntent<SID>(Abandon{E {LglsFwd(arguments)...}});
-               else static_assert(false,
-                  "Too many arguments for emplacing a sparse instance");
+               ThisCom::template EmplaceWithIntent<SID>(Abandon{E {LglsFwd(arguments)...}});
             }
-            else static_assert(false,
-               "Too many arguments for emplacing in a type-erased container. "
-               "You should either provide E type, or set pack type and pack "
-               "all arguments inside a Describe intent first."
-            );
          }
          else {
             //                                                          
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
-            if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-               self.template GetType<SID>();
+            if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
                if_available(self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1)));
             }
-            else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate) {
-               self.template GetType<SID>();
+            else if constexpr (STRAT == AllocationStrategy::Reallocate) {
                if_available(self.template AllocateMore<SID>(1));
             }
 
@@ -837,19 +848,20 @@ namespace Langulus::Anyness::Component
                else
                   ThisCom::template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
             }
-            else if constexpr (CT::Dense<T>)
+            else {
+               static_assert(CT::Dense<T>,
+                  "Too many arguments for emplacing a sparse instance");
                ThisCom::template EmplaceWithIntent<SID>(Abandon {Decvq<T> {LglsFwd(arguments)...}});
-            else static_assert(false,
-               "Too many arguments for emplacing a sparse instance");
+            }
          }
          
          // Update count always _after_ emplacement - EmplaceWithIntent 
          // might throw, and we wouldn't want to have valid elements if 
          // this happens!                                               
-         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+         if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
             if_available(self.template SetCountInner<SID>(1));
          }
-         else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate
+         else if constexpr (STRAT == AllocationStrategy::Reallocate
          and requires { self.template SetCountInner<SID>(1); }) {
             if (self.template IsEmpty<SID>())
                self.template SetCountInner<SID>(1);

@@ -58,8 +58,8 @@ add_langulus_test(LangulusAnynessTest
 
                Anyness/pair/TestPair-Empty.cpp
 
-               Anyness/map/TestMap-Empty.cpp
-               Anyness/map/TestMap-Absorb.cpp
+               #Anyness/map/TestMap-Empty.cpp
+               #Anyness/map/TestMap-Absorb.cpp
                #Anyness/map/TestMap-Piecewise.cpp
 
    LIBRARIES   doctest

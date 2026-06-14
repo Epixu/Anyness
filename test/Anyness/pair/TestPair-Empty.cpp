@@ -39,8 +39,6 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
-   , Types<Pair, Text*, ScopedElement<Text*>, Text*,    ScopedElement<Text*>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Pair, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
    , Types<Pair, int,    ScopedElement<int>,     int,    ScopedElement<int>>
@@ -48,6 +46,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
    , Types<Pair, RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
    , Types<Pair, char,   ScopedElement<char>,    char,   ScopedElement<char>>
 
+   , Types<Pair, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
    , Types<Pair, int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
    , Types<Pair, Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
    , Types<Pair, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>

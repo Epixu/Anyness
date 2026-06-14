@@ -451,6 +451,14 @@ namespace Langulus::Anyness::Component
          return self.C::IsTypeConstrained();
       }
 
+      /// Deduce all types of the container from provided arguments           
+      ///   @param a The arguments - one for each dimension.                  
+      constexpr void DeduceType(this auto& self, auto const&...a) {
+         Subcomponents::Expand([&]<class...C> {
+            (self.C::DeduceType(a), ...);
+         });
+      }
+
    protected:
       LglsComRemoval(friend);
       LglsComHeapMovable(friend);
