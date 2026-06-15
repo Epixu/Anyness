@@ -108,7 +108,7 @@ void Map_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = 
 /// Possible state test implementations                                       
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_Default(C const& pack, bool typed = false) {
-   Pair_CheckState_Default<K, V>(pack, typed);
+   Pair_CheckState_Default<K, V>(pack, true, typed);
 
    REQUIRE_FALSE(pack.IsCompressed());
    REQUIRE_FALSE(pack.IsSorted());
@@ -121,7 +121,7 @@ void Map_CheckState_OwnedEmpty(C const& pack) {
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_OwnedFull(C const& pack) {
-   Pair_CheckState_OwnedFull<K, V>(pack);
+   Pair_CheckState_OwnedFull<K, V>(pack, true);
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>

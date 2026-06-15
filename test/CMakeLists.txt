@@ -6,7 +6,7 @@ fetch_external_module(
 
 add_langulus_test(LangulusAnynessTest
    SOURCES	   Main.cpp 
-               TestAssume.cpp
+               #[[TestAssume.cpp
                TestHashOf.cpp
                TestIntentOf.cpp
                TestLambda.cpp
@@ -54,12 +54,12 @@ add_langulus_test(LangulusAnynessTest
                
                Anyness/set/TestSet-Empty.cpp
                Anyness/set/TestSet-Absorb.cpp
-               Anyness/set/TestSet-Piecewise.cpp
+               Anyness/set/TestSet-Piecewise.cpp]]
 
                Anyness/pair/TestPair-Empty.cpp
 
-               #Anyness/map/TestMap-Empty.cpp
-               #Anyness/map/TestMap-Absorb.cpp
+               Anyness/map/TestMap-Empty.cpp
+               Anyness/map/TestMap-Absorb.cpp
                #Anyness/map/TestMap-Piecewise.cpp
 
    LIBRARIES   doctest

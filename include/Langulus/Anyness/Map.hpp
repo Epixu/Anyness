@@ -165,7 +165,7 @@ namespace Langulus::Anyness::Inner
       auto Assign(CT::Pair auto&& pair) -> Map& {
          using I = IntentOf(pair);
          this->Clear();
-         this->MergeInner(I::Nest(pair.GetKey()), I::Nest(pair.GetVal()));
+         this->MergeInner(I::Nest(pair.GetKeyHandle()), I::Nest(pair.GetValHandle()));
          return *this;
       }
 

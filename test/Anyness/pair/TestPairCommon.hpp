@@ -159,7 +159,7 @@ void Pair_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness =
 
 /// MARK: Default                                                             
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Pair_CheckState_Default(C const& pack, bool typed = false) {
+void Pair_CheckState_Default(C const& pack, bool ismap = false, bool typed = false) {
    if constexpr (CT::Typed<C>) {
       static_assert(Exact<TypeOf<C, 0>, K>);
       static_assert(Exact<TypeOf<C, 1>, V>);
@@ -183,7 +183,7 @@ void Pair_CheckState_Default(C const& pack, bool typed = false) {
    REQUIRE      (pack.IsDefaultState());
    REQUIRE      (pack.IsKeyTypeConstrained() == CT::Typed<C>);
    REQUIRE      (pack.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE_FALSE(pack.IsKeyConstant());
+   REQUIRE      (pack.IsKeyConstant() == ismap);
    REQUIRE_FALSE(pack.IsValConstant());
    REQUIRE_FALSE(pack.IsValid());
    REQUIRE_FALSE(pack.GetAllocation());
@@ -193,6 +193,7 @@ void Pair_CheckState_Default(C const& pack, bool typed = false) {
    REQUIRE      (pack.GetUses() == 0);
    REQUIRE_FALSE(pack);
    REQUIRE      (not pack);
+   REQUIRE      (pack == C{});
 
    //TODO Many_CheckState_Default<K>(map.GetKeys());
    //TODO Many_CheckState_Default<V>(map.GetVals());
@@ -217,6 +218,7 @@ void Pair_CheckState_OwnedEmpty(C const& pack) {
    REQUIRE      (pack.GetUses() == 1);
    REQUIRE_FALSE(pack);
    REQUIRE      (not pack);
+   REQUIRE      (pack == C{});
 
    //TODO Many_CheckState_OwnedEmpty<K>(map.GetKeys());
    //TODO Many_CheckState_OwnedEmpty<V>(map.GetVals());
@@ -224,12 +226,12 @@ void Pair_CheckState_OwnedEmpty(C const& pack) {
 
 /// MARK: OwnedFull                                                           
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Pair_CheckState_OwnedFull(C const& pack) {
+void Pair_CheckState_OwnedFull(C const& pack, bool ismap = false) {
    Pair_Helper_TestType<K, V>(pack);
 
    REQUIRE      (pack.IsKeyTypeConstrained() == CT::Typed<C>);
    REQUIRE      (pack.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (pack.IsKeyConstant() == CT::Constant<K>);
+   REQUIRE      (pack.IsKeyConstant() == (CT::Constant<K> or ismap));
    REQUIRE      (pack.IsValConstant() == CT::Constant<V>);
    REQUIRE      (pack.IsValid());
    REQUIRE      (pack.GetAllocation());
@@ -240,6 +242,7 @@ void Pair_CheckState_OwnedFull(C const& pack) {
    REQUIRE      (pack.GetRaw());
    REQUIRE      (pack);
    REQUIRE_FALSE(not pack);
+   REQUIRE      (pack != C{});
 
    //TODO Many_CheckState_OwnedFull<K>(map.GetKeys());
    //TODO Many_CheckState_OwnedFull<V>(map.GetVals());
