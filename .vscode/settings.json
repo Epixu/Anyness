@@ -119,7 +119,7 @@
          "backgroundColor": "#88ff8820",
          "color": "#ffffff"
       }],
-      "(/{3}.*)": [{
+      "(/{3}(?!TODO).*)": [{
          "filterLanguageRegex": "c",
          "backgroundColor": "#b0ffb040",
          "color": "#ffffff"

@@ -521,9 +521,9 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      constexpr THandlePair(auto&& key, auto&& val) noexcept {
-         Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(key));
-         Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(val));
+      constexpr THandlePair(auto&& a1, auto&& a2) noexcept {
+         Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(a1));
+         Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(a2));
       }
 
       constexpr ~THandlePair() noexcept {

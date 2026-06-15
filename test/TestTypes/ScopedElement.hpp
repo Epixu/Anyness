@@ -90,7 +90,10 @@ protected:
             delete place;
          }
          else if constexpr (MANAGED) {
-            LglsAssumeDev((*entry)->GetUses() >= 1);
+            LglsAssumeDev((*entry)->GetUses() >= 1,
+               "Managed test allocation was deallocated before the test finished. "
+               "You either forgot to Keep(), or called Free() without needing it.");
+               
             if ((*entry)->GetUses() == 1) {
                if constexpr (requires { place->~INNER(); })
                   place->~INNER();

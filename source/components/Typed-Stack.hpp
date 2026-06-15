@@ -398,7 +398,7 @@ namespace Langulus::Anyness::Component
 
       /// Deduce type of the container from provided argument                 
       ///   @param a The argument. Accepts intents, handles, arrays etc.      
-      template<Cid SID = ID, class A> requires (SID == ID)
+      template<class A>
       constexpr void DeduceType(this auto& self, A const& a) {
          static_assert(not Same<A, Describe>,
             "Can't deduce type from a describe intent. "
@@ -406,11 +406,11 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Handle<A>) {
             if constexpr (CT::TypeErased<A>)
-               ThisCom::SetType(DeintCast(a).template GetType<SID>());
+               ThisCom::SetType(DeintCast(a).GetType());
             else
-               ThisCom::template SetType<TypeOf<Deint<A>, SID>>();
+               ThisCom::template SetType<TypeOf<Deint<A>>>();
          }
-         else ThisCom::template SetType<Decvq<Deext<Deref<Deint<A>>>>>();
+         else ThisCom::template SetType<Decvq<DeextAll<Deref<Deint<A>>>>>();
       }
 
    protected:

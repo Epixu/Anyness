@@ -146,37 +146,69 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       {
          TPair test {*element1, *element2};
 
-         if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
-            REQUIRE(DenseCast(*element1).GetReferences() == 2);
-            REQUIRE(DenseCast(*element3).GetReferences() == 1);
+         REQUIRE(element1.entries[0]->GetUses() == 1);
+         REQUIRE(element2.entries[0]->GetUses() == 1);
+
+         if constexpr (CT::Sparse<E1>) {
+            REQUIRE(element1.entries[1]->GetUses() == 2);
+            if constexpr (CT::Referenced<Decay<E1>>) {
+               REQUIRE(DenseCast(*element1).GetReferences() == 2);
+               REQUIRE(DenseCast(*element3).GetReferences() == 1);
+            }
          }
-         if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
-            REQUIRE(DenseCast(*element2).GetReferences() == 2);
-            REQUIRE(DenseCast(*element4).GetReferences() == 1);
+         if constexpr (CT::Sparse<E2>) {
+            REQUIRE(element2.entries[1]->GetUses() == 2);
+            if constexpr (CT::Referenced<Decay<E2>>) {
+               REQUIRE(DenseCast(*element2).GetReferences() == 2);
+               REQUIRE(DenseCast(*element4).GetReferences() == 1);
+            }
          }   
       }
 
-      /*T piecewise1{Piecewise, TPair {*element1, *element2}};
+      if constexpr (CT::Sparse<E1>)
+         REQUIRE(element1.entries[1]->GetUses() == 1);
+      if constexpr (CT::Sparse<E2>)
+         REQUIRE(element2.entries[1]->GetUses() == 1);
 
-      if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
-         REQUIRE(DenseCast(*element1).GetReferences() == 2);
-         REQUIRE(DenseCast(*element3).GetReferences() == 1);
+      T piecewise1{Piecewise, TPair {*element1, *element2}};
+
+      REQUIRE(element1.entries[0]->GetUses() == 1);
+      REQUIRE(element2.entries[0]->GetUses() == 1);
+
+      if constexpr (CT::Sparse<E1>) {
+         REQUIRE(element1.entries[1]->GetUses() == 2);
+         if constexpr (CT::Referenced<Decay<E1>>) {
+            REQUIRE(DenseCast(*element1).GetReferences() == 2);
+            REQUIRE(DenseCast(*element3).GetReferences() == 1);
+         }
+      }
+      if constexpr (CT::Sparse<E2>) {
+         REQUIRE(element2.entries[1]->GetUses() == 2);
+         if constexpr (CT::Referenced<Decay<E2>>) {
+            REQUIRE(DenseCast(*element2).GetReferences() == 2);
+            REQUIRE(DenseCast(*element4).GetReferences() == 1);
+         }
+      }
+
+      piecewise1.Assign(*element3, *element4);
+
+      REQUIRE(element1.entries[0]->GetUses() == 1);
+      REQUIRE(element2.entries[0]->GetUses() == 1);
+
+      if constexpr (CT::Sparse<E1>) {
+         REQUIRE(element1.entries[1]->GetUses() == 1);
+         if constexpr (CT::Referenced<Decay<E1>>) {
+            REQUIRE(DenseCast(*element1).GetReferences() == 1);
+            REQUIRE(DenseCast(*element3).GetReferences() == 2);
+         }
       }
       if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
-         REQUIRE(DenseCast(*element2).GetReferences() == 2);
-         REQUIRE(DenseCast(*element4).GetReferences() == 1);
-      }*/
-
-      /*piecewise1.Assign(*element3, *element4);
-
-      if constexpr (CT::Sparse<E1> and CT::Referenced<Decay<E1>>) {
-         REQUIRE(DenseCast(*element1).GetReferences() == 1);
-         REQUIRE(DenseCast(*element3).GetReferences() == 2);
+         REQUIRE(element2.entries[1]->GetUses() == 1);
+         if constexpr (CT::Referenced<Decay<E2>>) {
+            REQUIRE(DenseCast(*element2).GetReferences() == 1);
+            REQUIRE(DenseCast(*element4).GetReferences() == 2);
+         }
       }
-      if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
-         REQUIRE(DenseCast(*element2).GetReferences() == 1);
-         REQUIRE(DenseCast(*element4).GetReferences() == 2);
-      }*/
    }
 
    GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {

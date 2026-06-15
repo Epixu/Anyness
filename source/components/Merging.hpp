@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Insertion.hpp"
+#include "source/Component.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -67,47 +68,34 @@ namespace Langulus::Anyness::Component
          size_t lastInsertedIndex = 0;
       };
 
-      /// Merge a new element at the performance-optimal position.            
-      /// This usually means at the back of a contiguous container. Supports  
-      /// intents and arrays.                                                 
-      ///   @param a an element or array of elements (and its intent) to merge
-      ///   @attention when 'a' is an array, you have to be careful with      
-      ///      using MergeResult::lastInsertedIndex, as it will show only the 
-      ///      position of the last insertion! Merge elements one-by-one, in  
-      ///      order to get the proper offsets.                               
+      /// Merge a pair at the performance-optimal position.                   
+      /// This usually means at the back of a contiguous container.           
+      ///   @attention all types need to be set prior to calling this function
+      ///   @attention when inserting in a hash table, the item is used as a  
+      ///      swapper, and has to be strongly owned from outside this call   
+      ///   @param a pair of elements (and its intent) to merge               
       ///   @return 1 if element was inserted, and the position where it was  
       ///      inserted (or found at, if it was already existing)             
-      template<class A, CT::ContainsMany C> requires (not Shared)
-      auto MergeInner(this C& self, A&& a) -> MergeResult {
-         // Gather the number of all elements and types.                
-         // Empty containers can't change type. If one of the type      
-         // changes raises a conflict, this function will throw.        
-         size_t rhs_count;
-         if constexpr (CT::Array<A>) {
-            using E = Decvq<Deref<DeextAll<Deint<A>>>>;
-            self.template SetType<E>();
-            rhs_count = GetAllExtentsOf(a);
-         }
-         else {
-            using E = Decvq<Deref<Deint<A>>>;
-            self.template SetType<E>();
-            rhs_count = 1;
-         }
+      template<class T, CT::ContainsMany C>
+      auto MergeInner(this C& self, T&& item) -> MergeResult {
+         static_assert(not CT::Array<T>,
+            "This inner routine doesn't account for arrays");
 
+         // If this is reached, then types are the same                 
          // Reallocate/branch out                                       
          const size_t lhs_count = self.GetCount();
-         const size_t all_count = lhs_count + rhs_count;
+         const size_t all_count = lhs_count + 1;
          self.BranchOut(all_count);
 
          // Insert the new elements if they're not contained yet        
          MergeResult result;
-         auto insert = [&]<class E>(E&& item) {
+         try {
             if constexpr (CT::Contiguous<C>) {
                // Contiguous merge                                      
                if (not self.IsEmpty()) {
                   if (const auto found = self.FindInner(DeintCast(item), 0)) {
                      result.lastInsertedIndex = found - self.GetHandle();
-                     return;
+                     return result;
                   }
                }
 
@@ -121,84 +109,23 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Hash table merge                                      
-               const auto bucket = self.GetOffset(DeintCast(item));
+               static_assert(CT::OwnedStrong<T>,
+                  "Item needs to be strongly owned, because it will be "
+                  "used as a temporary swapper");
+      
+               const auto key = DeintCast(item).GetKeyHandle(); //TODO this presumes the key dimension is the one the hash table is associated with
+               const auto bucket = self.GetOffset(key);
                if (not self.IsEmpty()) {
-                  if (const auto found = self.FindInner(DeintCast(item), bucket)) {
+                  if (const auto found = self.FindInner(key, bucket)) {
                      result.lastInsertedIndex = found - self.GetHandle();
-                     return;
+                     return result;
                   }
                }
 
-               // Move the element to a temporary local swapper first   
-               THandle<Decvq<Deref<Deint<E>>>> swapper {Piecewise, LglsFwd(item)};
-               result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
+               result.lastInsertedIndex = self.TableEmplace(bucket, item);
+               ++result.itemsInserted;
             }
-
-            ++result.itemsInserted;
-         };
-
-         try {
-            //TODO actual array insertion
-            insert(LglsFwd(a));
          }
-         catch (...) {
-            // Account for throws inside constructors                   
-            self.SetCountInner(lhs_count + result.itemsInserted);
-            throw;
-         }
-
-         self.SetCountInner(lhs_count + result.itemsInserted);
-         return result;
-      }
-
-      /// Merge a pair at the performance-optimal position.                   
-      /// This usually means at the back of a contiguous container.           
-      ///   @param a pair of elements (and its intent) to merge               
-      ///   @return 1 if element was inserted, and the position where it was  
-      ///      inserted (or found at, if it was already existing)             
-      template<class K, class V, CT::ContainsMany C> requires Shared
-      auto MergeInner(this C& self, K&& key, V&& val) -> MergeResult {
-         static_assert(not CT::Array<K, V>);
-         static_assert(not CT::Contiguous<C>);
-
-         if constexpr (CT::Handle<K>)
-            self.template SetType<0>(DeintCast(key).GetType());
-         else
-            self.template SetType<Decvq<Deref<Deint<K>>>, 0>();
-
-         if constexpr (CT::Handle<V>)
-            self.template SetType<1>(DeintCast(val).GetType());
-         else
-            self.template SetType<Decvq<Deref<Deint<V>>>, 1>();
-
-         // If this is reached, then types are the same                 
-         // Reallocate/branch out                                       
-         const size_t lhs_count = self.GetCount();
-         const size_t all_count = lhs_count + 1;
-         self.BranchOut(all_count);
-
-         // Insert the new elements if they're not contained yet        
-         MergeResult result;
-         auto insert = [&self,&result](K&& k, V&& v) {
-            // Hash table merge only                                    
-            const auto bucket = self.GetOffset(DeintCast(k));
-            if (not self.IsEmpty()) {
-               if (const auto found = self.FindInner(DeintCast(k), bucket)) {
-                  result.lastInsertedIndex = found - self.GetHandle();
-                  return;
-               }
-            }
-
-            // Make a local pair to use as a swapper                    
-            THandlePair<
-               Tif<CT::Handle<K>, Deref<Deint<K>>, THandle<Decvq<Deref<Deint<K>>>>>,
-               Tif<CT::Handle<V>, Deref<Deint<V>>, THandle<Decvq<Deref<Deint<V>>>>>
-            > swapper {LglsFwd(k), LglsFwd(v)};
-            result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
-            ++result.itemsInserted;
-         };
-
-         try { insert(LglsFwd(key), LglsFwd(val)); }
          catch (...) {
             // Account for throws inside constructors                   
             self.SetCountInner(lhs_count + result.itemsInserted);

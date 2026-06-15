@@ -210,7 +210,9 @@ namespace Langulus::Anyness::Component
          if (self.IsDisowned()) {
             self.DisableDisowned();
             PROVIDERS::ForEach([&]<class P> {
-               self.P::AllocateFresh(self.P::RequestHeap(1));
+               using PP = P;
+               LglsVerbose(NameOf<PP>());
+               self.PP::AllocateFresh(self.PP::RequestHeap(1));
             });
             return;
          }
@@ -228,7 +230,9 @@ namespace Langulus::Anyness::Component
             self.template Free<false>();
             if constexpr (CT::ContainsMany<C>) {
                PROVIDERS::ForEach([&]<class P> {
-                  self.P::AllocateLess(1);
+                  using PP = P;
+                  LglsVerbose(NameOf<PP>());
+                  self.PP::AllocateLess(1);
                });
             }
             return;
@@ -240,7 +244,9 @@ namespace Langulus::Anyness::Component
          // a new block, which will be exclusively ours.                
          self.Free();
          PROVIDERS::ForEach([&]<class P> {
-            self.P::AllocateFresh(self.P::RequestHeap(1));
+            using PP = P;
+            LglsVerbose(NameOf<PP>());
+            self.PP::AllocateFresh(self.PP::RequestHeap(1));
          });
       }
 

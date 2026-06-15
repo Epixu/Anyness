@@ -138,6 +138,8 @@ namespace Langulus::Anyness
 
       /// Construct from handles                                              
       constexpr TPair(auto&& a1, auto&& a2) {
+         this->DeduceType(a1, a2);
+         
          if constexpr (OnHeap) {
             this->AllocateFresh(this->RequestHeap(1));
             this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(FWDIntent(a1));
@@ -169,6 +171,8 @@ namespace Langulus::Anyness
 
       /// Clear the pair and assign a key and a value                         
       constexpr TPair& Assign(auto&& a1, auto&& a2) {
+         this->DeduceType(a1, a2);
+
          if constexpr (OnHeap) {
             this->Reset();
             this->AllocateFresh(this->RequestHeap(1));

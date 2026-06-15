@@ -259,10 +259,7 @@ namespace Langulus::Anyness::Component
       ///      relevant dimensions                                            
       ///   @return the offset at which pair was inserted                     
       template<Cid SID = ID, CT::NoIntent H> requires Relevant<SID>
-      size_t TableEmplace(this auto& self, size_t const start, H& swapper) /*-> Count<C>*/ {
-         /*static_assert(not Shared or CT::Pair<H>,
-            "Swapper handle must match the number of shared providers");*/
-
+      size_t TableEmplace(this auto& self, size_t const start, H& swapper) {
          // Get the starting index based on the key hash                
          const auto reserved = self.template GetReserved<SID>();
          const auto tableBeg = self.template GetHashTableInner<SID>();

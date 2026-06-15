@@ -798,7 +798,7 @@ namespace Langulus::Anyness::Component
                }
                else {
                   if constexpr (STRAT != AllocationStrategy::DontAllocate)
-                     self.template DeduceType<SID>(arguments...);
+                     self.DeduceType(arguments...);
 
                   // Allocate if we have to                             
                   if constexpr (STRAT == AllocationStrategy::FreshAllocate)

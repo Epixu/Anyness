@@ -107,8 +107,8 @@ namespace Langulus::Anyness
       template<CT::Pair A1, CT::Pair...AN>
       constexpr TMap(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->MergeInner(NestIntentOf(a1, a1.GetKeyHandle()), NestIntentOf(a1, a1.GetValHandle()));
-        (this->MergeInner(NestIntentOf(an, an.GetKeyHandle()), NestIntentOf(an, an.GetValHandle())), ...);
+         this->MergeInner(LglsFwd(a1));
+        (this->MergeInner(LglsFwd(an)), ...);
       }
 
       /// Assignment                                                          
@@ -131,16 +131,17 @@ namespace Langulus::Anyness
 
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> TMap& {
-         using I = IntentOf(pair);
          this->Clear();
-         this->MergeInner(I::Nest(pair.GetKeyHandle()), I::Nest(pair.GetValHandle()));
+         this->DeduceType(DeintCast(pair).GetKeyHandle(), DeintCast(pair).GetValHandle());
+         this->MergeInner(LglsFwd(pair));
          return *this;
       }
 
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> TMap& {
          this->Clear();
-         this->MergeInner(LglsFwd(key), LglsFwd(val));
+         this->DeduceType(key, val);
+         this->MergeInner(TPair {LglsFwd(key), LglsFwd(val)});
          return *this;
       }
 

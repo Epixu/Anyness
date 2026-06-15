@@ -272,15 +272,15 @@ namespace Langulus::Anyness::Component
       /// typed container can't change their type, so this acts like a static 
       /// assertion, if the argument is compatible with the contained type.   
       ///   @param a The argument. Accepts intents, handles, arrays etc.      
-      template<Cid SID = ID, class A> requires (SID == ID)
+      template<class A>
       constexpr void DeduceType(A const& a) noexcept {
          if constexpr (CT::Handle<A>) {
             if constexpr (CT::TypeErased<A>)
-               SetType(DeintCast(a).template GetType<SID>());
+               SetType(DeintCast(a).GetType());
             else
-               SetType<TypeOf<Deint<A>, SID>>();
+               SetType<TypeOf<Deint<A>>>();
          }
-         else SetType<Decvq<Deext<Deref<Deint<A>>>>>();
+         else SetType<Decvq<DeextAll<Deref<Deint<A>>>>>();
       }
    };
 }
