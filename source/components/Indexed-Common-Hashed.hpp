@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "Indexed-Common.hpp"
+#include "Langulus/Typenav.hpp"
 #include <Langulus/HashOf.hpp>
 
 
@@ -260,6 +261,8 @@ namespace Langulus::Anyness::Component
       ///   @return the offset at which pair was inserted                     
       template<Cid SID = ID, CT::NoIntent H> requires Relevant<SID>
       size_t TableEmplace(this auto& self, size_t const start, H& swapper) {
+         static_assert(CT::Mutable<H>, "Swapper should be mutable");
+         
          // Get the starting index based on the key hash                
          const auto reserved = self.template GetReserved<SID>();
          const auto tableBeg = self.template GetHashTableInner<SID>();
