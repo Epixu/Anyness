@@ -211,7 +211,7 @@ namespace Langulus::Anyness::Component
             self.DisableDisowned();
             PROVIDERS::ForEach([&]<class P> {
                using PP = P;
-               LglsVerbose(NameOf<PP>());
+               Logger::Special(NameOf<PP>());
                self.PP::AllocateFresh(self.PP::RequestHeap(1));
             });
             return;
@@ -231,7 +231,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::ContainsMany<C>) {
                PROVIDERS::ForEach([&]<class P> {
                   using PP = P;
-                  LglsVerbose(NameOf<PP>());
+                  Logger::Special(NameOf<PP>());
                   self.PP::AllocateLess(1);
                });
             }
@@ -245,7 +245,7 @@ namespace Langulus::Anyness::Component
          self.Free();
          PROVIDERS::ForEach([&]<class P> {
             using PP = P;
-            LglsVerbose(NameOf<PP>());
+            Logger::Special(NameOf<PP>());
             self.PP::AllocateFresh(self.PP::RequestHeap(1));
          });
       }

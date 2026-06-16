@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Insertion.hpp"
+#include "Langulus/Typenav.hpp"
 #include "source/Component.hpp"
 
 
@@ -53,8 +54,19 @@ namespace Langulus::Anyness::Component
       ///   @param a element or an array of elements (and their intent)       
       ///   @return the number of inserted elements                           
       template<class A, CT::ContainsMany C>
-      auto Merge(this C& self, A&& a) -> Count<C> {
-         return static_cast<Count<C>>(self.MergeInner(LglsFwd(a)).itemsInserted);
+      auto Merge(this C& self, A&& a) -> size_t {
+         if constexpr (CT::Contiguous<C> or (not CT::Handle<A> and CT::Mutable<Deint<A>>))
+            return self.MergeInner(LglsFwd(a)).itemsInserted;
+         else if constexpr (requires { Decay<Deint<A>> {LglsFwd(a)}; }) {
+            // Table merge requires a local copy as a swapper           
+            Decay<Deint<A>> localCopy {LglsFwd(a)};
+            return self.MergeInner(Abandon(localCopy)).itemsInserted;
+         }
+         else {
+            // Table merge requires a local copy as a swapper           
+            Decay<Deint<A>> localCopy {DeintCast(a)};
+            return self.MergeInner(Abandon(localCopy)).itemsInserted;
+         }
       }
 
       template<CT::Container C>
@@ -106,12 +118,32 @@ namespace Langulus::Anyness::Component
                   else
                      to.template EmplaceWithIntent<D>(FWDIntent(item));
                });
+
+               result.lastInsertedIndex = lhs_count;
+               ++result.itemsInserted;
+            }
+            else if constexpr (not Shared) {
+               // Hash table merge                                      
+               static_assert(not CT::Handle<T> and CT::Mutable<Deint<T>>,
+                  "Item needs to be strongly owned and mutable, because "
+                  "it will be used as a temporary swapper");
+      
+               const auto bucket = self.GetOffset(DeintCast(item));
+               if (not self.IsEmpty()) {
+                  if (const auto found = self.FindInner(DeintCast(item), bucket)) {
+                     result.lastInsertedIndex = found - self.GetHandle();
+                     return result;
+                  }
+               }
+
+               result.lastInsertedIndex = self.TableEmplace(bucket, DeintCast(item));
+               ++result.itemsInserted;
             }
             else {
-               // Hash table merge                                      
-               static_assert(CT::OwnedStrong<T>,
-                  "Item needs to be strongly owned, because it will be "
-                  "used as a temporary swapper");
+               // Hash table merge (multidimensional)                   
+               static_assert(not CT::Handle<T> and CT::Mutable<Deint<T>>,
+                  "Item needs to be strongly owned and mutable, because "
+                  "it will be used as a temporary swapper");
       
                const auto key = DeintCast(item).GetKeyHandle(); //TODO this presumes the key dimension is the one the hash table is associated with
                const auto bucket = self.GetOffset(key);
@@ -122,7 +154,7 @@ namespace Langulus::Anyness::Component
                   }
                }
 
-               result.lastInsertedIndex = self.TableEmplace(bucket, item);
+               result.lastInsertedIndex = self.TableEmplace(bucket, DeintCast(item));
                ++result.itemsInserted;
             }
          }
