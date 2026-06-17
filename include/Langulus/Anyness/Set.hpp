@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "source/Container.hpp"
 #include <source/components/Typed-Stack.hpp>
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Count-Stack.hpp>
@@ -104,8 +105,8 @@ namespace Langulus::Anyness::Inner
          }
          else {
             this->ConstructDefault();
-            this->Merge(LglsFwd(a1));
-           (this->Merge(LglsFwd(an)), ...);
+            this->Merge(TAny {Anyness::Piecewise, LglsFwd(a1)});
+           (this->Merge(TAny {Anyness::Piecewise, LglsFwd(an)}), ...);
          }
       }
       
@@ -125,8 +126,8 @@ namespace Langulus::Anyness::Inner
       template<class A1, class...AN>
       constexpr Set(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->Merge(LglsFwd(a1));
-        (this->Merge(LglsFwd(an)), ...);
+         this->Merge(TAny {Anyness::Piecewise, LglsFwd(a1)}.GetHandle());
+        (this->Merge(TAny {Anyness::Piecewise, LglsFwd(an)}.GetHandle()), ...);
       }
       
       /// Assignment                                                          

@@ -70,8 +70,8 @@ namespace Langulus::Anyness::Inner
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
 
-      using Base          = MapBase<SORTED>;
-      using DeepType      = Many;
+      using Base           = MapBase<SORTED>;
+      using DeepType       = Many;
 
       using HandleType    = THandlePair<Handle, Handle>;
       using HandleMutType = THandlePair<Handle, HandleMut>;

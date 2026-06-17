@@ -54,10 +54,10 @@ namespace Langulus::Anyness
       using Base           = Inner::TSetBase<T, SORT>;
       using DeepType       = Any;
 
-      using HandleType    = THandle<ConstAll<T&>>;
-      using HandleMutType = THandle<ConstAll<T&>>;
-      using Pick          = ConstAll<T&>;
-      using PickMut       = ConstAll<T&>;
+      using HandleType     = THandle<ConstAll<T&>>;
+      using HandleMutType  = THandle<ConstAll<T&>>;
+      using Pick           = ConstAll<T&>;
+      using PickMut        = ConstAll<T&>;
 
       constexpr TSet() noexcept {
          this->ConstructDefault();

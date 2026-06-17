@@ -33,6 +33,7 @@ namespace Langulus::Anyness::Inner
 
 namespace Langulus::Anyness
 {
+   /// MARK: TAny                                                             
    ///                                                                        
    /// A statically-typed container of size 1 that is binary-compatible with  
    /// the type-erased alternative `Any`.                                     
@@ -115,10 +116,21 @@ namespace Langulus::Anyness
       using Com::Comparison<>::operator <=>;
       using Com::Comparison<>::operator ==;
    };
+
+   /// MARK: CTAD                                                             
+   template<CT::NotVoid T>
+   TAny(T&&) -> TAny<Decvq<Deref<Deint<T>>>>;
+
+   template<CT::NotVoid T>
+   TAny(Inner::Absorb, T&&) -> TAny<TypeOf<T>>;
+
+   template<CT::NotVoid T>
+   TAny(Inner::Piecewise, T&&) -> TAny<Decvq<Deref<Deint<T>>>>;
 }
 
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Convert TAny -> Text                                                   
    template<class T>
    struct Converter<Anyness::TAny<T>, Anyness::Text> {

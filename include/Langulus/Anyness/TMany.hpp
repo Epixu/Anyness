@@ -43,6 +43,7 @@ namespace Langulus::Anyness::Inner
 
 namespace Langulus::Anyness
 {
+   /// MARK: TMany                                                            
    ///                                                                        
    /// A statically-typed contiguous container of variable size that is       
    /// binary-compatible with the type-erased alternative `Many`.             
@@ -143,10 +144,21 @@ namespace Langulus::Anyness
       using Com::IterationRange<>::rbegin;
       using Com::IterationRange<>::rend;
    };
+
+   /// MARK: CTAD                                                             
+   template<CT::NotVoid T>
+   TMany(T&&) -> TMany<Decvq<Deref<Deint<T>>>>;
+
+   template<CT::NotVoid T>
+   TMany(Inner::Absorb, T&&) -> TMany<TypeOf<T>>;
+
+   template<CT::NotVoid T>
+   TMany(Inner::Piecewise, T&&) -> TMany<Decvq<Deref<Deint<T>>>>;
 }
 
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Convert TMany -> Text                                                  
    template<class T>
    struct Converter<Anyness::TMany<T>, Anyness::Text> {

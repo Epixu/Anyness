@@ -7,6 +7,8 @@
 ///                                                                           
 #pragma once
 #include "Insertion.hpp"
+#include "Langulus/CT/Contiguous.hpp"
+#include "Langulus/IntentOf.hpp"
 #include "Langulus/Typenav.hpp"
 #include "source/Component.hpp"
 
@@ -55,13 +57,7 @@ namespace Langulus::Anyness::Component
       ///   @return the number of inserted elements                           
       template<class A, CT::ContainsMany C>
       auto Merge(this C& self, A&& a) -> size_t {
-         if constexpr (CT::Contiguous<C> or (CT::Handle<A> and CT::Mutable<Deint<A>>))
-            return self.MergeInner(LglsFwd(a)).itemsInserted;
-         else {
-            // Table merge requires a local copy as a swapper           
-            Decay<Deint<A>> localCopy {LglsFwd(a)};
-            return self.MergeInner(Abandon(localCopy)).itemsInserted;
-         }
+         return self.MergeInner(LglsFwd(a)).itemsInserted;
       }
 
       template<CT::Container C>
@@ -87,6 +83,15 @@ namespace Langulus::Anyness::Component
       auto MergeInner(this C& self, T&& item) -> MergeResult {
          static_assert(not CT::Array<T>,
             "This inner routine doesn't account for arrays");
+
+         if constexpr (CT::Container<T>) {
+            static_assert(C::Dimensions::Count == Decay<Deint<T>>::Dimensions::Count,
+               "Dimension mismatch");
+         }
+         else {
+            static_assert(C::Dimensions::Count == 1,
+               "Dimension mismatch");
+         }
 
          // If this is reached, then types are the same                 
          // Reallocate/branch out                                       
@@ -117,40 +122,38 @@ namespace Langulus::Anyness::Component
                result.lastInsertedIndex = lhs_count;
                ++result.itemsInserted;
             }
-            else if constexpr (not Shared) {
-               // Hash table merge                                      
-               static_assert(CT::Handle<T> and CT::Mutable<Deint<T>>,
-                  "Item needs to be mutable handle to a reusable container, because "
-                  "it will be used as a temporary swapper");
-      
-               const auto bucket = self.GetOffset(DeintCast(item));
-               if (not self.IsEmpty()) {
-                  if (const auto found = self.FindInner(DeintCast(item), bucket)) {
-                     result.lastInsertedIndex = found - self.GetHandle();
-                     return result;
-                  }
-               }
-
-               Deint<T> temp = DeintCast(item);
-               result.lastInsertedIndex = self.TableEmplace(bucket, temp);
-               ++result.itemsInserted;
-            }
             else {
-               // Hash table merge (multidimensional)                   
-               static_assert(CT::Handle<T> and CT::Mutable<Deint<T>>,
+               static_assert(CT::Handle<T> and CT::Mutable<T>,
                   "Item needs to be mutable handle to a reusable container, because "
                   "it will be used as a temporary swapper");
-      
-               const auto key = DeintCast(item).GetKeyHandle(); //TODO this presumes the key dimension is the one the hash table is associated with
-               const auto bucket = self.GetOffset(key);
-               if (not self.IsEmpty()) {
-                  if (const auto found = self.FindInner(key, bucket)) {
-                     result.lastInsertedIndex = found - self.GetHandle();
-                     return result;
+
+               if constexpr (not Shared) {
+                  // Hash table merge                                   
+                  const auto bucket = self.GetOffset(DeintCast(item));
+                  if (not self.IsEmpty()) {
+                     if (const auto found = self.FindInner(DeintCast(item), bucket)) {
+                        result.lastInsertedIndex = found - self.GetHandle();
+                        return result;
+                     }
                   }
+
+                  Deint<T> temp = DeintCast(item);
+                  result.lastInsertedIndex = self.TableEmplace(bucket, temp);
+               }
+               else {
+                  // Hash table merge (multidimensional)                
+                  const auto key = DeintCast(item).GetKeyHandle(); //TODO this presumes the key dimension is the one the hash table is associated with
+                  const auto bucket = self.GetOffset(key);
+                  if (not self.IsEmpty()) {
+                     if (const auto found = self.FindInner(key, bucket)) {
+                        result.lastInsertedIndex = found - self.GetHandle();
+                        return result;
+                     }
+                  }
+
+                  result.lastInsertedIndex = self.TableEmplace(bucket, DeintCast(item));
                }
 
-               result.lastInsertedIndex = self.TableEmplace(bucket, DeintCast(item));
                ++result.itemsInserted;
             }
          }

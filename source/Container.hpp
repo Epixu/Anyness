@@ -848,6 +848,7 @@ namespace Langulus::Anyness
          }
       }
 
+   public: // public because it is used from serialization routines
       /// Get a handle to the first element(s). Very useful for internal use. 
       /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   
@@ -875,7 +876,6 @@ namespace Langulus::Anyness
          return LglsFwd(self);
       }
       
-   public: // public because it is used from serialization routines
       /// MARK: Apply                                                         
       /// Visit all element's handles and perform a function on them.         
       /// Handles both linear and non-linear containers gracefully.           
