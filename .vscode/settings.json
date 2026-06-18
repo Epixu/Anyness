@@ -28,12 +28,30 @@
          "class": "#dfffbb",
          "typeParameter": "#d279e4",
          "concept": "#c1ebff",
-         "operator": "#f0e117",
-         "parameter": "#b9b9b9",
+         "operator": "#569CD6",
+         "parameter": "#b9b9b9"
       }
    },
    "editor.tokenColorCustomizations": {
       "textMateRules": [
+      {
+        "scope": "comment.line",
+        "settings": {
+          "foreground": "#ffffff"
+        }
+      },
+      {
+        "scope": "string",
+        "settings": {
+          "foreground": "#ff6e6e"
+        }
+      },
+      {
+        "scope": "storage.type",
+        "settings": {
+          "foreground": "#569CD6"
+        }
+      },
       {
         "scope": "variable.other.property",
         "settings": {
@@ -56,6 +74,12 @@
         "scope": "entity.name.function.preprocessor",
         "settings": {
           "foreground": "#d279e4"
+        }
+      },
+      {
+        "scope": "entity.name.function",
+        "settings": {
+          "foreground": "#f4f5ad"
         }
       },
       {
@@ -83,7 +107,7 @@
         }
       },
       {
-        "scope": "keyword.other.operator",
+        "scope": "keyword.other",
         "settings": {
           "foreground": "#569CD6"
         }
@@ -116,13 +140,11 @@
    "highlight.regexes": {
       "(/{2}(?!TODO).*)": [{
          "filterLanguageRegex": "c",
-         "backgroundColor": "#88ff8820",
-         "color": "#ffffff"
+         "backgroundColor": "#88ff8820"
       }],
       "(/{3}(?!TODO).*)": [{
          "filterLanguageRegex": "c",
-         "backgroundColor": "#b0ffb040",
-         "color": "#ffffff"
+         "backgroundColor": "#b0ffb040"
       }],
       "(/{2}TODO.*)": [{
         "filterLanguageRegex": "c",

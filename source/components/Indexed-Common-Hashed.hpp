@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "Indexed-Common.hpp"
+#include "Langulus/IntentOf.hpp"
 #include "Langulus/Typenav.hpp"
 #include <Langulus/HashOf.hpp>
 
@@ -234,7 +235,6 @@ namespace Langulus::Anyness::Component
                      auto to     = handle + newIndex;
                      Id::ForEach([&to,&from]<Cid D>{
                         to.template EmplaceWithIntent<D>(Abandon(from));
-                        //from.template DestroyElement<true, D>();
                      });
 
                      from.template Free<false>();
@@ -252,59 +252,71 @@ namespace Langulus::Anyness::Component
 
       /// Table insertion function                                            
       ///   @param start the starting index                                   
-      ///   @param swapper swapper to use while trying to insert              
+      ///   @param item item to insert                                        
       ///   @attention works in all dimensions simultaneously!                
       ///   @attention assumes that reserved count is the same across all     
       ///      relevant dimensions                                            
       ///   @attention assumes that the same hash table is used across all    
       ///      relevant dimensions                                            
       ///   @return the offset at which pair was inserted                     
-      template<Cid SID = ID, CT::NoIntent H> requires Relevant<SID>
-      size_t TableEmplace(this auto& self, size_t const start, H& swapper) {
-         static_assert(CT::Mutable<H>, "Swapper should be mutable");
-         
+      template<Cid SID = ID, CT::Intent H> requires Relevant<SID>
+      size_t TableEmplace(this auto& self, size_t const start, H&& item) {
          // Get the starting index based on the key hash                
-         const auto reserved = self.template GetReserved<SID>();
          const auto tableBeg = self.template GetHashTableInner<SID>();
-         const auto tableEnd = tableBeg + reserved;
-
-         TableType attempts = 1;
-         auto insertedAt = reserved;
          auto table = tableBeg + start;
          auto handle = self.GetHandle().ForceMutable();
-         while (*table) {
-            const auto index = table - tableBeg;
-            if (attempts > *table) {
-               // The value we're inserting is closer to bucket, so swap
-               auto h = handle + index;
-               Id::ForEach([&h,&swapper]<Cid D>{
-                  h.template SwapInner<D>(swapper);
-               });
 
-               ::std::swap(attempts, *table);
-               if (insertedAt == reserved)
-                  insertedAt = index;
+         if (*table) {
+            // Container is not empty and swapping will occur           
+            const auto reserved = self.template GetReserved<SID>();
+            const auto tableEnd = tableBeg + reserved;
+            auto swapper = self.CreateSwapper(LglsFwd(item));
+            auto swapper_handle = swapper.GetHandle();
+            TableType attempts = 1;
+            auto insertedAt = reserved;
+            while (*table) {
+               const auto index = table - tableBeg;
+               if (attempts > *table) {
+                  // We're inserting closer to bucket, so swap          
+                  auto h = handle + index;
+                  Id::ForEach([&h,&swapper_handle]<Cid D>{
+                     h.template SwapInner<D>(swapper_handle);
+                  });
+
+                  ::std::swap(attempts, *table);
+                  if (insertedAt == reserved)
+                     insertedAt = index;
+               }
+
+               ++attempts;
+
+               // Wrap around and start from the beginning if we have to
+               if (table < tableEnd - 1) ++table;
+               else table = tableBeg;
             }
 
-            ++attempts;
+            // If reached, then empty slot found, so put the value there
+            const auto index = table - tableBeg;
+            handle += index;
+            Id::ForEach([&handle,&swapper_handle]<Cid D>{
+               handle.template EmplaceWithIntent<D>(Abandon(swapper_handle));
+            });
 
-            // Wrap around and start from the beginning if we have to   
-            if (table < tableEnd - 1) ++table;
-            else table = tableBeg;
+            if (insertedAt == reserved)
+               insertedAt = index;
+
+            *table = attempts;
+            return insertedAt;
          }
-
-         // If reached, then empty slot found, so put the value there   
-         const auto index = table - tableBeg;
-         handle += index;
-         Id::ForEach([&handle,&swapper]<Cid D>{
-            handle.template EmplaceWithIntent<D>(Abandon(swapper));
-         });
-
-         if (insertedAt == reserved)
-            insertedAt = index;
-
-         *table = attempts;
-         return insertedAt;
+         else {
+            // No swapping will happen                                  
+            Id::ForEach([&handle,&item]<Cid D>{
+               handle.template EmplaceWithIntent<D>(LglsFwd(item));
+            });
+            
+            *table = 1;
+            return start;
+         }
       }
    };
 }

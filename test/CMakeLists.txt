@@ -66,4 +66,7 @@ add_langulus_test(LangulusAnynessTest
                LangulusAnyness
 )
 
-target_compile_definitions(LangulusAnynessTest PRIVATE LANGULUS_OPTION_TESTING)
+target_compile_definitions(LangulusAnynessTest
+   PRIVATE     LANGULUS_OPTION_TESTING
+               DOCTEST_CONFIG_SUPER_FAST_ASSERTS
+)

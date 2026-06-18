@@ -128,11 +128,21 @@ namespace Langulus::Anyness
             return this->Assign(LglsFwd(argument));
          }
       }
+      
+      /// Create a temporary swapper with compatible elements and initialize  
+      /// it with a compatible value, by shallow copying it.                  
+      template<CT::Pair P>
+      constexpr auto CreateSwapper(P&& pair) assumptious {
+         static_assert(Same<TypeOf<Deint<P>, 0>, K>, "Key type mismatch");
+         static_assert(Same<TypeOf<Deint<P>, 1>, V>, "Val type mismatch");
+         return TPair {Copy {LglsFwd(pair)}};
+      }
 
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> TMap& {
          this->Clear();
-         this->DeduceType(DeintCast(pair).GetKeyHandle(), DeintCast(pair).GetValHandle());
+         this->template SetType<0>(pair.template GetType<0>());
+         this->template SetType<1>(pair.template GetType<1>());
          this->MergeInner(LglsFwd(pair));
          return *this;
       }

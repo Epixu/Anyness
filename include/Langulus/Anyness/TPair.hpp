@@ -221,6 +221,9 @@ namespace Langulus::Anyness
    };
 
    /// MARK: CTAD                                                             
+   template<CT::Pair P>
+   TPair(P&&) -> TPair<TypeOf<Deint<P>, 0>, TypeOf<Deint<P>, 1>>;
+
    template<CT::NotHandle K, CT::NotHandle V>
    TPair(K&&, V&&) -> TPair<Decvq<Deref<Deint<K>>>, Decvq<Deref<Deint<V>>>>;
 

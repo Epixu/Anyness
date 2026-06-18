@@ -30,6 +30,8 @@
 #include <source/states/Encrypted.hpp>
 #include <source/states/Tracked.hpp>
 #include "HandlePair.hpp"
+#include "Langulus/IntentOf.hpp"
+#include "source/Container.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -44,7 +46,7 @@ namespace Langulus::Anyness::Inner
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     
       Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
-      Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>, // Separate key deep ownership
+      Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>,
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      
       //Com::Assignment<1>,                 // Assignment of values       
@@ -58,6 +60,7 @@ namespace Langulus::Anyness::Inner
       Com::State::Encrypted<>             // Toggle encryption          
    >;
 
+   /// MARK: Map                                                              
    ///                                                                        
    /// A universal type-erased non-contiguous map of variable size.           
    /// Emplacement is disabled for maps, because keys aren't allowed to       
@@ -127,7 +130,7 @@ namespace Langulus::Anyness::Inner
          }
       }
       
-      /// Construction that emplaces all arguments inside                     
+      /// Construction that merges all provided pairs                         
       template<CT::Pair A1, CT::Pair...AN>
       constexpr Map(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
@@ -161,10 +164,20 @@ namespace Langulus::Anyness::Inner
          }
       }
 
+      /// Create a temporary swapper with compatible elements and initialize  
+      /// it with a compatible value, by shallow copying it.                  
+      template<CT::Pair P>
+      constexpr auto CreateSwapper(P&& pair) assumptious {
+         LglsAssumeDev(this->template IsSame<TypeOf<Deint<P>, 0>, 0>(), "Type mismatch");
+         LglsAssumeDev(this->template IsSame<TypeOf<Deint<P>, 1>, 1>(), "Type mismatch");
+         return TPair {Copy {LglsFwd(pair)}};
+      }
+
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> Map& {
          this->Reset();
-         this->DeduceType(DeintCast(pair).GetKeyHandle(), DeintCast(pair).GetValHandle());
+         this->template SetType<0>(pair.template GetType<0>());
+         this->template SetType<1>(pair.template GetType<1>());
          this->MergeInner(LglsFwd(pair));
          return *this;
       }
@@ -216,6 +229,7 @@ namespace Langulus::Anyness
 
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Convert Map -> Text                                                    
    template<Anyness::StateValue SORT>
    struct Converter<Anyness::Inner::Map<SORT>, Anyness::Text> {

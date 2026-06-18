@@ -324,7 +324,7 @@ namespace Langulus::Anyness::Component
          static_assert(CT::ContainsOne<C>,
             "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
-             "Can be used only for contiguous containers");
+            "Can be used only for contiguous containers");
          static_assert(not CT::Cloned<I> and not CT::Copied<I>,
             "Since this function assumes container has been preallocated, "
             "it makes no sense to clone or copy here "
@@ -332,7 +332,7 @@ namespace Langulus::Anyness::Component
          );
 
          using IT = Decvq<Deref<TypeOf<I>>>;
-         LglsAssumeDev(self.template GetRaw<SID>(), "Invalid heap");
+         LglsAssumeDev(self.template GetRaw<SID>(),  "Invalid heap");
          LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");
          decltype(auto) rhs = LglsFwd(intent.what);
          

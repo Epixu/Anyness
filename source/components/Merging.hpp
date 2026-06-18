@@ -123,36 +123,34 @@ namespace Langulus::Anyness::Component
                ++result.itemsInserted;
             }
             else {
-               static_assert(CT::Handle<T> and CT::Mutable<T>,
-                  "Item needs to be mutable handle to a reusable container, because "
-                  "it will be used as a temporary swapper");
-
+               // Table merge                                           
+               size_t bucket;
                if constexpr (not Shared) {
-                  // Hash table merge                                   
-                  const auto bucket = self.GetOffset(DeintCast(item));
+                  // Single dimension                                   
+                  bucket = self.GetOffset(DeintCast(item));
                   if (not self.IsEmpty()) {
                      if (const auto found = self.FindInner(DeintCast(item), bucket)) {
                         result.lastInsertedIndex = found - self.GetHandle();
                         return result;
                      }
                   }
-
-                  Deint<T> temp = DeintCast(item);
-                  result.lastInsertedIndex = self.TableEmplace(bucket, temp);
                }
                else {
-                  // Hash table merge (multidimensional)                
+                  // Multidimensional                                   
                   const auto key = DeintCast(item).GetKeyHandle(); //TODO this presumes the key dimension is the one the hash table is associated with
-                  const auto bucket = self.GetOffset(key);
+                  bucket = self.GetOffset(key);
                   if (not self.IsEmpty()) {
                      if (const auto found = self.FindInner(key, bucket)) {
                         result.lastInsertedIndex = found - self.GetHandle();
                         return result;
                      }
                   }
-
-                  result.lastInsertedIndex = self.TableEmplace(bucket, DeintCast(item));
                }
+            
+               if constexpr (CT::Copied<IntentOf(item)>)
+                  result.lastInsertedIndex = self.TableEmplace(bucket, Refer(LglsFwd(item)));
+               else
+                  result.lastInsertedIndex = self.TableEmplace(bucket, FWDIntent(item));
 
                ++result.itemsInserted;
             }

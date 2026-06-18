@@ -105,8 +105,8 @@ namespace Langulus::Anyness::Inner
          }
          else {
             this->ConstructDefault();
-            this->Merge(TAny {Anyness::Piecewise, LglsFwd(a1)});
-           (this->Merge(TAny {Anyness::Piecewise, LglsFwd(an)}), ...);
+            this->MergeInner(LglsFwd(a1));
+           (this->MergeInner(LglsFwd(an)), ...);
          }
       }
       
@@ -126,8 +126,8 @@ namespace Langulus::Anyness::Inner
       template<class A1, class...AN>
       constexpr Set(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->Merge(TAny {Anyness::Piecewise, LglsFwd(a1)}.GetHandle());
-        (this->Merge(TAny {Anyness::Piecewise, LglsFwd(an)}.GetHandle()), ...);
+         this->MergeInner(LglsFwd(a1));
+        (this->MergeInner(LglsFwd(an)), ...);
       }
       
       /// Assignment                                                          
@@ -153,8 +153,13 @@ namespace Langulus::Anyness::Inner
          else return this->Assign(LglsFwd(argument));
       }
 
-      using Com::Comparison<>::operator <=>;
-      using Com::Comparison<>::operator ==;
+      /// Create a temporary swapper with compatible elements and initialize  
+      /// it with a compatible value, by shallow copying it.                  
+      template<class A>
+      constexpr auto CreateSwapper(A&& argument) assumptious {
+         LglsAssumeDev(this->template IsSame<Deint<A>>(), "Type mismatch");
+         return TAny {Copy {LglsFwd(argument)}};
+      }
    };
 }
 
