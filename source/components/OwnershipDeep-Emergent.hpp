@@ -977,7 +977,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
-            using H = TypeOf<I>;
+            //using H = TypeOf<I>;
             LglsAssumeDev(self.template IsSame<SID>(rhs.template GetType<SID>()),
                "Type mismatch", ": ", self.template GetType<SID>(),
                " is not same as ", rhs.template GetType<SID>()
@@ -991,13 +991,21 @@ namespace Langulus::Anyness::Component
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (CT::OwnedDeepStrong<H> and I::IsMoved()) {
+                  if constexpr (/*CT::OwnedDeepStrong<H> and*/ I::IsMoved()) {
                      // We are moving/abandoning, and we have to make   
                      // sure that source entries are zeroes, because    
                      // otherwise they will be dereferenced when H goes 
                      // out of scope.                                   
-                     LglsAssumeDev(rhs.template GetUses<SID>() == 1,
-                        "Can't move out from used memory");
+                     if constexpr (requires { rhs.template GetUses<SID>(); }) {
+                        LglsAssumeDev(rhs.template GetUses<SID>() == 1,
+                           "Can't move out from used memory");
+                     }
+                     else {
+                        #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                           LglsAssumeDev(Allocator::Find(entries_src)->GetUses() == 1,
+                              "Can't move out from used memory");
+                        #endif
+                     }
                      memset(DecvqAllCast(entries_src), 0, entries_size);
                   }
                }
@@ -1008,16 +1016,24 @@ namespace Langulus::Anyness::Component
                // reference all elements.                               
                ThisCom::template KeepElementDeep<sought, SID>();
             }
-            else if constexpr (CT::OwnedDeepStrong<H> and REF_INDIVIDUAL) {
+            else if constexpr (/*CT::OwnedDeepStrong<H> and*/ REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
                // are referenced (even if they have no corresponding    
                // entry), we need to zero the source pointers, so that  
                // we avoid them getting dereferenced later.             
                if (rhs.IsSparse()) {
-                  LglsAssumeDev(rhs.template GetUses<SID>() == 1,
-                     "Can't move out from used memory");
                   auto pointers_src = rhs.template GetRaw<SID>();
-                  memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
+                  if constexpr (requires { rhs.template GetUses<SID>(); }) {
+                     LglsAssumeDev(rhs.template GetUses<SID>() == 1,
+                        "Can't move out from used memory");
+                  }
+                  else {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        LglsAssumeDev(Allocator::Find(pointers_src)->GetUses() == 1,
+                           "Can't move out from used memory");
+                     #endif
+                  }
+               memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
                }
             }
          }

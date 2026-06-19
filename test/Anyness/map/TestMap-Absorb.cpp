@@ -150,6 +150,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          REQUIRE(element2.entries[0]->GetUses() == 1);
 
          if constexpr (CT::Sparse<E1>) {
+            REQUIRE(*test.template GetEntries<0>() == element1.entries[1]);
             REQUIRE(element1.entries[1]->GetUses() == 2);
             if constexpr (CT::Referenced<Decay<E1>>) {
                REQUIRE(DenseCast(*element1).GetReferences() == 2);
@@ -157,6 +158,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             }
          }
          if constexpr (CT::Sparse<E2>) {
+            REQUIRE(*test.template GetEntries<1>() == element2.entries[1]);
             REQUIRE(element2.entries[1]->GetUses() == 2);
             if constexpr (CT::Referenced<Decay<E2>>) {
                REQUIRE(DenseCast(*element2).GetReferences() == 2);
@@ -176,6 +178,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
       REQUIRE(element2.entries[0]->GetUses() == 1);
 
       if constexpr (CT::Sparse<E1>) {
+         //REQUIRE(*piecewise1.template GetEntries<0>() == element1.entries[1]); //TODO can't be sure in which spot inside the map the element will land.
          REQUIRE(element1.entries[1]->GetUses() == 2);
          if constexpr (CT::Referenced<Decay<E1>>) {
             REQUIRE(DenseCast(*element1).GetReferences() == 2);
@@ -183,6 +186,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          }
       }
       if constexpr (CT::Sparse<E2>) {
+         //REQUIRE(*piecewise1.template GetEntries<1>() == element2.entries[1]); //TODO can't be sure in which spot inside the map the element will land
          REQUIRE(element2.entries[1]->GetUses() == 2);
          if constexpr (CT::Referenced<Decay<E2>>) {
             REQUIRE(DenseCast(*element2).GetReferences() == 2);
@@ -194,15 +198,21 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
       REQUIRE(element1.entries[0]->GetUses() == 1);
       REQUIRE(element2.entries[0]->GetUses() == 1);
+      REQUIRE(element3.entries[0]->GetUses() == 1);
+      REQUIRE(element4.entries[0]->GetUses() == 1);
 
       if constexpr (CT::Sparse<E1>) {
+         //REQUIRE(*piecewise1.template GetEntries<0>() == element3.entries[1]); //TODO can't be sure in which spot inside the map the element will land
+         REQUIRE(element3.entries[1]->GetUses() == 2);
          REQUIRE(element1.entries[1]->GetUses() == 1);
          if constexpr (CT::Referenced<Decay<E1>>) {
             REQUIRE(DenseCast(*element1).GetReferences() == 1);
             REQUIRE(DenseCast(*element3).GetReferences() == 2);
          }
       }
-      if constexpr (CT::Sparse<E2> and CT::Referenced<Decay<E2>>) {
+      if constexpr (CT::Sparse<E2>) {
+         //REQUIRE(*piecewise1.template GetEntries<1>() == element4.entries[1]); //TODO can't be sure in which spot inside the map the element will land
+         REQUIRE(element4.entries[1]->GetUses() == 2);
          REQUIRE(element2.entries[1]->GetUses() == 1);
          if constexpr (CT::Referenced<Decay<E2>>) {
             REQUIRE(DenseCast(*element2).GetReferences() == 1);

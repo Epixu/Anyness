@@ -52,7 +52,7 @@ namespace Langulus::Anyness
          Com::TypedStack<DMeta, void, true>,
          Com::HeapReference<>,
          Com::CountStatic<1u>,
-         Com::OwnershipDeepReference<Com::NoOwnership>,
+         Com::OwnershipDeepReference<Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Comparison<>,
          Com::IterationOperators<>
@@ -170,7 +170,8 @@ namespace Langulus::Anyness
       >;
    }
 
-   
+
+   /// MARK: HandleMut                                                        
    ///                                                                        
    /// A type-erased mutable handle with ownership.                           
    /// It refers to a picked element inside a type-erased container.          
@@ -231,6 +232,7 @@ namespace Langulus::Anyness
    };
    
 
+   /// MARK: HandleDisownedMut                                                
    ///                                                                        
    /// A type-erased mutable handle without ownership.                        
    /// It refers to a picked element inside a type-erased container.          
@@ -289,6 +291,7 @@ namespace Langulus::Anyness
    };
    
 
+   /// MARK: Handle                                                           
    ///                                                                        
    /// A type-erased immutable handle with ownership.                         
    /// It refers to a picked element inside a type-erased container.          
@@ -352,6 +355,7 @@ namespace Langulus::Anyness
    };
    
 
+   /// MARK: HandleDisowned                                                   
    ///                                                                        
    /// A type-erased immutable handle without ownership.                      
    /// It refers to a picked element inside a type-erased container.          
@@ -413,6 +417,7 @@ namespace Langulus::Anyness
    };
 
    
+   /// MARK: THandle                                                          
    ///                                                                        
    /// When T is a reference, then element is embedded inside container       
    ///   @attention memory is never (de)referenced upon construction and      
@@ -531,6 +536,7 @@ namespace Langulus::Anyness
    };
    
    
+   /// MARK: THandleEmergent                                                  
    ///                                                                        
    /// When T is a reference, then element is embedded inside container       
    ///   @attention memory is never (de)referenced upon construction and      
@@ -653,6 +659,7 @@ namespace Langulus::Anyness
    };
    
 
+   /// MARK: THandleDisowned                                                  
    ///                                                                        
    /// When T is a reference, then element is embedded inside container.      
    /// This handle never propagates or modifies ownership.                    
@@ -714,6 +721,7 @@ namespace Langulus::Anyness
    };
    
 
+   /// MARK: THandle local                                                    
    ///                                                                        
    /// When T is not a reference, then it is not embedded.                    
    /// Such dense handles are similar to TOwn<T> - data is on the stack.      

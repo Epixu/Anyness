@@ -116,7 +116,7 @@ void Map_CheckState_Default(C const& pack, bool typed = false) {
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_OwnedEmpty(C const& pack) {
-   Pair_CheckState_OwnedEmpty<K, V>(pack);
+   Pair_CheckState_OwnedEmpty<K, V>(pack, true);
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>

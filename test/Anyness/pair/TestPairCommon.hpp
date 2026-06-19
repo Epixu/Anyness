@@ -203,12 +203,12 @@ void Pair_CheckState_Default(C const& pack, bool ismap = false, bool typed = fal
 
 /// MARK: OwnedEmpty                                                          
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
-void Pair_CheckState_OwnedEmpty(C const& pack) {
+void Pair_CheckState_OwnedEmpty(C const& pack, bool ismap = false) {
    Pair_Helper_TestType<K, V>(pack);
 
    REQUIRE      (pack.IsKeyTypeConstrained() == CT::Typed<C>);
    REQUIRE      (pack.IsValTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (pack.IsKeyConstant() == CT::Constant<K>);
+   REQUIRE      (pack.IsKeyConstant() == (CT::Constant<K> or ismap));
    REQUIRE      (pack.IsValConstant() == CT::Constant<V>);
    REQUIRE_FALSE(pack.IsValid());
    REQUIRE      (pack.GetAllocation());
