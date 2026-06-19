@@ -57,6 +57,21 @@ namespace Langulus::Anyness::Component
       ///   @return the number of inserted elements                           
       template<class A, CT::ContainsMany C>
       auto Merge(this C& self, A&& a) -> size_t {
+         // Make sure types match                                       
+         if constexpr (CT::Handle<A>) {
+            Id::ForEach([&]<Cid D> {
+               if constexpr (CT::TypeErased<C> or CT::TypeErased<A>)
+                  self.template SetType<D>(DeintCast(a).template GetType<D>());
+               else
+                  self.template SetType<TypeOf<Deint<A>, D>>();
+            });
+         }
+         else {
+            static_assert(not Shared,
+               "Multidimensional merge should be done using a handle");
+            self.template SetType<Decvq<Deref<Deint<A>>>, ID>();
+         }
+
          return self.MergeInner(LglsFwd(a)).itemsInserted;
       }
 
@@ -71,7 +86,7 @@ namespace Langulus::Anyness::Component
          size_t lastInsertedIndex = 0;
       };
 
-      /// Merge a pair at the performance-optimal position.                   
+      /// Merge item at the performance-optimal position.                     
       /// This usually means at the back of a contiguous container.           
       ///   @attention all types need to be set prior to calling this function
       ///   @attention when inserting in a hash table, the item is used as a  
@@ -83,15 +98,8 @@ namespace Langulus::Anyness::Component
       auto MergeInner(this C& self, T&& item) -> MergeResult {
          static_assert(not CT::Array<T>,
             "This inner routine doesn't account for arrays");
-
-         if constexpr (CT::Container<T>) {
-            static_assert(C::Dimensions::Count == Decay<Deint<T>>::Dimensions::Count,
-               "Dimension mismatch");
-         }
-         else {
-            static_assert(C::Dimensions::Count == 1,
-               "Dimension mismatch");
-         }
+         static_assert(CT::Handle<T> or not Shared,
+            "Multidimensional merge should be done using a handle");
 
          // If this is reached, then types are the same                 
          // Reallocate/branch out                                       

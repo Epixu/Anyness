@@ -33,6 +33,7 @@
 
 namespace Langulus::Anyness::Inner
 {
+   /// MARK: SetBase                                                          
    template<StateValue SORT>
    using SetBase = Com::Container<
       Com::State::Disowned<>,          // Allows disownment             
@@ -57,8 +58,9 @@ namespace Langulus::Anyness::Inner
       Com::State::Encrypted<>          // Toggle encryption             
    >;
 
+   /// MARK: Set                                                              
    ///                                                                        
-   /// A universal type-erased non-contiguous set of variable size.           
+   ///   A universal type-erased non-contiguous set of variable size.         
    /// Emplacement is disabled for sets, because elements aren't allowed to   
    /// change in-place. This also means that they are only const-iteratable.  
    template<StateValue SORTED>
@@ -172,6 +174,7 @@ namespace Langulus::Anyness
 
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Convert Set -> Text                                                    
    template<Anyness::StateValue SORT>
    struct Converter<Anyness::Inner::Set<SORT>, Anyness::Text> {

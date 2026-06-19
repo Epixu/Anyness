@@ -6,11 +6,13 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "Langulus/IntentOf.hpp"
 #include "Map.hpp"
 
 
 namespace Langulus::Anyness::Inner
 {
+   /// MARK: TMapBase                                                         
    template<CT::NotVoid K, CT::NotVoid V, StateValue SORT>
    requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TMapBase = Com::Container<
@@ -26,8 +28,6 @@ namespace Langulus::Anyness::Inner
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 1>>>,
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      
-      //Com::Insertion<1>,                  // Allows inserting values    
-      //Com::Assignment<1>,                 // Allows assignment of values
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
       Com::Comparison<true, 0, 1>,        // Allows comparisons of K/V  
@@ -41,8 +41,9 @@ namespace Langulus::Anyness::Inner
 
 namespace Langulus::Anyness
 {
+   /// MARK: TMap                                                             
    ///                                                                        
-   /// A statically-typed non-contiguous map of variable size that is         
+   ///   A statically-typed non-contiguous map of variable size that is       
    /// binary-compatible with the type-erased alternative `Map`.              
    /// Emplacement is disabled for maps, because keys aren't allowed to       
    /// change in-place. This also means that they are only const-iteratable.  
@@ -86,8 +87,8 @@ namespace Langulus::Anyness
          else {
             static_assert(CT::Pair<A1, AN...>, "Arguments must be pairs");
             this->ConstructDefault();
-            this->MergeInner(LglsFwd(a1));
-           (this->MergeInner(LglsFwd(an)), ...);
+            this->MergeInner(NestIntentOf(a1, DeintCast(a1).GetHandle()));
+           (this->MergeInner(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
          }
       }
       
@@ -107,8 +108,8 @@ namespace Langulus::Anyness
       template<CT::Pair A1, CT::Pair...AN>
       constexpr TMap(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->MergeInner(LglsFwd(a1));
-        (this->MergeInner(LglsFwd(an)), ...);
+         this->MergeInner(NestIntentOf(a1, DeintCast(a1).GetHandle()));
+        (this->MergeInner(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
       }
 
       /// Assignment                                                          
@@ -143,7 +144,7 @@ namespace Langulus::Anyness
          this->Clear();
          this->template SetType<0>(pair.template GetType<0>());
          this->template SetType<1>(pair.template GetType<1>());
-         this->MergeInner(LglsFwd(pair));
+         this->MergeInner(NestIntentOf(pair, DeintCast(pair).GetHandle()));
          return *this;
       }
 
@@ -151,7 +152,8 @@ namespace Langulus::Anyness
       auto Assign(auto&& key, auto&& val) -> TMap& {
          this->Clear();
          this->DeduceType(key, val);
-         this->MergeInner(TPair {LglsFwd(key), LglsFwd(val)});
+         TPair temp {LglsFwd(key), LglsFwd(val)};
+         this->MergeInner(Abandon {temp.GetHandle()});
          return *this;
       }
 
@@ -198,6 +200,7 @@ namespace Langulus::Anyness
       }*/
    };
 
+   /// MARK: CTAD                                                             
    template<CT::NotVoid K, CT::NotVoid V>
    using TMapSorted = TMap<K, V, StateValue::Enabled>;
 
@@ -207,6 +210,7 @@ namespace Langulus::Anyness
 
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Convert TMap -> Text                                                   
    template<CT::NotVoid K, CT::NotVoid V, Anyness::StateValue SORT>
    struct Converter<Anyness::TMap<K, V, SORT>, Anyness::Text> {

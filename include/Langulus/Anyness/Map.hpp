@@ -113,8 +113,8 @@ namespace Langulus::Anyness::Inner
          else {
             static_assert(CT::Pair<A1, AN...>, "Arguments must be pairs");
             this->ConstructDefault();
-            this->MergeInner(LglsFwd(a1));
-           (this->MergeInner(LglsFwd(an)), ...);
+            this->Merge(NestIntentOf(a1, DeintCast(a1).GetHandle()));
+           (this->Merge(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
          }
       }
       
@@ -134,8 +134,8 @@ namespace Langulus::Anyness::Inner
       template<CT::Pair A1, CT::Pair...AN>
       constexpr Map(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->MergeInner(LglsFwd(a1));
-        (this->MergeInner(LglsFwd(an)), ...);
+         this->Merge(NestIntentOf(a1, DeintCast(a1).GetHandle()));
+        (this->Merge(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
       }
       
       /// Assignment                                                          
@@ -176,9 +176,7 @@ namespace Langulus::Anyness::Inner
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> Map& {
          this->Reset();
-         this->template SetType<0>(pair.template GetType<0>());
-         this->template SetType<1>(pair.template GetType<1>());
-         this->MergeInner(LglsFwd(pair));
+         this->Merge(NestIntentOf(pair, DeintCast(pair).GetHandle()));
          return *this;
       }
 
@@ -186,7 +184,8 @@ namespace Langulus::Anyness::Inner
       auto Assign(auto&& key, auto&& val) -> Map& {
          this->Reset();
          this->DeduceType(key, val);
-         this->MergeInner(TPair {LglsFwd(key), LglsFwd(val)});
+         TPair temp {LglsFwd(key), LglsFwd(val)};
+         this->MergeInner(Abandon {temp.GetHandle()});
          return *this;
       }
 

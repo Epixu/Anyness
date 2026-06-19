@@ -15,7 +15,7 @@
 
 namespace Langulus::Anyness
 {
-   /// MARK: Handle/Handle                                                    
+   /// MARK: H/H                                                              
    ///                                                                        
    /// Type-erased immutable handle                                           
    ///                                                                        
@@ -26,6 +26,7 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0>>,
                          Com::HeapReference<HeapEntry<1>>>,
       Com::CountStatic<1u, 0, 1>,
+      Com::ReserveStatic<1u, 0, 1>,
       Com::MultiownDeep<Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>,
                         Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
@@ -99,6 +100,7 @@ namespace Langulus::Anyness
    };
    
 
+   /// MARK: HMut/HMut                                                        
    ///                                                                        
    /// Type-erased mutable handle                                             
    ///                                                                        
@@ -109,6 +111,7 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0>>,
                          Com::HeapReference<HeapEntry<1>>>,
       Com::CountStatic<1u, 0, 1>,
+      Com::ReserveStatic<1u, 0, 1>,
       Com::MultiownDeep<Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>,
                         Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
@@ -183,6 +186,7 @@ namespace Langulus::Anyness
    };
    
 
+   /// MARK: H/HMut                                                           
    ///                                                                        
    /// Type-erased immutable key paired with mutable value.                   
    /// Often used for mutable access in maps, where keys can't be modified.   
@@ -193,6 +197,7 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0>>,
                          Com::HeapReference<HeapEntry<1>>>,
       Com::CountStatic<1u, 0, 1>,
+      Com::ReserveStatic<1u, 0, 1>,
       Com::MultiownDeep<Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>,
                         Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>,
       Com::HashEmergent<0, Hash, 1>,
@@ -268,6 +273,7 @@ namespace Langulus::Anyness
    };
 
 
+   /// MARK: HE/HE                                                            
    ///                                                                        
    /// Statically typed emergent handles                                      
    ///                                                                        
@@ -278,6 +284,7 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0, Deref<K>*>>,
                          Com::HeapReference<HeapEntry<1, Deref<V>*>>>,
       Com::CountStatic<1u, 0, 1>,
+      Com::ReserveStatic<1u, 0, 1>,
       //Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipEmergent<Com::WeakOwnership, 0>>,
       //                  EnableComponentIf<CT::Dense<V>,  Com::OwnershipEmergent<Com::WeakOwnership, 1>>>,
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepEmergent<Com::WeakOwnership, true, 0>>,
@@ -365,6 +372,7 @@ namespace Langulus::Anyness
    };
 
 
+   /// MARK: HT/HT                                                            
    ///                                                                        
    /// Statically typed embedded handles                                      
    ///                                                                        
@@ -375,6 +383,7 @@ namespace Langulus::Anyness
       Com::Multiprovider<Com::HeapReference<HeapEntry<0, Deref<K>*>>,
                          Com::HeapReference<HeapEntry<1, Deref<V>*>>>,
       Com::CountStatic<1u, 0, 1>,
+      Com::ReserveStatic<1u, 0, 1>,
       //Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipStack<Com::WeakOwnership, 0>>,
       //                  EnableComponentIf<CT::Dense<V>,  Com::OwnershipStack<Com::WeakOwnership, 1>>>,
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>>,
@@ -472,6 +481,7 @@ namespace Langulus::Anyness
    };
 
 
+   /// MARK: HTL/HTL                                                          
    ///                                                                        
    /// Statically typed local handles                                         
    ///                                                                        
