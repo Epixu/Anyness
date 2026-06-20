@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "../states/Typed.hpp"
+#include "Langulus/IntentOf.hpp"
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Akin.hpp>
 #include <Langulus/CT/Deep.hpp>
@@ -395,6 +396,29 @@ namespace Langulus::Anyness::Component
                " is not exactly ", type);
          }
       }
+      
+      /// Set all contained data types by copying them from another container 
+      /// This is still used if statically typed - checks if types are        
+      /// compatible in constructors and assigners.                           
+      ///   @attention intents like Clone and Copy will strip constness       
+      ///   @param other the container to copy types from                     
+      template<Cid SID = ID, CT::Container I> requires CT::Intent<I>
+      void AbsorbType(this auto& self, I const& other) {
+         if constexpr (TypeErased or CT::TypeErased<I>) {
+            auto T = DeintCast(other).template GetType<SID>();
+            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+               ThisCom::SetType(T.GetDecvq());
+            else
+               ThisCom::SetType(T);
+         }
+         else {
+            using T = Deref<TypeOf<Deint<I>, SID>>;
+            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+               ThisCom::template SetType<Decvq<T>>();
+            else
+               ThisCom::template SetType<T>();
+         }
+      }
 
       /// Deduce type of the container from provided argument                 
       ///   @param a The argument. Accepts intents, handles, arrays etc.      
@@ -404,13 +428,10 @@ namespace Langulus::Anyness::Component
             "Can't deduce type from a describe intent. "
             "You have to set it up manually.");
 
-         if constexpr (CT::Handle<A>) {
-            if constexpr (CT::TypeErased<A>)
-               ThisCom::SetType(DeintCast(a).GetType());
-            else
-               ThisCom::template SetType<TypeOf<Deint<A>>>();
-         }
-         else ThisCom::template SetType<Decvq<DeextAll<Deref<Deint<A>>>>>();
+         if constexpr (CT::Handle<A>)
+            ThisCom::template AbsorbType<0>(Copy(a));
+         else
+            ThisCom::template SetType<Decvq<DeextAll<Deref<Deint<A>>>>>();
       }
 
    protected:
@@ -458,9 +479,10 @@ namespace Langulus::Anyness::Component
       template<Cid D, class SELF, CT::Intent I> requires CT::Container<I>
       void SliceFrom(this SELF& self, I&& intent) {
          static_assert(CT::Disowned<I>);
-         if constexpr (TypeErased) {
-            ThisCom::SetType(intent->template GetType<D>());
 
+         ThisCom::template AbsorbType<D>(LglsFwd(intent));
+
+         if constexpr (TypeErased) {
             // While we are interfacing external memory, we have to     
             // keep the type-constrained state, otherwise we risk       
             // interpreting static memory the wrong way.                
@@ -473,22 +495,15 @@ namespace Langulus::Anyness::Component
                   ThisCom::EnableTypeConstrained();
             }
          }
-         else {
-            // These are called just to do compile-time type safety     
-            if constexpr (CT::TypeErased<I>)
-               ThisCom::SetType(intent->template GetType<D>());
-            else
-               ThisCom::template SetType<TypeOf<Deint<I>, D>>();
-         }
       }
 
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (TypeErased) {
-            ThisCom::SetType(intent->template GetType<ID>());
+         ThisCom::AbsorbType(LglsFwd(intent));
 
+         if constexpr (TypeErased) {
             // While we are interfacing external memory, we have to     
             // keep the type-constrained state, otherwise we risk       
             // interpreting static memory the wrong way.                
@@ -500,13 +515,6 @@ namespace Langulus::Anyness::Component
                   // From dynamically-typed to dynamically-typed        
                   ThisCom::EnableTypeConstrained();
             }
-         }
-         else {
-            // These are called just to do compile-time type safety     
-            if constexpr (CT::TypeErased<I>)
-               ThisCom::SetType(intent->template GetType<ID>());
-            else
-               ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
          }
 
          if constexpr (CT::Moved<I> and CT::TypeErased<I>)

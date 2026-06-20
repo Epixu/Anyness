@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Langulus/IntentOf.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
@@ -304,13 +305,7 @@ namespace Langulus::Anyness::Component
          if (not rhs_count)
             return 0;
 
-         using S = IntentOf(data);
-         //using T = Tif<CT::TypeErased<C>, TypeOf<Deint<S>>, TypeOf<C>>;
-         if constexpr (CT::TypeErased<C>)
-            self.SetType(DeintCast(data).GetType());
-         else
-            self.template SetType<TypeOf<Deint<S>>>();
-
+         self.AbsorbType(FWDIntent(data));
          self.BranchOut();
          const auto lhs_count = self.GetCount();
          const auto idx = self.template SimplifyIndex<false>(index);
@@ -432,12 +427,7 @@ namespace Langulus::Anyness::Component
          if (not c)
             return;
 
-         using S = IntentOf(a);
-         using E = TypeOf<Deint<S>>;
-         if constexpr (CT::NotVoid<E>)
-            self.template SetType<E>();
-         else
-            self.SetType(DeintCast(a).GetType());
+         self.AbsorbType(FWDIntent(a));
          out_count += c;
       }
    };

@@ -1194,7 +1194,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             auto reset_and_reallocate = [&](T& a) {
                const auto memory = a.GetRaw();
                a.Reset();
-               a = TPair {*element1, *element2};
+               a = TPair<E1 const&, E2 const&> {*element1, *element2};
                REQUIRE(a.GetRaw() == memory);
             };
 

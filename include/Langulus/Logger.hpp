@@ -239,7 +239,7 @@ namespace Langulus::Logger
       // Tabulator color and formatting customization                   
       Intent mDefaultIntent = DefaultIntent;
       Style  mDefaultStyle = DefaultStyle;
-      ::std::string_view mTabString = "▐  ";
+      ::std::string_view mTabString = "▌  ";
 
       size_t GetTabs() const noexcept { return mTabulator; }
 
@@ -329,7 +329,7 @@ namespace Langulus::Logger
                //const auto currentStyle = GlobalState.GetCurrentStyle();
                GlobalState.NewLine();
                //GlobalState.Write(GlobalState.mDefaultStyle);
-               GlobalState.Write(" ");
+               //GlobalState.Write(" ");
                GlobalState.Write(Push);
                //GlobalState.Write(currentStyle);
                GlobalState.Write(Underline);

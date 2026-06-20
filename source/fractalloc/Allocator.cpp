@@ -10,7 +10,7 @@
 #include <map>
 #include <ranges>
 
-#if 0
+#if 1
    #include <Langulus/Logger/EnableVerbose.hpp>
 #else
    #include <Langulus/Logger/NoVerbose.hpp>
@@ -151,6 +151,11 @@ namespace Langulus::Fractalloc
                "Impossible amount of frontend allocation"
             );
          #endif
+         LglsVerbose(
+            "Fractalloc: ", Logger::Green, "Allocation ", Logger::Hex(entry),
+            " was allocated with ", Logger::Size {static_cast<size_t>(entry->GetSize())},
+            " (associated type `", meta.GetName(), "`)"
+         );
          return entry;
       }
 
@@ -171,6 +176,11 @@ namespace Langulus::Fractalloc
 
       // Place allocation in the new pool. This is guaranteed to work.  
       entry = pool->Allocate(size);
+      LglsVerbose(
+         "Fractalloc: ", Logger::Green, "Allocation ", Logger::Hex(entry),
+         " was allocated with ", Logger::Size {static_cast<size_t>(entry->GetSize())},
+         " (associated type `", meta.GetName(), "`)"
+      );
 
       // Time to update the pool chain with the new pool.               
       pool_bank->LinkPool(pool);
@@ -216,7 +226,8 @@ namespace Langulus::Fractalloc
          LglsVerbose(
             "Fractalloc: ", Logger::Yellow, "Allocation ", Logger::Hex(previous),
             " was reallocated from ", Logger::Size {oldSize}, " to ",
-            Logger::Size {static_cast<size_t>(previous->GetSize())}
+            Logger::Size {static_cast<size_t>(previous->GetSize())},
+            " (associated type `", type.GetName(), "`)"
          );
          return previous;
       }

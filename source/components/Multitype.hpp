@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Langulus/IntentOf.hpp"
 LglsDisableWarningPush
 LglsDisableWarning_UnusedLocalTypedef
 
@@ -238,13 +239,13 @@ namespace Langulus::Anyness::Component
          using C = typename Subcomponents::template At<SID>;
          return self.C::IsSame(other);
       }
-      constexpr bool IsKeySame(this auto const& self, CT::Container auto const& type) noexcept {
+      constexpr bool IsKeySame(this auto const& self, CT::Container auto const& other) noexcept {
          using C = typename Subcomponents::First;
-         return self.C::IsSame(type);
+         return self.C::IsSame(other);
       }
-      constexpr bool IsValSame(this auto const& self, CT::Container auto const& type) noexcept {
+      constexpr bool IsValSame(this auto const& self, CT::Container auto const& other) noexcept {
          using C = typename Subcomponents::Second;
-         return self.C::IsSame(type);
+         return self.C::IsSame(other);
       }
 
       /// Check if this type is exactly T (references are ignored)            
@@ -291,13 +292,13 @@ namespace Langulus::Anyness::Component
          using C = typename Subcomponents::template At<SID>;
          return self.C::IsExact(other);
       }
-      constexpr bool IsKeyExact(this auto const& self, CT::Container auto const& type) noexcept {
+      constexpr bool IsKeyExact(this auto const& self, CT::Container auto const& other) noexcept {
          using C = typename Subcomponents::First;
-         return self.C::IsExact(type);
+         return self.C::IsExact(other);
       }
-      constexpr bool IsValExact(this auto const& self, CT::Container auto const& type) noexcept {
+      constexpr bool IsValExact(this auto const& self, CT::Container auto const& other) noexcept {
          using C = typename Subcomponents::Second;
-         return self.C::IsExact(type);
+         return self.C::IsExact(other);
       }
 
       /// Check if container contains pointers                                
@@ -449,6 +450,20 @@ namespace Langulus::Anyness::Component
       constexpr bool IsValTypeConstrained(this auto const& self) noexcept {
          using C = typename Subcomponents::Second;
          return self.C::IsTypeConstrained();
+      }
+
+      /// Set all contained data types by copying them from another container 
+      /// This is still used if statically typed - checks if types are        
+      /// compatible in constructors and assigners.                           
+      ///   @attention intents like Clone and Copy will strip constness       
+      ///   @param other the container to copy types from                     
+      template<CT::Container I> requires CT::Intent<I>
+      void AbsorbType(this auto& self, I const& other) {
+         static_assert(CT::Handle<I>,
+            "Multidimensional types should be set using a handle");
+         Subcomponents::ForEach([&]<class C> {
+            self.C::AbsorbType(other);
+         });
       }
 
       /// Deduce all types of the container from provided arguments           

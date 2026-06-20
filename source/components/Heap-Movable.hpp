@@ -84,12 +84,6 @@ namespace Langulus::Anyness::Component
          size_t count = from.template GetCount<Id::First>();
          if constexpr (CT::Copied<I> or CT::Cloned<I>) {
             // Do a copy or clone.                                      
-            // When copying, we're cloning just the first layer, so we  
-            // guarantee that data is no longer static and constant at  
-            // the first level of indirection.                          
-            //self.template SetType<Id::First>(type);
-            //size_t count, reserve;
-
             // Verify that all dimensions are copiable/clonable, and    
             // make sure that 'count' and 'reserve' are consistent      
             // across all dimensions.                                   

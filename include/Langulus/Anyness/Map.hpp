@@ -168,9 +168,11 @@ namespace Langulus::Anyness::Inner
       /// it with a compatible value, by shallow copying it.                  
       template<CT::Pair P>
       constexpr auto CreateSwapper(P&& pair) assumptious {
-         LglsAssumeDev(this->template IsSame<TypeOf<Deint<P>, 0>, 0>(), "Type mismatch");
-         LglsAssumeDev(this->template IsSame<TypeOf<Deint<P>, 1>, 1>(), "Type mismatch");
-         return TPair {Copy {LglsFwd(pair)}};
+         using K = Decvq<Deref<TypeOf<Deint<P>, 0>>>;
+         using V = Decvq<Deref<TypeOf<Deint<P>, 1>>>;
+         LglsAssumeDev(this->template IsSame<K, 0>(), "Type mismatch");
+         LglsAssumeDev(this->template IsSame<V, 1>(), "Type mismatch");
+         return TPair<K, V> {Copy {LglsFwd(pair)}};
       }
 
       /// Clear the map and assign a single pair                              

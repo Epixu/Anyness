@@ -267,6 +267,29 @@ namespace Langulus::Anyness::Component
       void SetType(META type) {
          LglsAssert(GetType().IsExact(type), "Type mismatch");
       }
+      
+      /// Set all contained data types by copying them from another container 
+      /// This is still used if statically typed - checks if types are        
+      /// compatible in constructors and assigners.                           
+      ///   @attention intents like Clone and Copy will strip constness       
+      ///   @param other the container to copy types from                     
+      template<Cid SID = ID, CT::Container I> requires CT::Intent<I>
+      void AbsorbType(I const& other) {
+         if constexpr (TypeErased or CT::TypeErased<I>) {
+            auto T = DeintCast(other).template GetType<SID>();
+            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+               SetType(T.GetDecvq());
+            else
+               SetType(T);
+         }
+         else {
+            using T = Deref<TypeOf<Deint<I>, SID>>;
+            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+               SetType<Decvq<T>>();
+            else
+               SetType<T>();
+         }
+      }
 
       /// Deduce type of the container from provided argument. Statically     
       /// typed container can't change their type, so this acts like a static 
@@ -274,13 +297,10 @@ namespace Langulus::Anyness::Component
       ///   @param a The argument. Accepts intents, handles, arrays etc.      
       template<class A>
       constexpr void DeduceType(A const& a) noexcept {
-         if constexpr (CT::Handle<A>) {
-            if constexpr (CT::TypeErased<A>)
-               SetType(DeintCast(a).GetType());
-            else
-               SetType<TypeOf<Deint<A>>>();
-         }
-         else SetType<Decvq<DeextAll<Deref<Deint<A>>>>>();
+         if constexpr (CT::Handle<A>)
+            AbsorbType<0>(Copy(a));
+         else
+            SetType<Decvq<DeextAll<Deref<Deint<A>>>>>();
       }
    };
 }

@@ -70,8 +70,9 @@ namespace Langulus::Anyness
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
-         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
-         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
+         this->DeduceType(key, val);
+         //this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
+         //this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
       /// Assignment is disabled                                              
@@ -157,8 +158,9 @@ namespace Langulus::Anyness
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
-         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
-         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
+         this->DeduceType(key, val);
+         //this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
+         //this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
       /// Assignment is disabled                                              
@@ -243,8 +245,9 @@ namespace Langulus::Anyness
          this->Com::HeapReference<HeapEntry<1>>::SetHeapInner(val.GetHeapInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>::SetEntriesInner(key.GetEntriesInner());
          this->Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>::SetEntriesInner(val.GetEntriesInner());
-         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
-         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
+         this->DeduceType(key, val);
+         //this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
+         //this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
       /// Assignment is disabled                                              

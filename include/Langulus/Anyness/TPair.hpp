@@ -124,14 +124,14 @@ namespace Langulus::Anyness
       
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
       requires OnStack
-         : Base{Stackwise, LglsFwd(a1), LglsFwd(a2)} {
+         : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
 
       constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1)
       requires OnStack
-         : Base{Stackwise, LglsFwd(a1), {}} {
+         : Base {Stackwise, LglsFwd(a1), {}} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
@@ -233,7 +233,7 @@ namespace Langulus::Anyness
 
 namespace Langulus::CTTI
 {
-   /// MARK: Converters                                                       
+   /// MARK: CTTI                                                             
    /// Convert TPair -> Text                                                  
    template<class K, class V>
    struct Converter<Anyness::TPair<K, V>, Anyness::Text> {

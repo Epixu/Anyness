@@ -57,21 +57,7 @@ namespace Langulus::Anyness::Component
       ///   @return the number of inserted elements                           
       template<class A, CT::ContainsMany C>
       auto Merge(this C& self, A&& a) -> size_t {
-         // Make sure types match                                       
-         if constexpr (CT::Handle<A>) {
-            Id::ForEach([&]<Cid D> {
-               if constexpr (CT::TypeErased<C> or CT::TypeErased<A>)
-                  self.template SetType<D>(DeintCast(a).template GetType<D>());
-               else
-                  self.template SetType<TypeOf<Deint<A>, D>>();
-            });
-         }
-         else {
-            static_assert(not Shared,
-               "Multidimensional merge should be done using a handle");
-            self.template SetType<Decvq<Deref<Deint<A>>>, ID>();
-         }
-
+         self.DeduceType(LglsFwd(a));
          return self.MergeInner(LglsFwd(a)).itemsInserted;
       }
 

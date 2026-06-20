@@ -305,6 +305,9 @@ namespace Langulus
    template<CT::Intent T>
    Copy(T&&) -> Copy<Decq<Deref<TypeOf<T>>>>;
 
+   template<CT::Intent T>
+   Copy(T const&) -> Copy<Decq<Deref<TypeOf<T>>>>;
+
 
    /// MARK: Move                                                             
    ///                                                                        

@@ -87,8 +87,8 @@ namespace Langulus::Anyness
          else {
             static_assert(CT::Pair<A1, AN...>, "Arguments must be pairs");
             this->ConstructDefault();
-            this->MergeInner(NestIntentOf(a1, DeintCast(a1).GetHandle()));
-           (this->MergeInner(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
+            this->Merge(NestIntentOf(a1, DeintCast(a1).GetHandle()));
+           (this->Merge(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
          }
       }
       
@@ -108,8 +108,8 @@ namespace Langulus::Anyness
       template<CT::Pair A1, CT::Pair...AN>
       constexpr TMap(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->MergeInner(NestIntentOf(a1, DeintCast(a1).GetHandle()));
-        (this->MergeInner(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
+         this->Merge(NestIntentOf(a1, DeintCast(a1).GetHandle()));
+        (this->Merge(NestIntentOf(an, DeintCast(an).GetHandle())), ...);
       }
 
       /// Assignment                                                          
@@ -134,17 +134,17 @@ namespace Langulus::Anyness
       /// it with a compatible value, by shallow copying it.                  
       template<CT::Pair P>
       constexpr auto CreateSwapper(P&& pair) assumptious {
-         static_assert(Same<TypeOf<Deint<P>, 0>, K>, "Key type mismatch");
-         static_assert(Same<TypeOf<Deint<P>, 1>, V>, "Val type mismatch");
-         return TPair {Copy {LglsFwd(pair)}};
+         using PK = Decvq<Deref<TypeOf<Deint<P>, 0>>>;
+         using PV = Decvq<Deref<TypeOf<Deint<P>, 1>>>;
+         static_assert(Same<PK, K>, "Key type mismatch");
+         static_assert(Same<PV, V>, "Val type mismatch");
+         return TPair<PK, PV> {Copy {LglsFwd(pair)}};
       }
 
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> TMap& {
          this->Clear();
-         this->template SetType<0>(pair.template GetType<0>());
-         this->template SetType<1>(pair.template GetType<1>());
-         this->MergeInner(NestIntentOf(pair, DeintCast(pair).GetHandle()));
+         this->Merge(NestIntentOf(pair, DeintCast(pair).GetHandle()));
          return *this;
       }
 
