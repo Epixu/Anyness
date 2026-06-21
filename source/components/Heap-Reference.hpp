@@ -246,38 +246,11 @@ namespace Langulus::Anyness::Component
                LglsAssert(type.Is(requested), 
                   "Type mismatch", ": ", type, " not akin to ", requested);
 
-               //if (type.Is(requested)) {
-                  // Access directly                                    
-                  /*if constexpr (CT::DeepDense<AS>)
-                     return Decvq<AS> {Absorb, *ThisCom::template Get<AS, SID>()};
-                  else*/ if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *ThisCom::template Get<AS, SID>();
-                  else
-                     return ThisCom::template Get<Deptr<AS>, SID>();
-               //}
-               /*else if constexpr (CT::DeepDense<AS>) {
-                  // Wrap in a container                                
-                  using H = DecideHandle<C>;
-
-                  if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
-                     //TODO magic numbers here, use H::PickDimension?
-                     if constexpr (SID == 0)
-                        return Decvq<AS> {Absorb, ThisCom::template As<typename H::KeyHandle, 0>()};
-                     else if constexpr (SID == 1)
-                        return Decvq<AS> {Absorb, ThisCom::template As<typename H::ValHandle, 1>()};
-                     else
-                        static_assert(false, "Unsupported SID");
-                  }
-                  else return Decvq<AS> {Absorb, ThisCom::template As<H, SID>()};
-               }*/
-               /*else {
-                  // Runtime type mismatch error                        
-                  LglsError("Type mismatch", ": ", type, " not akin to ", requested);
-                  if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *ThisCom::template Get<AS, SID>();
-                  else
-                     return ThisCom::template Get<Deptr<AS>, SID>();
-               }*/
+               // Access directly                                       
+               if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
+                  return *ThisCom::template Get<AS, SID>();
+               else
+                  return ThisCom::template Get<Deptr<AS>, SID>();
             }
             else {
                using T = TypeOf<C, SID>;
