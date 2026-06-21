@@ -208,12 +208,12 @@ namespace Langulus::Anyness::Component
 
          using PROVIDERS = decltype(C::FindProviders(Id{}));
          static_assert(not PROVIDERS::Empty);
-         static_assert(requires { typename PROVIDERS::First; });
          if (self.IsDisowned()) {
             self.DisableDisowned();
             PROVIDERS::ForEach([&]<class P> {
-               static_assert(CT::Component<P>);
-               self.P::AllocateFresh(self.P::RequestHeap(1));
+               auto alloc = &P::template AllocateFresh<P::Id::First, C>;
+               auto reqhp = &P::template RequestHeap<P::Id::First, C>;
+               alloc(self, reqhp(self, 1));
             });
             return;
          }
