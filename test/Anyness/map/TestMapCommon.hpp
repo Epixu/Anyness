@@ -326,10 +326,17 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
 
          if constexpr (not CT::Disowned<IK>) {
             for (size_t i = 0; i < IndirectsOf<E1>; ++i) {
-               if constexpr (CT::Cloned<IK>)
+               if constexpr (CT::Cloned<IK>) {
+                  REQUIRE(map.GetKeyEntriesAt(0)[i] != nullptr);
                   REQUIRE(map.GetKeyEntriesAt(0)[i] != e1.entries[i + 1]);
-               else
-                  REQUIRE(map.GetKeyEntriesAt(0)[i] == e1.entries[i + 1]);
+               }
+               else {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     REQUIRE(map.GetKeyEntriesAt(0)[i] == e1.entries[i + 1]);
+                  #else
+                     REQUIRE(map.GetKeyEntriesAt(0)[i] == nullptr);
+                  #endif
+               }
             }
          }
          else {
@@ -345,10 +352,17 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
 
          if constexpr (not CT::Disowned<IV>) {
             for (size_t i = 0; i < IndirectsOf<E2>; ++i) {
-               if constexpr (CT::Cloned<IV>)
+               if constexpr (CT::Cloned<IV>) {
+                  REQUIRE(map.GetValEntriesAt(0)[i] != nullptr);
                   REQUIRE(map.GetValEntriesAt(0)[i] != e2.entries[i + 1]);
-               else
-                  REQUIRE(map.GetValEntriesAt(0)[i] == e2.entries[i + 1]);
+               }
+               else {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     REQUIRE(map.GetValEntriesAt(0)[i] == e2.entries[i + 1]);
+                  #else
+                     REQUIRE(map.GetValEntriesAt(0)[i] == nullptr);
+                  #endif
+               }
             }
          }
          else {
