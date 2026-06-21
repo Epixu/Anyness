@@ -89,13 +89,13 @@ namespace Langulus::Anyness
             }
             else {
                this->ConstructDefault();
-               this->MergeInner(LglsFwd(a1));
+               this->Merge(LglsFwd(a1));
             }
          }
          else {
             this->ConstructDefault();
-            this->MergeInner(LglsFwd(a1));
-           (this->MergeInner(LglsFwd(an)), ...);
+            this->Merge(LglsFwd(a1));
+           (this->Merge(LglsFwd(an)), ...);
          }
       }
       
@@ -115,8 +115,8 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       constexpr TSet(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->MergeInner(LglsFwd(a1));
-        (this->MergeInner(LglsFwd(an)), ...);
+         this->Merge(LglsFwd(a1));
+        (this->Merge(LglsFwd(an)), ...);
       }
 
       /// Assignment                                                          

@@ -107,8 +107,8 @@ namespace Langulus::Anyness::Inner
          }
          else {
             this->ConstructDefault();
-            this->MergeInner(LglsFwd(a1));
-           (this->MergeInner(LglsFwd(an)), ...);
+            this->Merge(LglsFwd(a1));
+           (this->Merge(LglsFwd(an)), ...);
          }
       }
       
@@ -128,8 +128,8 @@ namespace Langulus::Anyness::Inner
       template<class A1, class...AN>
       constexpr Set(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->MergeInner(LglsFwd(a1));
-        (this->MergeInner(LglsFwd(an)), ...);
+         this->Merge(LglsFwd(a1));
+        (this->Merge(LglsFwd(an)), ...);
       }
       
       /// Assignment                                                          

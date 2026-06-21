@@ -10,7 +10,7 @@
 #include <map>
 #include <ranges>
 
-#if 1
+#if 0
    #include <Langulus/Logger/EnableVerbose.hpp>
 #else
    #include <Langulus/Logger/NoVerbose.hpp>

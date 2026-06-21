@@ -4,6 +4,7 @@
       "fabiospampinato.vscode-highlight",
       "cheshirekow.cmake-format",
       "ms-vscode.cmake-tools",
-      "vadimcn.vscode-lldb"
+      "vadimcn.vscode-lldb",
+      "roonie007.hide-files"
    ]
 }
