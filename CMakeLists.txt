@@ -77,19 +77,19 @@ option(LANGULUS_OPTION_PROFILING
 option(LANGULUS_OPTION_STACKTRACE
     "Enables logging of stacktrace on errors and assumptions (currently not available on GCC 14.2+)" OFF)
 
-option(LANGULUS_OPTION_LOGGING               "Master logger switch" ON)
-option(LANGULUS_LOGGER_DISABLE_FATALERRORS	"Disables fatal error logging via Logger::Fatal()" OFF)
-option(LANGULUS_LOGGER_DISABLE_ERRORS		   "Disables error logging via Logger::Error()" OFF)
-option(LANGULUS_LOGGER_DISABLE_WARNINGS		"Disables warning logging via Logger::Warning()" OFF)
-option(LANGULUS_LOGGER_DISABLE_INFOS		   "Disables information logging via Logger::Info()" OFF)
-option(LANGULUS_LOGGER_DISABLE_MESSAGES		"Disables message logging via Logger::Message()" OFF)
-option(LANGULUS_LOGGER_DISABLE_PROMPTS		   "Disables prompts logging via Logger::Prompt()" OFF)
-option(LANGULUS_LOGGER_DISABLE_VERBOSE		   "Disables verbose logging via Logger::Verbose()" OFF)
-option(LANGULUS_LOGGER_DISABLE_SPECIALS		"Disables special message logging via Logger::Special()" OFF)
-option(LANGULUS_LOGGER_DISABLE_FLOWS		   "Disables flow logging via Logger::Flow()" OFF)
-option(LANGULUS_LOGGER_DISABLE_INPUTS		   "Disables input logging via Logger::Input()" OFF)
-option(LANGULUS_LOGGER_DISABLE_NETWORKS		"Disables network logging via Logger::Network()" OFF)
-option(LANGULUS_LOGGER_DISABLE_OS			   "Disables OS logging via Logger::OS()" OFF)
+option(LANGULUS_OPTION_LOGGING              "Master logger switch" ON)
+option(LANGULUS_LOGGER_DISABLE_FATALERRORS  "Disables fatal error logging via Logger::Fatal()" OFF)
+option(LANGULUS_LOGGER_DISABLE_ERRORS       "Disables error logging via Logger::Error()" OFF)
+option(LANGULUS_LOGGER_DISABLE_WARNINGS     "Disables warning logging via Logger::Warning()" OFF)
+option(LANGULUS_LOGGER_DISABLE_INFOS        "Disables information logging via Logger::Info()" OFF)
+option(LANGULUS_LOGGER_DISABLE_MESSAGES     "Disables message logging via Logger::Message()" OFF)
+option(LANGULUS_LOGGER_DISABLE_PROMPTS      "Disables prompts logging via Logger::Prompt()" OFF)
+option(LANGULUS_LOGGER_DISABLE_VERBOSE      "Disables verbose logging via Logger::Verbose()" OFF)
+option(LANGULUS_LOGGER_DISABLE_SPECIALS     "Disables special message logging via Logger::Special()" OFF)
+option(LANGULUS_LOGGER_DISABLE_FLOWS        "Disables flow logging via Logger::Flow()" OFF)
+option(LANGULUS_LOGGER_DISABLE_INPUTS       "Disables input logging via Logger::Input()" OFF)
+option(LANGULUS_LOGGER_DISABLE_NETWORKS     "Disables network logging via Logger::Network()" OFF)
+option(LANGULUS_LOGGER_DISABLE_OS           "Disables OS logging via Logger::OS()" OFF)
 
 option(LANGULUS_OPTION_MANAGED_MEMORY
     "Memory will be pooled and recycled when freed, and you can safely push any kind of pointer, \
@@ -128,9 +128,9 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     endif()
 endif()
 
-set(logger_related_cpp_files source/logger/Logger.cpp
-                             source/logger/HTML.cpp
-                             source/logger/TXT.cpp)
+set(logger_related_cpp_files     source/logger/Logger.cpp
+                                 source/logger/HTML.cpp
+                                 source/logger/TXT.cpp)
 set(fractalloc_related_cpp_files source/fractalloc/Allocator.cpp
                                  source/fractalloc/Pool.cpp)
 set(statistic_enabled "$<AND:$<BOOL:${LANGULUS_OPTION_MEMORY_STATISTICS}>,$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>>")
@@ -214,7 +214,7 @@ reflect_option(LANGULUS_OPTION_STACKTRACE          "Stacktracing enabled")
 reflect_option(LANGULUS_OPTION_NEWDELETE           "New/Delete operator override enabled")
 reflect_option(LANGULUS_OPTION_UNICODE             "Unicode text containers enabled")
 reflect_option(LANGULUS_OPTION_COMPRESSION         "Compressable memory enabled")
-reflect_option(LANGULUS_OPTION_ENCRYPTION		      "Encryptable memory enabled")
+reflect_option(LANGULUS_OPTION_ENCRYPTION          "Encryptable memory enabled")
 reflect_option(LANGULUS_OPTION_MANAGED_MEMORY      "Managed memory enabled")
 reflect_option(LANGULUS_OPTION_MANAGED_REFLECTION  "Managed reflection enabled")
 reflect_option(LANGULUS_OPTION_MEMORY_STATISTICS   "Memory statistics enabled")

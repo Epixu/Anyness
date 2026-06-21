@@ -57,7 +57,10 @@ namespace Langulus::Anyness::Component
       ///   @return the number of inserted elements                           
       template<class A, CT::ContainsMany C>
       auto Merge(this C& self, A&& a) -> size_t {
-         self.DeduceType(LglsFwd(a));
+         if constexpr (CT::Handle<A>)
+            self.AbsorbType(Copy(a));
+         else
+            self.DeduceType(LglsFwd(a));
          return self.MergeInner(LglsFwd(a)).itemsInserted;
       }
 

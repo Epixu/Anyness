@@ -159,29 +159,15 @@ void Map_VerifyAccessorInterface(T const& map, I1&&, I2&&) {
 
    // AsAt dereferences that pointer and/or wraps inside handles or     
    // containers.                                                       
-   /*if constexpr (CT::DeepDense<E1> and (not Same<TypeOf<T>, E1> or CT::TypeErased<T>)) {
-      static_assert(requires {
-         {map.template AsAt<E1, 0>(0)} -> ::std::same_as<Decay<E1>>;
-      });
-   }
-   else {*/
-      using innerT = Tif<(CT::Sparse<E1> and not CT::CustomPointer<E1>), ConstAll<E1>, ConstAll<E1> const&>;
-      static_assert(requires {
-         {map.template AsAt<E1, 0>(0)} -> ::std::same_as<innerT>;
-      });
-   //}
+   using innerT1 = Tif<(CT::Sparse<E1> and not CT::CustomPointer<E1>), ConstAll<E1>, ConstAll<E1> const&>;
+   static_assert(requires {
+      {map.template AsAt<E1, 0>(0)} -> ::std::same_as<innerT1>;
+   });
 
-   /*if constexpr (CT::DeepDense<E2> and (not Same<TypeOf<T>, E2> or CT::TypeErased<T>)) {
-      static_assert(requires {
-         {map.template AsAt<E2, 1>(0)} -> ::std::same_as<Decay<E2>>;
-      });
-   }
-   else {*/
-      using innerT = Tif<(CT::Sparse<E2> and not CT::CustomPointer<E2>), ConstAll<E2>, ConstAll<E2> const&>;
-      static_assert(requires {
-         {map.template AsAt<E2, 1>(0)} -> ::std::same_as<innerT>;
-      });
-   //}
+   using innerT2 = Tif<(CT::Sparse<E2> and not CT::CustomPointer<E2>), ConstAll<E2>, ConstAll<E2> const&>;
+   static_assert(requires {
+      {map.template AsAt<E2, 1>(0)} -> ::std::same_as<innerT2>;
+   });
 
    if constexpr (CT::Dense<E1> and CT::Typed<T>) {
       // One additional indirection is always acceptable                
