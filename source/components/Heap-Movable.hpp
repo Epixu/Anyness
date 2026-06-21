@@ -199,7 +199,7 @@ namespace Langulus::Anyness::Component
                //    2. Count responsible for deep ownership            
                if constexpr (not IT::CanBeDisowned
                and (not requires { from.template SetCountInner<Id::First>(0); }
-                    or from.CountHeapRequests())
+                    or IT::CountHeapRequests())
                ) {
                   // Some monocontainers have no variable count, and in 
                   // some cases the heap pointer is used to specify the 
