@@ -304,14 +304,14 @@ void Pair_VerifyAccessorInterface(T const& pack, I1&&, I2&&) {
 
    // AsAt dereferences that pointer and/or wraps inside handles or     
    // containers.                                                       
-   using innerT = Tif<(CT::Sparse<E1> and not CT::CustomPointer<E1>), ConstAll<E1>, ConstAll<E1> const&>;
+   using innerT1 = Tif<(CT::Sparse<E1> and not CT::CustomPointer<E1>), ConstAll<E1>, ConstAll<E1> const&>;
    static_assert(requires {
-      {pack.template As<E1, 0>()} -> ::std::same_as<innerT>;
+      {pack.template As<E1, 0>()} -> ::std::same_as<innerT1>;
    });
 
-   using innerT = Tif<(CT::Sparse<E2> and not CT::CustomPointer<E2>), ConstAll<E2>, ConstAll<E2> const&>;
+   using innerT2 = Tif<(CT::Sparse<E2> and not CT::CustomPointer<E2>), ConstAll<E2>, ConstAll<E2> const&>;
    static_assert(requires {
-      {pack.template As<E2, 1>()} -> ::std::same_as<innerT>;
+      {pack.template As<E2, 1>()} -> ::std::same_as<innerT2>;
    });
 
    if constexpr (CT::Dense<E1> and CT::Typed<T>) {
