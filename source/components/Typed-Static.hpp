@@ -273,21 +273,21 @@ namespace Langulus::Anyness::Component
       /// compatible in constructors and assigners.                           
       ///   @attention intents like Clone and Copy will strip constness       
       ///   @param other the container to copy types from                     
-      template<Cid SID = ID, CT::Container I> requires CT::Intent<I>
-      void AbsorbType(I const& other) {
+      template<Cid SID = ID, CT::Container I, class SELF> requires CT::Intent<I>
+      void AbsorbType(this SELF& self, I const& other) {
          if constexpr (TypeErased or CT::TypeErased<I>) {
             auto T = DeintCast(other).template GetType<SID>();
             if constexpr (CT::Copied<I> or CT::Cloned<I>)
-               SetType(T.GetDecvq());
+               self.template SetType<ID>(T.GetDecvq());
             else
-               SetType(T);
+               self.template SetType<ID>(T);
          }
          else {
             using T = Deref<TypeOf<Deint<I>, SID>>;
             if constexpr (CT::Copied<I> or CT::Cloned<I>)
-               SetType<Decvq<T>>();
+               self.template SetType<Decvq<T>, ID>();
             else
-               SetType<T>();
+               self.template SetType<T, ID>();
          }
       }
 

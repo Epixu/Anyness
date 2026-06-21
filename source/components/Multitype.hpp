@@ -457,12 +457,18 @@ namespace Langulus::Anyness::Component
       /// compatible in constructors and assigners.                           
       ///   @attention intents like Clone and Copy will strip constness       
       ///   @param other the container to copy types from                     
-      template<CT::Container I> requires CT::Intent<I>
-      void AbsorbType(this auto& self, I const& other) {
+      template<CT::Container I, class SELF> requires CT::Intent<I>
+      void AbsorbType(this SELF& self, I const& other) {
          static_assert(CT::Handle<I>,
             "Multidimensional types should be set using a handle");
          Subcomponents::ForEach([&]<class C> {
-            (&self)->C::AbsorbType(other);
+            //WORKAROUND GNU 14.2.0 refuses to recognize C as a base    
+            //WORKAROUND Clang 21 refuses to unfold when Expand used    
+            //WORKAROUND This workaround is the only thing that         
+            //WORKAROUND pacifies both...                               
+            //self.C::AbsorbType(other);
+            auto absorb = &C::template AbsorbType<C::Id::First, I, SELF>;
+            absorb(self, other);
          });
       }
 
