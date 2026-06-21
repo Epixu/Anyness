@@ -211,6 +211,11 @@ namespace Langulus::Anyness::Component
          if (self.IsDisowned()) {
             self.DisableDisowned();
             PROVIDERS::ForEach([&]<class P> {
+               //WORKAROUND GNU 14.2.0 refuses to recognize P as a base 
+               //WORKAROUND Clang 21 refuses to unfold when Expand used 
+               //WORKAROUND This workaround is the only thing that      
+               //WORKAROUND pacifies both...                            
+               //self.P::AllocateFresh(self.P::RequestHeap(1));
                auto alloc = &P::template AllocateFresh<P::Id::First, C>;
                auto reqhp = &P::template RequestHeap<P::Id::First, C>;
                alloc(self, reqhp(self, 1));
@@ -243,7 +248,14 @@ namespace Langulus::Anyness::Component
          // a new block, which will be exclusively ours.                
          self.Free();
          PROVIDERS::ForEach([&]<class P> {
-            self.P::AllocateFresh(self.P::RequestHeap(1));
+            //WORKAROUND GNU 14.2.0 refuses to recognize P as a base    
+            //WORKAROUND Clang 21 refuses to unfold when Expand used    
+            //WORKAROUND This workaround is the only thing that         
+            //WORKAROUND pacifies both...                               
+            //self.P::AllocateFresh(self.P::RequestHeap(1));
+            auto alloc = &P::template AllocateFresh<P::Id::First, C>;
+            auto reqhp = &P::template RequestHeap<P::Id::First, C>;
+            alloc(self, reqhp(self, 1));
          });
       }
 

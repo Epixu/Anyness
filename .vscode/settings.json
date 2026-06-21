@@ -151,6 +151,11 @@
         "backgroundColor": "orange",
         "color": "black"
       }]
+      "(/{2}WORKAROUND.*)": [{
+        "filterLanguageRegex": "c",
+        "backgroundColor": "cyan",
+        "color": "black"
+      }]
    },
    "workbench.editor.wrapTabs": true,
    "editor.hover.delay": 1250,
