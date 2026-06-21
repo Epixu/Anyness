@@ -462,7 +462,7 @@ namespace Langulus::Anyness::Component
          static_assert(CT::Handle<I>,
             "Multidimensional types should be set using a handle");
          Subcomponents::ForEach([&]<class C> {
-            self.C::AbsorbType(other);
+            (&self)->C::AbsorbType(other);
          });
       }
 
