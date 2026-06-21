@@ -79,8 +79,8 @@ namespace Langulus::Anyness::Component
       ///      a new allocation occurs.                                       
       template<class C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent, size_t reserve = 0) {
-         using IT = Deint<I>;
-         IT from = LglsFwd(intent.what);
+         using IT = Decvq<Deref<Deint<I>>>;
+         decltype(auto) from = LglsFwd(intent.what);
 
          size_t count = from.template GetCount<Id::First>();
          if constexpr (CT::Copied<I> or CT::Cloned<I>) {
@@ -197,7 +197,7 @@ namespace Langulus::Anyness::Component
                // components, if possible:                              
                //    1. Allocation responsible for shallow ownership    
                //    2. Count responsible for deep ownership            
-               if constexpr (not from.CanBeDisowned
+               if constexpr (not IT::CanBeDisowned
                and (not requires { from.template SetCountInner<Id::First>(0); }
                     or from.CountHeapRequests())
                ) {

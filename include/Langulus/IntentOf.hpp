@@ -229,7 +229,10 @@ namespace Langulus
 
    template<CT::Intent T>
    Refer(T&&) -> Refer<Decq<Deref<TypeOf<T>>>>;
-   
+
+   template<CT::Intent T>
+   Refer(T const&) -> Refer<Decq<Deref<TypeOf<T>>>>;
+
    
    /// MARK: Copy                                                             
    ///                                                                        
@@ -560,6 +563,9 @@ namespace Langulus
    template<CT::Intent T>
    Disown(T&&) -> Disown<Decq<Deref<TypeOf<T>>>>;
 
+   template<CT::Intent T>
+   Disown(T const&) -> Disown<Decq<Deref<TypeOf<T>>>>;
+
 
    /// MARK: Clone                                                            
    ///                                                                        
@@ -620,6 +626,9 @@ namespace Langulus
    template<CT::Intent T>
    Clone(T&&) -> Clone<Decq<Deref<TypeOf<T>>>>;
 
+   template<CT::Intent T>
+   Clone(T const&) -> Clone<Decq<Deref<TypeOf<T>>>>;
+   
 
    /// MARK: CT::Has*                                                         
    namespace CT

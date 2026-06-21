@@ -150,11 +150,12 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+            using IT = Decvq<Deref<Deint<I>>>;
             decltype(auto) from = LglsFwd(intent.what);
 
             if constexpr (CT::Disowned<I>) {
                // Disown                                                
-               if constexpr (not self.CanBeDisowned and STYLE & OnCreateAndDestroy) {
+               if constexpr (not SELF::CanBeDisowned and STYLE & OnCreateAndDestroy) {
                   // This container can't be marked as disowned - we    
                   // must reset ownership unless it's weak.             
                   ThisCom::SetAllocationInner(nullptr);
@@ -167,7 +168,7 @@ namespace Langulus::Anyness::Component
                   else ThisCom::SetAllocationInner(nullptr);
                }
             }
-            else if constexpr (not requires { from.Owned; }) {
+            else if constexpr (not requires { IT::Owned; }) {
                // No ownership on the right side - we must search the   
                // memory allocation ourselves.                          
                ThisCom::FindAllocationInner();
@@ -198,7 +199,7 @@ namespace Langulus::Anyness::Component
                         ThisCom::Keep();
                      }
 
-                     if constexpr (CT::Moved<I> or not from.CanBeDisowned) {
+                     if constexpr (CT::Moved<I> or not IT::CanBeDisowned) {
                         // Transfer ownership in order to disown        
                         from.template SetAllocationInner<ID>(nullptr);
                      }

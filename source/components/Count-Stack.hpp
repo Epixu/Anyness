@@ -100,6 +100,7 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+            using IT = Decvq<Deref<Deint<I>>>;
             decltype(auto) from = LglsFwd(intent.what);
             ThisCom::SetCountInner(from.template GetCount<ID>());
 
@@ -111,7 +112,7 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::Abandoned<I> and CT::OwnedDeepStrong<I>) {
                // Abandoning                                            
-               if constexpr (not from.CanBeDisowned) {
+               if constexpr (not IT::CanBeDisowned) {
                   // In case source is not disownable, this component   
                   // must make sure to reset relevant properties.       
                   if_available(from.template SetCountInner<ID>(0));

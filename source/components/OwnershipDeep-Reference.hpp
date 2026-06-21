@@ -114,12 +114,13 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I>
       requires (CT::Container<I> and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>, ID>>))
       void ConstructFrom(this SELF& self, I&& intent) noexcept {
+         using IT = Decvq<Deref<Deint<I>>>;
          decltype(auto) from = LglsFwd(intent.what);
 
          ThisCom::SetEntriesInner(from.template GetEntries<ID>());
 
          if constexpr ((STYLE & OnCreateAndDestroy) != 0) {
-            if constexpr (CT::Referred<I> or (from.OwnedDeep & OnCreateAndDestroy) == 0) {
+            if constexpr (CT::Referred<I> or (IT::OwnedDeep & OnCreateAndDestroy) == 0) {
                // Refer                                                 
                ThisCom::Keep();
             }
@@ -129,7 +130,7 @@ namespace Langulus::Anyness::Component
                   // Right was never owned, now we own it               
                   ThisCom::Keep();
                }
-               else if constexpr (CT::Moved<I> or not from.CanBeDisowned) {
+               else if constexpr (CT::Moved<I> or not IT::CanBeDisowned) {
                   // Transfer ownership if we can, otherwise refer      
                   // Deep ownership can be reset in two ways: either    
                   // reset the entries pointer, or reset the count.     

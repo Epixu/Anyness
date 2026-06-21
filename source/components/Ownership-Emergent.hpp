@@ -95,9 +95,10 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I>
       requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I> and (STYLE & OnCreateAndDestroy) != 0)
       void ConstructFrom(this SELF& self, I&& intent) {
+         using IT = Decvq<Deref<Deint<I>>>;
          decltype(auto) from = LglsFwd(intent.what);
 
-         if constexpr (CT::Referred<I> or 0 == (from.Owned & OnCreateAndDestroy)) {
+         if constexpr (CT::Referred<I> or 0 == (IT::Owned & OnCreateAndDestroy)) {
             // Refer                                                    
             ThisCom::Keep();
          }
@@ -107,7 +108,7 @@ namespace Langulus::Anyness::Component
                // Right was never owned, now we own it                  
                ThisCom::Keep();
             }
-            else if constexpr (CT::Moved<I> or not from.CanBeDisowned) {
+            else if constexpr (CT::Moved<I> or not IT::CanBeDisowned) {
                // Transfer ownership if we can, otherwise refer         
                if_available(from.template SetAllocationInner<ID>(nullptr))
                else ThisCom::Keep();
