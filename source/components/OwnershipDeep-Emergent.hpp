@@ -1139,6 +1139,7 @@ namespace Langulus::Anyness::Component
                   const auto T = self.template GetType<D>();
                   if (const auto destructor = T.GetDestructor()) {
                      self.Apply([&destructor, &T](auto&& item) {
+                        (void) T;
                         const auto ptr = item.template GetRaw<D>();
                         if constexpr (REF_INDIVIDUAL) {
                            IF_SAFE(if (const auto referencer = T.GetReferencer())

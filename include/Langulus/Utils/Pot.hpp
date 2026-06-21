@@ -108,11 +108,11 @@ namespace Langulus
          return (T {1} << bit) * rhs;
       }
 
-      constexpr pot_t operator % (pot_t const& rhs) const assumptious {
+      /*constexpr pot_t operator % (pot_t const& rhs) const assumptious {
          LglsAssumeDev(rhs.bit > bit,
             "pot_t modulo resulted in zero");
          return *this;
-      }
+      }*/
 
       template<::std::unsigned_integral T>
       constexpr pot_t& operator >>= (T const& rhs) assumptious {
