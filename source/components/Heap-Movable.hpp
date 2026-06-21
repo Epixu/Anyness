@@ -45,6 +45,7 @@ namespace Langulus::Anyness::Component
       LglsComReserveEmergent(friend);
       LglsComInsertion(friend);
       LglsComMerging(friend);
+      LglsComAssignment(friend);
       LglsComEmplacement(friend);
       LglsComConversion(friend);
       LglsComOwnershipEmergent(friend);

@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "Langulus/CT/Contiguous.hpp"
+#include "source/Component.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 
@@ -207,9 +208,11 @@ namespace Langulus::Anyness::Component
 
          using PROVIDERS = decltype(C::FindProviders(Id{}));
          static_assert(not PROVIDERS::Empty);
+         static_assert(requires { typename PROVIDERS::First; });
          if (self.IsDisowned()) {
             self.DisableDisowned();
             PROVIDERS::ForEach([&]<class P> {
+               static_assert(CT::Component<P>);
                self.P::AllocateFresh(self.P::RequestHeap(1));
             });
             return;
