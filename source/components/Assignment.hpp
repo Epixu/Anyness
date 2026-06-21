@@ -236,7 +236,13 @@ namespace Langulus::Anyness::Component
             self.template Free<false>();
             if constexpr (CT::ContainsMany<C>) {
                PROVIDERS::ForEach([&]<class P> {
-                  self.P::AllocateLess(1);
+                  //WORKAROUND GNU 14.2.0 refuses to recognize P as a base 
+                  //WORKAROUND Clang 21 refuses to unfold when Expand used 
+                  //WORKAROUND This workaround is the only thing that      
+                  //WORKAROUND pacifies both...                            
+                  //self.P::AllocateLess(1);
+                  auto alloc = &P::template AllocateLess<P::Id::First, C>;
+                  alloc(self, 1);
                });
             }
             return;
