@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         managed: [ON, OFF]
-        os: [ubuntu-24.04, windows-latest]
+        os: [ubuntu-24.04, windows-2022]   # windows-latest uses vs2026, which uses clang 22, which is full of regressions in concept compilation
         build: [debug, release]
         cxx: [g++-14, clang++-19, clangcl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
         arch: [x86, x64]
@@ -20,9 +20,9 @@ jobs:
             cxx: v143
           - os: ubuntu-24.04
             cxx: clangcl
-          - os: windows-latest
+          - os: windows-2022
             cxx: g++-14
-          - os: windows-latest
+          - os: windows-2022
             cxx: clang++-19
 
         include:
@@ -36,10 +36,10 @@ jobs:
           - os: ubuntu-24.04
             arch: x64
             cmake_args: "-DCMAKE_CXX_FLAGS=-m64"
-          - os: windows-latest
+          - os: windows-2022
             arch: x86
             cmake_args: "-G \"Visual Studio 17 2022\" -A Win32"
-          - os: windows-latest
+          - os: windows-2022
             arch: x64
             cmake_args: "-G \"Visual Studio 17 2022\" -A x64"
           - managed: OFF
@@ -83,8 +83,8 @@ jobs:
           -DLANGULUS_OPTION_TESTING=ON
           ${{matrix.debug_flags}}
 
-      - if: matrix.os == 'windows-latest'
-        name: Configure (Windows)
+      - if: matrix.os == 'windows-2022'
+        name: Configure (Windows with VS2022)
         run: >
           mkdir build && cd build && cmake ..
           ${{matrix.cmake_args}} -T "${{matrix.cxx}}"
