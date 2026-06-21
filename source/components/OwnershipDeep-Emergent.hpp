@@ -243,7 +243,7 @@ namespace Langulus::Anyness::Component
 
             if (subT.IsSparse()) {
                // Pointer to pointer                                    
-               H temp {ptr, nullptr, subT};
+               H temp {Stackwise, subT, ptr};
                temp.KeepElementDeepStandardPointersEmergent();
             }
             else if constexpr (REF_INDIVIDUAL) {
@@ -271,7 +271,7 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Sparse<DT>) {
                // Pointer to pointer                                    
-               typename H::Denser temp {ptr, nullptr};
+               typename H::Denser temp {Stackwise, ptr};
                temp.KeepElementDeepStandardPointersEmergent();
             }
             else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
@@ -495,7 +495,7 @@ namespace Langulus::Anyness::Component
                   // Pointer to pointer.                                
                   // Destroy all nested indirection layers.             
                   if (auto subEntry = entries + 1) {
-                     H temp {ptr, subEntry, subT};
+                     H temp {Stackwise, subT, ptr, subEntry};
                      temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                   }
                }
@@ -517,7 +517,7 @@ namespace Langulus::Anyness::Component
                   // Pointer to pointer.                                
                   // Dereference all indirection layers.                
                   if (auto subEntry = entries + 1) {
-                     H temp {ptr, subEntry, subT};
+                     H temp {Stackwise, subT, ptr, subEntry};
                      temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                   }
                }
@@ -565,7 +565,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer.                                
                   // Destroy all nested indirection layers.             
-                  typename H::Denser temp{ptr, entries + 1};
+                  typename H::Denser temp {Stackwise, ptr, entries + 1};
                   temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                }
                else if constexpr (CT::Destroyable<DT>) {
@@ -582,7 +582,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer.                                
                   // Destroy all nested indirection layers.             
-                  typename H::Denser temp {ptr, entries + 1};
+                  typename H::Denser temp {Stackwise, ptr, entries + 1};
                   temp.template DestroyElementDeepStandardPointers<FORCE_DESTROY>();
                }
                else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
@@ -652,7 +652,7 @@ namespace Langulus::Anyness::Component
                if (subT.IsSparse()) {
                   // Pointer to pointer.                                
                   // Destroy all nested indirection layers.             
-                  H temp {ptr, nullptr, subT};
+                  H temp {Stackwise, subT, ptr};
                   temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
                }
                else if (auto destructor = subT.GetDestructor()) {
@@ -673,7 +673,7 @@ namespace Langulus::Anyness::Component
                if (subT.IsSparse()) {
                   // Pointer to pointer.                                
                   // Dereference all indirection layers.                
-                  H temp {ptr, nullptr, subT};
+                  H temp {Stackwise, subT, ptr};
                   temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
                }
                else if constexpr (REF_INDIVIDUAL) {
@@ -719,7 +719,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer.                                
                   // Destroy all nested indirection layers.             
-                  typename H::Denser temp{ptr, nullptr};
+                  typename H::Denser temp{Stackwise, ptr};
                   temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
                }
                else if constexpr (CT::Destroyable<DT>) {
@@ -737,7 +737,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Sparse<DT>) {
                // Pointer to pointer.                                   
                // Destroy all nested indirection layers.                
-               typename H::Denser temp {ptr, nullptr};
+               typename H::Denser temp {Stackwise, ptr};
                temp.template DestroyElementDeepStandardPointersEmergent<FORCE_DESTROY>();
             }
             else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
