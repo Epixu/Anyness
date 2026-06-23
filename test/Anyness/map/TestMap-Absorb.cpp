@@ -38,8 +38,6 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
-   , Types<Map, Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Map, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
    , Types<Map, int,    ScopedElement<int>,     int,    ScopedElement<int>>
@@ -85,6 +83,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
    , Types<Map, RT,     ScopedElement<RT,   true>,    RT,     ScopedElement<RT,   true>>
    , Types<Map, char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
 
+   , Types<Map, Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
    , Types<Map, int*,   ScopedElement<int*,  true>,   int*,   ScopedElement<int*,  true>>
    , Types<Map, Any*,   ScopedElement<Any*,  true>,   Any*,   ScopedElement<Any*,  true>>
    , Types<Map, RT*,    ScopedElement<RT*,   true>,   RT*,    ScopedElement<RT*,   true>>

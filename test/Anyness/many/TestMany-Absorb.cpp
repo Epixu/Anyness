@@ -38,10 +38,9 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
-   , Types<Many, int,    ScopedElement<int>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Many, Text,   ScopedElement<Text>>
+   , Types<Many, int,    ScopedElement<int>>
    , Types<Many, Many,   ScopedElement<Many>>
    , Types<Many, RT,     ScopedElement<RT>>
    , Types<Many, char,   ScopedElement<char>>

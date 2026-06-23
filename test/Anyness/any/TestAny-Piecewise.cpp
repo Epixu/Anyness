@@ -38,8 +38,6 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
-   , Types<TAny<Text>,   Text,   ScopedElement<Text>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
    , Types<Any, int,    ScopedElement<int>>
@@ -59,6 +57,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
    , Types<Any, RT**,   ScopedElement<RT**>>
    , Types<Any, char**, ScopedElement<char**>>
 
+   , Types<TAny<Text>,   Text,   ScopedElement<Text>>
    , Types<TAny<int>,    int,    ScopedElement<int>>
    , Types<TAny<Any>,    Any,    ScopedElement<Any>>
    , Types<TAny<RT>,     RT,     ScopedElement<RT>>
