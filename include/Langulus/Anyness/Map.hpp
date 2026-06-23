@@ -101,13 +101,13 @@ namespace Langulus::Anyness::Inner
       template<class A1, class...AN>
       constexpr Map(A1&& a1, AN&&...an) {
          if constexpr (CT::Map<A1> and sizeof...(AN) == 0) {
-            LglsAssumeUser((Same<Deint<A1>, Map>),
+            /*LglsAssumeUser((Same<Deint<A1>, Map>),
                "Ambiguous use of construction "
                "- you should use tag-dispatch with first argument either Absorb "
                "(if you want to overwrite the container itself) or Piecewise "
                "(if you want to overwrite the first item) in order to clearly "
                "state your intent. Absorb will be used by default!"
-            );
+            );*/ //TODO irrelevant for maps? never ambiguous because they require pairs, and if not pairs, then at least two arguments?
             this->Absorb(LglsFwd(a1));
          }
          else {
@@ -149,13 +149,13 @@ namespace Langulus::Anyness::Inner
       template<class A>
       constexpr Map& operator = (A&& argument) {
          if constexpr (CT::Map<A>) {
-            LglsAssumeUser((Same<Deint<A>, Map>),
+            /*LglsAssumeUser((Same<Deint<A>, Map>),
                "Ambiguous use of assignment "
                "- you should use either AssignAbsorb (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "
                "first item) in order to clearly state your intent. "
                "AssignAbsorb will be used by default!"
-            );
+            );*/ //TODO irrelevant for maps?
             return this->AssignAbsorb(LglsFwd(argument));
          }
          else {

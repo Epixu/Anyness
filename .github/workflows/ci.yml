@@ -106,5 +106,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: "artifacts-${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{github.sha}}"
-          path: build/bin/*.txt
+          path: |
+            build/bin/*.txt
+            build/bin/*.htm
           retention-days: 7

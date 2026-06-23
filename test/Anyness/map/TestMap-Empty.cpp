@@ -11,26 +11,26 @@
 namespace Langulus::Anyness
 {
    // Explicit instantiation for using extern templates in other tests  
-   template struct TMap<Text, Text>;
-   template struct TMap<int, int>;
-   template struct TMap<Any, Any>;
-   template struct TMap<RT, RT>;
-   template struct TMap<char, char>;
+   template struct TMap<Text,   Text>;
+   template struct TMap<int,    int>;
+   template struct TMap<Any,    Any>;
+   template struct TMap<RT,     RT>;
+   template struct TMap<char,   char>;
 
-   template struct TMap<Text*, Text*>;
-   template struct TMap<int*, int*>;
-   template struct TMap<Any*, Any*>;
-   template struct TMap<RT*, RT*>;
-   template struct TMap<char*, char*>;
+   template struct TMap<Text*,  Text*>;
+   template struct TMap<int*,   int*>;
+   template struct TMap<Any*,   Any*>;
+   template struct TMap<RT*,    RT*>;
+   template struct TMap<char*,  char*>;
 
    template struct TMap<Text**, Text**>;
-   template struct TMap<int**, int**>;
-   template struct TMap<Any**, Any**>;
-   template struct TMap<RT**, RT**>;
+   template struct TMap<int**,  int**>;
+   template struct TMap<Any**,  Any**>;
+   template struct TMap<RT**,   RT**>;
    template struct TMap<char**, char**>;
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
-   template struct TMap<pptr8, pptr8>;
+   template struct TMap<pptr8,  pptr8>;
    template struct TMap<pptr16, pptr16>;
    template struct TMap<pptr32, pptr32>;
 #endif
