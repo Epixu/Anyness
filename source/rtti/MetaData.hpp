@@ -143,6 +143,7 @@ namespace Langulus::RTTI
          #endif
 
          constexpr auto GetIndirections() const noexcept -> size_t;
+         constexpr auto GetIndirections(bool& custom_pointer_encountered) const noexcept -> size_t;
          constexpr auto GetPointerSpecification() const noexcept -> PointerSpecification;
          constexpr bool IsDense()     const noexcept;
          constexpr bool IsSparse()    const noexcept;
@@ -233,6 +234,7 @@ namespace Langulus::RTTI
          #endif
                                       
          auto GetIndirections()       const noexcept -> size_t;
+         auto GetIndirections(bool& custom_pointer_encountered) const noexcept -> size_t;
          auto GetPointerSpecification() const noexcept -> PointerSpecification;
          bool IsDense()               const noexcept;
          bool IsSparse()              const noexcept;

@@ -301,6 +301,29 @@ namespace Langulus::RTTI::Inner
       return result;
    }
 
+   /// Count the number of indirections, and check if custom pointers are     
+   /// involved.                                                              
+   /// int**** will result in 4; int* will result in 1, int will result in 0. 
+   TEMPLATE()
+   constexpr size_t ME()::GetIndirections(bool& custom_pointer_encountered) const noexcept {
+      custom_pointer_encountered = false;
+      const auto id = Base::GetID();
+      if (not id or not sparse)
+         return 0;
+
+      auto d = Instance.GetMetaDataByID(id, sparse, constant);
+      size_t result = 0;
+      while (d->mDeptr) {
+         if (d->mPointerSpecification.IsPacked())
+            custom_pointer_encountered = true;
+         if (reinterpret_cast<intptr_t>(d->mDeptr) == 1)
+            return result + 1;
+         ++result;
+         d = d->mDeptr;
+      }
+      return result;
+   }
+
    /// Get the pointer specification for a sparse type                        
    TEMPLATE()
    constexpr auto ME()::GetPointerSpecification() const noexcept -> PointerSpecification {

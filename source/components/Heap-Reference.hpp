@@ -155,17 +155,21 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Casting to a desired runtime type                     
-               const auto indirections = T.GetIndirections();
+               bool custom_pointer_encountered;
+               const auto indirections = T.GetIndirections(custom_pointer_encountered);
 
                if (indirections == IndirectsOf<TH>) {
                   // No difference in indirections                      
                   return static_cast<THP>(heap);
                }
                else if (indirections > IndirectsOf<TH>) {
-                  if (indirections == IndirectsOf<THP>) {
+                  if (indirections == IndirectsOf<THP> and not custom_pointer_encountered) {
                      // If we're going to add the same pointer later,   
                      // then avoid dereferencing altogether.            
                      // Unfortunately this can't support packed pointers
+                     /*LglsAssert(not custom_pointer_encountered, 
+                        "Custom pointer detected, use Cast instead of As/Get",
+                        ", when trying to convert: ", T, " to ", MetaDataOf<THP>());*/
                      LglsAssumeDev(T.IsSame(MetaDataOf<THP>()), "Type mismatch",
                         ": ", T, " not same as ", MetaDataOf<THP>());
                      return *static_cast<THP*>(heap);

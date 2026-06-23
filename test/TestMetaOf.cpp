@@ -42,6 +42,9 @@ TEST_CASE("Testing empty meta data") {
    REQUIRE(meta.GetDecvqAll() == nullptr);
    REQUIRE(meta.GetDecvq() == nullptr);
    REQUIRE(meta.GetIndirections() == 0);
+   bool customptr;
+   REQUIRE(meta.GetIndirections(customptr) == 0);
+   REQUIRE_FALSE(customptr);
    REQUIRE(not meta.GetPointerSpecification().IsPacked());
    REQUIRE(meta.AddPtr() == nullptr);
    REQUIRE(meta.AddConst() == nullptr);
@@ -151,6 +154,9 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.GetDecvqAll() == MetaDataOf<DecvqAll<Deref<T>>>());
    REQUIRE(meta.GetDecvq() == MetaDataOf<Decvq<Deref<T>>>());
    REQUIRE(meta.GetIndirections() == IndirectsOf<T>);
+   bool customptr;
+   REQUIRE(meta.GetIndirections(customptr) == IndirectsOf<T>);
+   REQUIRE_FALSE(customptr);
    REQUIRE(not meta.GetPointerSpecification().IsPacked());
    REQUIRE_THROWS(meta.AddPtr() == nullptr);
    REQUIRE_THROWS(meta.AddConst() == nullptr);
@@ -634,6 +640,9 @@ SCENARIO("A type reflected with all traits") {
       REQUIRE(convertedFromString == 666);
    }
 }
+
+//TODO reflecting custom pointers
+
 
 ///                                                                           
 /// Reflecting verbs                                                          
