@@ -129,6 +129,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
 
+#if LANGULUS(BENCHMARK)
+   using stdany = ::std::any;
+#endif
+
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
@@ -261,7 +265,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
          BenchmarkAnyStd("Empty/DefaultConstructor", 30, 40,
             T temp,                 new (&temp)     T{},
-            ::std::any temp_std,    new (&temp_std) ::std::any{}
+            stdany temp_std,        new (&temp_std) stdany{}
          );
       }
 
@@ -271,9 +275,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkAnyStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkAnyStd("Empty/Assign/Refer", 30, 100,
             T temp,                 temp.Assign(*element),
-            ::std::any temp_std,    temp_std = *element
+            stdany temp_std,        temp_std = *element
          );
       }
 
@@ -294,10 +298,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            [[maybe_unused]] ::std::any src_std{*element};
-            BenchmarkAnyStd("Empty/AssignAbsorb(Refer(" + NameOf<E>() + "))", 30, 100,
-               T temp,              temp.AssignAbsorb(*element),
-               ::std::any temp_std, temp_std = src_std;
+            [[maybe_unused]] stdany src_std{*element};
+            BenchmarkAnyStd("Empty/AssignAbsorb/Refer", 30, 100,
+               T temp,                 temp.AssignAbsorb(*element),
+               stdany temp_std,        temp_std = src_std;
             );
          }
       }
@@ -320,9 +324,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkAnyStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkAnyStd("Empty/Assign/Move", 30, 100,
             auto movable = *element; T temp,                temp.Assign(::std::move(movable)),
-            auto movable = *element; ::std::any temp_std,   temp_std = ::std::move(movable)
+            auto movable = *element; stdany temp_std,       temp_std = ::std::move(movable)
          );
       }
 
@@ -346,9 +350,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkAnyStd("Empty/AssignAbsorb(Move(" + NameOf<E>() + "))", 30, 100,
-               auto movable = *element;  T temp,                temp.AssignAbsorb(::std::move(movable)),
-               ::std::any movable = 555; ::std::any temp_std,   temp_std = ::std::move(movable)
+            BenchmarkAnyStd("Empty/AssignAbsorb/Move", 30, 100,
+               auto movable = *element;  T temp,            temp.AssignAbsorb(::std::move(movable)),
+               stdany movable = 555; stdany temp_std,       temp_std = ::std::move(movable)
             );
          }
       }
@@ -365,9 +369,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Copy(element));
 
-         BenchmarkAnyStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkAnyStd("Empty/Assign/Copy", 30, 100,
             T temp,                 temp.Assign(Copy(*element)),
-            ::std::any temp_std,    temp_std = *element
+            stdany temp_std,        temp_std = *element
          );
       }
 
@@ -393,10 +397,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::any src_std = *element;
-            BenchmarkAnyStd("Empty/AssignAbsorb(Copy(" + NameOf<E>() + "))", 30, 100,
+            [[maybe_unused]] stdany src_std = *element;
+            BenchmarkAnyStd("Empty/AssignAbsorb/Copy", 30, 100,
                T temp,                 temp.AssignAbsorb(Copy(*element)),
-               ::std::any temp_std,    temp_std = src_std
+               stdany temp_std,        temp_std = src_std
             );
          }
       }
@@ -413,9 +417,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Clone(element));
 
-         BenchmarkAnyStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkAnyStd("Empty/Assign/Clone", 30, 100,
             T temp,                 temp.Assign(Clone(*element)),
-            ::std::any temp_std,    temp_std = *element
+            stdany temp_std,        temp_std = *element
          );
       }
 
@@ -442,10 +446,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation() != element->GetAllocation());
 
-            [[maybe_unused]] ::std::any src_std = *element;
-            BenchmarkAnyStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
+            [[maybe_unused]] stdany src_std = *element;
+            BenchmarkAnyStd("Empty/AssignAbsorb/Clone", 30, 100,
                T temp,                 temp.AssignAbsorb(Clone(*element)),
-               ::std::any temp_std,    temp_std = src_std
+               stdany temp_std,        temp_std = src_std
             );
          }
       }
@@ -462,9 +466,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Disown(element));
 
-         BenchmarkAnyStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkAnyStd("Empty/Assign/Disown", 30, 100,
             T temp,                 temp.Assign(Disown(*element)),
-            ::std::any temp_std,    temp_std = *element
+            stdany temp_std,        temp_std = *element
          );
       }
 
@@ -493,10 +497,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             //REQUIRE(pack.GetUses() == 0);
             //REQUIRE_FALSE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::any src_std = *element;
-            BenchmarkAnyStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,
+            [[maybe_unused]] stdany src_std = *element;
+            BenchmarkAnyStd("Empty/AssignAbsorb/Disown", 30, 100,
                T temp,                 temp.AssignAbsorb(Disown(*element)),
-               ::std::any temp_std,    temp_std = src_std
+               stdany temp_std,        temp_std = src_std
             );
          }
       }
@@ -517,9 +521,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkAnyStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkAnyStd("Empty/Assign/Abandon", 30, 100,
             auto movable = *element; T temp,                temp.Assign(Abandon(movable)),
-            auto movable = *element; ::std::any temp_std,   temp_std = ::std::move(movable)
+            auto movable = *element; stdany temp_std,       temp_std = ::std::move(movable)
          );
       }
 
@@ -542,9 +546,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkAnyStd("Empty/AssignAbsorb(Abandon(" + NameOf<E>() + "))", 30, 100,
-               auto movable = *element;  T temp,                temp.AssignAbsorb(Abandon(movable)),
-               ::std::any movable = 555; ::std::any temp_std,   temp_std = ::std::move(movable)
+            BenchmarkAnyStd("Empty/AssignAbsorb/Abandon", 30, 100,
+               auto movable = *element;  T temp,         temp.AssignAbsorb(Abandon(movable)),
+               stdany movable = 555; stdany temp_std,    temp_std = ::std::move(movable)
             );
          }
       }
@@ -582,7 +586,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
                REQUIRE(&*pack == &instance);
          }
 
-         BenchmarkAny("Empty/Emplace(" + NameOf<E>() + ")", 30,
+         BenchmarkAny("Empty/Emplace", 30,
             auto movable = *element; T temp,
             temp.Emplace(::std::move(movable))
          );
@@ -607,7 +611,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetReserved() >= 1);
 
-            BenchmarkAny("Empty/Emplace(Describe(" + NameOf<E>() + "))", 30,
+            BenchmarkAny("Empty/Emplace/Describe", 30,
                T temp,
                temp.Emplace(Describe{descriptor})
             );
@@ -624,9 +628,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
          Any_CheckState_Default<E>(pack);
 
-         BenchmarkAnyStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
+         BenchmarkAnyStd("Empty/Clear", 30, 100,
             T temp,                 temp.Clear(),
-            ::std::any temp_std,    temp_std.reset()
+            stdany temp_std,        temp_std.reset()
          );
       }
 
@@ -635,9 +639,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
          Any_CheckState_Default<E>(pack);
 
-         BenchmarkAnyStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
+         BenchmarkAnyStd("Empty/Reset", 30, 100,
             T temp,                 temp.Reset(),
-            ::std::any temp_std,    temp_std.reset()
+            stdany temp_std,        temp_std.reset()
          );
       }
 
@@ -718,10 +722,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
          // Unfortunately, ::std::any aren't comparable when empty      
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkAny("Empty/operator==(" + NameOf<E>() + ")", 30,
+         BenchmarkAny("Empty/operator==", 30,
             (void) 0, dont_optimize |= (another_pack1 == another_pack2)
          );
-         BenchmarkAny("Empty/operator!=(" + NameOf<E>() + ")", 30,
+         BenchmarkAny("Empty/operator!=", 30,
             (void) 0, dont_optimize |= (another_pack1 != another_pack2)
          );
       }
@@ -730,7 +734,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          REQUIRE_FALSE(pack.Contains(*element));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkAny("Empty/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkAny("Empty/Contains", 30,
             (void) 0, dont_optimize |= pack.Contains(*element)
          );
       }

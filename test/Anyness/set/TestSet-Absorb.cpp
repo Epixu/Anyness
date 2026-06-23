@@ -128,7 +128,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
-   
+
+#if LANGULUS(BENCHMARK)
+   using stdset = ::std::unordered_set<E>;
+#endif
+
    GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
       const ScopedE element1{555};
       const ScopedE element2{111};
@@ -230,10 +234,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
          }
 
-         BenchmarkSetStd("Empty/AbsorbConstructor(" + NameOf<E>() + ")", 30, 100,
-            T temp,                                              (new (&temp) T{Absorb, piecewise1}),
-            ::std::unordered_set<E> temp_std1 (*originalElement);
-            ::std::unordered_set<E> temp_std2,                    new (&temp_std2) ::std::unordered_set<E> {temp_std1}
+         BenchmarkSetStd("Empty/AbsorbConstructor", 30, 100,
+            T temp,                                (new (&temp) T{Absorb, piecewise1}),
+            stdset temp_std1 (*originalElement);
+            stdset temp_std2,                      new (&temp_std2) stdset {temp_std1}
          );
       }
 
@@ -246,10 +250,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(*element),                             a.Assign(*originalElement),
-               ::std::unordered_set<E> temp_std (1, *element), temp_std[0] = *originalElement
+            BenchmarkSetStd("Absorb/" + intent + "/Assign/Refer", 30, 100,
+               a.Assign(*element),                 a.Assign(*originalElement),
+               stdset temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -293,11 +296,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(*element),                              a.AssignAbsorb(*originalElement),
-                  ::std::unordered_set<E> temp_std1 (*element);
-                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
+               BenchmarkSetStd("Absorb/" + intent + "/AssignAbsorb/Refer", 30, 100,
+                  a.AssignAbsorb(*element),                 a.AssignAbsorb(*originalElement),
+                  stdset temp_std1 (*element);
+                  stdset temp_std2 (*originalElement),      temp_std1 = temp_std2
                );
             };
 
@@ -319,10 +321,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Clone(element));
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Clone(*element)),                    a.Assign(Clone(*originalElement)),
-               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
+            BenchmarkSetStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
+               a.Assign(Clone(*element)),       a.Assign(Clone(*originalElement)),
+               stdset temp_std (*element),      temp_std[0] = *originalElement
             );
          };
 
@@ -362,11 +363,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Clone(*element)),                       a.AssignAbsorb(Clone(*originalElement)),
-                  ::std::unordered_set<E> temp_std1 (*element);
-                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
+               BenchmarkSetStd("Absorb/" + intent + "/AssignAbsorb/Clone", 30, 100,
+                  a.AssignAbsorb(Clone(*element)),          a.AssignAbsorb(Clone(*originalElement)),
+                  stdset temp_std1 (*element);
+                  stdset temp_std2 (*originalElement),      temp_std1 = temp_std2
                );
             };
 
@@ -388,10 +388,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Copy(*element)),                     a.Assign(Copy(*originalElement)),
-               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
+            BenchmarkSetStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
+               a.Assign(Copy(*element)),        a.Assign(Copy(*originalElement)),
+               stdset temp_std (*element),      temp_std[0] = *originalElement
             );
          };
 
@@ -431,11 +430,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Copy(*element)),                    a.AssignAbsorb(Copy(*originalElement)),
-                  ::std::unordered_set<E> temp_std1 (*element);
-                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
+               BenchmarkSetStd("Absorb/" + intent + "/AssignAbsorb/Copy", 30, 100,
+                  a.AssignAbsorb(Copy(*element)),           a.AssignAbsorb(Copy(*originalElement)),
+                  stdset temp_std1 (*element);
+                  stdset temp_std2 (*originalElement),      temp_std1 = temp_std2
                );
             };
 
@@ -458,14 +456,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+            BenchmarkSetStd("Absorb/" + intent + "/Assign/Move", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               a.Assign(Move(movable1)),                                 a.Assign(Move(movable2)),
+               a.Assign(Move(movable1)),                    a.Assign(Move(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               ::std::unordered_set<E> temp_std (::std::move(movable1)), temp_std[0] = ::std::move(movable2)
+               stdset temp_std (::std::move(movable1)),     temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -511,13 +508,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               BenchmarkSetStd("Absorb/" + intent + "/AssignAbsorb/Move", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
-                  a.AssignAbsorb(Move(movable1)),                       a.AssignAbsorb(Move(movable2)),
-                  ::std::unordered_set<E> movable1 (*element);
-                  ::std::unordered_set<E> movable2 (*originalElement),  movable1 = ::std::move(movable2)
+                  a.AssignAbsorb(Move(movable1)),        a.AssignAbsorb(Move(movable2)),
+                  stdset movable1 (*element);
+                  stdset movable2 (*originalElement),    movable1 = ::std::move(movable2)
                );
             };
 
@@ -537,10 +533,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Disown(element));
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Disown(*element)),                   a.Assign(Disown(*originalElement)),
-               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
+            BenchmarkSetStd("Absorb/" + intent + "/Assign/Disown", 30, 100,
+               a.Assign(Disown(*element)),      a.Assign(Disown(*originalElement)),
+               stdset temp_std (*element),      temp_std[0] = *originalElement
             );
          };
 
@@ -584,11 +579,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                REQUIRE(a.GetUses() == 0);
                REQUIRE_FALSE(a.GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Disown(*element)),                      a.AssignAbsorb(Disown(*originalElement)),
-                  ::std::unordered_set<E> temp_std1 (*element);
-                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
+               BenchmarkSetStd("Absorb/" + intent + "/AssignAbsorb/Disown", 30, 100,
+                  a.AssignAbsorb(Disown(*element)),         a.AssignAbsorb(Disown(*originalElement)),
+                  stdset temp_std1 (*element);
+                  stdset temp_std2 (*originalElement),      temp_std1 = temp_std2
                );
             };
 
@@ -611,14 +605,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Assign(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+            BenchmarkSetStd("Absorb/" + intent + "/Assign/Abandon", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               a.Assign(Abandon(movable1)),                                a.Assign(Abandon(movable2)),
+               a.Assign(Abandon(movable1)),                 a.Assign(Abandon(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               ::std::unordered_set<E> temp_std (::std::move(movable1)),   temp_std[0] = ::std::move(movable2)
+               stdset temp_std (::std::move(movable1)),     temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -664,14 +657,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkSetStd(
-                  std::string("Absorb/") + intent + "/AssignAbsorb(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               BenchmarkSetStd("Absorb/" + intent + "/AssignAbsorb/Abandon", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
-                  a.AssignAbsorb(Abandon(movable1)),                          a.AssignAbsorb(Abandon(movable2)),
-                  ::std::unordered_set<E> movable1 (*element);
-                  ::std::unordered_set<E> movable2 (*originalElement);
-                  ::std::unordered_set<E> temp_std = ::std::move(movable1),   temp_std = ::std::move(movable2)
+                  a.AssignAbsorb(Abandon(movable1)),         a.AssignAbsorb(Abandon(movable2)),
+                  stdset movable1 (*element);
+                  stdset movable2 (*originalElement);
+                  stdset temp_std = ::std::move(movable1),   temp_std = ::std::move(movable2)
                );
             };
 
@@ -999,10 +991,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
       
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent, int uses = 1) {
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                                   temp.Clear(),
-               ::std::unordered_set<E> temp_std (*element),  temp_std.clear()
+            BenchmarkSetStd("Absorb/" + intent + "/Clear", 30, 100,
+               T temp = a,                      temp.Clear(),
+               stdset temp_std (*element),      temp_std.clear()
             );
 
             a.Clear();
@@ -1023,10 +1014,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
 
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/Reset(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                                  temp.Reset(),
-               ::std::unordered_set<E> temp_std (*element), temp_std.clear()
+            BenchmarkSetStd("Absorb/" + intent + "/Reset", 30, 100,
+               T temp = a,                         temp.Reset(),
+               stdset temp_std (*element),         temp_std.clear()
             );
 
             a.Reset();
@@ -1079,17 +1069,15 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             REQUIRE_FALSE(a != same_pack);
 
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/operator==(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                                dont_optimize |= (a == same_pack),
-               const ::std::unordered_set<E> a_std (*element);
-               const ::std::unordered_set<E> another_pack1_std (*e1),   dont_optimize |= (a_std == another_pack1_std)
+            BenchmarkSetStd("Absorb/" + intent + "/operator==", 30, 100,
+               (void) 0,                           dont_optimize |= (a == same_pack),
+               stdset a_std (*element);
+               stdset another_pack1_std (*e1),     dont_optimize |= (a_std == another_pack1_std)
             );
-            BenchmarkSetStd(
-               std::string("Absorb/") + intent + "/operator!=(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                                dont_optimize |= (a != same_pack),
-               const ::std::unordered_set<E> a_std (*element);
-               const ::std::unordered_set<E> another_pack1_std (*e1),   dont_optimize |= (a_std != another_pack1_std)
+            BenchmarkSetStd("Absorb/" + intent + "/operator!=", 30, 100,
+               (void) 0,                           dont_optimize |= (a != same_pack),
+               stdset a_std (*element);
+               stdset another_pack1_std (*e1),     dont_optimize |= (a_std != another_pack1_std)
             );
          };
 
@@ -1126,7 +1114,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkSet("Absorb/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkSet("Absorb/Contains", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
          );
       }

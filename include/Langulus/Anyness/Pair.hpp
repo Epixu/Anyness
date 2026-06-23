@@ -100,6 +100,9 @@ namespace Langulus::Anyness
          this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
       }
 
+      constexpr Pair(Inner::Piecewise, auto&& a1, auto&& a2)
+         : Pair {LglsFwd(a1), LglsFwd(a2)} {}
+
       /// Assignment                                                          
       constexpr Pair& operator = (Pair const& other) {
          return this->AssignAbsorb(Refer(other));

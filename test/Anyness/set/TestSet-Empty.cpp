@@ -128,6 +128,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
 
+#if LANGULUS(BENCHMARK)
+   using stdset = ::std::unordered_set<E>;
+#endif
+
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
@@ -277,8 +281,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
 
          BenchmarkSetStd("Empty/DefaultConstructor", 30, 40,
-            T temp,                           new (&temp)     T{},
-            ::std::unordered_set<E> temp_std, new (&temp_std) ::std::unordered_set<E>{}
+            T temp,                 new (&temp)     T{},
+            stdset temp_std,        new (&temp_std) stdset{}
          );
       }
 
@@ -288,9 +292,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkSetStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
-            T temp,                           temp.Assign(*element),
-            ::std::unordered_set<E> temp_std, temp_std.emplace(*element)
+         BenchmarkSetStd("Empty/Assign/Refer", 30, 100,
+            T temp,              temp.Assign(*element),
+            stdset temp_std,     temp_std.emplace(*element)
          );
       }
 
@@ -311,10 +315,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            [[maybe_unused]] ::std::unordered_set<E> src_std {1, *element};
-            BenchmarkSetStd("Empty/AssignAbsorb(Refer(" + NameOf<E>() + "))", 30, 100,
-               T temp,                           temp.AssignAbsorb(*element),
-               ::std::unordered_set<E> temp_std, temp_std = src_std;
+            [[maybe_unused]] stdset src_std {1, *element};
+            BenchmarkSetStd("Empty/AssignAbsorb/Refer", 30, 100,
+               T temp,              temp.AssignAbsorb(*element),
+               stdset temp_std,     temp_std = src_std;
             );
          }
       }
@@ -337,11 +341,11 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkSetStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkSetStd("Empty/Assign/Move", 30, 100,
             auto movable = *element;
-            T temp,                             temp.Assign(::std::move(movable)),
+            T temp,                       temp.Assign(::std::move(movable)),
             auto movable = *element;
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(::std::move(movable))
+            stdset temp_std,              temp_std.emplace(::std::move(movable))
          );
       }
 
@@ -364,11 +368,11 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkSetStd("Empty/AssignAbsorb(Move(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkSetStd("Empty/AssignAbsorb/Move", 30, 100,
                auto movable = *element;
-               T temp,                                   temp.AssignAbsorb(::std::move(movable)),
-               ::std::unordered_set<E> movable (1, 555);
-               ::std::unordered_set<E> temp_std,         temp_std.emplace(::std::move(movable))
+               T temp,                          temp.AssignAbsorb(::std::move(movable)),
+               stdset movable (1, 555);
+               stdset temp_std,                 temp_std.emplace(::std::move(movable))
             );
          }
       }
@@ -385,9 +389,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Copy(element));
 
-         BenchmarkSetStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
-            T temp,                            temp.Assign(Copy(*element)),
-            ::std::unordered_set<E> temp_std,  temp_std.emplace(*element)
+         BenchmarkSetStd("Empty/Assign/Copy", 30, 100,
+            T temp,                 temp.Assign(Copy(*element)),
+            stdset temp_std,        temp_std.emplace(*element)
          );
       }
 
@@ -413,10 +417,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::vector<E> src_std (1, *element);
-            BenchmarkSetStd("Empty/AssignAbsorb(Copy(" + NameOf<E>() + "))", 30, 100,
-               T temp,                             temp.AssignAbsorb(Copy(*element)),
-               ::std::unordered_set<E> temp_std,   temp_std = src_std
+            [[maybe_unused]] stdset src_std (1, *element);
+            BenchmarkSetStd("Empty/AssignAbsorb/Copy", 30, 100,
+               T temp,                    temp.AssignAbsorb(Copy(*element)),
+               stdset temp_std,           temp_std = src_std
             );
          }
       }
@@ -433,9 +437,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Clone(element));
 
-         BenchmarkSetStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
-            T temp,                             temp.Assign(Clone(*element)),
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(*element)
+         BenchmarkSetStd("Empty/Assign/Clone", 30, 100,
+            T temp,              temp.Assign(Clone(*element)),
+            stdset temp_std,     temp_std.emplace(*element)
          );
       }
 
@@ -460,10 +464,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::unordered_set<E> src_std ({*element});
-            BenchmarkSetStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
-               T temp,                             temp.AssignAbsorb(Clone(*element)),
-               ::std::unordered_set<E> temp_std,   temp_std = src_std
+            [[maybe_unused]] stdset src_std ({*element});
+            BenchmarkSetStd("Empty/AssignAbsorb/Clone", 30, 100,
+               T temp,                 temp.AssignAbsorb(Clone(*element)),
+               stdset temp_std,        temp_std = src_std
             );
          }
       }
@@ -480,9 +484,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Disown(element));
 
-         BenchmarkSetStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
-            T temp,                             temp.Assign(Disown(*element)),
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(*element)
+         BenchmarkSetStd("Empty/Assign/Disown", 30, 100,
+            T temp,                 temp.Assign(Disown(*element)),
+            stdset temp_std,        temp_std.emplace(*element)
          );
       }
 
@@ -507,10 +511,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 0);
             REQUIRE_FALSE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::unordered_set<E> src_std (1, *element);
-            BenchmarkSetStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,
-               T temp,                             temp.AssignAbsorb(Disown(*element)),
-               ::std::unordered_set<E> temp_std,   temp_std = src_std
+            [[maybe_unused]] stdset src_std (1, *element);
+            BenchmarkSetStd("Empty/AssignAbsorb/Disown", 30, 100,
+               T temp,              temp.AssignAbsorb(Disown(*element)),
+               stdset temp_std,     temp_std = src_std
             );
          }
       }
@@ -531,11 +535,11 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkSetStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkSetStd("Empty/Assign/Abandon", 30, 100,
             auto movable = *element;
-            T temp,                             temp.Assign(Abandon(movable)),
+            T temp,                          temp.Assign(Abandon(movable)),
             auto movable = *element;
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(::std::move(movable))
+            stdset temp_std,                 temp_std.emplace(::std::move(movable))
          );
       }
 
@@ -557,11 +561,11 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkSetStd("Empty/AssignAbsorb(Abandon(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkSetStd("Empty/AssignAbsorb/Abandon", 30, 100,
                auto movable = *element;
-               T temp,                                      temp.AssignAbsorb(Abandon(movable)),
-               ::std::unordered_set<E> movable (1, 555);
-               ::std::unordered_set<E> temp_std,            temp_std = ::std::move(movable)
+               T temp,                       temp.AssignAbsorb(Abandon(movable)),
+               stdset movable (1, 555);
+               stdset temp_std,              temp_std = ::std::move(movable)
             );
          }
       }
@@ -633,9 +637,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          Set_CheckState_Default<E>(pack);
 
-         BenchmarkSetStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
-            T temp,                             temp.Clear(),
-            ::std::unordered_set<E> temp_std,   temp_std.clear()
+         BenchmarkSetStd("Empty/Clear", 30, 100,
+            T temp,              temp.Clear(),
+            stdset temp_std,     temp_std.clear()
          );
       }
 
@@ -644,9 +648,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          Set_CheckState_Default<E>(pack);
 
-         BenchmarkSetStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
-            T temp,                             temp.Reset(),
-            ::std::unordered_set<E> temp_std,   temp_std.clear()
+         BenchmarkSetStd("Empty/Reset", 30, 100,
+            T temp,              temp.Reset(),
+            stdset temp_std,     temp_std.clear()
          );
       }
 
@@ -727,10 +731,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          // Unfortunately, ::std::any aren't comparable when empty      
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkSet("Empty/operator==(" + NameOf<E>() + ")", 30,
+         BenchmarkSet("Empty/operator==", 30,
             (void) 0, dont_optimize |= (another_pack1 == another_pack2)
          );
-         BenchmarkSet("Empty/operator!=(" + NameOf<E>() + ")", 30,
+         BenchmarkSet("Empty/operator!=", 30,
             (void) 0, dont_optimize |= (another_pack1 != another_pack2)
          );
       }
@@ -739,7 +743,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          REQUIRE_FALSE(pack.Contains(*element));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkSet("Empty/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkSet("Empty/Contains", 30,
             (void) 0, dont_optimize |= pack.Contains(*element)
          );
       }

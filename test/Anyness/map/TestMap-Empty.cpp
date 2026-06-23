@@ -372,7 +372,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Map_CheckState_OwnedFull<E1, E2>(pack);
          Map_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
-         BenchmarkMapStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign/Refer", 30, 100,
             T temp,              temp.Assign(*element1, *element2),
             stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
@@ -424,7 +424,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Map_CheckState_OwnedFull<E1, E2>(pack);
          Map_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
-         BenchmarkMapStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign/Move", 30, 100,
             auto movable1 = *element1;
             auto movable2 = *element2;
             T temp,                       temp.Assign(::std::move(movable1), ::std::move(movable2)),
@@ -474,7 +474,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Map_CheckState_OwnedFull<E1, E2>(pack);
          Map_CheckState_ContainsOne(pack, Copy(element1), Copy(element2));
 
-         BenchmarkMapStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign/Copy", 30, 100,
             T temp,              temp.Assign(Copy(*element1), Copy(*element2)),
             stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
@@ -522,7 +522,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Map_CheckState_OwnedFull<E1, E2>(pack);
          Map_CheckState_ContainsOne(pack, Clone(element1), Clone(element2));
 
-         BenchmarkMapStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign/Clone", 30, 100,
             T temp,              temp.Assign(Clone(*element1), Clone(*element2)),
             stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
@@ -569,7 +569,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Map_CheckState_OwnedFull<E1, E2>(pack);
          Map_CheckState_ContainsOne(pack, Disown(element1), Disown(element2));
 
-         BenchmarkMapStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign/Disown", 30, 100,
             T temp,              temp.Assign(Disown(*element1), Disown(*element2)),
             stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
@@ -624,7 +624,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Map_CheckState_OwnedFull<E1, E2>(pack);
          Map_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
-         BenchmarkMapStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign/Abandon", 30, 100,
             auto movable = *element;
             T temp,                    temp.Assign(Abandon(movable1), Abandon(movable2)),
             auto movable = *element;
@@ -726,7 +726,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
 
          Map_CheckState_Default<E1, E2>(pack);
 
-         BenchmarkMapStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
+         BenchmarkMapStd("Empty/Clear", 30, 100,
             T temp,              temp.Clear(),
             stdmap temp_std,     temp_std.clear()
          );
@@ -737,7 +737,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
 
          Map_CheckState_Default<E1, E2>(pack);
 
-         BenchmarkMapStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
+         BenchmarkMapStd("Empty/Reset", 30, 100,
             T temp,              temp.Reset(),
             stdmap temp_std,     temp_std.clear()
          );
@@ -819,10 +819,10 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          static_assert(not (T{} != T{}));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkMap("Empty/operator==(" + NameOf<E>() + ")", 30,
+         BenchmarkMap("Empty/operator==", 30,
             (void) 0, dont_optimize |= (another_pack1 == another_pack2)
          );
-         BenchmarkMap("Empty/operator!=(" + NameOf<E>() + ")", 30,
+         BenchmarkMap("Empty/operator!=", 30,
             (void) 0, dont_optimize |= (another_pack1 != another_pack2)
          );
       }
@@ -831,7 +831,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          REQUIRE_FALSE(pack.Contains(*element1));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkMap("Empty/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkMap("Empty/Contains", 30,
             (void) 0, dont_optimize |= pack.Contains(*element1)
          );
       }

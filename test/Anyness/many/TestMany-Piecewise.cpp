@@ -130,6 +130,10 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
    constexpr bool Managed = ScopedE::Managed;
    constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
 
+#if LANGULUS(BENCHMARK)
+   using stdvec = ::std::vector<E>;
+#endif
+
    if constexpr (Ambiguous) {
       GIVEN("Piecewise-constructed container (ambiguously)") {
          ScopedE element {555};
@@ -178,9 +182,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          Many_CheckState_ContainsOne(pack_abandoned, Refer(originalElement));
          Many_CheckState_ContainsOne(pack_disowned,  Disown(originalElement));
 
-         BenchmarkManyStd("Empty/PiecewiseConstructor(" + NameOf<E>() + ")", 30, 400,
-            T temp,                    (new (&temp)     T{Piecewise, *originalElement}),
-            ::std::vector<E> temp_std,  new (&temp_std) ::std::vector<E>{*originalElement}
+         BenchmarkManyStd("Empty/PiecewiseConstructor", 30, 400,
+            T temp,              (new (&temp)     T{Piecewise, *originalElement}),
+            stdvec temp_std,      new (&temp_std) stdvec{*originalElement}
          );
       }
 
@@ -193,10 +197,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Assign(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(*element),                       a.Assign(*originalElement),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+            BenchmarkManyStd("Piecewise/" + intent + "/Assign/Refer", 30, 100,
+               a.Assign(*element),                 a.Assign(*originalElement),
+               stdvec temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -236,11 +239,10 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(*element),                          a.AssignAbsorb(*originalElement),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+               BenchmarkManyStd("Piecewise/" + intent + "/AssignAbsorb/Refer", 30, 100,
+                  a.AssignAbsorb(*element),                    a.AssignAbsorb(*originalElement),
+                  stdvec temp_std1 (1, *element);
+                  stdvec temp_std2 (1, *originalElement),      temp_std1 = temp_std2
                );
             };
 
@@ -262,10 +264,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Clone(element));
 
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Assign(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Clone(*element)),                a.Assign(Clone(*originalElement)),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+            BenchmarkManyStd("Piecewise/" + intent + "/Assign/Clone", 30, 100,
+               a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
+               stdvec temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -305,11 +306,10 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Clone(*element)),                   a.AssignAbsorb(Clone(*originalElement)),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+               BenchmarkManyStd("Piecewise/" + intent + "/AssignAbsorb/Clone", 30, 100,
+                  a.AssignAbsorb(Clone(*element)),             a.AssignAbsorb(Clone(*originalElement)),
+                  stdvec temp_std1 (1, *element);
+                  stdvec temp_std2 (1, *originalElement),      temp_std1 = temp_std2
                );
             };
 
@@ -331,10 +331,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Assign(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Copy(*element)),                 a.Assign(Copy(*originalElement)),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+            BenchmarkManyStd("Piecewise/" + intent + "/Assign/Copy", 30, 100,
+               a.Assign(Copy(*element)),        a.Assign(Copy(*originalElement)),
+               stdvec temp_std (1, *element),   temp_std[0] = *originalElement
             );
          };
 
@@ -374,11 +373,10 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Copy(*element)),                    a.AssignAbsorb(Copy(*originalElement)),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+               BenchmarkManyStd("Piecewise/" + intent + "/AssignAbsorb/Copy", 30, 100,
+                  a.AssignAbsorb(Copy(*element)),              a.AssignAbsorb(Copy(*originalElement)),
+                  stdvec temp_std1 (1, *element);
+                  stdvec temp_std2 (1, *originalElement),      temp_std1 = temp_std2
                );
             };
 
@@ -401,14 +399,13 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Assign(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+            BenchmarkManyStd("Piecewise/" + intent + "/Assign/Move", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               a.Assign(Move(movable1)),                                a.Assign(Move(movable2)),
+               a.Assign(Move(movable1)),                      a.Assign(Move(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               ::std::vector<E> temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
+               stdvec temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -454,13 +451,12 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               BenchmarkManyStd("Piecewise/" + intent + "/AssignAbsorb/Move", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
-                  a.AssignAbsorb(Move(movable1)),                    a.AssignAbsorb(Move(movable2)),
-                  ::std::vector<E> movable1 (1, *element);
-                  ::std::vector<E> movable2 (1, *originalElement),   movable1 = ::std::move(movable2)
+                  a.AssignAbsorb(Move(movable1)),           a.AssignAbsorb(Move(movable2)),
+                  stdvec movable1 (1, *element);
+                  stdvec movable2 (1, *originalElement),    movable1 = ::std::move(movable2)
                );
             };
 
@@ -480,10 +476,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Disown(element));
 
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Assign(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Disown(*element)),               a.Assign(Disown(*originalElement)),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+            BenchmarkManyStd("Piecewise/" + intent + "/Assign/Disown", 30, 100,
+               a.Assign(Disown(*element)),         a.Assign(Disown(*originalElement)),
+               stdvec temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -527,11 +522,10 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 0);
                REQUIRE_FALSE(a.GetAllocation());
 
-               BenchmarkManyStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Disown(*element)),                  a.AssignAbsorb(Disown(*originalElement)),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+               BenchmarkManyStd("Piecewise/" + intent + "/AssignAbsorb/Disown", 30, 100,
+                  a.AssignAbsorb(Disown(*element)),         a.AssignAbsorb(Disown(*originalElement)),
+                  stdvec temp_std1 (1, *element);
+                  stdvec temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -554,14 +548,13 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Assign(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+            BenchmarkManyStd("Piecewise/" + intent + "/Assign/Abandon", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               a.Assign(Abandon(movable1)),                             a.Assign(Abandon(movable2)),
+               a.Assign(Abandon(movable1)),                   a.Assign(Abandon(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               ::std::vector<E> temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
+               stdvec temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -607,14 +600,13 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               BenchmarkManyStd("Piecewise/" + intent + "/AssignAbsorb/Abandon", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
-                  a.AssignAbsorb(Abandon(movable1)),                    a.AssignAbsorb(Abandon(movable2)),
-                  ::std::vector<E> movable1 (1, *element);
-                  ::std::vector<E> movable2 (1, *originalElement);
-                  ::std::vector<E> temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
+                  a.AssignAbsorb(Abandon(movable1)),          a.AssignAbsorb(Abandon(movable2)),
+                  stdvec movable1 (1, *element);
+                  stdvec movable2 (1, *originalElement);
+                  stdvec temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
                );
             };
 
@@ -845,8 +837,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                   REQUIRE(&*a == &instance);
             }
 
-            BenchmarkMany(
-               std::string("Piecewise/") + intent + "/Emplace(" + static_cast<std::string>(NameOf<E>()) + ")", 30,
+            BenchmarkMany("Piecewise/" + intent + "/Emplace", 30,
                auto movable1 = *element;
                auto movable2 = *originalElement;
                a.Emplace(::std::move(movable1)),      a.Emplace(::std::move(movable2))
@@ -883,8 +874,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetCount() == 1);
                REQUIRE(a.GetReserved() >= 1);
 
-               BenchmarkMany(
-                  std::string("Piecewise/") + intent + "/Emplace(Describe(" + static_cast<std::string>(NameOf<E>()) + "))", 30,
+               BenchmarkMany("Piecewise/" + intent + "/Emplace/Describe", 30,
                   auto movable1 = *element;
                   a.Emplace(::std::move(movable1)),      a.Emplace(Describe{descriptor})
                );
@@ -906,10 +896,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
       
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                               temp.Clear(),
-               ::std::vector<E> temp_std (1, *element),  temp_std.clear()
+            BenchmarkManyStd("Piecewise/" + intent + "/Clear", 30, 100,
+               T temp = a,                         temp.Clear(),
+               stdvec temp_std (1, *element),      temp_std.clear()
             );
 
             a.Clear();
@@ -927,10 +916,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
 
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/Reset(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                            temp.Reset(),
-               ::std::vector<E> temp_std = *element,  temp_std.reset()
+            BenchmarkManyStd("Piecewise/" + intent + "/Reset", 30, 100,
+               T temp = a,                      temp.Reset(),
+               stdvec temp_std = *element,      temp_std.reset()
             );
 
             a.Reset();
@@ -983,17 +971,15 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             REQUIRE_FALSE(a != same_pack);
 
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/operator==(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                             dont_optimize |= (a == same_pack),
-               const ::std::vector<E> a_std (1, *element);
-               const ::std::vector<E> another_pack1_std (1, *e1),    dont_optimize |= (a_std == another_pack1_std)
+            BenchmarkManyStd("Piecewise/" + intent + "/operator==", 30, 100,
+               (void) 0,                                   dont_optimize |= (a == same_pack),
+               const stdvec a_std (1, *element);
+               const stdvec another_pack1_std (1, *e1),    dont_optimize |= (a_std == another_pack1_std)
             );
-            BenchmarkManyStd(
-               std::string("Piecewise/") + intent + "/operator!=(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                             dont_optimize |= (a != same_pack),
-               const ::std::vector<E> a_std (1, *element);
-               const ::std::vector<E> another_pack1_std (1, *e1),    dont_optimize |= (a_std != another_pack1_std)
+            BenchmarkManyStd("Piecewise/" + intent + "/operator!=", 30, 100,
+               (void) 0,                                   dont_optimize |= (a != same_pack),
+               const stdvec a_std (1, *element);
+               const stdvec another_pack1_std (1, *e1),    dont_optimize |= (a_std != another_pack1_std)
             );
          };
 
@@ -1030,7 +1016,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkMany("Piecewise/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkMany("Piecewise/Contains", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
          );
       }

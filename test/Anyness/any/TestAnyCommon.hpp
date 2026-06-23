@@ -22,7 +22,7 @@ using namespace Anyness;
 #if LANGULUS(BENCHMARK)
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkAny(func, tolerance, my_init, my) { \
-      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |" + NameOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -42,7 +42,7 @@ using namespace Anyness;
    /// Perform two persistent benchmarks across builds - one for Any and      
    /// one for std::any. Make sure they don't deviate a lot.                  
    #define BenchmarkAnyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
-      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |" + NameOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -56,7 +56,7 @@ using namespace Anyness;
          } \
       } \
       i = 0; \
-      const auto token_std = ::std::string("Test/") + static_cast<::std::string>(func) + " |std::any|"; \
+      const auto token_std = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |std::any|"; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          theirs_init; \
          theirs; \

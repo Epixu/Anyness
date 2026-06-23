@@ -355,7 +355,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          Pair_CheckState_OwnedFull<E1, E2>(pack);
          Pair_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
-         BenchmarkPairStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkPairStd("Empty/Assign/Refer", 30, 100,
             T temp,              temp.Assign(*element1, *element2),
             stdpair temp_std,    temp_std.emplace(*element1, *element2)
          );
@@ -379,9 +379,9 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetAllocation() == element1->GetAllocation());
 
             [[maybe_unused]] stdpair src_std {1, *element1};
-            BenchmarkPairStd("Empty/AssignAbsorb(Refer(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkPairStd("Empty/AssignAbsorb/Refer", 30, 100,
                T temp,              temp.AssignAbsorb(*element),
-               stdpair temp_std,     temp_std = src_std;
+               stdpair temp_std,    temp_std = src_std;
             );
          }
       }
@@ -407,7 +407,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          Pair_CheckState_OwnedFull<E1, E2>(pack);
          Pair_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
-         BenchmarkPairStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkPairStd("Empty/Assign/Move", 30, 100,
             auto movable1 = *element1;
             auto movable2 = *element2;
             T temp,                       temp.Assign(::std::move(movable1), ::std::move(movable2)),
@@ -436,7 +436,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element1->GetAllocation());
 
-            BenchmarkPairStd("Empty/AssignAbsorb(Move(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkPairStd("Empty/AssignAbsorb/Move", 30, 100,
                auto movable = *element;
                T temp,                     temp.AssignAbsorb(::std::move(movable)),
                stdpair movable (1, 555);
@@ -457,7 +457,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          Pair_CheckState_OwnedFull<E1, E2>(pack);
          Pair_CheckState_ContainsOne(pack, Copy(element1), Copy(element2));
 
-         BenchmarkPairStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkPairStd("Empty/Assign/Copy", 30, 100,
             T temp,              temp.Assign(Copy(*element1), Copy(*element2)),
             stdpair temp_std,    temp_std.emplace(*element1, *element2)
          );
@@ -486,7 +486,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetAllocation());
 
             [[maybe_unused]] stdpair src_std (1, *element1);
-            BenchmarkPairStd("Empty/AssignAbsorb(Copy(" + NameOf<E1>() + "))", 30, 100,
+            BenchmarkPairStd("Empty/AssignAbsorb/Copy", 30, 100,
                T temp,              temp.AssignAbsorb(Copy(*element)),
                stdpair temp_std,    temp_std = src_std
             );
@@ -505,7 +505,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          Pair_CheckState_OwnedFull<E1, E2>(pack);
          Pair_CheckState_ContainsOne(pack, Clone(element1), Clone(element2));
 
-         BenchmarkPairStd("Empty/Assign(Clone(" + NameOf<E1>() + "))", 30, 100,
+         BenchmarkPairStd("Empty/Assign/Clone", 30, 100,
             T temp,              temp.Assign(Clone(*element1), Clone(*element2)),
             stdpair temp_std,    temp_std.emplace(*element1, *element2)
          );
@@ -533,7 +533,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetAllocation());
 
             [[maybe_unused]] stdpair src_std ({*element1});
-            BenchmarkPairStd("Empty/AssignAbsorb(Clone(" + NameOf<E1>() + "))", 30, 100,
+            BenchmarkPairStd("Empty/AssignAbsorb/Clone", 30, 100,
                T temp,              temp.AssignAbsorb(Clone(*element1)),
                stdpair temp_std,    temp_std = src_std
             );
@@ -552,7 +552,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          Pair_CheckState_OwnedFull<E1, E2>(pack);
          Pair_CheckState_ContainsOne(pack, Disown(element1), Disown(element2));
 
-         BenchmarkPairStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkPairStd("Empty/Assign/Disown", 30, 100,
             T temp,              temp.Assign(Disown(*element1), Disown(*element2)),
             stdpair temp_std,    temp_std.emplace(*element1, *element2)
          );
@@ -580,7 +580,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE_FALSE(pack.GetAllocation());
 
             [[maybe_unused]] stdpair src_std (1, *element1);
-            BenchmarkPairStd("Empty/AssignAbsorb(Disown(" + NameOf<E1>() + "))", 30, 100,
+            BenchmarkPairStd("Empty/AssignAbsorb/Disown", 30, 100,
                T temp,              temp.AssignAbsorb(Disown(*element1)),
                stdpair temp_std,    temp_std = src_std
             );
@@ -607,7 +607,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          Pair_CheckState_OwnedFull<E1, E2>(pack);
          Pair_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
-         BenchmarkPairStd("Empty/Assign(Abandon(" + NameOf<E1>() + "))", 30, 100,
+         BenchmarkPairStd("Empty/Assign/Abandon", 30, 100,
             auto movable = *element;
             T temp,                    temp.Assign(Abandon(movable1), Abandon(movable2)),
             auto movable = *element;
@@ -633,7 +633,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element1->GetAllocation());
 
-            BenchmarkPairStd("Empty/AssignAbsorb(Abandon(" + NameOf<E1>() + "))", 30, 100,
+            BenchmarkPairStd("Empty/AssignAbsorb/Abandon", 30, 100,
                auto movable = *element;
                T temp,                    temp.AssignAbsorb(Abandon(movable)),
                stdpair movable (1, 555);
@@ -709,7 +709,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
 
          Pair_CheckState_Default<E1, E2>(pack);
 
-         BenchmarkPairStd("Empty/Clear(" + NameOf<E1>() + ")", 30, 100,
+         BenchmarkPairStd("Empty/Clear", 30, 100,
             T temp,              temp.Clear(),
             stdpair temp_std,    temp_std.clear()
          );
@@ -720,7 +720,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
 
          Pair_CheckState_Default<E1, E2>(pack);
 
-         BenchmarkPairStd("Empty/Reset(" + NameOf<E1>() + ")", 30, 100,
+         BenchmarkPairStd("Empty/Reset", 30, 100,
             T temp,              temp.Reset(),
             stdpair temp_std,    temp_std.clear()
          );
@@ -802,10 +802,10 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          static_assert(not (T{} != T{}));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkPair("Empty/operator==(" + NameOf<E1>() + ")", 30,
+         BenchmarkPair("Empty/operator==", 30,
             (void) 0, dont_optimize |= (another_pack1 == another_pack2)
          );
-         BenchmarkPair("Empty/operator!=(" + NameOf<E1>() + ")", 30,
+         BenchmarkPair("Empty/operator!=", 30,
             (void) 0, dont_optimize |= (another_pack1 != another_pack2)
          );
       }
@@ -814,7 +814,7 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
          REQUIRE_FALSE(pack.Contains(*element1));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkPair("Empty/Contains(" + NameOf<E1>() + ")", 30,
+         BenchmarkPair("Empty/Contains", 30,
             (void) 0, dont_optimize |= pack.Contains(*element1)
          );
       }

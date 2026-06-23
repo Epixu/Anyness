@@ -182,7 +182,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
          if constexpr (CT::Referenced<Decay<E2>>)
             REQUIRE(DenseCast(*originalElement2).GetReferences() == (CT::Sparse<E2> ? 8 : 1));
 
-         BenchmarkMapStd("Empty/PiecewiseConstructor(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 400,
+         BenchmarkMapStd("Empty/PiecewiseConstructor", 30, 400,
             T temp,           (new (&temp)     T     (Piecewise, TPair {*originalElement1, *originalElement2})),
             stdmap temp_std,   new (&temp_std) stdmap({*originalElement1, *originalElement2})
          );
@@ -200,8 +200,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
             Map_CheckState_OwnedFull<E1, E2>(a);
             Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
 
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Assign(Refer(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Assign/Refer", 30, 100,
                a.Assign(*element1, *element2),              a.Assign(*originalElement1, *originalElement2),
                stdmap temp_std ({*element1, *element2}),    temp_std.clear(); temp_std.insert(std::pair(*originalElement1, *originalElement2))
             );
@@ -243,8 +242,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element1->GetAllocation());
 
-               BenchmarkMapStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Refer(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               BenchmarkMapStd("Piecewise/" + intent + "/AssignAbsorb/Refer", 30, 100,
                   a.AssignAbsorb(*element1),                                   a.AssignAbsorb(*originalElement1),
                   stdmap temp_std1 ({*element1, *element2});
                   stdmap temp_std2 ({*originalElement1, *originalElement2}),   temp_std1 = temp_std2
@@ -272,8 +270,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
             Map_CheckState_OwnedFull<E1, E2>(a);
             Map_CheckState_ContainsOne(a, Clone(element1), Clone(element2));
 
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Assign(Clone(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Assign/Clone", 30, 100,
                a.Assign(Clone(*element1), Clone(*element2)),      a.Assign(Clone(*originalElement1), Clone(*originalElement2)),
                stdmap temp_std ({*element1, *element2}),          temp_std.clear(); temp_std.insert(std::pair {*originalElement1, *originalElement2})
             );
@@ -316,8 +313,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
                REQUIRE(a.GetAllocation() == element1->GetAllocation());
 
                BenchmarkMapStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Clone(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
-                  a.AssignAbsorb(Clone(*element1)),          a.AssignAbsorb(Clone(*originalElement1)),
+                  std::string("Piecewise/") + intent + "/AssignAbsorb/Clone", 30, 100,
+                  a.AssignAbsorb(Clone(*element1)),         a.AssignAbsorb(Clone(*originalElement1)),
                   stdmap temp_std1 (*element);
                   stdmap temp_std2 (*originalElement),      temp_std1 = temp_std2
                );
@@ -344,8 +341,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
             Map_CheckState_OwnedFull<E1, E2>(a);
             Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
 
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Assign(Copy(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Assign/Copy", 30, 100,
                a.Assign(Copy(*element1), Copy(*element2)),     a.Assign(Copy(*originalElement1), Copy(*originalElement2)),
                stdmap temp_std ({*element1, *element2}),       temp_std.clear(); temp_std.insert(std::pair {*originalElement1, *originalElement2})
             );
@@ -387,8 +383,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element1->GetAllocation());
 
-               BenchmarkMapStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Copy(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               BenchmarkMapStd("Piecewise/" + intent + "/AssignAbsorb/Copy", 30, 100,
                   a.AssignAbsorb(Copy(*element1)),        a.AssignAbsorb(Copy(*originalElement1)),
                   stdmap temp_std1 (*element1);
                   stdmap temp_std2 (*originalElement1),   temp_std1 = temp_std2
@@ -418,8 +413,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
             Map_CheckState_OwnedFull<E1, E2>(a);
             Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
 
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Assign(Move(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Assign/Move", 30, 100,
                auto movable1_1 = *element1;
                auto movable1_2 = *element2;
                auto movable2_1 = *originalElement1;
@@ -475,8 +469,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element1->GetAllocation());
 
-               BenchmarkMapStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Move(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               BenchmarkMapStd("Piecewise/" + intent + "/AssignAbsorb/Move", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
                   a.AssignAbsorb(Move(movable1)),           a.AssignAbsorb(Move(movable2)),
@@ -501,8 +494,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
             Map_CheckState_OwnedFull<E1, E2>(a);
             Map_CheckState_ContainsOne(a, Disown(element1), Disown(element2));
 
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Assign(Disown(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Assign/Disown", 30, 100,
                a.Assign(Disown(*element1), Disown(*element2)),    a.Assign(Disown(*originalElement1), Disown(*originalElement2)),
                stdmap temp_std({*element1, *element2}),           temp_std.clear(); temp_std.insert(std::pair{*originalElement1, *originalElement2})
             );
@@ -548,8 +540,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
                REQUIRE(a.GetUses() == 0);
                REQUIRE_FALSE(a.GetAllocation());
 
-               BenchmarkMapStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Disown(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               BenchmarkMapStd("Piecewise/" + intent + "/AssignAbsorb/Disown", 30, 100,
                   a.AssignAbsorb(Disown(*element)),         a.AssignAbsorb(Disown(*originalElement)),
                   stdmap temp_std1 (*element);
                   stdmap temp_std2 (*originalElement),      temp_std1 = temp_std2
@@ -579,8 +570,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
             Map_CheckState_OwnedFull<E1, E2>(a);
             Map_CheckState_ContainsOne(a, Refer(element1), Refer(element2));
 
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Assign(Abandon(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Assign/Abandon", 30, 100,
                auto movable11 = *element1;
                auto movable21 = *originalElement1;
                auto movable12 = *element2;
@@ -636,8 +626,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element1->GetAllocation());
 
-               BenchmarkMapStd(
-                  std::string("Piecewise/") + intent + "/AssignAbsorb(Abandon(" + NameOf<E1>() + "," + NameOf<E2>() + "))", 30, 100,
+               BenchmarkMapStd("Piecewise/" + intent + "/AssignAbsorb/Abandon", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
                   a.AssignAbsorb(Abandon(movable1)),         a.AssignAbsorb(Abandon(movable2)),
@@ -949,8 +938,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
       
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Clear(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Clear", 30, 100,
                T temp = a,                      temp.Clear(),
                stdmap temp_std (*element),      temp_std.clear()
             );
@@ -970,8 +958,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
 
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/Reset(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/Reset", 30, 100,
                T temp = a,                      temp.Reset(),
                stdmap temp_std{*element},       temp_std.reset()
             );
@@ -1027,14 +1014,12 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
             REQUIRE_FALSE(a != same_pack);
 
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/operator==(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/operator==", 30, 100,
                (void) 0,                                       dont_optimize |= (a == same_pack),
                const stdmap a_std ({*element1, *element2});
                const stdmap another_pack1_std ({*e1, *e2}),    dont_optimize |= (a_std == another_pack1_std)
             );
-            BenchmarkMapStd(
-               std::string("Piecewise/") + intent + "/operator!=(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30, 100,
+            BenchmarkMapStd("Piecewise/" + intent + "/operator!=", 30, 100,
                (void) 0,                                       dont_optimize |= (a != same_pack),
                const stdmap a_std ({*element1, *element2});
                const stdmap another_pack1_std ({*e1, *e2}),    dont_optimize |= (a_std != another_pack1_std)
@@ -1084,7 +1069,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkMap("Piecewise/Contains(" + NameOf<E1>() + "," + NameOf<E2>() + ")", 30,
+         BenchmarkMap("Piecewise/Contains", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
          );
       }
