@@ -130,9 +130,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
    constexpr bool Managed = ScopedE::Managed;
    constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
 
-#if LANGULUS(BENCHMARK)
-   using stdvec = ::std::vector<E>;
-#endif
+   #if LANGULUS(BENCHMARK)
+      using stdvec = ::std::vector<E>;
+   #endif
 
    if constexpr (Ambiguous) {
       GIVEN("Piecewise-constructed container (ambiguously)") {

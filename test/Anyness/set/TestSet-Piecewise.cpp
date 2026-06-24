@@ -130,9 +130,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
    constexpr bool Managed = ScopedE::Managed;
    constexpr bool Ambiguous = not Same<T, E> and CT::Set<E> and LANGULUS(SAFE);
 
-#if LANGULUS(BENCHMARK)
-   using stdset = ::std::unordered_set<E>;
-#endif
+   #if LANGULUS(BENCHMARK)
+      using stdset = ::std::unordered_set<E>;
+   #endif
 
    if constexpr (Ambiguous) {
       GIVEN("Piecewise-constructed container (ambiguously)") {

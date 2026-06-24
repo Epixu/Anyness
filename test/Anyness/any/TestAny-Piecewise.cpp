@@ -129,10 +129,10 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
    constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
-
-#if LANGULUS(BENCHMARK)
-   using stdany = ::std::any;
-#endif
+   
+   #if LANGULUS(BENCHMARK)
+      using stdany = ::std::any;
+   #endif
 
    if constexpr (Ambiguous) {
       GIVEN("Piecewise-constructed container (ambiguously)") {

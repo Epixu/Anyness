@@ -127,7 +127,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
-   using stdset = ::std::unordered_set<E>;
+
+   #if LANGULUS(BENCHMARK)
+      using stdset = ::std::unordered_set<E>;
+   #endif
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
@@ -238,30 +241,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
    constexpr bool Ambiguous = not Same<T, E> and CT::Set<E> and LANGULUS(SAFE);
    
-   GIVEN("Gap test") {
-      alignas(T) char unininitialized[sizeof(T)];
-      memset(unininitialized, 254, sizeof(unininitialized));
-      new (unininitialized) T {};
-      for (auto b : unininitialized) {
-         REQUIRE(b != 254);
-      }
-      Logger::Info("Size of ", NameOf<::std::unordered_set<E>>(), " container is: ", sizeof(::std::unordered_set<E>), " bytes");
-      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
-      size_t accumulated_size = 0;
-      size_t accumulated_stack_size = 0;
-      T::ComponentList::ForEach([&]<class C> {
-         if constexpr (requires { typename C::StackRequest; }) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
-            accumulated_stack_size += sizeof(typename C::StackRequest);
-         }
-         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
-         accumulated_size += sizeof(C);
-      });
-      Logger::Info("-----------------------------------------");
-      Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
-      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      static_assert(sizeof(T) <= sizeof(::std::unordered_set<E>));
-   }
+   Common_GapTest<T, ::std::unordered_set<E>>();
+   static_assert(sizeof(T) <= sizeof(::std::unordered_set<E>));
 
    GIVEN("Default-constructed container") {
       const ScopedE element {555};

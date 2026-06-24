@@ -12,6 +12,7 @@
 #include <Langulus/Sequence.hpp>
 #include <Langulus/HashOf.hpp>
 #include <Langulus/CT/Bool.hpp>
+#include <concepts>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -67,22 +68,28 @@ namespace Langulus::Anyness
       template<StateValue SORT = StateValue::Variable> struct Map;
       template<StateValue SORT = StateValue::Variable> struct Set;
 
+      struct DisambiguatorTag {
+         using CTTI_Void      = void;
+         using CTTI_ReflectAs = void;
+         using CTTI_Disambiguator = Yes<>;
+      };
+
       /// Tag for calling container constructors that initalize the           
       /// internal stack tuple. Extensively used by handles and iterators.    
-      struct Stackwise {};
+      struct Stackwise : DisambiguatorTag {};
 
       /// Tag for calling container constructors that emplace elements.       
       /// Often used to disambiguate and state clear intent.                  
-      struct Piecewise {};
+      struct Piecewise : DisambiguatorTag {};
 
       /// Tag for calling container constructors that absorb container.       
       /// Often used to disambiguate and state clear intent.                  
-      struct Absorb {};
+      struct Absorb : DisambiguatorTag {};
 
       /// Tag for calling container constructors that slice containers.       
       /// Often used to disambiguate and state clear intent.                  
       template<Cid>
-      struct Slice {};
+      struct Slice : DisambiguatorTag {};
 
       /// Inner function that picks the best possible handle type, depending  
       /// on a container's constness and type-erasedness, as well as member   
@@ -160,6 +167,9 @@ namespace Langulus::Anyness
 
    template<CT::Container C>
    using DecidePick = typename decltype(Inner::DecidePickType<Deref<C>>())::First;
+
+   template<class...T>
+   concept NotTag = ((not requires { typename Decay<T>::CTTI_Disambiguator; }) and ...);
 
    namespace Component
    {

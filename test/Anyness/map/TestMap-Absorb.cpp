@@ -132,9 +132,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
    constexpr bool Managed = ScopedE1::Managed;
    static_assert(ScopedE1::Managed == ScopedE2::Managed);
 
-#if LANGULUS(BENCHMARK)
-   using stdmap = ::std::unordered_map<E1, E2>;
-#endif
+   #if LANGULUS(BENCHMARK)
+      using stdmap = ::std::unordered_map<E1, E2>;
+   #endif
    
    GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
       const ScopedE1 element1{555};

@@ -128,7 +128,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
-   using stdany = ::std::any;
+   
+   #if LANGULUS(BENCHMARK)
+      using stdany = ::std::any;
+   #endif
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
@@ -221,30 +224,8 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
    constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
    
-   GIVEN("Gap test") {
-      alignas(T) char unininitialized[sizeof(T)];
-      memset(unininitialized, 254, sizeof(unininitialized));
-      new (unininitialized) T {};
-      for (auto b : unininitialized) {
-         REQUIRE(b != 254);
-      }
-      Logger::Info("Size of ", NameOf<::std::any>(), " container is: ", sizeof(::std::any), " bytes");
-      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
-      size_t accumulated_size = 0;
-      size_t accumulated_stack_size = 0;
-      T::ComponentList::ForEach([&]<class C> {
-         if constexpr (requires { typename C::StackRequest; }) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
-            accumulated_stack_size += sizeof(typename C::StackRequest);
-         }
-         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
-         accumulated_size += sizeof(C);
-      });
-      Logger::Info("-----------------------------------------");
-      Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
-      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      //static_assert(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
-   }
+   Common_GapTest<T, ::std::any>();
+   //static_assert(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
 
    GIVEN("Default-constructed container") {
       const ScopedE element {555};

@@ -129,10 +129,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
-
-#if LANGULUS(BENCHMARK)
-   using stdany = ::std::any;
-#endif
+   
+   #if LANGULUS(BENCHMARK)
+      using stdany = ::std::any;
+   #endif
 
    auto testtype1 = MetaDataOf<E>();
    auto testtype2 = MetaDataOf<E const*>();

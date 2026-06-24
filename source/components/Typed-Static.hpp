@@ -277,14 +277,14 @@ namespace Langulus::Anyness::Component
       void AbsorbType(this SELF& self, I const& other) {
          if constexpr (TypeErased or CT::TypeErased<I>) {
             auto T = DeintCast(other).template GetType<SID>();
-            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+            if constexpr (CT::Copied<I> or CT::Cloned<I> or not CT::HeapAllocated<I>)
                self.template SetType<ID>(T.GetDecvq());
             else
                self.template SetType<ID>(T);
          }
          else {
             using T = Deref<TypeOf<Deint<I>, SID>>;
-            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+            if constexpr (CT::Copied<I> or CT::Cloned<I> or not CT::HeapAllocated<I>)
                self.template SetType<Decvq<T>, ID>();
             else
                self.template SetType<T, ID>();

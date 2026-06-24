@@ -131,10 +131,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
    using ScopedE2 = typename TestType::template At<4>;
    constexpr bool Managed = ScopedE1::Managed;
    static_assert(ScopedE1::Managed == ScopedE2::Managed);
-
-#if LANGULUS(BENCHMARK)
-   using stdpair = ::std::pair<E1, E2>;
-#endif
+   
+   #if LANGULUS(BENCHMARK)
+      using stdpair = ::std::pair<E1, E2>;
+   #endif
    
    GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
       const ScopedE1 element1{555};
@@ -142,11 +142,20 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
       const ScopedE1 element3{556};
       const ScopedE2 element4{112};
 
+      if constexpr (Managed) {
+         REQUIRE(element1.entries[0]->GetUses() == 1);
+         REQUIRE(element2.entries[0]->GetUses() == 1);
+         REQUIRE(element3.entries[0]->GetUses() == 1);
+         REQUIRE(element4.entries[0]->GetUses() == 1);
+      }
+
       {
          T test {*element1, *element2};
 
-         REQUIRE(element1.entries[0]->GetUses() == 1);
-         REQUIRE(element2.entries[0]->GetUses() == 1);
+         if constexpr (Managed) {
+            REQUIRE(element1.entries[0]->GetUses() == 1);
+            REQUIRE(element2.entries[0]->GetUses() == 1);
+         }
 
          if constexpr (CT::Sparse<E1>) {
             REQUIRE(*test.template GetEntries<0>() == element1.entries[1]);
@@ -173,8 +182,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
 
       T piecewise1{Piecewise, *element1, *element2};
 
-      REQUIRE(element1.entries[0]->GetUses() == 1);
-      REQUIRE(element2.entries[0]->GetUses() == 1);
+      if constexpr (Managed) {
+         REQUIRE(element1.entries[0]->GetUses() == 1);
+         REQUIRE(element2.entries[0]->GetUses() == 1);
+      }
 
       if constexpr (CT::Sparse<E1>) {
          REQUIRE(*piecewise1.template GetEntries<0>() == element1.entries[1]);
@@ -195,10 +206,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
 
       piecewise1.Assign(*element3, *element4);
 
-      REQUIRE(element1.entries[0]->GetUses() == 1);
-      REQUIRE(element2.entries[0]->GetUses() == 1);
-      REQUIRE(element3.entries[0]->GetUses() == 1);
-      REQUIRE(element4.entries[0]->GetUses() == 1);
+      if constexpr (Managed) {
+         REQUIRE(element1.entries[0]->GetUses() == 1);
+         REQUIRE(element2.entries[0]->GetUses() == 1);
+         REQUIRE(element3.entries[0]->GetUses() == 1);
+         REQUIRE(element4.entries[0]->GetUses() == 1);
+      }
 
       if constexpr (CT::Sparse<E1>) {
          REQUIRE(*piecewise1.template GetEntries<0>() == element3.entries[1]);
@@ -1199,7 +1212,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
       WHEN("Compared") {
          ScopedE1 e1 {1};
          ScopedE2 e2 {2};
-         T another_pack1{Piecewise, TPair {*e1, *e2}};
+         T another_pack1{Piecewise, *e1, *e2};
          T defaulted_pack;
 
          auto compared_full = [&](T& a, [[maybe_unused]] const char* intent) {

@@ -129,9 +129,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
 
-#if LANGULUS(BENCHMARK)
-   using stdset = ::std::unordered_set<E>;
-#endif
+   #if LANGULUS(BENCHMARK)
+      using stdset = ::std::unordered_set<E>;
+   #endif
 
    GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
       const ScopedE element1{555};

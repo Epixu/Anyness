@@ -260,34 +260,12 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    constexpr bool Ambiguous = LANGULUS(SAFE) and ((not Same<T, E1> and CT::Map<E1>)
                                                or (not Same<T, E2> and CT::Map<E2>));
 
-#if LANGULUS(BENCHMARK)
-   using stdmap = ::std::unordered_map<E1, E2>;
-#endif
+   #if LANGULUS(BENCHMARK)
+      using stdmap = ::std::unordered_map<E1, E2>;
+   #endif
 
-   GIVEN("Gap test") {
-      alignas(T) char unininitialized[sizeof(T)];
-      memset(unininitialized, 254, sizeof(unininitialized));
-      new (unininitialized) T {};
-      for (auto b : unininitialized) {
-         REQUIRE(b != 254);
-      }
-      Logger::Info("Size of ", NameOf<::std::unordered_map<E1, E2>>(), " container is: ", sizeof(::std::unordered_map<E1, E2>), " bytes");
-      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
-      size_t accumulated_size = 0;
-      size_t accumulated_stack_size = 0;
-      T::ComponentList::ForEach([&]<class C> {
-         if constexpr (requires { typename C::StackRequest; }) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
-            accumulated_stack_size += sizeof(typename C::StackRequest);
-         }
-         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
-         accumulated_size += sizeof(C);
-      });
-      Logger::Info("-----------------------------------------");
-      Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
-      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      //static_assert(sizeof(T) <= sizeof(::std::unordered_map<E1, E2>)); //TODO not true on 32bit builds unfortunately
-   }
+   Common_GapTest<T, ::std::unordered_map<E1, E2>>();
+   //static_assert(sizeof(T) <= sizeof(::std::unordered_map<E1, E2>)); //TODO not true on 32bit builds unfortunately
    
    GIVEN("Empty-constructed container, assigned (refer), and then destroyed") {
       const ScopedE1 element1{555};

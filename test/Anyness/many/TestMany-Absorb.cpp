@@ -128,10 +128,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
-
-#if LANGULUS(BENCHMARK)
-   using stdvec = ::std::vector<E>;
-#endif
+   
+   #if LANGULUS(BENCHMARK)
+      using stdvec = ::std::vector<E>;
+   #endif
 
    GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
       const ScopedE element1{555};

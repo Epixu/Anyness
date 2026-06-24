@@ -9,6 +9,7 @@
 #include "../Container.hpp"
 #include "../states/Typed.hpp"
 #include "Langulus/IntentOf.hpp"
+#include "source/Component.hpp"
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Akin.hpp>
 #include <Langulus/CT/Deep.hpp>
@@ -421,14 +422,14 @@ namespace Langulus::Anyness::Component
       void AbsorbType(this SELF& self, I const& other) {
          if constexpr (TypeErased or CT::TypeErased<I>) {
             auto T = DeintCast(other).template GetType<SID>();
-            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+            if constexpr (CT::Copied<I> or CT::Cloned<I> or not CT::HeapAllocated<I>)
                ThisCom::SetType(T.GetDecvq());
             else
                ThisCom::SetType(T);
          }
          else {
             using T = Deref<TypeOf<Deint<I>, SID>>;
-            if constexpr (CT::Copied<I> or CT::Cloned<I>)
+            if constexpr (CT::Copied<I> or CT::Cloned<I> or not CT::HeapAllocated<I>)
                ThisCom::template SetType<Decvq<T>>();
             else
                ThisCom::template SetType<T>();

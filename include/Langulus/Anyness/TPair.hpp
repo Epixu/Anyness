@@ -115,29 +115,31 @@ namespace Langulus::Anyness
       }
 
       /// Stack-based constructors                                            
-      constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
-      requires OnStack
+      template<CT::NotHandle K_ALT, CT::NotHandle V_ALT>
+      constexpr TPair(K_ALT&& a1, V_ALT&& a2) requires (OnStack and NotTag<K_ALT, V_ALT>)
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
       
-      constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
-      requires OnStack
+      template<CT::NotHandle K_ALT, CT::NotHandle V_ALT>
+      constexpr TPair(Inner::Piecewise, K_ALT&& a1, V_ALT&& a2) requires OnStack
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
 
-      constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1)
-      requires OnStack
+      template<CT::NotHandle K_ALT>
+      constexpr TPair(Inner::Piecewise, K_ALT&& a1) requires OnStack
          : Base {Stackwise, LglsFwd(a1), {}} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
 
       /// Construct from handles                                              
-      constexpr TPair(auto&& a1, auto&& a2) {
+      template<NotTag K_ALT, NotTag V_ALT>
+      constexpr TPair(K_ALT&& a1, V_ALT&& a2)
+      requires (OnHeap or CT::Handle<K_ALT> or CT::Handle<V_ALT>) {
          this->DeduceType(a1, a2);
          
          if constexpr (OnHeap) {

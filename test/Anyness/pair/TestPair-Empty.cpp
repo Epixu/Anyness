@@ -245,33 +245,13 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
    constexpr bool Ambiguous = LANGULUS(SAFE) and ((not Same<T, E1> and CT::Pair<E1>)
                                                or (not Same<T, E2> and CT::Pair<E2>));
 
-   using stdpair = ::std::pair<E1, E2>;
+   #if LANGULUS(BENCHMARK)
+      using stdpair = ::std::pair<E1, E2>;
+   #endif
 
-   GIVEN("Gap test") {
-      alignas(T) char unininitialized[sizeof(T)];
-      memset(unininitialized, 254, sizeof(unininitialized));
-      new (unininitialized) T {};
-      for (auto b : unininitialized) {
-         REQUIRE(b != 254);
-      }
-      Logger::Info("Size of ", NameOf<stdpair>(), " container is: ", sizeof(stdpair), " bytes");
-      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
-      size_t accumulated_size = 0;
-      size_t accumulated_stack_size = 0;
-      T::ComponentList::ForEach([&]<class C> {
-         if constexpr (requires { typename C::StackRequest; }) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
-            accumulated_stack_size += sizeof(typename C::StackRequest);
-         }
-         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
-         accumulated_size += sizeof(C);
-      });
-      Logger::Info("-----------------------------------------");
-      Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
-      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      //static_assert(sizeof(T) <= sizeof(stdpair)); //TODO not true on 32bit builds unfortunately
-   }
-   
+   Common_GapTest<T, ::std::pair<E1, E2>>();
+   //static_assert(sizeof(T) <= sizeof(::std::pair<E1, E2>)); //TODO not true on 32bit builds unfortunately
+
    GIVEN("Empty-constructed container, assigned (refer), and then destroyed") {
       const ScopedE1 element1{555};
       const ScopedE2 element2{111};
@@ -378,10 +358,10 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element1->GetAllocation());
 
-            [[maybe_unused]] stdpair src_std {1, *element1};
             BenchmarkPairStd("Empty/AssignAbsorb/Refer", 30, 100,
-               T temp,              temp.AssignAbsorb(*element),
-               stdpair temp_std,    temp_std = src_std;
+               T temp,                             temp.AssignAbsorb(*element),
+               stdpair temp_std;
+               stdpair src_std (1, *element1),     temp_std = src_std;
             );
          }
       }
@@ -485,10 +465,10 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] stdpair src_std (1, *element1);
             BenchmarkPairStd("Empty/AssignAbsorb/Copy", 30, 100,
-               T temp,              temp.AssignAbsorb(Copy(*element)),
-               stdpair temp_std,    temp_std = src_std
+               T temp,                             temp.AssignAbsorb(Copy(*element)),
+               stdpair temp_std;
+               stdpair src_std (1, *element1),     temp_std = src_std
             );
          }
       }
@@ -532,10 +512,10 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] stdpair src_std ({*element1});
             BenchmarkPairStd("Empty/AssignAbsorb/Clone", 30, 100,
-               T temp,              temp.AssignAbsorb(Clone(*element1)),
-               stdpair temp_std,    temp_std = src_std
+               T temp,                        temp.AssignAbsorb(Clone(*element1)),
+               stdpair temp_std;
+               stdpair src_std (*element1),   temp_std = src_std
             );
          }
       }
@@ -579,10 +559,10 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
             REQUIRE(pack.GetUses() == 0);
             REQUIRE_FALSE(pack.GetAllocation());
 
-            [[maybe_unused]] stdpair src_std (1, *element1);
             BenchmarkPairStd("Empty/AssignAbsorb/Disown", 30, 100,
-               T temp,              temp.AssignAbsorb(Disown(*element1)),
-               stdpair temp_std,    temp_std = src_std
+               T temp,                             temp.AssignAbsorb(Disown(*element1)),
+               stdpair temp_std;
+               stdpair src_std (1, *element1),     temp_std = src_std
             );
          }
       }

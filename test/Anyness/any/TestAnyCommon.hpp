@@ -10,6 +10,7 @@
 #include "../../TestTypes/ScopedElement.hpp"
 #include "../../TestTypes/ReferencedType.hpp"
 #include "../../TestTypes/CommonTypes.hpp"
+#include "Langulus/Logger.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
@@ -86,7 +87,7 @@ using namespace Anyness;
 template<class T, class COMPARE_WITH>
 void Common_GapTest() {
    // Make sure the container is tightly packed with no padding         
-   /*alignas(T) char unininitialized[sizeof(T)];
+   alignas(T) char unininitialized[sizeof(T)];
    memset(unininitialized, 0xff, sizeof(unininitialized));
    new (unininitialized) T {};
    size_t matched_bytes = 0;
@@ -95,7 +96,7 @@ void Common_GapTest() {
          break;
       ++matched_bytes;
    }
-   REQUIRE(matched_bytes == sizeof(T));*/
+   REQUIRE(matched_bytes == sizeof(T));
 
    Logger::Info("Size of ", NameOf<COMPARE_WITH>(), " container is: ", sizeof(COMPARE_WITH), " bytes");
    auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
@@ -104,7 +105,7 @@ void Common_GapTest() {
    size_t heap_size = 0;
    size_t heap_size_per_element = 0;
    size_t heap_size_per_indirection = 0;
-   size_t heap_size_per_element_times_indirection = 0;
+   size_t heap_size_per_dimension = 0;
 
    T::ComponentList::ForEach([&]<class C> {
       if constexpr (requires { typename C::StackRequest; }) {
@@ -121,39 +122,31 @@ void Common_GapTest() {
          // Scan all heap requests                                      
          using R = typename C::HeapRequest;
          if constexpr (CT::NotVoid<R>) {
-            if constexpr (requires { R::AllocatedPerIndirection; }) {
-               if constexpr (requires { R::Type::AllocatedPerElement; }) {
-                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-                     " bytes (reserves ", sizeof(typename R::Type::Type), 
-                     " bytes per indirection per element on the heap footer)");
-                  heap_size_per_element_times_indirection += sizeof(typename R::Type::Type);
+            if constexpr (Com::IsRequestModifier<R>) {
+               constexpr size_t S = sizeof(TypeOf<R>);
+               Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
+                  " bytes; reserves ", S, " bytes in footer ");
+
+               if constexpr (R::AllocatedPerElement) {
+                  heap_size_per_element += S;
+                  Logger::Append("per element ");
                }
-               else {
-                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-                     " bytes (reserves ", sizeof(typename R::Type), 
-                     " bytes per indirection on the heap footer)");
-                  heap_size_per_indirection += sizeof(typename R::Type);
+
+               if constexpr (R::AllocatedPerDimension) {
+                  heap_size_per_dimension += S;
+                  Logger::Append("per dimension ");
                }
-            }
-            else if constexpr (requires { R::AllocatedPerElement; }) {
-               if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
-                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-                     " bytes (reserves ", sizeof(typename R::Type::Type),
-                     " bytes per indirection per element on the heap footer)");
-                  heap_size_per_element_times_indirection += sizeof(typename R::Type::Type);
-               }
-               else {
-                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-                     " bytes (reserves ", sizeof(typename R::Type),
-                     " bytes per element on the heap footer)");
-                  heap_size_per_element += sizeof(typename R::Type);
+
+               if constexpr (R::AllocatedPerIndirection) {
+                  heap_size_per_indirection += S;
+                  Logger::Append("per indirection ");
                }
             }
             else {
+               constexpr size_t S = sizeof(R);
                Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-                  " bytes (reserves ", sizeof(R), 
-                  " bytes on the heap header)");
-               heap_size += sizeof(R);
+                  " bytes; reserves ", S, " bytes");
+               heap_size += S;
             }
          }
       }
@@ -169,11 +162,11 @@ void Common_GapTest() {
    Logger::Info("For a total of ", heap_size,
       " bytes on the heap header");
    Logger::Info("For a total of ", heap_size_per_element,
-      " bytes per element on the heap footer");
+      " bytes per element");
    Logger::Info("For a total of ", heap_size_per_indirection,
-      " bytes per indirection on the heap footer");
-   Logger::Info("For a total of ", heap_size_per_element_times_indirection,
-      " bytes per indirection per element on the heap footer");
+      " bytes per indirection");
+   Logger::Info("For a total of ", heap_size_per_dimension,
+      " bytes per dimension");
 }
 
 namespace doctest

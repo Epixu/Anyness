@@ -93,7 +93,7 @@ namespace Langulus::Anyness
          this->Absorb(LglsFwd(p));
       }
 
-      constexpr Pair(auto&& a1, auto&& a2) {
+      constexpr Pair(NotTag auto&& a1, NotTag auto&& a2) {
          this->DeduceType(a1, a2);
          this->AllocateFresh(this->RequestHeap(1));
          this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
