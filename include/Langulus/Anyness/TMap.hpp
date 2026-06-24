@@ -22,7 +22,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<8, 2, HeapEntry<0, K*>, HeapEntry<1, V*>>,
       Com::CountStack<size_t, 0, 1>,      // Dynamically sized          
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     
-      Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
+      Com::IndexedHashHeap<0, Hash, 1>,   // Indexed by hash table      
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0>>,
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 1>>>,

@@ -276,10 +276,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            [[maybe_unused]] stdany src_std{*element};
             BenchmarkAnyStd("Empty/AssignAbsorb/Refer", 30, 100,
-               T temp,                 temp.AssignAbsorb(*element),
-               stdany temp_std,        temp_std = src_std;
+               T temp,                    temp.AssignAbsorb(*element),
+               stdany src_std{*element};
+               stdany temp_std,           temp_std = src_std;
             );
          }
       }
@@ -375,10 +375,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] stdany src_std = *element;
             BenchmarkAnyStd("Empty/AssignAbsorb/Copy", 30, 100,
-               T temp,                 temp.AssignAbsorb(Copy(*element)),
-               stdany temp_std,        temp_std = src_std
+               T temp,                       temp.AssignAbsorb(Copy(*element)),
+               stdany src_std = *element;
+               stdany temp_std,              temp_std = src_std
             );
          }
       }
@@ -424,10 +424,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation() != element->GetAllocation());
 
-            [[maybe_unused]] stdany src_std = *element;
             BenchmarkAnyStd("Empty/AssignAbsorb/Clone", 30, 100,
-               T temp,                 temp.AssignAbsorb(Clone(*element)),
-               stdany temp_std,        temp_std = src_std
+               T temp,                       temp.AssignAbsorb(Clone(*element)),
+               stdany src_std = *element;
+               stdany temp_std,              temp_std = src_std
             );
          }
       }
@@ -475,10 +475,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             //REQUIRE(pack.GetUses() == 0);
             //REQUIRE_FALSE(pack.GetAllocation());
 
-            [[maybe_unused]] stdany src_std = *element;
             BenchmarkAnyStd("Empty/AssignAbsorb/Disown", 30, 100,
-               T temp,                 temp.AssignAbsorb(Disown(*element)),
-               stdany temp_std,        temp_std = src_std
+               T temp,                       temp.AssignAbsorb(Disown(*element)),
+               stdany src_std = *element;
+               stdany temp_std,              temp_std = src_std
             );
          }
       }

@@ -14,7 +14,7 @@
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/OwnershipDeep-Heap.hpp>
 #include <source/components/Hash-Heap.hpp>
-#include <source/components/IndexedHash-Stack.hpp>
+#include <source/components/IndexedHash-Heap.hpp>
 #include <source/components/Merging.hpp>
 #include <source/components/MergingOperators.hpp>
 #include <source/components/Assignment.hpp>
@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<8, 2, HeapEntry<0>, HeapEntry<1>>,
       Com::CountStack<size_t, 0, 1>,      // Dynamically sized          
       Com::ReserveStack<size_t, 0, 1>,    // Reserve kept as member     
-      Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
+      Com::IndexedHashHeap<0, Hash, 1>,   // Indexed by hash table      
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
       Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>,
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         

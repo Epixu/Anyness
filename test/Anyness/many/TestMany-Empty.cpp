@@ -387,10 +387,10 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] stdvec src_std (1, *element);
             BenchmarkManyStd("Empty/AssignAbsorb/Copy", 30, 100,
-               T temp,              temp.AssignAbsorb(Copy(*element)),
-               stdvec temp_std,     temp_std = src_std
+               T temp,                          temp.AssignAbsorb(Copy(*element)),
+               stdvec src_std (1, *element);
+               stdvec temp_std,                 temp_std = src_std
             );
          }
       }
@@ -434,10 +434,10 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] stdvec src_std (1, *element);
             BenchmarkManyStd("Empty/AssignAbsorb/Clone", 30, 100,
-               T temp,              temp.AssignAbsorb(Clone(*element)),
-               stdvec temp_std,     temp_std = src_std
+               T temp,                          temp.AssignAbsorb(Clone(*element)),
+               stdvec src_std (1, *element);
+               stdvec temp_std,                 temp_std = src_std
             );
          }
       }
@@ -485,10 +485,10 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             REQUIRE(pack.GetUses() == 0);
             REQUIRE_FALSE(pack.GetAllocation());*/
 
-            [[maybe_unused]] stdvec src_std (1, *element);
             BenchmarkManyStd("Empty/AssignAbsorb/Disown", 30, 100,
-               T temp,              temp.AssignAbsorb(Disown(*element)),
-               stdvec temp_std,     temp_std = src_std
+               T temp,                       temp.AssignAbsorb(Disown(*element)),
+               stdvec src_std (1, *element);
+               stdvec temp_std,              temp_std = src_std
             );
          }
       }

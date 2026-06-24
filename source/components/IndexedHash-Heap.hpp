@@ -26,7 +26,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam SHARED providers that share the same indexing scheme         
    template<Cid ID, class HASH, Cid...SHARED>
    struct IndexedHashHeap : IndexedCommonHashed<ID, HASH, SHARED...> {
-      using Base             = IndexedCommonHashed<ID, HASH, SHARED...>
+      using Base             = IndexedCommonHashed<ID, HASH, SHARED...>;
       using TableType        = typename Base::TableType;
       using HeapRequest      = PerElement<TableType>;
       using IteratorCategory = typename Base::IteratorCategory;
@@ -57,7 +57,7 @@ namespace Langulus::Anyness::Component
       /// Get the start of the hash table (inner)                             
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto* GetHashTableInner(this auto&& self) noexcept {
-         return self.template AccessHeap<IndexedHashHeap>();
+         return self.template AccessHeap<IndexedHashHeap, SID>();
       }
 
       /// This method is called to erase the hash table                       

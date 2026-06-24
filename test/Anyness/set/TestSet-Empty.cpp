@@ -293,10 +293,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            [[maybe_unused]] stdset src_std {1, *element};
             BenchmarkSetStd("Empty/AssignAbsorb/Refer", 30, 100,
-               T temp,              temp.AssignAbsorb(*element),
-               stdset temp_std,     temp_std = src_std;
+               T temp,                          temp.AssignAbsorb(*element),
+               stdset src_std (1, *element);
+               stdset temp_std,                 temp_std = src_std;
             );
          }
       }
@@ -395,10 +395,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] stdset src_std (1, *element);
             BenchmarkSetStd("Empty/AssignAbsorb/Copy", 30, 100,
-               T temp,                    temp.AssignAbsorb(Copy(*element)),
-               stdset temp_std,           temp_std = src_std
+               T temp,                          temp.AssignAbsorb(Copy(*element)),
+               stdset src_std (1, *element);
+               stdset temp_std,                 temp_std = src_std
             );
          }
       }
@@ -442,10 +442,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] stdset src_std ({*element});
             BenchmarkSetStd("Empty/AssignAbsorb/Clone", 30, 100,
-               T temp,                 temp.AssignAbsorb(Clone(*element)),
-               stdset temp_std,        temp_std = src_std
+               T temp,                       temp.AssignAbsorb(Clone(*element)),
+               stdset src_std ({*element});
+               stdset temp_std,              temp_std = src_std
             );
          }
       }
@@ -489,10 +489,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 0);
             REQUIRE_FALSE(pack.GetAllocation());
 
-            [[maybe_unused]] stdset src_std (1, *element);
             BenchmarkSetStd("Empty/AssignAbsorb/Disown", 30, 100,
-               T temp,              temp.AssignAbsorb(Disown(*element)),
-               stdset temp_std,     temp_std = src_std
+               T temp,                          temp.AssignAbsorb(Disown(*element)),
+               stdset src_std (1, *element);
+               stdset temp_std,                 temp_std = src_std
             );
          }
       }
