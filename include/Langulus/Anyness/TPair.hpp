@@ -38,6 +38,7 @@ namespace Langulus::Anyness::Inner
    template<CT::NotVoid K, CT::NotVoid V>
    requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TPairHeapBase = Com::Container<
+      Com::State::Disowned<>,             // Allows disownment          
       Com::Multitype<Com::TypedStack<DMeta, K, true, 0>,
                      Com::TypedStack<DMeta, V, true, 1>>,
       Com::HeapMovable<0, 0, HeapEntry<0, K*>, HeapEntry<1, V*>>,
@@ -52,8 +53,6 @@ namespace Langulus::Anyness::Inner
       Com::Removal<0, 1>,                 // Allows clear/reset         
       Com::Conversion<0, 1>,              // Allows conversion          
       Com::Comparison<true, 0, 1>,        // Allows comparisons         
-      Com::State::Future<>,               // Toggle future linking      
-      Com::State::Past<>,                 // Toggle past linking        
       Com::State::Encrypted<>             // Toggle encryption          
    >;
 
@@ -140,6 +139,7 @@ namespace Langulus::Anyness
       template<NotTag K_ALT, NotTag V_ALT>
       constexpr TPair(K_ALT&& a1, V_ALT&& a2)
       requires (OnHeap or CT::Handle<K_ALT> or CT::Handle<V_ALT>) {
+         this->ResetState();
          this->DeduceType(a1, a2);
          
          if constexpr (OnHeap) {
@@ -176,15 +176,15 @@ namespace Langulus::Anyness
 
       /// Clear the pair and assign a key and a value                         
       constexpr TPair& Assign(auto&& a1, auto&& a2) {
-         this->DeduceType(a1, a2);
-
          if constexpr (OnHeap) {
             this->Reset();
+            this->DeduceType(a1, a2);
             this->AllocateFresh(this->RequestHeap(1));
             this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
             this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
          }
          else {
+            this->DeduceType(a1, a2);
             this->template AssignWithIntent<0>(FWDIntent(a1));
             this->template AssignWithIntent<1>(FWDIntent(a2));
          }

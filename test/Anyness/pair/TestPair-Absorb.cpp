@@ -1146,26 +1146,29 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
       }*/
       
       WHEN("Cleared") {
-         auto clear_full = [&](T& a, [[maybe_unused]] const char* intent, int uses = 1) {
+         auto clear_full = [&](T& a, [[maybe_unused]] const char* intent) {
             BenchmarkPairStd("Absorb/" + intent + "/Clear", 30, 100,
                T temp = a,                                   temp.Clear(),
                stdpair temp_std({{*element1, *element2}}),   temp_std.clear()
             );
 
+            const auto uses = a.GetUses();
+            const bool was_disowned = a.IsDisowned();
+
             a.Clear();
 
-            if (uses != 1)
-               Pair_CheckState_Default<E1, E2>(a, true);
+            if (uses != 1 or was_disowned)
+               Pair_CheckState_Default<E1, E2>(a, false, true);
             else
                Pair_CheckState_OwnedEmpty<E1, E2>(a);
          };
 
-         clear_full(pack_referred1, "Refer", 3);
+         clear_full(pack_referred1, "Refer");
          clear_full(pack_copied,    "Copy");
          clear_full(pack_cloned,    "Clone");
          clear_full(pack_moved1,    "Move");
          clear_full(pack_abandoned, "Abandon");
-         clear_full(pack_disowned,  "Disown", 0);
+         clear_full(pack_disowned,  "Disown");
       }
 
       WHEN("Reset") {

@@ -19,13 +19,10 @@
 #include <source/components/Removal.hpp>
 #include <source/components/Conversion.hpp>
 #include <source/components/Comparison.hpp>
-#include <source/components/State-Stack.hpp>
-#include <source/states/Typed.hpp>
-#include <source/states/Future.hpp>
-#include <source/states/Past.hpp>
-#include <source/states/Compressed.hpp>
+//#include <source/components/State-Stack.hpp>
+//#include <source/states/Typed.hpp>
 #include <source/states/Encrypted.hpp>
-#include <source/states/Tracked.hpp>
+#include <source/states/Disowned.hpp>
 #include "HandlePair.hpp"
 
 
@@ -33,6 +30,7 @@ namespace Langulus::Anyness::Inner
 {
    /// Type-erased heap-based pair container                                  
    using PairBase = Com::Container<
+      Com::State::Disowned<>,             // Allows disownment          
       Com::Multitype<Com::TypedStack<DMeta, void, false, 0>,
                      Com::TypedStack<DMeta, void, false, 1>>,
       Com::HeapMovable<0, 0, HeapEntry<0>, HeapEntry<1>>,
@@ -46,14 +44,13 @@ namespace Langulus::Anyness::Inner
       Com::Removal<0, 1>,                 // Allows clear/reset         
       Com::Conversion<0, 1>,              // Allows conversion          
       Com::Comparison<true, 0, 1>,        // Allows comparisons         
-      Com::State::Future<>,               // Toggle future linking      
-      Com::State::Past<>,                 // Toggle past linking        
       Com::State::Encrypted<>             // Toggle encryption          
    >;
 }
 
 namespace Langulus::Anyness
 {
+   /// MARK: Pair                                                             
    ///                                                                        
    /// A type-erased pair                                                     
    struct Pair : Inner::PairBase {
@@ -94,6 +91,7 @@ namespace Langulus::Anyness
       }
 
       constexpr Pair(NotTag auto&& a1, NotTag auto&& a2) {
+         this->ResetState();
          this->DeduceType(a1, a2);
          this->AllocateFresh(this->RequestHeap(1));
          this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
@@ -150,6 +148,7 @@ namespace Langulus::Anyness
 
 namespace Langulus::CTTI
 {
+   /// MARK: CTTI                                                             
    /// Convert Pair -> Text                                                   
    template<>
    struct Converter<Anyness::Pair, Anyness::Text> {

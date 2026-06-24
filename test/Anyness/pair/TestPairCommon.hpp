@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../set/TestSetCommon.hpp"
+#include "source/Component.hpp"
 #include <Langulus/Anyness/Pair.hpp>
 #include <Langulus/Anyness/TPair.hpp>
 
