@@ -973,7 +973,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
                   REQUIRE(entry->GetUses() == entry_refs);
 
                if constexpr (CT::Referenced<Decay<E1>>) {
-                  auto e = absorbed.template KeyAsAt<E1>(0);
+                  auto e = absorbed.template KeyAs<E1>();
                   REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
             }
@@ -985,7 +985,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
                   REQUIRE(entry->GetUses() == entry_refs);
 
                if constexpr (CT::Referenced<Decay<E2>>) {
-                  auto e = absorbed.template ValAsAt<E2>(0);
+                  auto e = absorbed.template ValAs<E2>();
                   REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
             }

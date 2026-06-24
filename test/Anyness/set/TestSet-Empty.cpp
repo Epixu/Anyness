@@ -127,10 +127,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
-
-#if LANGULUS(BENCHMARK)
    using stdset = ::std::unordered_set<E>;
-#endif
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              

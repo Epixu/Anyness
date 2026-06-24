@@ -128,10 +128,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
-
-#if LANGULUS(BENCHMARK)
    using stdvec = ::std::vector<E>;
-#endif
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              

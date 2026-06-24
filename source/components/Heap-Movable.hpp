@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Heap-Reference.hpp"
+#include "source/Component.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -83,11 +84,13 @@ namespace Langulus::Anyness::Component
          decltype(auto) from = LglsFwd(intent.what);
 
          size_t count = from.template GetCount<Id::First>();
-         if constexpr (CT::Copied<I> or CT::Cloned<I>) {
+         if constexpr (CT::Copied<I> or CT::Cloned<I> or not CT::HeapAllocated<I>) {
             // Do a copy or clone.                                      
             // Verify that all dimensions are copiable/clonable, and    
             // make sure that 'count' and 'reserve' are consistent      
             // across all dimensions.                                   
+            //TODO experimental: when constructing from containers on the stack, this routine defualts to a copy intent
+            //TODO make sure this is reflected in all other components that have different behafior or copy/clone
             Id::ForEach([&]<Cid D> {
                LglsAssumeDev(from.template GetCount<D>() == from.template GetCount<Id::First>(),
                   "Inconsistent count across dimensions");
@@ -96,29 +99,29 @@ namespace Langulus::Anyness::Component
 
                if constexpr (CT::TypeErased<IT>) {
                   auto type = from.template GetType<D>();
-                  if constexpr (CT::Copied<I>) {
-                     LglsAssert(type.GetReferConstructor(),
-                        "Can't refer-construct elements"
-                        " - no refer-constructor was reflected for type ",
-                        type
-                     );
-                  }
-                  else {
+                  if constexpr (CT::Cloned<I>) {
                      LglsAssert(type.GetCloneConstructor(),
                         "Can't clone-construct elements"
                         " - no clone-constructor was reflected for type ",
                         type
                      );
                   }
+                  else {
+                     LglsAssert(type.GetReferConstructor(),
+                        "Can't refer-construct elements"
+                        " - no refer-constructor was reflected for type ",
+                        type
+                     );
+                  }
                }
                else {
-                  if constexpr (CT::Copied<I>) {
-                     static_assert(CT::ReferConstructible<TypeOf<IT, D>>,
-                        "Contained type is not refer-constructible");
-                  }
-                  else {
+                  if constexpr (CT::Cloned<I>) {
                      static_assert(CT::CloneConstructible<TypeOf<IT, D>>,
                         "Contained type is not clone-constructible");
+                  }
+                  else {
+                     static_assert(CT::ReferConstructible<TypeOf<IT, D>>,
+                        "Contained type is not refer-constructible");
                   }
                }
             });
@@ -140,10 +143,10 @@ namespace Langulus::Anyness::Component
 
                   if constexpr (CT::Supported<decltype(src)>) {
                      Id::ForEach([&dst,&src]<Cid D>{
-                        if constexpr (CT::Copied<I>)
-                           dst.template EmplaceWithIntent<D>(Refer(src));
-                        else
+                        if constexpr (CT::Cloned<I>)
                            dst.template EmplaceWithIntent<D>(Clone(src));
+                        else
+                           dst.template EmplaceWithIntent<D>(Refer(src));
                      });
 
                      if constexpr (not CT::Contiguous<C>) {
@@ -180,12 +183,13 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Move/Refer/Abandon/Disown other                          
+            // @attention this should never be reached, if I is stack   
+            //    allocated                                             
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
             if constexpr (CT::Moved<I>) {
-               // We are moving 'from' - it needs to be fully reset,    
-               // unless it's on the stack                              
-               from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
+               // We are moving 'from' - it needs to be fully reset     
+               from.template SetHeapInner<Id::First>(nullptr);
             }
             else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {
                // We are abandoning 'from'.                             
@@ -207,7 +211,7 @@ namespace Langulus::Anyness::Component
                   // responsible to reset the pointer. Same applies in  
                   // the cases where vital properties are positioned on 
                   // the heap (CountHeap/HashHeap/OwnershipDeepHeap)    
-                  from.template SetHeapInner<Id::First>(nullptr); //TODO what if 'from' is stack based or each D is somewhere else?
+                  from.template SetHeapInner<Id::First>(nullptr);
                }
             }
          }

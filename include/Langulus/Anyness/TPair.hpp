@@ -151,6 +151,9 @@ namespace Langulus::Anyness
          }
       }
 
+      constexpr TPair(Inner::Piecewise, auto&& a1, auto&& a2) requires OnHeap
+         : TPair {LglsFwd(a1), LglsFwd(a2)} {}
+
       /*constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
       requires CT::NotReference<K, V> {
          this->AllocateFresh(this->RequestHeap(1));
