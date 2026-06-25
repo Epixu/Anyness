@@ -12,6 +12,7 @@
 #include "../../TestTypes/CommonTypes.hpp"
 #include "Langulus/Logger.hpp"
 #include "Langulus/LoggerStateless.hpp"
+#include "source/Component.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
@@ -83,6 +84,71 @@ using namespace Anyness;
    #include "../../TestTypes/PackedPointers.hpp"
 #endif
 
+struct SizeSummary {
+   size_t size = 0;
+   size_t stack_size = 0;
+   size_t heap_size = 0;
+   size_t heap_size_per_element = 0;
+   size_t heap_size_per_indirection = 0;
+   size_t heap_size_per_dimension = 0;
+};
+
+template<class C, size_t DimensionsCount>
+void Common_GapTest_Inner(SizeSummary& summary) {
+   if constexpr (requires { typename C::Subcomponents; }) {
+      C::Subcomponents::ForEach([&]<class InnerC> {
+         Common_GapTest_Inner<InnerC, DimensionsCount>(summary);
+      });
+   }
+   else {
+      if constexpr (requires { typename C::StackRequest; }) {
+         // Scan all stack requests                                        
+         using R = typename C::StackRequest;
+         if constexpr (CT::NotVoid<R>) {
+            Logger::Info(NameOf<C>(), " component reserves ",
+               sizeof(R), " bytes on the stack");
+            summary.stack_size += sizeof(R);
+         }
+      }
+
+      if constexpr (requires { typename C::HeapRequest; }) {
+         // Scan all heap requests                                         
+         using R = typename C::HeapRequest;
+         if constexpr (CT::NotVoid<R>) {
+            if constexpr (Com::IsRequestModifier<R>) {
+               constexpr size_t S = sizeof(TypeOf<R>);
+               Logger::Info(NameOf<C>(), " component reserves ",
+                  S, " bytes on the heap");
+
+               if constexpr (R::AllocatedPerElement) {
+                  summary.heap_size_per_element += S;
+                  Logger::Append("per element ");
+               }
+
+               if constexpr (R::AllocatedPerDimension) {
+                  summary.heap_size_per_dimension += S;
+                  Logger::Append("per dimension ");
+                  summary.heap_size += S * DimensionsCount;
+               }
+
+               if constexpr (R::AllocatedPerIndirection) {
+                  summary.heap_size_per_indirection += S;
+                  Logger::Append("per indirection ");
+               }
+            }
+            else {
+               constexpr size_t S = sizeof(R);
+               Logger::Info(NameOf<C>(), " component reserves ",
+                  S, " bytes on the heap");
+               summary.heap_size += S;
+            }
+         }
+      }
+   }
+
+   summary.size += sizeof(C);
+}
+
 /// Reports on a container, compares it to its std equivalent, makes sure it  
 /// is tightly packed, properly sized, etc.                                   
 template<class T, class COMPARE_WITH>
@@ -93,88 +159,50 @@ void Common_GapTest() {
    new (unininitialized) T {};
    size_t matched_bytes = 0;
    for (auto b : unininitialized) {
-      if (b != 0xff)
+      if (b == 0xff)
          break;
       ++matched_bytes;
    }
 
+   WARN(matched_bytes == sizeof(T));
+
+   auto s = Logger::Section(NameOf<T>(), " gap test:");
    if (matched_bytes != sizeof(T)) {
-      Logger::Warning("Padding mask (FF corresponds to padded bytes): ");
+      Logger::Warning("Padding mask (FF corresponds to padding): ");
       Logger::Warning(" ");
       for (auto b : unininitialized)
          Logger::Append(Logger::Hex(b));
    }
-   WARN(matched_bytes == sizeof(T));
-
    Logger::Info("Size of ", NameOf<COMPARE_WITH>(), " container is: ", sizeof(COMPARE_WITH), " bytes");
-   auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
-   size_t size = 0;
-   size_t stack_size = 0;
-   size_t heap_size = 0;
-   size_t heap_size_per_element = 0;
-   size_t heap_size_per_indirection = 0;
-   size_t heap_size_per_dimension = 0;
+   Logger::Info("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
 
+   SizeSummary summary;
    T::ComponentList::ForEach([&]<class C> {
-      if constexpr (requires { typename C::StackRequest; }) {
-         // Scan all stack requests                                     
-         using R = typename C::StackRequest;
-         if constexpr (CT::NotVoid<R>) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-               " bytes (reserves ", sizeof(R), " bytes on the stack)");
-            stack_size += sizeof(R);
-         }
-      }
-
-      if constexpr (requires { typename C::HeapRequest; }) {
-         // Scan all heap requests                                      
-         using R = typename C::HeapRequest;
-         if constexpr (CT::NotVoid<R>) {
-            if constexpr (Com::IsRequestModifier<R>) {
-               constexpr size_t S = sizeof(TypeOf<R>);
-               Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-                  " bytes; reserves ", S, " bytes in footer ");
-
-               if constexpr (R::AllocatedPerElement) {
-                  heap_size_per_element += S;
-                  Logger::Append("per element ");
-               }
-
-               if constexpr (R::AllocatedPerDimension) {
-                  heap_size_per_dimension += S;
-                  Logger::Append("per dimension ");
-               }
-
-               if constexpr (R::AllocatedPerIndirection) {
-                  heap_size_per_indirection += S;
-                  Logger::Append("per indirection ");
-               }
-            }
-            else {
-               constexpr size_t S = sizeof(R);
-               Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
-                  " bytes; reserves ", S, " bytes");
-               heap_size += S;
-            }
-         }
-      }
-
-      size += sizeof(C);
+      Common_GapTest_Inner<C, T::Dimensions::Count>(summary);
    });
 
    Logger::Info("-----------------------------------------");
-   Logger::Info("For a total of ", size,
+   Logger::Info("For a total of ", summary.size,
       " bytes in components (should be optimized-out as empty bases)");
-   Logger::Info("For a total of ", stack_size,
+   Logger::Info("For a total of ", summary.stack_size,
       " bytes on the stack");
-   Logger::Info("For a total of ", heap_size,
-      " bytes on the heap header");
-   Logger::Info("For a total of ", heap_size_per_element,
-      " bytes per element");
-   Logger::Info("For a total of ", heap_size_per_indirection,
-      " bytes per indirection");
-   Logger::Info("For a total of ", heap_size_per_dimension,
-      " bytes per dimension");
+
+   if (summary.heap_size) {
+      Logger::Info("For a total of ", summary.heap_size,
+         " bytes on the heap header");
+   }
+   if (summary.heap_size_per_element) {
+      Logger::Info("For a total of ", summary.heap_size_per_element,
+         " bytes per element");
+   }
+   if (summary.heap_size_per_indirection) {
+      Logger::Info("For a total of ", summary.heap_size_per_indirection,
+         " bytes per indirection");
+   }
+   if (summary.heap_size_per_dimension) {
+      Logger::Info("For a total of ", summary.heap_size_per_dimension,
+         " bytes per dimension");
+   }
 }
 
 namespace doctest

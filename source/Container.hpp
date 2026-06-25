@@ -171,6 +171,7 @@ namespace Langulus::Anyness
    template<class...T>
    concept NotTag = ((not requires { typename Decay<T>::CTTI_Disambiguator; }) and ...);
 
+   
    namespace Component
    {
    /// MARK: Container                                                        
