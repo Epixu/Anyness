@@ -346,7 +346,7 @@ namespace Langulus::Anyness::Component
             "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
             "Can be used only for contiguous containers");
-         static_assert(not CT::Cloned<I> and not CT::Copied<I>,
+         static_assert(not CT::Cloned<I> and not CT::Copied<I> and CT::HeapAllocated<C>,
             "Since this function assumes container has been preallocated, "
             "it makes no sense to clone or copy here "
             "- it should be handled outside this call."

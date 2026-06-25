@@ -589,20 +589,6 @@ namespace Langulus::Fractalloc
       auto pool_bank = SelectPoolBank(deptr_type);
       LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
 
-      /*LglsAssumeDev(deptr_type, "Invalid meta data");
-      PoolBank* bank = nullptr;
-      switch (deptr_type.GetPoolTactic()) {
-      case PoolTactic::Size:
-         bank = &gSizePoolChain[FastLog2(deptr_type.GetSize())];
-         break;
-      case PoolTactic::Type:
-         bank = &gTypePoolChain.at(deptr_type);            
-         break;
-      case PoolTactic::Main:
-         bank = &gMainPoolChain;
-         break;
-      }*/
-
       // Unpack indices and return raw pointer                          
       const size_t poolId = packed >> (spec.EntryBits + spec.OffsetBits);
       LglsAssumeDev(pool_bank->indexed.contains(poolId), "Invalid pool id");
@@ -619,11 +605,11 @@ namespace Langulus::Fractalloc
 
    /// Dump all currently allocated pools and entries, useful to locate leaks 
    void Allocator::DumpPools() noexcept {
-      auto section = Logger::InfoScoped("MANAGED MEMORY POOL DUMP");
+      auto section = Logger::InfoSection("MANAGED MEMORY POOL DUMP");
 
       // Dump main pool chain                                           
       if (gMainPoolChain.unindexed) {
-         const auto scope = Logger::InfoScoped(Logger::Purple, "MAIN POOL CHAIN: ");
+         const auto scope = Logger::InfoSection(Logger::Purple, "MAIN POOL CHAIN: ");
          gMainPoolChain.DumpPools({});
       }
 
@@ -632,7 +618,7 @@ namespace Langulus::Fractalloc
          if (not sized.unindexed)
             continue;
 
-         const auto scope = Logger::InfoScoped(Logger::Purple, 
+         const auto scope = Logger::InfoSection(Logger::Purple, 
             "SIZE POOL CHAIN FOR ", Logger::Red, Logger::Size {1ul << (&sized - gSizePoolChain)},
             Logger::Purple, ": "
          );
@@ -642,7 +628,7 @@ namespace Langulus::Fractalloc
       
       // Dump every type pool chain                                     
       for (auto& type : gTypePoolChain) {
-         const auto scope = Logger::InfoScoped(Logger::Purple,
+         const auto scope = Logger::InfoSection(Logger::Purple,
             "TYPE POOL CHAIN FOR `", Logger::Red, type.first.GetCppName(),
             Logger::Purple, '`'
          );
@@ -654,7 +640,7 @@ namespace Langulus::Fractalloc
    /// Compare two statistics snapshots, and find the difference              
    ///   @param with previous state                                           
    void Allocator::Diff(const Statistics& with) noexcept {
-      auto section = Logger::InfoScoped("MANAGED MEMORY DIFF");
+      auto section = Logger::InfoSection("MANAGED MEMORY DIFF");
       auto& stats = GetStatistics();
 
       if (stats.mBytesAllocatedByBackend != with.mBytesAllocatedByBackend) {
@@ -677,15 +663,29 @@ namespace Langulus::Fractalloc
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       if (stats.mDataDefinitions != with.mDataDefinitions) {
-         const auto scope = Logger::InfoScoped(Logger::Purple,
+         Logger::Info(Logger::Purple,
             "Data definitions difference: ",
             static_cast<int>(stats.mDataDefinitions) - static_cast<int>(with.mDataDefinitions)
+         );
+      }
+
+      if (stats.mTraitDefinitions != with.mTraitDefinitions) {
+         Logger::Info(Logger::Purple,
+            "Trait definitions difference: ",
+            static_cast<int>(stats.mTraitDefinitions) - static_cast<int>(with.mTraitDefinitions)
+         );
+      }
+
+      if (stats.mVerbDefinitions != with.mVerbDefinitions) {
+         Logger::Info(Logger::Purple,
+            "Verb definitions difference: ",
+            static_cast<int>(stats.mVerbDefinitions) - static_cast<int>(with.mVerbDefinitions)
          );
       }
    #endif
 
       if (stats.mPools != with.mPools) {
-         const auto scope = Logger::InfoScoped(Logger::Purple,
+         Logger::Info(Logger::Purple,
             "Pool difference: ", static_cast<int>(stats.mPools) - static_cast<int>(with.mPools)
          );
          
@@ -697,22 +697,6 @@ namespace Langulus::Fractalloc
          for (auto& type : gTypePoolChain)
             type.second.DiffPools(with, type.first);
       }
-
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      if (stats.mTraitDefinitions != with.mTraitDefinitions) {
-         const auto scope = Logger::InfoScoped(Logger::Purple,
-            "Trait definitions difference: ",
-            static_cast<int>(stats.mTraitDefinitions) - static_cast<int>(with.mTraitDefinitions)
-         );
-      }
-
-      if (stats.mVerbDefinitions != with.mVerbDefinitions) {
-         const auto scope = Logger::InfoScoped(Logger::Purple,
-            "Verb definitions difference: ",
-            static_cast<int>(stats.mVerbDefinitions) - static_cast<int>(with.mVerbDefinitions)
-         );
-      }
-   #endif
    }   
    
    /// Integrity checks                                                       

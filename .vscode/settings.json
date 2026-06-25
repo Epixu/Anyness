@@ -155,6 +155,10 @@
         "filterLanguageRegex": "c",
         "backgroundColor": "cyan",
         "color": "black"
+      }],
+      "(/[*]([^*]|([*][^/]))*[*]+/)": [{
+        "filterLanguageRegex": "c",
+        "backgroundColor": "#88ff8820"
       }]
    },
    "workbench.editor.wrapTabs": true,

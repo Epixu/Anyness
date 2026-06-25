@@ -70,10 +70,14 @@ namespace Langulus::Anyness::Component
       }
       
       /// Transfer from any kind of container, respecting intents             
+      ///   @important notice that Copy and Clone intents are not handled     
+      ///      here. They're handled in heap components instead, in case      
+      ///      something throws an exception while constructing. Same applies 
+      ///      to source containers that are allocated on the stack.          
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and CT::HeapAllocated<I>) {
             decltype(auto) from = LglsFwd(intent.what);
          
             // Always propagate custom reserve if available             

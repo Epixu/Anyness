@@ -93,7 +93,7 @@ namespace Langulus::Anyness::Component
       ///      here. They're handled in heap components instead, in case      
       ///      something throws an exception while constructing.              
       template<class SELF, CT::Intent I>
-      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I> and (STYLE & OnCreateAndDestroy) != 0)
+      requires (CT::Container<I> and not CT::Copied<I> and not CT::Cloned<I> and CT::HeapAllocated<I> and (STYLE & OnCreateAndDestroy) != 0)
       void ConstructFrom(this SELF& self, I&& intent) {
          using IT = Decvq<Deref<Deint<I>>>;
          decltype(auto) from = LglsFwd(intent.what);

@@ -99,7 +99,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and CT::HeapAllocated<I>) {
             using IT = Decvq<Deref<Deint<I>>>;
             decltype(auto) from = LglsFwd(intent.what);
             ThisCom::SetCountInner(from.template GetCount<ID>());

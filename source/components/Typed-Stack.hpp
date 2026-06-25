@@ -501,7 +501,7 @@ namespace Langulus::Anyness::Component
 
          ThisCom::template AbsorbType<D>(LglsFwd(intent));
 
-         if constexpr (TypeErased) {
+         if constexpr (TypeErased) { //TODO type constraints are either pointless, or should happen only if source is !Copied and !Cloned and !HeapAllocated
             // While we are interfacing external memory, we have to     
             // keep the type-constrained state, otherwise we risk       
             // interpreting static memory the wrong way.                
@@ -522,7 +522,7 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this SELF& self, I&& intent) {
          ThisCom::AbsorbType(LglsFwd(intent));
 
-         if constexpr (TypeErased) {
+         if constexpr (TypeErased) { //TODO type constraints are either pointless, or should happen only if source is !Copied and !Cloned and !HeapAllocated
             // While we are interfacing external memory, we have to     
             // keep the type-constrained state, otherwise we risk       
             // interpreting static memory the wrong way.                

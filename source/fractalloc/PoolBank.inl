@@ -100,8 +100,8 @@ namespace Langulus::Fractalloc
       ///   @param id pool id                                                 
       ///   @param pool the pool to dump                                      
       static void DumpPool(DMeta type, size_t id, const Pool* pool) noexcept {
-         const auto scope = Logger::InfoScoped(
-            Logger::PushCyan, Logger::Underline, "Pool #", id, " at ",
+         const auto scope = Logger::InfoSection(
+            Logger::PushCyan, "Pool #", id, " at ",
             Logger::Hex(pool), Logger::Pop
          );
 

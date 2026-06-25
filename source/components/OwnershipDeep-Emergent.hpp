@@ -1225,6 +1225,7 @@ namespace Langulus::Anyness::Component
       template<class SELF, CT::Intent I>
       requires (CT::Container<I> and (STYLE & OnCreateAndDestroy) != 0
            and not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>
+           and CT::HeapAllocated<I>
            and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>, ID>>))
       void ConstructFrom(this SELF& self, I&& intent) {
          using IT = Decvq<Deref<Deint<I>>>;

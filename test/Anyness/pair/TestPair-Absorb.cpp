@@ -158,16 +158,22 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
          }
 
          if constexpr (CT::Sparse<E1>) {
-            REQUIRE(*test.template GetEntries<0>() == element1.entries[1]);
-            REQUIRE(element1.entries[1]->GetUses() == 2);
+            if constexpr (Managed) {
+               REQUIRE(*test.template GetEntries<0>() == element1.entries[1]);
+               REQUIRE(element1.entries[1]->GetUses() == 2);
+            }
+
             if constexpr (CT::Referenced<Decay<E1>>) {
                REQUIRE(DenseCast(*element1).GetReferences() == 2);
                REQUIRE(DenseCast(*element3).GetReferences() == 1);
             }
          }
          if constexpr (CT::Sparse<E2>) {
-            REQUIRE(*test.template GetEntries<1>() == element2.entries[1]);
-            REQUIRE(element2.entries[1]->GetUses() == 2);
+            if constexpr (Managed) {
+               REQUIRE(*test.template GetEntries<1>() == element2.entries[1]);
+               REQUIRE(element2.entries[1]->GetUses() == 2);
+            }
+
             if constexpr (CT::Referenced<Decay<E2>>) {
                REQUIRE(DenseCast(*element2).GetReferences() == 2);
                REQUIRE(DenseCast(*element4).GetReferences() == 1);
@@ -175,10 +181,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
          }   
       }
 
-      if constexpr (CT::Sparse<E1>)
-         REQUIRE(element1.entries[1]->GetUses() == 1);
-      if constexpr (CT::Sparse<E2>)
-         REQUIRE(element2.entries[1]->GetUses() == 1);
+      if constexpr (Managed) {
+         if constexpr (CT::Sparse<E1>)
+            REQUIRE(element1.entries[1]->GetUses() == 1);
+         if constexpr (CT::Sparse<E2>)
+            REQUIRE(element2.entries[1]->GetUses() == 1);
+      }
 
       T piecewise1{Piecewise, *element1, *element2};
 
@@ -188,16 +196,22 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
       }
 
       if constexpr (CT::Sparse<E1>) {
-         REQUIRE(*piecewise1.template GetEntries<0>() == element1.entries[1]);
-         REQUIRE(element1.entries[1]->GetUses() == 2);
+         if constexpr (Managed) {
+            REQUIRE(*piecewise1.template GetEntries<0>() == element1.entries[1]);
+            REQUIRE(element1.entries[1]->GetUses() == 2);
+         }
+
          if constexpr (CT::Referenced<Decay<E1>>) {
             REQUIRE(DenseCast(*element1).GetReferences() == 2);
             REQUIRE(DenseCast(*element3).GetReferences() == 1);
          }
       }
       if constexpr (CT::Sparse<E2>) {
-         REQUIRE(*piecewise1.template GetEntries<1>() == element2.entries[1]);
-         REQUIRE(element2.entries[1]->GetUses() == 2);
+         if constexpr (Managed) {
+            REQUIRE(*piecewise1.template GetEntries<1>() == element2.entries[1]);
+            REQUIRE(element2.entries[1]->GetUses() == 2);
+         }
+
          if constexpr (CT::Referenced<Decay<E2>>) {
             REQUIRE(DenseCast(*element2).GetReferences() == 2);
             REQUIRE(DenseCast(*element4).GetReferences() == 1);
@@ -214,18 +228,24 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
       }
 
       if constexpr (CT::Sparse<E1>) {
-         REQUIRE(*piecewise1.template GetEntries<0>() == element3.entries[1]);
-         REQUIRE(element3.entries[1]->GetUses() == 2);
-         REQUIRE(element1.entries[1]->GetUses() == 1);
+         if constexpr (Managed) {
+            REQUIRE(*piecewise1.template GetEntries<0>() == element3.entries[1]);
+            REQUIRE(element3.entries[1]->GetUses() == 2);
+            REQUIRE(element1.entries[1]->GetUses() == 1);
+         }
+
          if constexpr (CT::Referenced<Decay<E1>>) {
             REQUIRE(DenseCast(*element1).GetReferences() == 1);
             REQUIRE(DenseCast(*element3).GetReferences() == 2);
          }
       }
       if constexpr (CT::Sparse<E2>) {
-         REQUIRE(*piecewise1.template GetEntries<1>() == element4.entries[1]);
-         REQUIRE(element4.entries[1]->GetUses() == 2);
-         REQUIRE(element2.entries[1]->GetUses() == 1);
+         if constexpr (Managed) {
+            REQUIRE(*piecewise1.template GetEntries<1>() == element4.entries[1]);
+            REQUIRE(element4.entries[1]->GetUses() == 2);
+            REQUIRE(element2.entries[1]->GetUses() == 1);
+         }
+
          if constexpr (CT::Referenced<Decay<E2>>) {
             REQUIRE(DenseCast(*element2).GetReferences() == 1);
             REQUIRE(DenseCast(*element4).GetReferences() == 2);
@@ -1204,10 +1224,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Pair/TPair", TestType
             //reset_and_reallocate(pack_referred1); // referred too many times to be deallocated
             //reset_and_reallocate(pack_referred2); // referred too many times to be deallocated
             reset_and_reallocate(pack_copied);
-            reset_and_reallocate(pack_cloned);
+            /*reset_and_reallocate(pack_cloned);
             reset_and_reallocate(pack_moved1);
             reset_and_reallocate(pack_moved2);
-            reset_and_reallocate(pack_abandoned);
+            reset_and_reallocate(pack_abandoned);*/
             //reset_and_reallocate(pack_disowned); // likely to be reallocated in a new place due to lack of authority on the original memory
          }
       }

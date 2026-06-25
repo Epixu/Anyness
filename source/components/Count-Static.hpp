@@ -99,7 +99,7 @@ namespace Langulus::Anyness::Component
       ///      inserted. In those cases, count is set by the heap components. 
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires (CT::Container<I>
-      and not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>)
+      and not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I> and CT::HeapAllocated<I>)
       void ConstructFrom(this SELF&, I&& intent) {
          using IT = Decvq<Deref<Deint<I>>>;
          decltype(auto) from = LglsFwd(intent.what);
