@@ -8,10 +8,15 @@
 #pragma once
 #include "Text.hpp"
 #include "Bytes.hpp"
+#include "Any.hpp"
 #include "TAny.hpp"
+#include "Many.hpp"
 #include "TMany.hpp"
+#include "Set.hpp"
 #include "TSet.hpp"
+#include "Pair.hpp"
 #include "TPair.hpp"
+#include "Map.hpp"
 #include "TMap.hpp"
 
 

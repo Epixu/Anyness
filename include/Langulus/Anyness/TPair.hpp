@@ -6,9 +6,26 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Pair.hpp"
+#include <source/components/Typed-Static.hpp>
+#include <source/components/Typed-Stack.hpp>
+#include <source/components/Heap-Movable.hpp>
+#include <source/components/Stack.hpp>
+#include <source/components/Count-Static.hpp>
+#include <source/components/Reserve-Static.hpp>
+#include <source/components/Ownership-Stack.hpp>
+#include <source/components/OwnershipDeep-Heap.hpp>
+#include <source/components/Hash-Emergent.hpp>
+#include <source/components/Emplacement.hpp>
+#include <source/components/Assignment.hpp>
+#include <source/components/Removal.hpp>
+#include <source/components/Conversion.hpp>
+#include <source/components/Comparison.hpp>
+#include <source/states/Encrypted.hpp>
+#include <source/states/Disowned.hpp>
+#include <source/components/Multitype.hpp>
 #include <source/components/Multiprovider.hpp>
 #include <source/components/Multiown-Deep.hpp>
+#include "HandlePair.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -58,8 +75,13 @@ namespace Langulus::Anyness::Inner
 
    template<CT::NotVoid K, CT::NotVoid V> requires CT::NotHandle<K, V>
    using TPairBase = Tif<CT::NotReference<K, V>, TPairHeapBase<Deref<K>, Deref<V>>, TPairStackBase<K, V>>;
-}
 
+   template<class K, class V>
+   concept PairOnStack = not CT::NotReference<K, V>;
+
+   template<class K, class V>
+   concept PairOnHeap = not PairOnStack<K, V>;
+}
 
 namespace Langulus::Anyness
 {
@@ -89,16 +111,13 @@ namespace Langulus::Anyness
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 
-      static constexpr bool OnStack = not CT::NotReference<K, V>;
-      static constexpr bool OnHeap  = not OnStack;
-
-      constexpr TPair() noexcept requires CT::NotReference<K, V> {
+      constexpr TPair() noexcept requires Inner::PairOnHeap<K, V> {
          this->ConstructDefault();
       }
-      constexpr TPair(TPair const& other) requires CT::NotReference<K, V> {
+      constexpr TPair(TPair const& other) requires Inner::PairOnHeap<K, V> {
          this->Absorb(Refer(other));
       }
-      constexpr TPair(TPair&& other) noexcept requires CT::NotReference<K, V> {
+      constexpr TPair(TPair&& other) noexcept requires Inner::PairOnHeap<K, V> {
          this->Absorb(Move(other));
       }
       constexpr ~TPair() noexcept {
@@ -115,21 +134,21 @@ namespace Langulus::Anyness
 
       /// Stack-based constructors                                            
       template<CT::NotHandle K_ALT, CT::NotHandle V_ALT>
-      constexpr TPair(K_ALT&& a1, V_ALT&& a2) requires (OnStack and NotTag<K_ALT, V_ALT>)
+      constexpr TPair(K_ALT&& a1, V_ALT&& a2) requires (Inner::PairOnStack<K, V> and NotTag<K_ALT, V_ALT>)
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
       
       template<CT::NotHandle K_ALT, CT::NotHandle V_ALT>
-      constexpr TPair(Inner::Piecewise, K_ALT&& a1, V_ALT&& a2) requires OnStack
+      constexpr TPair(Inner::Piecewise, K_ALT&& a1, V_ALT&& a2) requires Inner::PairOnStack<K, V>
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
       }
 
       template<CT::NotHandle K_ALT>
-      constexpr TPair(Inner::Piecewise, K_ALT&& a1) requires OnStack
+      constexpr TPair(Inner::Piecewise, K_ALT&& a1) requires Inner::PairOnStack<K, V>
          : Base {Stackwise, LglsFwd(a1), {}} {
          if constexpr (CT::Sparse<K> or CT::Sparse<V>)
             this->Com::OwnershipDeepEmergent<Com::StrongOwnership, true, 0, 1>::Keep();
@@ -138,11 +157,11 @@ namespace Langulus::Anyness
       /// Construct from handles                                              
       template<NotTag K_ALT, NotTag V_ALT>
       constexpr TPair(K_ALT&& a1, V_ALT&& a2)
-      requires (OnHeap or CT::Handle<K_ALT> or CT::Handle<V_ALT>) {
+      requires (Inner::PairOnHeap<K, V> or CT::Handle<K_ALT> or CT::Handle<V_ALT>) {
          this->ResetState();
          this->DeduceType(a1, a2);
          
-         if constexpr (OnHeap) {
+         if constexpr (Inner::PairOnHeap<K, V>) {
             this->AllocateFresh(this->RequestHeap(1));
             this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(FWDIntent(a1));
             this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(FWDIntent(a2));
@@ -153,15 +172,8 @@ namespace Langulus::Anyness
          }
       }
 
-      constexpr TPair(Inner::Piecewise, auto&& a1, auto&& a2) requires OnHeap
+      constexpr TPair(Inner::Piecewise, auto&& a1, auto&& a2) requires Inner::PairOnHeap<K, V>
          : TPair {LglsFwd(a1), LglsFwd(a2)} {}
-
-      /*constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
-      requires CT::NotReference<K, V> {
-         this->AllocateFresh(this->RequestHeap(1));
-         this->template EmplaceConstruct<0, AllocationStrategy::DontAllocate>(FWDIntent(a1));
-         this->template EmplaceConstruct<1, AllocationStrategy::DontAllocate>(FWDIntent(a2));
-      }*/
      
       /// Assignment                                                          
       constexpr TPair& operator = (TPair const& other) {
@@ -176,7 +188,7 @@ namespace Langulus::Anyness
 
       /// Clear the pair and assign a key and a value                         
       constexpr TPair& Assign(auto&& a1, auto&& a2) {
-         if constexpr (OnHeap) {
+         if constexpr (Inner::PairOnHeap<K, V>) {
             this->Reset();
             this->DeduceType(a1, a2);
             this->AllocateFresh(this->RequestHeap(1));
@@ -193,20 +205,6 @@ namespace Langulus::Anyness
 
       using Com::Comparison<true, 0, 1>::operator <=>;
       using Com::Comparison<true, 0, 1>::operator ==;
-
-      /*auto& GetKey(this auto&& self) noexcept {
-         if constexpr (CT::NotReference<K, V>)
-            return *self.Com::template HeapMovable<0, 0, HeapEntry<0, K*>, HeapEntry<1, V*>>::template Get<void, 0>();
-         else
-            return *self.Com::template Stack<K, 0>::Get();
-      }
-
-      auto& GetVal(this auto&& self) noexcept {
-         if constexpr (CT::NotReference<K, V>)
-            return *self.Com::template HeapMovable<0, 0, HeapEntry<0, K*>, HeapEntry<1, V*>>::template Get<void, 1>();
-         else
-            return *self.Com::template Stack<V, 1>::Get();
-      }*/
 
       auto GetKeyHandle() const noexcept -> typename HandleType::KeyHandle {
          return {*this};

@@ -19,8 +19,6 @@
 #include <source/components/Removal.hpp>
 #include <source/components/Conversion.hpp>
 #include <source/components/Comparison.hpp>
-//#include <source/components/State-Stack.hpp>
-//#include <source/states/Typed.hpp>
 #include <source/states/Encrypted.hpp>
 #include <source/states/Disowned.hpp>
 #include "HandlePair.hpp"
