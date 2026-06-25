@@ -150,7 +150,7 @@
         "filterLanguageRegex": "c",
         "backgroundColor": "orange",
         "color": "black"
-      }]
+      }],
       "(/{2}WORKAROUND.*)": [{
         "filterLanguageRegex": "c",
         "backgroundColor": "cyan",
@@ -189,5 +189,12 @@
   "editor.minimap.scale": 1,
   "editor.minimap.maxColumn": 120,
   "editor.minimap.renderCharacters": false,
-  "editor.minimap.sectionHeaderFontSize": 10
+  "editor.minimap.sectionHeaderFontSize": 10,
+  "coverage-gutters.coverageBaseDir": "out/build/windows-clang-x64-debug-safe-AVX-managed-coverage/bin",
+  "coverage-gutters.showLineCoverage": true,
+  "coverage-gutters.showGutterCoverage": false,
+  "coverage-gutters.coverageFileNames": [
+    "lcov.info"
+  ],
+  "coverage-gutters.customizable.context-menu": false
 }
