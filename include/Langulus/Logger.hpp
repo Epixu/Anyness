@@ -304,7 +304,7 @@ namespace Langulus::Logger
       #endif
    }
 
-   /// A general same-line write function that continues the last style/intent
+   /// A general same-line write function that continues the last style       
    template<class...T> LANGULUS(INLINED)
    constexpr void Append(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
@@ -319,22 +319,18 @@ namespace Langulus::Logger
    /// MARK: Section                                                          
    /// Write a section on a new line, tab all consecutive lines, underline it,
    /// and return the scoped tabs, that will be	untabbed automatically at the 
-   /// scope's end. Section color is context dependent on the current intent  
+   /// scope's end. This Section continues the last intent/style.             
+   /// Use <Intent>Section if you want to change the intent as well.          
    ///   @return a scoped tab, that will untab when destroyed                 
    template<class...T> LANGULUS(INLINED)
    constexpr auto Section(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
          if constexpr (sizeof...(arguments) > 0) {
             if not consteval {
-               //const auto currentStyle = GlobalState.GetCurrentStyle();
                GlobalState.NewLine();
-               //GlobalState.Write(GlobalState.mDefaultStyle);
-               //GlobalState.Write(" ");
                GlobalState.Write(Push);
-               //GlobalState.Write(currentStyle);
                GlobalState.Write(Underline);
                (GlobalState.Write(LglsFwd(arguments)), ...);
-               //GlobalState.Write(GlobalState.mDefaultStyle);
                GlobalState.Write(Pop);
                return GlobalState.NewScope();
             }
@@ -389,7 +385,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write a fatal error section and tab all next lines                     
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto FatalSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::FatalError);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -442,6 +464,32 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// Write an error section and tab all next lines                          
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto ErrorSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Error);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
+               return UnusedScope {};
+            #else
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
    /// MARK: Warning                                                          
    /// Write a new-line warning                                               
    template<class...T> LANGULUS(INLINED)
@@ -483,7 +531,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write a warning section and tab all next lines                         
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto WarningSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Warning);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -530,7 +604,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write a verbose section and tab all next lines                         
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto VerboseSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Verbose);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -577,7 +677,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_INFOS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write an info section and tab all next lines                           
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto InfoSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_INFOS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Info);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_INFOS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -624,7 +750,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write a message section and tab all next lines                         
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto MessageSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Message);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -671,7 +823,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write a special section and tab all next lines                         
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto SpecialSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Special);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -718,7 +896,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write a flow section and tab all next lines                            
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto FlowSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Flow);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -765,7 +969,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write an input section and tab all next lines                          
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto InputSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Input);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -812,7 +1042,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write a network section and tab all next lines                         
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto NetworkSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Network);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -859,7 +1115,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_OS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+
+   /// Write an OS section and tab all next lines                             
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto OSSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_OS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::OS);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_OS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif
@@ -906,7 +1188,33 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
+            #endif
+         }
+      #endif
+   }
+   
+   /// Write a prompt section and tab all next lines                          
+   ///   @return a scoped tab, that will untab when destroyed                 
+   template<class...T> LANGULUS(INLINED)
+   constexpr auto PromptSection([[maybe_unused]] T&&...arguments) noexcept {
+      #if not LANGULUS_FEATURE(LOGGING)
+         return UnusedScope {};
+      #else
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Prompt);
+               return Section(LglsFwd(arguments)...);
+            #endif
+         }
+         else {
+            #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
+               return UnusedScope {};
+            #else
+               return Scope {0};
             #endif
          }
       #endif

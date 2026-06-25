@@ -20,9 +20,9 @@ namespace Langulus::Anyness::Component
    ///   Compile-time reserving isn't really reserving, and doesn't take up   
    /// space, but is useful for defining single-element containers that       
    /// still need the API required to function alongside other components.    
-   ///   In these cases, reserve is equal to SIZE if container has a heap     
-   /// component that has been allocated - otherwise it is 0. If no heap      
-   /// component exists or can't be null, then the reserve is always SIZE.    
+   ///   In these cases, reserve is equal to SIZE if container has a valid    
+   /// GetAllocationInner - otherwise it is 0. If a non-emergent allocation   
+   /// pointer doesn't exist, then the reserve is always SIZE.                
    ///   @tparam SIZE the reserve type and value                              
    ///   @tparam ID provider ID to keep reserve of                            
    ///   @tparam SHARED provider IDs that share the same reserve variable     
@@ -45,8 +45,8 @@ namespace Langulus::Anyness::Component
       /// Get the number of reserved (maybe uninitialized) elements           
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr auto GetReserved(this C const& self) noexcept -> ReserveType {
-         if constexpr (CT::HasVariableCount<C>)
-            return self.template GetRaw<SID>() ? SIZE : ReserveType {0};
+         if constexpr (requires { self.template GetAllocationInner<SID>(); })
+            return self.template GetAllocationInner<SID>() ? SIZE : 0;
          else
             return SIZE;
       }

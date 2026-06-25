@@ -72,6 +72,7 @@ namespace Langulus::Anyness::Component
       LglsComHeapMovable(friend);
       LglsComRemoval(friend);
       LglsComEmplacement(friend);
+      LglsComReserveStatic(friend);
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   

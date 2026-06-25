@@ -118,7 +118,7 @@ void Common_GapTest_Inner(SizeSummary& summary) {
             if constexpr (Com::IsRequestModifier<R>) {
                constexpr size_t S = sizeof(TypeOf<R>);
                Logger::Info(NameOf<C>(), " component reserves ",
-                  S, " bytes on the heap");
+                  S, " bytes on the heap ");
 
                if constexpr (R::AllocatedPerElement) {
                   summary.heap_size_per_element += S;
@@ -128,7 +128,8 @@ void Common_GapTest_Inner(SizeSummary& summary) {
                if constexpr (R::AllocatedPerDimension) {
                   summary.heap_size_per_dimension += S;
                   Logger::Append("per dimension ");
-                  summary.heap_size += S * DimensionsCount;
+                  if constexpr (not Com::IsFooterRequest<R>)
+                     summary.heap_size += S * DimensionsCount;
                }
 
                if constexpr (R::AllocatedPerIndirection) {
@@ -166,7 +167,7 @@ void Common_GapTest() {
 
    WARN(matched_bytes == sizeof(T));
 
-   auto s = Logger::Section(NameOf<T>(), " gap test:");
+   auto s = Logger::InfoSection(NameOf<T>(), " gap test:");
    if (matched_bytes != sizeof(T)) {
       Logger::Warning("Padding mask (FF corresponds to padding): ");
       Logger::Warning(" ");

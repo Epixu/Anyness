@@ -154,7 +154,7 @@ target_include_directories(LangulusAnyness PUBLIC include)
 target_include_directories(LangulusAnyness PUBLIC .)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
 target_link_libraries(LangulusAnyness PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>)
-#target_link_options(LangulusAnyness PUBLIC --icf=all)
+#target_compile_options(LangulusAnyness PUBLIC -Wl,--icf=all)
 
 set(LANGULUS_ALIGNMENT 16 CACHE STRING "Default langulus alignment (in bytes)")
 message(STATUS "[FEATURE] Alignment was set to ${LANGULUS_ALIGNMENT} bytes")
