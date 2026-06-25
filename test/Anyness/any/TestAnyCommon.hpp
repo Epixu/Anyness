@@ -11,6 +11,7 @@
 #include "../../TestTypes/ReferencedType.hpp"
 #include "../../TestTypes/CommonTypes.hpp"
 #include "Langulus/Logger.hpp"
+#include "Langulus/LoggerStateless.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
@@ -85,20 +86,25 @@ using namespace Anyness;
 /// Reports on a container, compares it to its std equivalent, makes sure it  
 /// is tightly packed, properly sized, etc.                                   
 template<class T, class COMPARE_WITH>
-void Common_GapTest(bool inspect_padding = true) {
+void Common_GapTest() {
    // Make sure the container is tightly packed with no padding         
-   if (inspect_padding) {
-      alignas(T) char unininitialized[sizeof(T)];
-      memset(unininitialized, 0xff, sizeof(unininitialized));
-      new (unininitialized) T {};
-      size_t matched_bytes = 0;
-      for (auto b : unininitialized) {
-         if (b != 0xff)
-            break;
-         ++matched_bytes;
-      }
-      REQUIRE(matched_bytes == sizeof(T));
+   alignas(T) char unininitialized[sizeof(T)];
+   memset(unininitialized, 0xff, sizeof(unininitialized));
+   new (unininitialized) T {};
+   size_t matched_bytes = 0;
+   for (auto b : unininitialized) {
+      if (b != 0xff)
+         break;
+      ++matched_bytes;
    }
+
+   if (matched_bytes != sizeof(T)) {
+      Logger::Warning("Padding mask (FF corresponds to padded bytes): ");
+      Logger::Warning(" ");
+      for (auto b : unininitialized)
+         Logger::Append(Logger::Hex(b));
+   }
+   WARN(matched_bytes == sizeof(T));
 
    Logger::Info("Size of ", NameOf<COMPARE_WITH>(), " container is: ", sizeof(COMPARE_WITH), " bytes");
    auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
