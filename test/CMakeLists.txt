@@ -58,6 +58,7 @@ add_langulus_test(LangulusAnynessTest
 
                Anyness/pair/TestPair-Empty.cpp
                Anyness/pair/TestPair-Absorb.cpp
+               Anyness/pair/TestPair-Piecewise.cpp
 
                Anyness/map/TestMap-Empty.cpp
                Anyness/map/TestMap-Absorb.cpp
