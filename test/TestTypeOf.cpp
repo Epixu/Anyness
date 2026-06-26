@@ -16,7 +16,7 @@ using namespace Langulus;
 
 
 ///                                                                           
-/// CT::Typed / CT::Untyped                                                   
+/// MARK: CT::Typed / CT::Untyped                                             
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing typed type", TestType
    , std::vector<bool>
@@ -52,7 +52,7 @@ static_assert(not CT::Untyped<CustomUntypedType, void, TypedEnum>);
 
 
 ///                                                                           
-/// TypeOf                                                                    
+/// MARK: TypeOf                                                              
 ///                                                                           
 TEST_CASE("Testing TypeOf") {
    static_assert(::std::same_as<TypeOf<SheddableType<int>>, int>);
@@ -74,7 +74,7 @@ TEST_CASE("Testing TypeOf") {
 
 
 ///                                                                           
-/// TypedCast                                                                 
+/// MARK: TypedCast                                                           
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing TypedCast", TestType
    , int
@@ -106,7 +106,7 @@ TEST_CASE_TEMPLATE("Testing TypedCast", TestType
 
 
 ///                                                                           
-/// ShedCast                                                                  
+/// MARK: ShedCast                                                            
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing ShedCast", TestType
    , int
@@ -135,7 +135,7 @@ TEST_CASE_TEMPLATE("Testing ShedCast", TestType
 
 
 ///                                                                           
-/// SparseCast                                                                
+/// MARK: SparseCast                                                          
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing SparseCast", TestType
    , int
@@ -196,7 +196,7 @@ TEST_CASE_TEMPLATE("Testing SparseCast", TestType
 
 
 ///                                                                           
-/// DenseCast                                                                 
+/// MARK: DenseCast                                                           
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing DenseCast", TestType
    , int

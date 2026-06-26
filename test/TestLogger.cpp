@@ -230,6 +230,8 @@ SCENARIO("Logging to console (stateful)") {
       Logger::Append(", and this should be appended");
       auto scope = Logger::Section("This should be a section inside a prompt");
       Logger::Line("This should be a line inside a section, inside a prompt");
+      auto scope2 = Logger::OSSection("This should be an OSSection inside a prompt section");
+      Logger::Network("This is a network message inside two sections");
    }
 
    Logger::Special("#2 The answer is ", 42, '!', " It's ", true, ", I tell ya!");

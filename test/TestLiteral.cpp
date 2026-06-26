@@ -35,7 +35,7 @@ namespace
 
 
 ///                                                                           
-/// CT::Literal                                                               
+/// MARK: CT::Literal                                                         
 ///                                                                           
 SCENARIO("Testing CT::Literal") {
    //static_assert(CT::Literal<>); // shouldn't compile
@@ -53,7 +53,7 @@ SCENARIO("Testing CT::Literal") {
 
 
 ///                                                                           
-/// CT::LiteralUndefined                                                      
+/// MARK: CT::LiteralUndefined                                                
 ///                                                                           
 SCENARIO("Testing CT::LiteralUndefined") {
    //static_assert(CT::LiteralUndefined<>); // shouldn't compile
@@ -74,7 +74,7 @@ SCENARIO("Testing CT::LiteralUndefined") {
 
 
 ///                                                                           
-/// CT::LiteralString                                                         
+/// MARK: CT::LiteralString                                                   
 ///                                                                           
 SCENARIO("Testing CT::LiteralString") {
    //static_assert(CT::LiteralString<>); // shouldn't compile
@@ -95,7 +95,7 @@ SCENARIO("Testing CT::LiteralString") {
 
 
 ///                                                                           
-/// CT::LiteralValue                                                          
+/// MARK: CT::LiteralValue                                                    
 ///                                                                           
 SCENARIO("Testing CT::LiteralValue") {
    //static_assert(CT::LiteralValue<>); // shouldn't compile
@@ -116,7 +116,7 @@ SCENARIO("Testing CT::LiteralValue") {
 
 
 ///                                                                           
-/// CT::LiteralChar                                                           
+/// MARK: CT::LiteralChar                                                     
 ///                                                                           
 SCENARIO("Testing CT::LiteralChar") {
    //static_assert(CT::LiteralChar<>); // shouldn't compile
@@ -126,7 +126,7 @@ SCENARIO("Testing CT::LiteralChar") {
 
 
 ///                                                                           
-/// Literal strings                                                           
+/// MARK: Literal strings                                                     
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing literal strings", TestType,
    char, wchar_t, char8_t, char16_t, char32_t

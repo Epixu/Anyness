@@ -263,9 +263,6 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    #if LANGULUS(BENCHMARK)
       using stdmap = ::std::unordered_map<E1, E2>;
    #endif
-
-   Common_GapTest<T, ::std::unordered_map<E1, E2>>();
-   //static_assert(sizeof(T) <= sizeof(::std::unordered_map<E1, E2>)); //TODO not true on 32bit builds unfortunately
    
    GIVEN("Empty-constructed container, assigned (refer), and then destroyed") {
       const ScopedE1 element1{555};
@@ -327,6 +324,11 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       const ScopedE1 element1 {555};
       const ScopedE2 element2 {111};
       T pack;
+
+      WHEN("Gap test") {
+         Common_GapTest<T, ::std::unordered_map<E1, E2>>();
+         //static_assert(sizeof(T) <= sizeof(::std::unordered_map<E1, E2>)); //TODO not true on 32bit builds unfortunately
+      }
 
       WHEN("Default-constructed") {
          Map_CheckState_Default<E1, E2>(pack);

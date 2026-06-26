@@ -154,17 +154,19 @@ SCENARIO("Testing byte container") {
    static_assert(not CT::Array<T>, "Wrongly typed container");
    static_assert(    Exact<TypeOf<T>, Byte>, "Wrongly typed container");
 
-   Common_GapTest<T, ::std::vector<Byte>>();
-   // Due to the additional cached hash member, byte container exceeds std::vector b
-   /*static_assert(
-         (Byteness == 8 and sizeof(T) <= sizeof(::std::vector<Byte>))
-      or (sizeof(T) <= 16) // Due to the additional cached hash member, byte container exceeds std::vector b
-   );*/
-
    GIVEN("Default byte container") {
       T bytes;
 
       Bytes_CheckState_Default(bytes);
+
+      WHEN("Gap test") {
+         Common_GapTest<T, ::std::vector<Byte>>();
+         // Due to the additional cached hash member, byte container exceeds std::vector b
+         /*static_assert(
+               (Byteness == 8 and sizeof(T) <= sizeof(::std::vector<Byte>))
+            or (sizeof(T) <= 16) // Due to the additional cached hash member, byte container exceeds std::vector b
+         );*/
+      }
 
       WHEN("Cleared") {
          bytes.Clear();

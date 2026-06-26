@@ -13,7 +13,7 @@ using namespace Langulus;
 
 
 ///                                                                           
-/// CT::Void                                                                  
+/// MARK: CT::Void                                                            
 ///                                                                           
 namespace
 {
@@ -78,7 +78,7 @@ static_assert(not CT::NotVoid<VoidType*, NonVoidTypeDerived, VoidType>);
 
 
 ///                                                                           
-/// CT::Typelist                                                              
+/// MARK: CT::Typelist                                                        
 ///                                                                           
 namespace
 {

@@ -23,6 +23,7 @@ using namespace Langulus;
 using namespace Anyness;
 
 #if LANGULUS(BENCHMARK)
+   /// MARK: Benchmark                                                        
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkAny(func, tolerance, my_init, my) { \
       const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |" + NameOf<T>() + "|"; \
@@ -93,6 +94,7 @@ struct SizeSummary {
    size_t heap_size_per_dimension = 0;
 };
 
+/// MARK: Gap test                                                            
 template<class C, size_t DimensionsCount>
 void Common_GapTest_Inner(SizeSummary& summary) {
    if constexpr (requires { typename C::Subcomponents; }) {
@@ -208,6 +210,7 @@ void Common_GapTest() {
 
 namespace doctest
 {
+   /// MARK: {doctest}                                                        
    /// doctest stringifiers for Any and TAny                                  
    template<>
    struct StringMaker<Any> {
@@ -228,6 +231,7 @@ namespace doctest
    };
 }
 
+/// MARK: TestType                                                            
 /// Tests if a container is of a particular type                              
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_Helper_TestType(const C& any) {
@@ -251,6 +255,7 @@ void Any_Helper_TestType(const C& any) {
    REQUIRE(any.IsTyped());
 }
 
+/// MARK: TestSame                                                            
 /// Tests if two containers point to the same memory the same way             
 template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
 void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
@@ -273,6 +278,7 @@ void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = 
       REQUIRE(rhs.IsDefaultState());
 }
 
+/// MARK: Default                                                             
 /// Tests whether a container is in its default-constructed state             
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Common_CheckState_Default(const C& any, bool typed = false) {
@@ -316,6 +322,7 @@ void Any_CheckState_Default(const C& any, bool typed = false) {
    }
 }
 
+/// MARK: OwnedEmpty                                                          
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_OwnedEmpty(const C& any) {
    Any_Helper_TestType<E>(any);
@@ -334,6 +341,7 @@ void Any_CheckState_OwnedEmpty(const C& any) {
    REQUIRE      (any == C{});
 }
 
+/// MARK: OwnedFull                                                           
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_OwnedFull(const C& any) {
    Any_Helper_TestType<E>(any);
@@ -353,6 +361,7 @@ void Any_CheckState_OwnedFull(const C& any) {
    REQUIRE      (any != C{});
 }
 
+/// MARK: DisownedFull                                                        
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_DisownedFull(const C& any) {
    Any_Helper_TestType<E>(any);
@@ -372,11 +381,13 @@ void Any_CheckState_DisownedFull(const C& any) {
    REQUIRE      (any != C{});
 }
 
+/// MARK: Abandoned                                                           
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_Abandoned(const C& any) {
    REQUIRE(any.IsDisowned());
 }
 
+/// MARK: ContainsOne                                                         
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) {
    auto& e = e_with_intent.what;
@@ -429,6 +440,7 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
    }
 }
 
+/// MARK: CompareOne                                                          
 template<CT::Container T, class E> requires CT::NoIntent<T>
 void Any_Helper_CompareOne(const T& pack, const E& e) {
    if constexpr (CT::TypeErased<T>) {

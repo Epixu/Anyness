@@ -18,7 +18,7 @@
 
 
 ///                                                                           
-/// Testing empty meta data                                                   
+/// MARK: Empty meta data                                                     
 ///                                                                           
 TEST_CASE("Testing empty meta data") {
    const DMeta meta = {};
@@ -110,7 +110,7 @@ TEST_CASE("Testing empty meta data") {
 }
 
 ///                                                                           
-/// Reflecting incomplete types                                               
+/// MARK: Incomplete types                                                    
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    //, void           // shouldn't compile
@@ -245,7 +245,7 @@ namespace {
 }
 
 ///                                                                           
-/// Reflecting names                                                          
+/// MARK: Names                                                               
 ///                                                                           
 SCENARIO("Testing reflection of names") {
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -420,7 +420,7 @@ SCENARIO("Testing reflection of names") {
 }
 
 ///                                                                           
-/// Reflecting abstracts                                                      
+/// MARK: Abstracts                                                           
 ///                                                                           
 TEST_CASE_TEMPLATE("Reflecting abstract types", T
    , PureAbstract
@@ -460,7 +460,7 @@ TEST_CASE_TEMPLATE("Reflecting non-abstract types", T
 }
 
 ///                                                                           
-/// Reflecting virtual bases                                                  
+/// MARK: Virtual bases                                                       
 ///                                                                           
 TEST_CASE_TEMPLATE("Reflecting virtual bases", T,
    VirtuallyDerived
@@ -507,7 +507,7 @@ TEST_CASE_TEMPLATE("Reflecting non-virtual bases", T,
 }
 
 ///                                                                           
-/// Reflecting a complex type                                                 
+/// MARK: Complex types                                                       
 ///                                                                           
 SCENARIO("A type reflected with all traits") {
    ImplicitlyReflectedDataWithTraits instance;
@@ -645,7 +645,7 @@ SCENARIO("A type reflected with all traits") {
 
 
 ///                                                                           
-/// Reflecting verbs                                                          
+/// MARK: Verbs                                                               
 ///                                                                           
 SCENARIO("Reflecting a verb") {
    {
@@ -685,7 +685,7 @@ SCENARIO("Reflecting a verb") {
 }
 
 ///                                                                           
-/// Reflecting tags                                                           
+/// MARK: Tags                                                                
 ///                                                                           
 SCENARIO("Reflecting a tag") {
    {
@@ -709,7 +709,7 @@ SCENARIO("Reflecting a tag") {
 }
 
 ///                                                                           
-/// Reflecting values                                                         
+/// MARK: Values                                                              
 ///                                                                           
 SCENARIO("Reflecting a value") {
    {
@@ -731,7 +731,7 @@ SCENARIO("Reflecting a value") {
 }
 
 ///                                                                           
-/// Reflecting functions                                                      
+/// MARK: Functions                                                           
 ///                                                                           
 TEST_CASE_TEMPLATE("A reflected function signature", TestType,
    //decltype(FunctionForTesting), // shouldn't compile

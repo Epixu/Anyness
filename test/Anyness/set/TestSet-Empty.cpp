@@ -240,13 +240,15 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    }
 
    constexpr bool Ambiguous = not Same<T, E> and CT::Set<E> and LANGULUS(SAFE);
-   
-   Common_GapTest<T, ::std::unordered_set<E>>();
-   static_assert(sizeof(T) <= sizeof(::std::unordered_set<E>));
 
    GIVEN("Default-constructed container") {
       const ScopedE element {555};
       T pack;
+
+      WHEN("Gap test") {
+         Common_GapTest<T, ::std::unordered_set<E>>();
+         static_assert(sizeof(T) <= sizeof(::std::unordered_set<E>));
+      }
 
       WHEN("Default-constructed") {
          Set_CheckState_Default<E>(pack);

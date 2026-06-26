@@ -198,14 +198,16 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
    static_assert(    requires (T pack, E item) { pack.ForEach([](const int&) {}); });
    static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
 
-   Common_GapTest<T, ::std::string>();
-   static_assert(sizeof(T) <= sizeof(::std::string));
-
    GIVEN("Default text container") {
       T text;
 
       Text_CheckState_Default(text);
       
+      WHEN("Gap test") {
+         Common_GapTest<T, ::std::string>();
+         static_assert(sizeof(T) <= sizeof(::std::string));
+      }
+
       WHEN("Cleared") {
          text.Clear();
 

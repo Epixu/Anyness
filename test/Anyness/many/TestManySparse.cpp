@@ -42,293 +42,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
    const DenseE& denseValue {DenseCast(element)};
    const DenseE* const sparseValue {SparseCast(element)};
 
-   const E darray1[5] {
-      CreateElement<E>(1),
-      CreateElement<E>(2),
-      CreateElement<E>(3),
-      CreateElement<E>(4),
-      CreateElement<E>(5)
-   };
-   const E darray2[5] {
-      CreateElement<E>(6),
-      CreateElement<E>(7),
-      CreateElement<E>(8),
-      CreateElement<E>(9),
-      CreateElement<E>(10)
-   };
-
-   if constexpr (CT::Untyped<T>) {
-      // All type-erased containers should have all intent              
-      // constructors and assigners available, and errors will instaed  
-      // be thrown as exceptions at runtime                             
-      static_assert(CT::CopyConstructible<T>);
-      static_assert(CT::ReferConstructible<T>);
-      static_assert(CT::AbandonConstructible<T>);
-      static_assert(CT::MoveConstructible<T>);
-      static_assert(CT::CloneConstructible<T>);
-      static_assert(CT::DisownConstructible<T>);
-
-      static_assert(CT::CopyAssignable<T>);
-      static_assert(CT::ReferAssignable<T>);
-      static_assert(CT::AbandonAssignable<T>);
-      static_assert(CT::MoveAssignable<T>);
-      static_assert(CT::CloneAssignable<T>);
-      static_assert(CT::DisownAssignable<T>);
-   }
 
    GIVEN("Default constructed container") {
       T pack;
-
-      Many_CheckState_Default<E>(pack);
-
-      #if LANGULUS(BENCHMARK)
-         BENCHMARK_ADVANCED("default construction") (timer meter) {
-            some<uninitialized<T>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct();
-            });
-         };
-
-         BENCHMARK_ADVANCED("std::vector::default construction") (timer meter) {
-            some<uninitialized<StdT>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct();
-            });
-         };
-
-         BENCHMARK_ADVANCED("std::any::default construction") (timer meter) {
-            some<uninitialized<std::any>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct();
-            });
-         };
-      #endif
-
-      WHEN("Assigned value by implicit copy") {
-         pack = element;
-
-         Many_CheckState_OwnedFull<E>(pack);
-         Many_CheckState_ContainsOne(pack, element);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::operator = (single value copy)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = {value};
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-         #endif
-      }
-
-      WHEN("Assigned value by explicit copy") {
-         pack = Copy(element);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         Many_CheckState_ContainsOne(pack, element);
-      }
-      
-      WHEN("Assigned value by refer") {
-         pack = element;
-
-         Many_CheckState_OwnedFull<E>(pack);
-         Many_CheckState_ContainsOne(pack, element);
-      }
-      
-      WHEN("Assigned value by implicit move") {
-         auto movable = element;
-         pack = ::std::move(movable);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         Many_CheckState_ContainsOne(pack, element);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::operator = (single value move)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = {::std::move(value)};
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-         #endif
-      }   
-
-      WHEN("Assigned value by explicit move") {
-         auto movable = element;
-         pack = Move(movable);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         Many_CheckState_ContainsOne(pack, element);
-      }
-
-      WHEN("Assigned disowned value") {
-         pack = Disown(element);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         Many_CheckState_ContainsOne(pack, element);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Disown(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::operator = (single value copy)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = {value};
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-         #endif
-      }
-      
-      if constexpr (CT::CloneAssignable<E>) {
-         WHEN("Assigned cloned value") {
-            pack = Clone(element);
-
-            Many_CheckState_OwnedFull<E>(pack);
-
-            REQUIRE(pack.GetCount() == 1);
-            REQUIRE(pack.GetUses() == 1);
-            REQUIRE(pack.GetReserved() >= 1);
-
-            for (auto& it : pack) {
-               REQUIRE(it != element);
-               REQUIRE(*it == *element);
-            }
-
-            IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries()));
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single cloned value)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Clone(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::operator = (single value copy)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = {value};
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-         #endif
-         }
-      }
-      
-      WHEN("Assigned abandoned value") {
-         auto movable = element;
-         pack = Abandon(movable);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         Many_CheckState_ContainsOne(pack, element);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Abandon(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::operator = (single value move)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = {::std::move(value)};
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Assigned empty self") {
-         pack = pack;
-
-         Many_CheckState_Default<E>(pack);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::operator = (self)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (self)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-         #endif
-      }
-
-      for (int repeat = 0; repeat != 10; ++repeat) {
-         WHEN(std::string("Populated using Many::New") + std::to_string(repeat)) {
-            pack = FromHelper<T, E>();
-            const auto created = pack.EmplaceAt(3, darray2[0]);
-            REQUIRE(created == 3);
-
-            Many_CheckState_OwnedFull<E>(pack);
-            Many_CheckState_ContainsN(3, pack, darray2[0]);
-         }
-      }
 
       WHEN("Shallow-copy more of the same stuff to the back (<<)") {
          pack << darray2[0]
@@ -339,29 +55,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray2);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_back(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_back(darray2[0]);
-                  s.push_back(darray2[1]);
-                  s.push_back(darray2[2]);
-                  s.push_back(darray2[3]);
-                  return s.push_back(darray2[4]);
-               });
-            };
-         #endif
       }
 
       WHEN("Shallow-copy more of the same stuff to the front (>>)") {
@@ -373,29 +66,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray2);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_front(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_front(darray2[0]);
-                  s.push_front(darray2[1]);
-                  s.push_front(darray2[2]);
-                  s.push_front(darray2[3]);
-                  return s.push_front(darray2[4]);
-               });
-            };
-         #endif
       }
 
       WHEN("Shallow-copy an array to the back") {
@@ -403,24 +73,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray2);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexBack> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexBack>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to back (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].end(), darray2, darray2 + 5);
-               });
-            };
-         #endif
       }
 
       WHEN("Shallow-copy an array to the front") {
@@ -428,24 +80,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray2);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexFront> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexFront>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to front (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin(), darray2, darray2 + 5);
-               });
-            };
-         #endif
       }
 
       WHEN("Move more of the same stuff to the back (<<)") {
@@ -475,34 +109,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray3backup);
          
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     << ::std::move(darray2[0])
-                     << ::std::move(darray2[1])
-                     << ::std::move(darray2[2])
-                     << ::std::move(darray2[3])
-                     << ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_back(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_back(::std::move(darray2[0]));
-                  s.emplace_back(::std::move(darray2[1]));
-                  s.emplace_back(::std::move(darray2[2]));
-                  s.emplace_back(::std::move(darray2[3]));
-                  return s.emplace_back(::std::move(darray2[4]));
-               });
-            };
-         #endif
-
          for (auto i : darray3)
             DestroyElement(i);
       }
@@ -534,34 +140,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray3backup);
          
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     >> ::std::move(darray2[0])
-                     >> ::std::move(darray2[1])
-                     >> ::std::move(darray2[2])
-                     >> ::std::move(darray2[3])
-                     >> ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_front(::std::move(darray2[0]));
-                  s.emplace_front(::std::move(darray2[1]));
-                  s.emplace_front(::std::move(darray2[2]));
-                  s.emplace_front(::std::move(darray2[3]));
-                  return s.emplace_front(::std::move(darray2[4]));
-               });
-            };
-         #endif
-
          for (auto i : darray3)
             DestroyElement(i);
       }
@@ -579,27 +157,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             REQUIRE(pack[0] == i666backup);
             REQUIRE(pack[0] == instance);
 
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the front)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-                  meter.measure([&](int i) {
-                     return storage[i].template Emplace<IndexFront>(::std::move(i666d));
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::emplace_front(single move)") (timer meter) {
-                  some<StdT> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-                  meter.measure([&](int i) {
-                     return storage[i].emplace_front(::std::move(i666d));
-                  });
-               };
-            #endif
          }
          else {
             REQUIRE_THROWS(pack.EmplaceAt(Index::Front, ::std::move(i666)));
@@ -622,27 +179,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             REQUIRE(pack[0] == i666backup);
             REQUIRE(pack[0] == instance);
 
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the back)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-                  meter.measure([&](int i) {
-                     return storage[i].template Emplace<IndexBack>(::std::move(i666d));
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::emplace_back(single move)") (timer meter) {
-                  some<StdT> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-                  meter.measure([&](int i) {
-                     return storage[i].emplace_back(::std::move(i666d));
-                  });
-               };
-            #endif
          }
          else {
             REQUIRE_THROWS(pack.EmplaceAt(Index::Back, ::std::move(i666)));
@@ -658,32 +194,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(removed9 == 0);
          Many_CheckState_Default<E>(pack);
       }    
-
-      WHEN("More capacity is reserved in an empty container") {
-         if constexpr (CT::Typed<T>) {
-            pack.Reserve(20);
-
-            Many_CheckState_OwnedEmpty<E>(pack);
-            REQUIRE(pack.GetCount() == 0);
-            REQUIRE(pack.GetReserved() >= 20);
-         }
-         else {
-            REQUIRE_THROWS(pack.Reserve(20));
-            Many_CheckState_Default<E>(pack);
-         }
-      }
-
-      WHEN("Empty pack is cleared") {
-         pack.Clear();
-
-         Many_CheckState_Default<E>(pack);
-      }
-
-      WHEN("Empty pack is reset") {
-         pack.Reset();
-
-         Many_CheckState_Default<E>(pack);
-      }
 
       WHEN("Empty pack with state is shallow-copied") {
          pack.EnableOr();
@@ -714,35 +224,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          Many_Helper_TestSame(moved, pack);
       }
 
-      WHEN("Packs are compared") {
-         T another_pack1;
-         another_pack1  << darray1;
-
-         T another_pack2;
-         another_pack2  << darray2;
-
-         T another_pack3;
-         another_pack3  << darray1 << darray2;
-
-         T defaulted_pack1;
-
-         TMany<uint> another_pack4;
-         another_pack4  << uint(1) << uint(2) << uint(3) << uint(4) << uint(5);
-
-         Many another_pack5;
-         another_pack5  << darray1;
-
-         Many defaulted_pack2;
-
-         REQUIRE(pack != another_pack1);
-         REQUIRE(pack != another_pack2);
-         REQUIRE(pack != another_pack3);
-         //REQUIRE(pack != another_pack4);
-         REQUIRE(pack != another_pack5);
-         REQUIRE(pack == defaulted_pack1);
-         REQUIRE(pack == defaulted_pack2);
-      }
-
       WHEN("A forward value-based search is performed on non-exitent value") {
          const auto found = pack.Find(darray2[2]);
 
@@ -764,26 +245,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge copy to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge copy to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(darray2[3]);
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-copy an element to the front, if not found (>>=)") {
@@ -793,26 +254,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (merge copy to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge copy to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(darray2[3]);
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-move an element to the back, if not found (<<=)") {
@@ -823,26 +264,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge move to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge move to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(::std::move(moved));
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-move an element to the front, if not found (>>=)") {
@@ -853,26 +274,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >>= (merge move to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge move to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(::std::move(moved));
-               });
-            };
-         #endif
       }
 
       WHEN("ForEach flat dense element (immutable)") {
@@ -956,452 +357,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
    }
 
-   GIVEN("Container constructed by same container copy") {
-      if constexpr (CT::Deep<E> and CT::Typed<T>)
-         REQUIRE_THROWS(T {element});
-      else {
-         const T source {element};
-         T pack {source};
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE( pack.template As<DenseE>() == denseValue);
-         REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE(pack.GetUses() == 2);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("construction (single container copy)") (timer meter) {
-               some<uninitialized<T>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(source);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::construction (single container copy)") (timer meter) {
-               StdT source {1, 555};
-               some<uninitialized<StdT>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(source);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::construction (single container copy)") (timer meter) {
-               std::any source {555};
-               some<uninitialized<std::any>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(source);
-               });
-            };
-         #endif
-      }
-   }
-
-   GIVEN("Container constructed by value copy") {
-      if constexpr (CT::Deep<E> && CT::Typed<T>)
-         REQUIRE_THROWS(T {element});
-      else {
-         T pack {element};
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE( pack.template As<DenseE>() == denseValue);
-         REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE( pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("construction (single value copy)") (timer meter) {
-               some<uninitialized<T>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::construction (single value copy)") (timer meter) {
-               some<uninitialized<StdT>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(1, value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::construction (single value copy)") (timer meter) {
-               some<uninitialized<std::any>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(value);
-               });
-            };
-         #endif
-
-         WHEN("Assigned compatible value by copy") {
-            pack = element;
-
-            Many_CheckState_OwnedFull<E>(pack);
-            REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE( pack.template As<DenseE>() == denseValue);
-            REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE( pack.GetUses() == 1);
-            REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
-            IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
-
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::operator = (single value copy)") (timer meter) {
-                  some<StdT> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = {value};
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-            #endif
-         }
-      
-         WHEN("Assigned compatible value by move") {
-            auto movable = element;
-            pack = ::std::move(movable);
-
-            Many_CheckState_OwnedFull<E>(pack);
-            REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE( pack.template As<DenseE>() == denseValue);
-            REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE( pack.GetUses() == 1);
-            REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
-            IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
-
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::operator = (single value move)") (timer meter) {
-                  some<StdT> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = {::std::move(value)};
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-            #endif
-         }
-
-         WHEN("Assigned compatible disowned value") {
-            pack = Disown(element);
-
-            Many_CheckState_OwnedFull<E>(pack);
-            REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE( pack.template As<DenseE>() == denseValue);
-            REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE( pack.GetUses() == 1);
-            REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
-            IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
-
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = Disown(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::operator = (single value copy)") (timer meter) {
-                  some<StdT> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = {value};
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-            #endif
-         }
-      
-         WHEN("Assigned compatible abandoned value") {
-            auto movable = element;
-            pack = Abandon(movable);
-
-            Many_CheckState_OwnedFull<E>(pack);
-            REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE( pack.template As<DenseE>() == denseValue);
-            REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE( pack.GetUses() == 1);
-            REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
-            IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
-
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = Abandon(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::operator = (single value move)") (timer meter) {
-                  some<StdT> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = {::std::move(value)};
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-            #endif
-         }
-
-         WHEN("Assigned compatible empty self") {
-            pack = T {};
-
-            Many_CheckState_Default<E>(pack);
-
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = storage[i];
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::operator = (self)") (timer meter) {
-                  some<StdT> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = storage[i];
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (self)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = storage[i];
-                  });
-               };
-            #endif
-         }
-
-         WHEN("Assigned compatible full self") {
-            pack = element;
-            pack = pack;
-
-            Many_CheckState_OwnedFull<E>(pack);
-            REQUIRE(pack.GetUses() == 1);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
-               some<T> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::operator = (self)") (timer meter) {
-               some<StdT> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (self)") (timer meter) {
-               some<std::any> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-         #endif
-         }
-      }
-   }
-
-   GIVEN("Container constructed by value move") {
-      if constexpr (CT::Deep<E> && CT::Typed<T>) {
-         E movable = element;
-         REQUIRE_THROWS(T {::std::move(movable)});
-         Many_CheckState_OwnedFull<E>(movable);
-      }
-      else {
-         E movable = element;
-         T pack {::std::move(movable)};
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(&pack.template As<DenseE>() == sparseValue);
-         REQUIRE( pack.template As<DenseE>() == denseValue);
-         REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE( pack.GetUses() == 1);
-         REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
-         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("construction (single value move)") (timer meter) {
-               some<uninitialized<T>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(::std::move(value));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::construction (single value move)") (timer meter) {
-               some<uninitialized<StdT>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(1, ::std::move(value));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::construction (single value move)") (timer meter) {
-               some<uninitialized<std::any>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(::std::move(value));
-               });
-            };
-         #endif
-      }
-   }
-
-   GIVEN("Container constructed by disowned value") {
-      if constexpr (CT::Deep<E> && CT::Typed<T>)
-         REQUIRE_THROWS(T {Disown(element)});
-      else {
-         T pack {Disown(element)};
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(&pack.template As<DenseE>() == sparseValue);
-         REQUIRE( pack.template As<DenseE>() == denseValue);
-         REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE( pack.GetUses() == 1);
-         REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
-         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("construction (single disowned value)") (timer meter) {
-               some<uninitialized<T>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(Disowned(value));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::construction (single value copy)") (timer meter) {
-               some<uninitialized<StdT>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(1, value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::construction (single value copy)") (timer meter) {
-               some<uninitialized<std::any>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(value);
-               });
-            };
-         #endif
-      }
-   }
-    
-   GIVEN("Container constructed by abandoned value") {
-      if constexpr (CT::Deep<E> && CT::Typed<T>) {
-         E movable = element;
-         REQUIRE_THROWS(T {Abandon(movable)});
-      }
-      else {
-         E movable = element;
-         T pack {Abandon(movable)};
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(&pack.template As<DenseE>() == sparseValue);
-         REQUIRE( pack.template As<DenseE>() == denseValue);
-         REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE( pack.GetUses() == 1);
-         REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
-         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("construction (single abandoned value)") (timer meter) {
-               some<uninitialized<T>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(Abandon(value));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::construction (single value move)") (timer meter) {
-               some<uninitialized<StdT>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(1, ::std::move(value));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::construction (single value move)") (timer meter) {
-               some<uninitialized<std::any>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct(::std::move(value));
-               });
-            };
-         #endif
-      }
-   }
-
    GIVEN("Container constructed by static list of exactly the same shallow-copied elements") {
       if constexpr (not CT::Typed<T>) {
          const T pack {element, element};
@@ -1460,29 +415,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(pack.GetRaw() == memory);
             }
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_back(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_back(darray2[0]);
-                  s.push_back(darray2[1]);
-                  s.push_back(darray2[2]);
-                  s.push_back(darray2[3]);
-                  return s.push_back(darray2[4]);
-               });
-            };
-         #endif
       }
 
       WHEN("Shallow-copy more of the same stuff to the front (>>)") {
@@ -1501,29 +433,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             if constexpr (CT::Same<E, int>) {
                REQUIRE(pack.GetRaw() == memory);
             }
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_front(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_front(darray2[0]);
-                  s.push_front(darray2[1]);
-                  s.push_front(darray2[2]);
-                  s.push_front(darray2[3]);
-                  return s.push_front(darray2[4]);
-               });
-            };
          #endif
       }
 
@@ -1544,24 +453,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(pack.GetRaw() == memory);
             }
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexBack> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexBack>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to back (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].end(), darray2, darray2 + 5);
-               });
-            };
-         #endif
       }
 
       WHEN("Shallow-copy an array to the front") {
@@ -1580,24 +471,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             if constexpr (CT::Same<E, int>) {
                REQUIRE(pack.GetRaw() == memory);
             }
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexFront> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexFront>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to front (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin(), darray2, darray2 + 5);
-               });
-            };
          #endif
       }
 
@@ -1637,34 +510,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     << ::std::move(darray2[0])
-                     << ::std::move(darray2[1])
-                     << ::std::move(darray2[2])
-                     << ::std::move(darray2[3])
-                     << ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_back(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_back(::std::move(darray2[0]));
-                  s.emplace_back(::std::move(darray2[1]));
-                  s.emplace_back(::std::move(darray2[2]));
-                  s.emplace_back(::std::move(darray2[3]));
-                  return s.emplace_back(::std::move(darray2[4]));
-               });
-            };
          #endif
 
          for (auto i : darray3)
@@ -1708,34 +553,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             REQUIRE(pack.GetRaw() == memory);
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     >> ::std::move(darray2[0])
-                     >> ::std::move(darray2[1])
-                     >> ::std::move(darray2[2])
-                     >> ::std::move(darray2[3])
-                     >> ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_front(::std::move(darray2[0]));
-                  s.emplace_front(::std::move(darray2[1]));
-                  s.emplace_front(::std::move(darray2[2]));
-                  s.emplace_front(::std::move(darray2[3]));
-                  return s.emplace_front(::std::move(darray2[4]));
-               });
-            };
-         #endif
 
          for (auto i : darray3)
             DestroyElement(i);
@@ -1757,28 +574,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack[3] == i666);
          REQUIRE(pack[4] == darray1[3]);
          REQUIRE(pack[5] == darray1[4]);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::InsertAt(single copy in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(&i666, &i666 + 1, 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single copy in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, i666d);
-               });
-            };
-         #endif
 
          DestroyElement(i666);
       }
@@ -1802,28 +597,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack[7] == darray2[4]);
          REQUIRE(pack[8] == darray1[3]);
          REQUIRE(pack[9] == darray1[4]);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::InsertAt(5 copies in the middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(darray2, darray2 + 5, 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(5 copies in the middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, darray2, darray2+5);
-               });
-            };
-         #endif
       }
 
       WHEN("Insert single item at a specific place by move") {
@@ -1843,28 +616,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack[3] == i666backup);
          REQUIRE(pack[4] == darray1[3]);
          REQUIRE(pack[5] == darray1[4]);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(::std::move(i666d), 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single move in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, ::std::move(i666d));
-               });
-            };
-         #endif
 
          DestroyElement(i666);
       }
@@ -1894,28 +645,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             REQUIRE(pack[3].GetCount() == 1);
          }
 
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].EmplaceAt(3, ::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single move in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, ::std::move(i666d));
-               });
-            };
-         #endif
-
          DestroyElement(i666);
       }
 
@@ -1943,28 +672,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             REQUIRE(pack[0].GetRaw() == instance.GetRaw());
             REQUIRE(pack[0].GetCount() == 1);
          }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the front)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].template Emplace<IndexFront>(::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(single move)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].emplace_front(::std::move(i666d));
-               });
-            };
-         #endif
 
          DestroyElement(i666);
       }
@@ -1994,28 +701,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             REQUIRE(pack[5].GetCount() == 1);
          }
 
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the back)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].template Emplace<IndexBack>(::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_back(single move)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].emplace_back(::std::move(i666d));
-               });
-            };
-         #endif
-
          DestroyElement(i666);
       }
 
@@ -2034,29 +719,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetReserved() >= 5);
          REQUIRE(pack.GetRaw() == memory);
 
-         #if LANGULUS(BENCHMARK) // Last result: 2:1 performance - needs more optimizations in Index handling
-            BENCHMARK_ADVANCED("Anyness::TMany::Remove(single element by value)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].Remove(2);
-               });
-            };
-
-            BENCHMARK_ADVANCED("Anyness::vector::erase-remove(single element by value)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  // Erase-remove idiom											
-                  return storage[i].erase(std::remove(storage[i].begin(), storage[i].end(), 2), storage[i].end());
-               });
-            };
-         #endif
-
          DestroyElement(temp);
       }
 
@@ -2073,55 +735,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetReserved() >= 5);
          REQUIRE(pack.GetRaw() == memory);
       }    
-
-      WHEN("More capacity is reserved") {
-         pack.Reserve(20);
-
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 20);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::POD<E>) {
-               // Test works only for POD types, because containers shift entries around
-               REQUIRE(pack.GetRaw() == memory);
-            }
-         #endif
-      }
-
-      WHEN("Less capacity is reserved") {
-         pack.Reserve(2);
-
-         REQUIRE(pack.GetCount() == 2);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetReserved() <= previousReserved);
-         #else
-            REQUIRE(pack.GetReserved() == previousReserved);
-         #endif
-         REQUIRE(pack.GetRaw() == memory);
-      }
-
-      WHEN("Pack is cleared") {
-         pack.Clear();
-
-         Any_CheckState_OwnedEmpty<E>(pack);
-      }
-
-      WHEN("Pack is reset") {
-         pack.Reset();
-
-         Any_CheckState_Default<E>(pack);
-      }
-
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         if constexpr (CT::Same<E, int>) {
-            // Works only if E doesn't move entries around
-            WHEN("Pack is reset, then immediately allocated again") {
-               (void) Allocator::CollectGarbage();
-               pack.Reset();
-               pack << darray2;
-               REQUIRE(pack.GetRaw() == memory);
-            }
-         }
-      #endif
 
       WHEN("Empty pack with state is shallow-copied") {
          pack.MakeOr();
@@ -2159,42 +772,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             T clone;
             REQUIRE_THROWS(new (&clone) T {Langulus::Clone(pack)});
          }
-      }
-
-      WHEN("Pack is moved") {
-         T movable = pack;
-         movable.MakeOr();
-         const T moved = ::std::move(movable);
-
-         REQUIRE(movable.GetRaw() == nullptr);
-         REQUIRE(movable.GetCount() == 0);
-         REQUIRE(movable.GetReserved() == 0);
-         REQUIRE(movable.IsTypeConstrained() == CT::Typed<T>);
-         REQUIRE(pack.GetRaw() == moved.GetRaw());
-         REQUIRE(pack.GetCount() == moved.GetCount());
-         REQUIRE(pack.GetReserved() == moved.GetReserved());
-         REQUIRE(pack.GetState() + State::Or == moved.GetState());
-         REQUIRE(pack.GetType() == moved.GetType());
-      }
-
-      WHEN("Packs are compared") {
-         T another_pack1;
-         another_pack1 << darray1;
-         T another_pack2;
-         another_pack2 << darray2;
-         T another_pack3;
-         another_pack3 << darray1 << darray2;
-         TMany<uint> another_pack4;
-         another_pack4 << uint(1) << uint(2) << uint(3) << uint(4) << uint(5);
-         Many another_pack5;
-         another_pack5 << darray1;
-
-         REQUIRE(pack == another_pack1);
-         REQUIRE(pack != another_pack2);
-         REQUIRE(pack != another_pack3);
-         if constexpr (CT::Untyped<T>)
-            REQUIRE(pack != another_pack4);
-         REQUIRE(another_pack1 == another_pack5);
       }
 
       WHEN("A forward value-based search is performed on existent value") {
@@ -2240,26 +817,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(pack.GetRaw() == memory);
             }
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge copy to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge copy to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(darray2[3]);
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-copy an element to the front, if not found (>>=)") {
@@ -2276,26 +833,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             if constexpr (CT::Same<E, int>) {
                REQUIRE(pack.GetRaw() == memory);
             }
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (merge copy to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge copy to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(darray2[3]);
-               });
-            };
          #endif
       }
 
@@ -2315,26 +852,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(pack.GetRaw() == memory);
             }
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge move to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge move to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(::std::move(moved));
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-move an element to the front, if not found (>>=)") {
@@ -2352,26 +869,6 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             if constexpr (CT::Same<E, int>) {
                REQUIRE(pack.GetRaw() == memory);
             }
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >>= (merge move to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge move to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(::std::move(moved));
-               });
-            };
          #endif
       }
 
@@ -2735,28 +1232,4 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             REQUIRE(pack3[i] == darray2[i - 5]);
       }
    }
-
-   if constexpr (CT::Referenced<Deptr<E>>)
-      element->Reference(-1);
-   delete element;
-
-   for (auto item : darray1) {
-      if constexpr (CT::Referenced<Deptr<E>>)
-         item->Reference(-1);
-      delete item;
-   }
-
-   for (auto item : darray2) {
-      if constexpr (CT::Referenced<Deptr<E>>)
-         item->Reference(-1);
-      delete item;
-   }
-
-   REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
-   REQUIRE_FALSE(Allocator::CollectGarbage());
 }

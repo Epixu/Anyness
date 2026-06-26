@@ -249,9 +249,6 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
       using stdpair = ::std::pair<E1, E2>;
    #endif
 
-   Common_GapTest<T, ::std::pair<E1, E2>>();
-   //static_assert(sizeof(T) <= sizeof(::std::pair<E1, E2>)); //TODO not true on 32bit builds unfortunately
-
    GIVEN("Empty-constructed container, assigned (refer), and then destroyed") {
       const ScopedE1 element1{555};
       const ScopedE2 element2{111};
@@ -312,6 +309,11 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
       const ScopedE1 element1 {555};
       const ScopedE2 element2 {111};
       T pack;
+
+      WHEN("Gap test") {
+         Common_GapTest<T, ::std::pair<E1, E2>>();
+         //static_assert(sizeof(T) <= sizeof(::std::pair<E1, E2>)); //TODO not true on 32bit builds unfortunately
+      }
 
       WHEN("Default-constructed") {
          Pair_CheckState_Default<E1, E2>(pack);

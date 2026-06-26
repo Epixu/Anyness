@@ -14,7 +14,7 @@ using namespace Langulus;
 
 
 ///                                                                           
-/// CT::Intent / CT::NoIntent                                                 
+/// MARK: CT::Intent / CT::NoIntent                                           
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing intent type", TestType
    , Refer<int>
@@ -54,7 +54,7 @@ static_assert(not CT::NoIntent<Refer<int>*, SheddableType<int>, Refer<int>>);
 
 
 ///                                                                           
-/// IntentOf                                                                  
+/// MARK: IntentOf                                                            
 ///                                                                           
 TEST_CASE("Testing IntentOf") {
    static_assert(::std::same_as<IntentOfT<int>,                 Refer<int>>);
@@ -342,7 +342,7 @@ TEST_CASE("Testing IntentOf") {
 
 
 ///                                                                           
-/// Deint                                                                     
+/// MARK: Deint                                                               
 ///                                                                           
 TEST_CASE("Testing Deint") {
    static_assert(::std::same_as<Deint<   Copy<int>>, int const&>);
@@ -360,7 +360,7 @@ TEST_CASE("Testing Deint") {
 
 
 ///                                                                           
-/// CT::HasReferConstructor                                                   
+/// MARK: CT::HasReferConstructor                                             
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasReferConstructor", TestType
    , AllIntentConstructible
@@ -415,7 +415,7 @@ static_assert(not CT::HasReferConstructor<AllIntentConstructible, AllIntentConst
 
 
 ///                                                                           
-/// CT::HasCopyConstructor                                                    
+/// MARK: CT::HasCopyConstructor                                              
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasCopyConstructor", TestType
    , AllIntentConstructible
@@ -472,7 +472,7 @@ static_assert(not CT::HasCopyConstructor<AllIntentConstructible, AllIntentConstr
 
 
 ///                                                                           
-/// CT::HasCloneConstructor                                                   
+/// MARK: CT::HasCloneConstructor                                             
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasCloneConstructor", TestType
    , AllIntentConstructible
@@ -529,7 +529,7 @@ static_assert(not CT::HasCloneConstructor<AllIntentConstructible, AllIntentConst
 
 
 ///                                                                           
-/// CT::HasDisownConstructor                                                  
+/// MARK: CT::HasDisownConstructor                                            
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasDisownConstructor", TestType
    , AllIntentConstructible
@@ -585,7 +585,7 @@ static_assert(not CT::HasDisownConstructor<AllIntentConstructible, AllIntentCons
 
 
 ///                                                                           
-/// CT::HasAbandonConstructor                                                 
+/// MARK: CT::HasAbandonConstructor                                           
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasAbandonConstructor", TestType
    , AllIntentConstructible
@@ -641,7 +641,7 @@ static_assert(not CT::HasAbandonConstructor<AllIntentConstructible, AllIntentCon
 
 
 ///                                                                           
-/// CT::HasMoveConstructor                                                    
+/// MARK: CT::HasMoveConstructor                                              
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasMoveConstructor", TestType
    , AllIntentConstructible
@@ -697,7 +697,7 @@ static_assert(not CT::HasMoveConstructor<AllIntentConstructible, AllIntentConstr
 
 
 ///                                                                           
-/// CT::HasReferAssign                                                        
+/// MARK: CT::HasReferAssign                                                  
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasReferAssign", TestType
    , AllIntentConstructibleImplicit
@@ -752,7 +752,7 @@ static_assert(not CT::HasReferAssign<AllIntentConstructibleAndAssignable, Privat
 
 
 ///                                                                           
-/// CT::HasCopyAssign                                                         
+/// MARK: CT::HasCopyAssign                                                   
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasCopyAssign", TestType
    , AllIntentConstructibleImplicit
@@ -807,7 +807,7 @@ static_assert(not CT::HasCopyAssign<AllIntentConstructibleAndAssignable, Private
 
 
 ///                                                                           
-/// CT::HasCloneAssign                                                        
+/// MARK: CT::HasCloneAssign                                                  
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasCloneAssign", TestType
    , AllIntentConstructibleImplicit
@@ -862,7 +862,7 @@ static_assert(not CT::HasCloneAssign<AllIntentConstructibleAndAssignable, Privat
 
 
 ///                                                                           
-/// CT::HasDisownAssign                                                       
+/// MARK: CT::HasDisownAssign                                                 
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasDisownAssign", TestType
    , AllIntentConstructibleImplicit
@@ -917,7 +917,7 @@ static_assert(not CT::HasDisownAssign<AllIntentConstructibleAndAssignable, Priva
 
 
 ///                                                                           
-/// CT::HasAbandonAssign                                                      
+/// MARK: CT::HasAbandonAssign                                                
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasAbandonAssign", TestType
    , AllIntentConstructibleImplicit
@@ -972,7 +972,7 @@ static_assert(not CT::HasAbandonAssign<AllIntentConstructibleAndAssignable, Priv
 
 
 ///                                                                           
-/// CT::HasMoveAssign                                                         
+/// MARK: CT::HasMoveAssign                                                   
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::HasMoveAssign", TestType
    , AllIntentConstructibleImplicit
@@ -1027,7 +1027,7 @@ static_assert(not CT::HasMoveAssign<AllIntentConstructibleAndAssignable, Private
 
 
 ///                                                                           
-///   Refer intent                                                            
+/// MARK: Refer intent                                                        
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing refer-constructible types", T
    , AggregateType
@@ -1196,7 +1196,7 @@ TEST_CASE_TEMPLATE("Testing non-refer-assignable types", T
 
 
 ///                                                                           
-///   Move intents                                                            
+/// MARK: Move intents                                                        
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing move-constructible types", T
    , AggregateType
@@ -1353,7 +1353,7 @@ TEST_CASE_TEMPLATE("Testing non-move-assignable types", T
 
 
 ///                                                                           
-///   Copy intents                                                            
+/// MARK: Copy intents                                                        
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing copy-constructible types", T
    , EmptyType
@@ -1502,7 +1502,7 @@ TEST_CASE_TEMPLATE("Testing non-copy-assignable types", T
 
 
 ///                                                                           
-///   Clone intents                                                           
+/// MARK: Clone intents                                                       
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing clone-constructible types", T
    , EmptyType
@@ -1650,7 +1650,7 @@ TEST_CASE_TEMPLATE("Testing non-clone-assignable types", T
 
 
 ///                                                                           
-///   Disown intents                                                          
+/// MARK: Disown intents                                                      
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing disown-constructible types", T
    , EmptyType
@@ -1797,7 +1797,7 @@ TEST_CASE_TEMPLATE("Testing non-disown-assignable types", T
 
 
 ///                                                                           
-///   Abandon semantics                                                       
+/// MARK: Abandon semantics                                                   
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing abandon-constructible types", T
    , EmptyType
@@ -1942,7 +1942,7 @@ TEST_CASE_TEMPLATE("Testing non-abandon-assignable types", T
 
 
 ///                                                                           
-///   Descriptor intents                                                      
+/// MARK: Descriptor intents                                                  
 ///                                                                           
 /*TEMPLATE_TEST_CASE("Testing descriptor-makable types", "[ct]",
    AllIntentConstructible,

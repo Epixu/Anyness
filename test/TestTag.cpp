@@ -49,7 +49,7 @@ TEST_CASE_TEMPLATE("Tags", T,
 ) {
    // Will cause a runtime meta conflict with another test              
    // if that test has been executed prior to this one (!!!)            
-   // Sad thing is, that this can't be guaranteed, so I've disabled it  
+   // Sad thing is, that this can't be guaranteed, so I've disabled it. 
    // Update: it can't be guaranteed to work, but can be guaranteed not 
    // to work. The solution is to disable reflection of items inside    
    // anonymous namespaces!                                             

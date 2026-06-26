@@ -233,12 +233,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
    constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
    
-   Common_GapTest<T, ::std::vector<E>>();
-   //static_assert(sizeof(T) <= sizeof(::std::vector<E>)); // bigger, because it precomputes and stores a hash on the stack
-
    GIVEN("Default-constructed container") {
       const ScopedE element {555};
       T pack;
+
+      WHEN("Gap test") {
+         Common_GapTest<T, ::std::vector<E>>();
+         //static_assert(sizeof(T) <= sizeof(::std::vector<E>)); // bigger, because it precomputes and stores a hash on the stack
+      }
 
       WHEN("Default-constructed") {
          Many_CheckState_Default<E>(pack);

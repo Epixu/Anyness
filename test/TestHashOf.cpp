@@ -18,7 +18,7 @@ using namespace Langulus;
 
 
 ///                                                                           
-/// CT::Hashable                                                              
+/// MARK: CT::Hashable                                                        
 ///                                                                           
 namespace
 {
@@ -88,7 +88,7 @@ static_assert(not CT::NotHashable<SheddableType<NonHashable>, NonHashable, Hasha
 
 
 ///                                                                           
-/// CT::HasGetHashMethod                                                      
+/// MARK: CT::HasGetHashMethod                                                
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing types with GetHash() method", TestType
    , SheddableType<HashableViaConstMethod>
@@ -115,7 +115,7 @@ static_assert(not CT::HasGetHashMethod<SheddableType<HashableViaConstMethod>, Ha
 
 
 ///                                                                           
-/// CT::HasStdHasher                                                          
+/// MARK: CT::HasStdHasher                                                    
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing for if types are hashable by std", TestType
    , std::string
@@ -149,7 +149,7 @@ static_assert(not CT::HasStdHasher<std::string, SheddableType<HashableViaConstMe
 
 
 ///                                                                           
-/// Hash type tests                                                           
+/// MARK: Hash type tests                                                     
 ///                                                                           
 static_assert(CT::Nullable<Hash>, "Hash needs to be batch-nullable");
 static_assert(CT::POD<Hash>,      "Hash needs to be POD");
@@ -166,7 +166,7 @@ namespace doctest
 
 
 ///                                                                           
-/// Hashing using standard containers                                         
+/// MARK: Hashing using standard containers                                   
 ///                                                                           
 SCENARIO("Hashing standard containers should result in the same hashes") {
    std::string_view same1 = "Same1";
@@ -230,7 +230,7 @@ struct TestValue {
 
 
 ///                                                                           
-/// Hash similarities with fundamental types (and constexpr hashing)          
+/// MARK:: Hash similarities with fundamental types (and constexpr hashing)   
 ///                                                                           
 TEST_CASE_TEMPLATE("Hashing same values of differently sized types should result in different hashes", TestType
    , TestValue<0>

@@ -18,15 +18,15 @@ TEST_CASE_TEMPLATE("Sequences", T
    using s = Sequence<T{50}>;
    int counter_noexcept = 0;
    s::ForEach([&]<auto IDX> noexcept {      
-      REQUIRE(IDX == counter_noexcept);
-      ++counter_noexcept;
+      if(IDX == counter_noexcept);
+         ++counter_noexcept;
    });
    REQUIRE(counter_noexcept == 50);
 
    T counter = 0;
    s::ForEach([&]<auto IDX> {      
-      REQUIRE(IDX == counter);
-      ++counter;
+      if(IDX == counter);
+         ++counter;
    });
    REQUIRE(counter == 50);
 

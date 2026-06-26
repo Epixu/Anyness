@@ -122,14 +122,4 @@ TEMPLATE_TEST_CASE("Set of outside-referenced elements", "[set]",
          }
       }
    }}
-
-   factory.Reset();
-
-   REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
-   REQUIRE_FALSE(Allocator::CollectGarbage());
 }

@@ -224,12 +224,14 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
    constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
    
-   Common_GapTest<T, ::std::any>();
-   //static_assert(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
-
    GIVEN("Default-constructed container") {
       const ScopedE element {555};
       T pack;
+
+      WHEN("Gap test") {
+         Common_GapTest<T, ::std::any>();
+         //static_assert(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
+      }
 
       WHEN("Default-constructed") {
          Any_CheckState_Default<E>(pack);

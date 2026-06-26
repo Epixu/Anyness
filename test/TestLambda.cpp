@@ -44,7 +44,7 @@ namespace
 
 
 ///                                                                           
-/// ArgumentOf                                                                
+/// MARK: ArgumentOf                                                          
 ///                                                                           
 SCENARIO("Testing ArgumentOf") {
    int   suppress_warnings1 = 666;
@@ -76,7 +76,7 @@ SCENARIO("Testing ArgumentOf") {
 
 
 ///                                                                           
-/// ArgumentsOf                                                               
+/// MARK: ArgumentsOf                                                         
 ///                                                                           
 SCENARIO("Testing ArgumentsOf") {
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaNoArgs)>, NoTypes>);
@@ -100,7 +100,7 @@ SCENARIO("Testing ArgumentsOf") {
 
 
 ///                                                                           
-/// ReturnOf                                                                  
+/// MARK: ReturnOf                                                            
 ///                                                                           
 SCENARIO("Testing ReturnOf") {
    static_assert(::std::same_as<ReturnOf<decltype(testLambdaNoArgs)>, double>);
@@ -124,7 +124,7 @@ SCENARIO("Testing ReturnOf") {
 
 
 ///                                                                           
-/// IsNoexcept                                                                
+/// MARK: IsNoexcept                                                          
 ///                                                                           
 SCENARIO("Testing IsNoexcept") {
    static_assert(not IsNoexcept<decltype(testLambdaNoArgs)>);

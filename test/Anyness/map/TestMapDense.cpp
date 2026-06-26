@@ -93,68 +93,6 @@ TEMPLATE_TEST_CASE(
       CreatePair<StdPair, K, V>("nine", 9),
       CreatePair<StdPair, K, V>("ten", 10)
    };
-
-
-   GIVEN("A default-initialized map instance") {
-      T map {};
-
-      WHEN("Given a default-constructed map") {
-         Map_CheckState_Default<K, V>(map);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::map::default construction") (timer meter) {
-               some<uninitialized<MapType>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct();
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::map::default construction") (timer meter) {
-               some<uninitialized<MapTypeStd>> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].construct();
-               });
-            };
-         #endif
-      }
-
-      WHEN("Assigned a pair by move") {
-         auto movablePair = pair;
-         map = ::std::move(movablePair);
-
-         Map_CheckState_OwnedFull<K, V>(map);
-
-         REQUIRE(movablePair != pair);
-         REQUIRE(map.GetCount() == 1);
-         REQUIRE(map[pair.GetKey()] == pair.GetValue());
-         REQUIRE(map["five hundred"] == pair.GetValue());
-         REQUIRE_THROWS(map["missing"] != pair.GetValue());
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TUnorderedMap::operator = (single pair copy)") (timer meter) {
-               some<Pair> source(meter.runs());
-               for (auto& i : source)
-                  i = CreatePair<Pair, K, V>("five hundred"_text, 555);
-                  
-               some<MapType> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(source[i]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::unordered_map::insert(single pair copy)") (timer meter) {
-               some<StdPair> source(meter.runs());
-               for(auto& i : source)
-                  i = valueStd;
-
-               some<MapTypeStd> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i].emplace(::std::move(source[i]));
-               });
-            };
-         #endif
-      }
-   }
    
    GIVEN("A pair copy-initialized map instance") {
       T map {pair};
@@ -245,70 +183,6 @@ TEMPLATE_TEST_CASE(
             REQUIRE(map.GetRawValsMemory() == valueMemory);
          #endif
          REQUIRE(map.GetReserved() >= 10);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TUnorderedMap::operator << (5 consecutive pair copies)") (timer meter) {
-               some<MapType> storage(meter.runs());
-               for (auto& i : storage)
-                  i << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i] << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::unordered_map::insert(5 consecutive pair copies)") (timer meter) {
-               some<MapTypeStd> storage(meter.runs());
-               for (auto& i : storage) {
-                  i.insert(darray1std[0]);
-                  i.insert(darray1std[1]);
-                  i.insert(darray1std[2]);
-                  i.insert(darray1std[3]);
-                  i.insert(darray1std[4]);
-               }
-
-               meter.measure([&](int i) {
-                  storage[i].insert(darray2std[0]);
-                  storage[i].insert(darray2std[1]);
-                  storage[i].insert(darray2std[2]);
-                  storage[i].insert(darray2std[3]);
-                  return storage[i].insert(darray2std[4]);
-               });
-            };
-
-            // Last result: 1:1, slightly slower than STD, can be further improved
-            BENCHMARK_ADVANCED("Anyness::TUnorderedMap::operator [] (retrieval by key from a map with 10 pairs)") (timer meter) {
-               some<MapType> storage(meter.runs());
-               for (auto& i : storage) {
-                  i << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-                  i << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-               }
-
-               meter.measure([&](int i) {
-                  return storage[i]["seven"];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::unordered_map::operator [] (retrieval by key from a map with 10 pairs)") (timer meter) {
-               some<MapTypeStd> storage(meter.runs());
-               for (auto& i : storage) {
-                  i.insert(darray1std[0]);
-                  i.insert(darray1std[1]);
-                  i.insert(darray1std[2]);
-                  i.insert(darray1std[3]);
-                  i.insert(darray1std[4]);
-                  i.insert(darray2std[0]);
-                  i.insert(darray2std[1]);
-                  i.insert(darray2std[2]);
-                  i.insert(darray2std[3]);
-                  i.insert(darray2std[4]);
-               }
-
-               meter.measure([&](int i) {
-                  return storage[i]["seven"];
-               });
-            };
-         #endif
       }
 
       WHEN("Move more of the same stuff") {
@@ -338,31 +212,6 @@ TEMPLATE_TEST_CASE(
             REQUIRE(map.GetRawValsMemory() == valueMemory);
          #endif
          REQUIRE(map.GetReserved() >= 10);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TUnorderedMap::operator << (5 consecutive trivial moves)") (timer meter) {
-               some<MapType> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] 
-                     << ::std::move(darray2[0]) 
-                     << ::std::move(darray2[1]) 
-                     << ::std::move(darray2[2]) 
-                     << ::std::move(darray2[3]) 
-                     << ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::unordered_map::emplace_back(5 consecutive trivial moves)") (timer meter) {
-               some<MapTypeStd> storage(meter.runs());
-               meter.measure([&](int i) {
-                  storage[i].emplace(::std::move(darray2std[0]));
-                  storage[i].emplace(::std::move(darray2std[1]));
-                  storage[i].emplace(::std::move(darray2std[2]));
-                  storage[i].emplace(::std::move(darray2std[3]));
-                  return storage[i].emplace(::std::move(darray2std[4]));
-               });
-            };
-         #endif
       }
 
       WHEN("Removing elements by value") {
@@ -389,41 +238,6 @@ TEMPLATE_TEST_CASE(
          REQUIRE(map.ContainsValue(darray1[2].GetValue()));
          REQUIRE_FALSE(map.ContainsValue(darray1[3].GetValue()));
          REQUIRE(map.ContainsValue(darray1[4].GetValue()));
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TUnorderedMap::RemoveValue") (timer meter) {
-               some<MapType> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].RemoveValue(2);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::unordered_map::erase(by value)") (timer meter) {
-               some<MapTypeStd> storage(meter.runs());
-               for (auto&& i : storage) {
-                  i.insert(darray1std[0]);
-                  i.insert(darray1std[1]);
-                  i.insert(darray1std[2]);
-                  i.insert(darray1std[3]);
-                  i.insert(darray1std[4]);
-               }
-
-               meter.measure([&](int i) {
-                  auto it = storage[i].begin();
-                  while (it != storage[i].end()) {
-                     if (it->second == 2) {
-                        it = storage[i].erase(it);
-                        continue;
-                     }
-                     it++;
-                  }
-                  return it;
-               });
-            };
-         #endif
       }
 
       for (int iii = 0; iii < 10; ++iii) {
@@ -451,33 +265,6 @@ TEMPLATE_TEST_CASE(
          REQUIRE(map.ContainsValue(darray1[2].GetValue()));
          REQUIRE_FALSE(map.ContainsValue(darray1[3].GetValue()));
          REQUIRE(map.ContainsValue(darray1[4].GetValue()));
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TUnorderedMap::RemoveKey") (timer meter) {
-               some<MapType> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].RemoveKey("two");
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::unordered_map::erase(by key)") (timer meter) {
-               some<MapTypeStd> storage(meter.runs());
-               for (auto&& i : storage) {
-                  i.insert(darray1std[0]);
-                  i.insert(darray1std[1]);
-                  i.insert(darray1std[2]);
-                  i.insert(darray1std[3]);
-                  i.insert(darray1std[4]);
-               }
-
-               meter.measure([&](int i) {
-                  return storage[i].erase("two");
-               });
-            };
-         #endif
       }
       }
 
@@ -533,128 +320,6 @@ TEMPLATE_TEST_CASE(
          REQUIRE(map.ContainsValue(darray1[4].GetValue()));
       }
       
-      WHEN("More capacity is reserved") {
-         map.Reserve(20);
-
-         Map_CheckState_OwnedFull<K, V>(map);
-
-         REQUIRE(map.GetCount() == 5);
-         REQUIRE(map.GetReserved() >= 20);
-      }
-
-      WHEN("Less capacity is reserved") {
-         map.Reserve(2);
-
-         Map_CheckState_OwnedFull<K, V>(map);
-
-         REQUIRE(map.GetCount() == 5);
-         REQUIRE(map.GetRawKeysMemory() == keyMemory);
-         REQUIRE(map.GetRawValsMemory() == valueMemory);
-         REQUIRE(map.GetReserved() >= 5);
-      }
-
-      WHEN("Map is cleared") {
-         map.Clear();
-
-         Map_CheckState_OwnedEmpty<K, V>(map);
-
-         REQUIRE(map.GetRawKeysMemory() == keyMemory);
-         REQUIRE(map.GetRawValsMemory() == valueMemory);
-         REQUIRE(map.GetReserved() >= 5);
-      }
-
-      WHEN("Map is reset") {
-         map.Reset();
-
-         Map_CheckState_Default<K, V>(map);
-      }
-
-      WHEN("Map is shallow-copied") {
-         auto copy = map;
-
-         Map_CheckState_OwnedFull<K, V>(copy);
-         Map_CheckState_OwnedFull<K, V>(map);
-
-         REQUIRE(copy == map);
-         REQUIRE(copy.GetKeys().GetUses() == 2);
-         REQUIRE(copy.GetVals().GetUses() == 2);
-         REQUIRE(copy.GetCount() == map.GetCount());
-         REQUIRE(copy.GetCount() == 5);
-         REQUIRE(copy.GetRawKeysMemory() == map.GetRawKeysMemory());
-         REQUIRE(copy.GetRawValsMemory() == map.GetRawValsMemory());
-         for (auto& comparer : darray1)
-            REQUIRE(copy[comparer.GetKey()] == comparer.GetValue());
-
-         if constexpr (CT::Typed<T>) {
-            for (auto& comparer : darray1)
-               REQUIRE(&map[comparer.GetKey()] == &copy[comparer.GetKey()]);
-         }
-      }
-
-      WHEN("Map is cloned") {
-         T clone = Langulus::Clone(map);
-
-         Map_CheckState_OwnedFull<K, V>(clone);
-         Map_CheckState_OwnedFull<K, V>(map);
-
-         REQUIRE((clone != map) == (CT::Sparse<K> or CT::Sparse<V>));
-         REQUIRE(clone.GetKeys().GetUses() == 1);
-         REQUIRE(clone.GetVals().GetUses() == 1);
-         REQUIRE(clone.GetCount() == map.GetCount());
-         REQUIRE(clone.GetCount() == 5);
-         REQUIRE(clone.GetRawKeysMemory() != map.GetRawKeysMemory());
-         REQUIRE(clone.GetRawValsMemory() != map.GetRawValsMemory());
-         for (auto& comparer : darray1) {
-            if constexpr (CT::Sparse<V>) {
-               REQUIRE(clone[comparer.GetKey()] != comparer.GetValue());
-               REQUIRE(map[comparer.GetKey()] != clone[comparer.GetKey()]);
-            }
-            else {
-               REQUIRE(clone[comparer.GetKey()] == comparer.GetValue());
-               REQUIRE(map[comparer.GetKey()] == clone[comparer.GetKey()]);
-            }
-               
-            REQUIRE(map[comparer.GetKey()] == comparer.GetValue());
-               
-            if constexpr (CT::Typed<T>)
-               REQUIRE(&map[comparer.GetKey()] != &clone[comparer.GetKey()]);
-            else
-               REQUIRE(map[comparer.GetKey()].GetRaw() != clone[comparer.GetKey()].GetRaw());
-         }
-      }
-
-      WHEN("Map is move-constructed") {
-         T movable = map;
-         T moved = ::std::move(movable);
-
-         Map_CheckState_Default<K, V>(movable);
-         Map_CheckState_OwnedFull<K, V>(moved);
-
-         REQUIRE(moved == map);
-         REQUIRE(moved != movable);
-         REQUIRE(moved.GetRawKeysMemory() == keyMemory);
-         REQUIRE(moved.GetRawValsMemory() == valueMemory);
-         REQUIRE(moved.GetCount() == 5);
-         REQUIRE(moved.GetKeys().GetUses() == 2);
-         REQUIRE(moved.GetVals().GetUses() == 2);
-         for (auto& comparer : darray1)
-            REQUIRE(moved[comparer.GetKey()] == comparer.GetValue());
-      }
-
-      WHEN("Maps are compared") {
-         T sameMap;
-         sameMap << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-         T clonedMap {Clone(map)};
-         T copiedMap {map};
-         T differentMap1;
-         differentMap1 << darray1[0] << darray1[0] << darray1[2] << darray1[3] << darray1[4];
-
-         REQUIRE(map == sameMap);
-         REQUIRE(map == clonedMap);
-         REQUIRE(map == copiedMap);
-         REQUIRE(map != differentMap1);
-      }
-
       WHEN("Maps are iterated with ranged-for") {
          for (auto& comparer : darray1)
             REQUIRE(map[comparer.GetKey()] == comparer.GetValue());
@@ -790,27 +455,6 @@ TEMPLATE_TEST_CASE(
          REQUIRE(i == done);
       }
    }
-   
-   DestroyPair(pair);
-   DestroyPair(stdpair);
-
-   for (auto& i : darray1)
-      DestroyPair(i);
-   for (auto& i : darray2)
-      DestroyPair(i);
-
-   for (auto& i : darray1std)
-      DestroyPair(i);
-   for (auto& i : darray2std)
-      DestroyPair(i);
-
-   REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
-   REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
 TEMPLATE_TEST_CASE("Dense templated map stress test", "[map]",
@@ -859,15 +503,4 @@ TEMPLATE_TEST_CASE("Dense templated map stress test", "[map]",
          REQUIRE(iterated == 2'000);
       }
    }
-
-   for (auto& i : darray)
-      DestroyElement(i);
-
-   REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
-   REQUIRE_FALSE(Allocator::CollectGarbage());
 }

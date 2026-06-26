@@ -14,7 +14,7 @@ using namespace Langulus;
 //TODO test custom pointers with all these!!
 
 ///                                                                           
-/// CT::Sheddable                                                             
+/// MARK: CT::Sheddable                                                       
 ///                                                                           
 namespace
 {
@@ -64,7 +64,7 @@ static_assert(not CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived
 
 
 ///                                                                           
-/// CT::Array                                                                 
+/// MARK: CT::Array                                                           
 ///                                                                           
 namespace
 {
@@ -110,7 +110,7 @@ static_assert(not CT::Array<ArrayType, ArrayType2, CustomNonArrayType>);
 
 
 ///                                                                           
-/// ExtentOf                                                                  
+/// MARK: ExtentOf                                                            
 ///                                                                           
 SCENARIO("Getting the extent of bounded array types") {
    static_assert(ExtentOf<SheddableType<ArrayType>> == 50);
@@ -131,7 +131,7 @@ SCENARIO("Getting the extent of bounded array types") {
 
 
 ///                                                                           
-/// CT::Sparse / CT::Dense                                                    
+/// MARK: CT::Sparse / CT::Dense                                              
 ///                                                                           
 namespace
 {
@@ -170,7 +170,7 @@ static_assert(not CT::Dense<SheddableType<CustomNonPointerType>, CustomNonPointe
 
 
 ///                                                                           
-/// CT::Constant / CT::Mutable                                                
+/// MARK: CT::Constant / CT::Mutable                                          
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing constant types", TestType
    , SheddableType<const PointerType>
@@ -205,7 +205,7 @@ static_assert(not CT::Mutable<SheddableType<PointerType>, SheddableType<PointerT
 
 
 ///                                                                           
-/// CT::Volatile                                                              
+/// MARK: CT::Volatile                                                        
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing volatile types", TestType
    , SheddableType<volatile int>
@@ -231,7 +231,7 @@ static_assert(not CT::Volatile<SheddableType<volatile int>, SheddableType<volati
 
 
 ///                                                                           
-/// CT::Convoluted                                                            
+/// MARK: CT::Convoluted                                                      
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing convoluted types", TestType
    , SheddableType<const PointerType>
@@ -270,7 +270,7 @@ static_assert(not CT::NotConvoluted<SheddableType<PointerType>, SheddableType<Po
 
 
 ///                                                                           
-/// CT::Null                                                                  
+/// MARK:: CT::Null                                                           
 ///                                                                           
 namespace
 {
@@ -315,7 +315,7 @@ static_assert(not CT::NotNull<SheddableType<NullType*>, nullptr_t*, NullType>);
 
 
 ///                                                                           
-/// CT::Enum                                                                  
+/// MARK: CT::Enum                                                            
 ///                                                                           
 namespace
 {
@@ -367,7 +367,7 @@ static_assert(not CT::NotEnum<SheddableType<EnumType*>, NonEnumTypeDerived, Actu
 
 
 ///                                                                           
-/// CT::Aggregate                                                             
+/// MARK: CT::Aggregate                                                       
 ///                                                                           
 namespace
 {
@@ -429,7 +429,7 @@ static_assert(not CT::NotAggregate<SheddableType<AggregateType*>, NonAggregateTy
 
 
 ///                                                                           
-/// CT::Fundamental                                                           
+/// MARK: CT::Fundamental                                                     
 ///                                                                           
 namespace
 {
@@ -473,7 +473,7 @@ static_assert(not CT::NotFundamental<SheddableType<FundamentalType*>, NonFundame
 
 
 ///                                                                           
-/// CT::Reference                                                             
+/// MARK: CT::Reference                                                       
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing reference types", TestType
    , IncompleteType&
@@ -507,7 +507,7 @@ static_assert(not CT::NotReference<SheddableType<int>&, int*, IncompleteType&>);
 
 
 ///                                                                           
-/// CT::Decayed                                                               
+/// MARK: CT::Decayed                                                         
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing decayed types", TestType
    , SheddableType<int&>
@@ -542,7 +542,7 @@ static_assert(not CT::NotDecayed<SheddableType<int>&, int*, void /*IncompleteTyp
 
 
 ///                                                                           
-/// CT::Slab                                                                  
+/// MARK: CT::Slab                                                            
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing slab types", TestType
    , SheddableType<int>
@@ -570,7 +570,7 @@ static_assert(not CT::Slab<SheddableType<int>, SheddableType<int&>, int*>);
 
 
 ///                                                                           
-/// IsConstexpr                                                               
+/// MARK: IsConstexpr                                                         
 ///                                                                           
 namespace
 {
@@ -583,7 +583,7 @@ static_assert(not IsConstexpr([] { nonconst_function(1,2);}));
 
 
 ///                                                                           
-/// Deref                                                                     
+/// MARK: Deref                                                               
 ///                                                                           
 static_assert(::std::same_as<Deref<SheddableType<int&>>, SheddableType<int&>>);
 static_assert(::std::same_as<Deref<SheddableType<int>&>, SheddableType<int>>);
@@ -601,7 +601,7 @@ static_assert(::std::same_as<Deref<int(&)[15]>,       int[15]>);
 
 
 ///                                                                           
-/// Deptr                                                                     
+/// MARK: Deptr                                                               
 ///                                                                           
 static_assert(::std::same_as<Deptr<SheddableType<int**>>, int*>);
 static_assert(::std::same_as<Deptr<SheddableType<int*>>, int>);
@@ -662,7 +662,7 @@ static_assert(::std::same_as<Deptr<int const* const*&&, 2>, int const>);
 
 
 ///                                                                           
-/// Decvq                                                                     
+/// MARK: Decvq                                                               
 ///                                                                           
 static_assert(::std::same_as<Decvq<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<Decvq<SheddableType<int>* const volatile>, SheddableType<int>*>);
@@ -704,7 +704,7 @@ static_assert(::std::same_as<Decvq<int const* const* const volatile>, int const*
 
 
 ///                                                                           
-/// Decq                                                                      
+/// MARK: Decq                                                                
 ///                                                                           
 static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<Decq<SheddableType<int>* const>, SheddableType<int>*>);
@@ -746,7 +746,7 @@ static_assert(::std::same_as<Decq<int const* const* const volatile>, int const* 
 
 
 ///                                                                           
-/// Devq                                                                      
+/// MARK: Devq                                                                
 ///                                                                           
 static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<Decq<SheddableType<int>* const volatile>, SheddableType<int>* volatile>);
@@ -788,7 +788,7 @@ static_assert(::std::same_as<Devq<int const* const* const volatile>, int const* 
 
 
 ///                                                                           
-/// Deext                                                                     
+/// MARK: Deext                                                               
 ///                                                                           
 static_assert(::std::same_as<Deext<SheddableType<int(&)[15]>>, SheddableType<int(&)[15]>>);
 static_assert(::std::same_as<Deext<SheddableType<int>(&)[15]>, SheddableType<int>>);
@@ -816,7 +816,7 @@ static_assert(::std::same_as<Deext<int const* const volatile>, int const* const 
 
 
 ///                                                                           
-/// Decay                                                                     
+/// MARK: Decay                                                               
 ///                                                                           
 static_assert(::std::same_as<Decay<SheddableType<int* const>>, int>);
 static_assert(::std::same_as<Decay<SheddableType<int>* const volatile>, int>);
@@ -857,7 +857,7 @@ static_assert(::std::same_as<Decay<int const* const* const volatile>, int>);
 
 
 ///                                                                           
-/// DecvqAll                                                                  
+/// MARK: DecvqAll                                                            
 ///                                                                           
 static_assert(::std::same_as<DecvqAll<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<DecvqAll<SheddableType<int>* const volatile>, SheddableType<int>*>);
@@ -928,7 +928,7 @@ TEST_CASE_TEMPLATE("Testing DecvqAllCast", TestType
 }
 
 ///                                                                           
-/// IndirectsOf                                                               
+/// MARK: IndirectsOf                                                         
 ///                                                                           
 static_assert(IndirectsOf<SheddableType<int>> == 0);
 static_assert(IndirectsOf<SheddableType<int* const>> == 1);
