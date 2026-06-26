@@ -121,6 +121,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    , Types<TAny<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
    , Types<TAny<pptr16>, pptr16, ScopedElementPacked<pptr16>>
    , Types<TAny<pptr32>, pptr32, ScopedElementPacked<pptr32>>
+   //TODO pointers to packed pointers?
+   //TODO pointers to incompletes?
+   //TODO aggregates?
    #endif
 ) {
    static MemoryState memoryState;
@@ -724,6 +727,29 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             Text owned_text = "666";
             pack = Text(owned_text.operator Token());
          }
+      }
+
+      WHEN("GetHandle is called on mutable container") {
+         auto h = pack.GetHandle();
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(h), HandleMut>);
+         else
+            static_assert(::std::same_as<decltype(h), THandle<E&>>);
+
+         Any_CheckState_Default<E>(h);
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const pack_constant;
+         auto h = pack_constant.GetHandle();
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(h), Handle>);
+         else
+            static_assert(::std::same_as<decltype(h), THandle<E const&>>);
+
+         Any_CheckState_Default<E>(h);
       }
    }
 

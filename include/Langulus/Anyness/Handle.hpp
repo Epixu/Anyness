@@ -745,9 +745,15 @@ namespace Langulus::Anyness
       requires (not requires { T{LglsFwd(a)}; })
          : Base {Stackwise, DeintCast(a)} {}
 
-      constexpr THandle() noexcept {
-         this->ConstructDefault();
-      }
+      template<NotTag ALT_T>
+      constexpr THandle(ALT_T&& a) requires requires { T{LglsFwd(a)}; }
+         : Base {Stackwise, LglsFwd(a)} {}
+
+      template<NotTag ALT_T> requires CT::Intent<ALT_T>
+      constexpr THandle(ALT_T&& a) requires (not requires { T{LglsFwd(a)}; })
+         : Base {Stackwise, DeintCast(a)} {}
+
+      constexpr THandle() noexcept = default;
 
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));

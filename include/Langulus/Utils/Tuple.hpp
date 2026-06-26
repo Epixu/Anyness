@@ -222,13 +222,13 @@ namespace Langulus::Inner
    constexpr auto forward_shuffled_tuple(indices<I...>, Tuple&& t)
    -> ShuffleTuple<Tuple, I...> {
       using std::get;
-      return std::forward_as_tuple(get<I>(LglsFwd(t))...);
+      return std::forward_as_tuple(get<I>(std::forward<Tuple>(t))...);
    }
    
    template<size_t...I, class...T>
    constexpr auto forward_shuffled(indices<I...> map, T&&... t)
    -> ShuffleTuple<std::tuple<T&&...>, I...> {
-      return forward_shuffled_tuple(map, std::forward_as_tuple(LglsFwd(t)...));
+      return forward_shuffled_tuple(map, std::forward_as_tuple(std::forward<T>(t)...));
    }
    
    template<class From, class To>

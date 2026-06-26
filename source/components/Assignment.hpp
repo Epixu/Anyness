@@ -181,6 +181,90 @@ namespace Langulus::Anyness::Component
          return self;
       }
 
+      /// Swap the value of the first element, if that element is initialized.
+      /// If the element isn't initialized yet it will be constructed, with   
+      /// the argument ending up default.                                     
+      ///   @param argument the argument to swap with                         
+      ///   @return reference to self                                         
+      template<CT::ContainsOne C, CT::ContainsOne A>
+      C& Swap(this C& self, A& argument) {
+         if constexpr (not CT::HeapAllocated<C>) {
+            // This container is on the stack, and by extension         
+            // statically-typed and always initialized                  
+            auto& data = self.template AccessProvider<ID>();
+            data = LglsFwd(argument);
+         }
+         else {
+            // This container is heap-allocated                         
+            using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;
+            self.template SetType<T>();
+
+            if (self.IsEmpty()) {
+               // Container is empty, we might have to fresh-allocate   
+               if constexpr (CT::UnfoldConstructible<T, A&&>) {
+                  // Just construct the first element                   
+                  self.PrepareForReconstruction();
+
+                  auto first = self.GetHandle();
+                  if constexpr (CT::Copied<IntentOf(argument)>) {
+                     Id::ForEach([&]<Cid D>{
+                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                     });
+                  }
+                  else {
+                     Id::ForEach([&]<Cid D>{
+                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                     });
+                  }
+               }
+               else static_assert(false, "T can't be reconstructed");
+            }
+            else {
+               // Container has at least one element                    
+               if constexpr (not CT::Cloned<IntentOf(argument)> and CT::UnfoldAssignable<T, A&&>) {
+                  // Reduce to one item and reassign if possible        
+                  if (self.PrepareForReassignment()) {
+                     auto first = self.GetHandle();
+                     Id::ForEach([&]<Cid D>{
+                        if constexpr (CT::Copied<IntentOf(argument)>)
+                           first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
+                        else
+                           first.template AssignWithIntent<D>(FWDIntent(argument));
+                     });
+                  }
+                  else {
+                     auto first = self.GetHandle();
+                     Id::ForEach([&]<Cid D>{
+                        if constexpr (CT::Copied<IntentOf(argument)>)
+                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                        else
+                           first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                     });
+                  }
+               }
+               else if constexpr (CT::UnfoldConstructible<T, A&&>) {
+                  // Assignment isn't available for T - destroy all     
+                  // items and reconstruct the first one                
+                  self.PrepareForReconstruction();
+
+                  auto first = self.GetHandle();
+                  Id::ForEach([&]<Cid D>{
+                     if constexpr (CT::Copied<IntentOf(argument)>)
+                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                     else
+                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                  });
+               }
+               else static_assert(false, "T can't be reassigned or reconstructed");
+            }
+
+            if_available(self.SetCountInner(1));
+            if_available(self.SetHashInner(0));
+         }
+         
+         return self;
+      }
+
       /// Assignment for discontiguous containers falls back to insert/merge. 
       ///   @param argument the argument to insert                            
       ///   @return reference to self                                         

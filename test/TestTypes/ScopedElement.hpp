@@ -13,14 +13,15 @@
 
 
 /// Useful for creating instances of types on the heap, with multiple levels  
-/// of indirection                                                            
+/// of indirection. Automatically deallocated at end of scope.                
 template<class T, bool MANAGED = false>
 struct ScopedElement {
    using CTTI_ReflectAs = void;
-   using Type = T;
-   using Allocation = Langulus::Allocation;
-   using AllocationPtr = Langulus::AllocationPtr;
-   using Allocator = Langulus::Allocator;
+   using CTTI_Typed     = T;
+   using Allocation     = Langulus::Allocation;
+   using AllocationPtr  = Langulus::AllocationPtr;
+   using Allocator      = Langulus::Allocator;
+
    static constexpr bool Managed = MANAGED;
    
    T* element = nullptr;
@@ -132,3 +133,6 @@ public:
    auto operator -> ()       -> T*       {return  element;}
    auto operator -> () const -> T const* {return  element;}
 };
+
+template<class T>
+using ScopedElementManaged = ScopedElement<T, true>;
