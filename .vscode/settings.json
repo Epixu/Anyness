@@ -200,5 +200,6 @@
   "coverage-gutters.coverageFileNames": [
     "lcov.info"
   ],
-  "coverage-gutters.customizable.context-menu": false
+  "coverage-gutters.customizable.context-menu": false,
+  "editor.autoClosingComments": "never"
 }

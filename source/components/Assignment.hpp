@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "Langulus/CT/Contiguous.hpp"
+#include "Langulus/IntentOf.hpp"
 #include "source/Component.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
@@ -99,6 +100,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument)
       requires (CT::RangeAssignable<C, A> /*and CT::Contiguous<C>*/) {
+         using I = IntentOf(argument);
+
          if constexpr (not CT::Contiguous<C>) {
             // Assignment for maps/sets falls back to merge             
             self.Clear();
@@ -110,60 +113,70 @@ namespace Langulus::Anyness::Component
             auto& data = self.template AccessProvider<ID>();
             data = LglsFwd(argument);
          }
-         else if constexpr (CT::Handle<A>) {
-            // This container is on the stack, and by extension         
-            // statically-typed and always initialized                  
-            auto& data = self.template AccessProvider<ID>();
-            data = LglsFwd(argument);
+         else if constexpr (CT::Handle<C>) {
+            // This container is heap-allocated                         
+            if constexpr (CT::Handle<A>)
+               self.AbsorbType(Copy(argument));
+            else
+               self.DeduceType(LglsFwd(argument));
+
+            Id::ForEach([&]<Cid D>{
+               if constexpr (CT::Cloned<I>)
+                  self.template AssignWithIntent<D>(FWDIntent(argument));
+               else
+                  self.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
+            });
          }
          else {
             // This container is heap-allocated                         
-            using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;
-            self.template SetType<T>();
+            //using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;
+
+            if constexpr (CT::Handle<A>)
+               self.AbsorbType(Copy(argument));
+            else
+               self.DeduceType(LglsFwd(argument));
+
+            //self.template SetType<T>();
 
             if (self.IsEmpty()) {
                // Container is empty, we might have to fresh-allocate   
-               if constexpr (CT::UnfoldConstructible<T, A&&>) {
+               //if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Just construct the first element                   
                   self.PrepareForReconstruction();
 
                   auto first = self.GetHandle();
-                  if constexpr (CT::Copied<IntentOf(argument)>) {
-                     Id::ForEach([&]<Cid D>{
-                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                     });
-                  }
-                  else {
-                     Id::ForEach([&]<Cid D>{
+                  Id::ForEach([&]<Cid D>{
+                     if constexpr (CT::Cloned<I>)
                         first.template EmplaceWithIntent<D>(FWDIntent(argument));
-                     });
-                  }
-               }
-               else static_assert(false, "T can't be reconstructed");
+                     else
+                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                  });
+               //}
+               //else static_assert(false, "T can't be reconstructed");
             }
             else {
                // Container has at least one element                    
-               if constexpr (not CT::Cloned<IntentOf(argument)> and CT::UnfoldAssignable<T, A&&>) {
+               //if constexpr (not CT::Cloned<I> and CT::UnfoldAssignable<T, A&&>) {
                   // Reduce to one item and reassign if possible        
+                  auto first = self.GetHandle();
+
                   if (self.PrepareForReassignment()) {
-                     auto first = self.GetHandle();
                      Id::ForEach([&]<Cid D>{
-                        if constexpr (CT::Copied<IntentOf(argument)>)
-                           first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
-                        else
+                        if constexpr (CT::Cloned<I>)
                            first.template AssignWithIntent<D>(FWDIntent(argument));
+                        else
+                           first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
                      });
                   }
                   else {
-                     auto first = self.GetHandle();
                      Id::ForEach([&]<Cid D>{
-                        if constexpr (CT::Copied<IntentOf(argument)>)
-                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                        else
+                        if constexpr (CT::Cloned<I>)
                            first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                        else
+                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
                      });
                   }
-               }
+               /*}
                else if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Assignment isn't available for T - destroy all     
                   // items and reconstruct the first one                
@@ -171,13 +184,13 @@ namespace Langulus::Anyness::Component
 
                   auto first = self.GetHandle();
                   Id::ForEach([&]<Cid D>{
-                     if constexpr (CT::Copied<IntentOf(argument)>)
-                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                     else
+                     if constexpr (CT::Cloned<I>)
                         first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                     else
+                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
                   });
                }
-               else static_assert(false, "T can't be reassigned or reconstructed");
+               else static_assert(false, "T can't be reassigned or reconstructed");*/
             }
 
             if_available(self.SetCountInner(1));
@@ -192,13 +205,19 @@ namespace Langulus::Anyness::Component
       /// the argument ending up default.                                     
       ///   @param argument the argument to swap with                         
       ///   @return reference to self                                         
-      template<CT::ContainsOne C, CT::ContainsOne A>
+      template<CT::ContainsOne C, CT::ContainsOne A> requires CT::NoIntent<A>//TODO this is completely wrong. test it!
       C& Swap(this C& self, A& argument) {
          if constexpr (not CT::HeapAllocated<C>) {
-            // This container is on the stack, and by extension         
-            // statically-typed and always initialized                  
-            auto& data = self.template AccessProvider<ID>();
-            data = LglsFwd(argument);
+            self.SwapInner(argument);
+         }
+         else if constexpr (CT::Handle<C>) {
+            // This container is heap-allocated                         
+            if constexpr (CT::Handle<A>)
+               self.AbsorbType(Copy(argument));
+            else
+               self.DeduceType(LglsFwd(argument));
+
+            TODO();
          }
          else {
             // This container is heap-allocated                         
@@ -207,47 +226,34 @@ namespace Langulus::Anyness::Component
 
             if (self.IsEmpty()) {
                // Container is empty, we might have to fresh-allocate   
-               if constexpr (CT::UnfoldConstructible<T, A&&>) {
+               //if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Just construct the first element                   
                   self.PrepareForReconstruction();
 
                   auto first = self.GetHandle();
-                  if constexpr (CT::Copied<IntentOf(argument)>) {
-                     Id::ForEach([&]<Cid D>{
-                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                     });
-                  }
-                  else {
-                     Id::ForEach([&]<Cid D>{
-                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
-                     });
-                  }
-               }
-               else static_assert(false, "T can't be reconstructed");
+                  Id::ForEach([&]<Cid D>{
+                     first.template EmplaceWithIntent<D>(Move(argument));
+                  });
+               //}
+               //else static_assert(false, "T can't be reconstructed");
             }
             else {
                // Container has at least one element                    
-               if constexpr (not CT::Cloned<IntentOf(argument)> and CT::UnfoldAssignable<T, A&&>) {
+               //if constexpr (not CT::Cloned<IntentOf(argument)> and CT::UnfoldAssignable<T, A&&>) {
                   // Reduce to one item and reassign if possible        
+                  auto first = self.GetHandle();
                   if (self.PrepareForReassignment()) {
-                     auto first = self.GetHandle();
                      Id::ForEach([&]<Cid D>{
-                        if constexpr (CT::Copied<IntentOf(argument)>)
-                           first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
-                        else
-                           first.template AssignWithIntent<D>(FWDIntent(argument));
+                        first.template AssignWithIntent<D>(Move(argument));
                      });
                   }
                   else {
-                     auto first = self.GetHandle();
                      Id::ForEach([&]<Cid D>{
-                        if constexpr (CT::Copied<IntentOf(argument)>)
-                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                        else
-                           first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                        first.template EmplaceWithIntent<D>(Move(argument));
                      });
                   }
-               }
+                  TODO();
+               /*}
                else if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Assignment isn't available for T - destroy all     
                   // items and reconstruct the first one                
@@ -261,7 +267,7 @@ namespace Langulus::Anyness::Component
                         first.template EmplaceWithIntent<D>(FWDIntent(argument));
                   });
                }
-               else static_assert(false, "T can't be reassigned or reconstructed");
+               else static_assert(false, "T can't be reassigned or reconstructed");*/
             }
 
             if_available(self.SetCountInner(1));
@@ -271,18 +277,6 @@ namespace Langulus::Anyness::Component
          return self;
       }
 
-      /// Assignment for discontiguous containers falls back to insert/merge. 
-      ///   @param argument the argument to insert                            
-      ///   @return reference to self                                         
-      /*template<CT::Container C, class A>
-      C& Assign(this C& self, A&& argument)
-      requires (CT::RangeAssignable<C, A> and not CT::Contiguous<C>) {
-         self.Clear();
-              if_available(self.Insert(LglsFwd(argument)))
-         else if_available(self.Merge (LglsFwd(argument)))
-         return self;
-      }*/
-
    protected:
       /// MARK: Protected                                                     
       LglsComIndexedCommonHashed(friend);
@@ -291,7 +285,7 @@ namespace Langulus::Anyness::Component
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         
       ///   @attention operates in all relevant dimensions simultaneously     
-      template<CT::HeapAllocated C>
+      template<CT::HeapAllocated C> requires CT::NotHandle<C>
       void PrepareForReconstruction(this C& self) {
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
@@ -436,11 +430,11 @@ namespace Langulus::Anyness::Component
             "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
             "Can be used only for contiguous containers");
-         static_assert(not CT::Cloned<I> and not CT::Copied<I> and CT::HeapAllocated<C>,
+         /*static_assert(not CT::Cloned<I> and not CT::Copied<I> and CT::HeapAllocated<C>,
             "Since this function assumes container has been preallocated, "
             "it makes no sense to clone or copy here "
             "- it should be handled outside this call."
-         );
+         );*/ // WRONG! we're doing assignment, not construction, so it is completely normal to use these intents on assignment in particular
 
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.template GetRaw<SID>(),  "Invalid heap");
@@ -467,6 +461,10 @@ namespace Langulus::Anyness::Component
                   T.GetReferAssigner()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownAssigner()(src, dst);
+               else if constexpr (CT::Copied<I>)
+                  T.GetCopyAssigner()(src, dst);
+               else if constexpr (CT::Cloned<I>)
+                  T.GetCloneAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
             }
@@ -482,13 +480,13 @@ namespace Langulus::Anyness::Component
                using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
                T* const dst = self.template GetRawAs<T, SID>();
 
-               if constexpr (CT::Mutable<T> or not I::IsMoved())
+               //if constexpr (CT::Mutable<T> or not I::IsMoved())
                   IntentAssign(*dst, I::Nest(*rhs.template GetRawAs<T, SID>()));
-               else
-                  IntentAssign(*dst, Refer(*rhs.template GetRawAs<T, SID>()));
+               //else
+               //   IntentAssign(*dst, Refer(*rhs.template GetRawAs<T, SID>()));
             }
 
-            if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
+            //if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
          else {
             if constexpr (CT::TypeErased<C, IT>) {
@@ -507,6 +505,10 @@ namespace Langulus::Anyness::Component
                   T.GetReferAssigner()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownAssigner()(src, dst);
+               else if constexpr (CT::Copied<I>)
+                  T.GetCopyAssigner()(src, dst);
+               else if constexpr (CT::Cloned<I>)
+                  T.GetCloneAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
             }
@@ -522,10 +524,13 @@ namespace Langulus::Anyness::Component
                IntentAssign(*dst, LglsFwd(intent));
             }
 
-            if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
+            //if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
+
+         if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
       }
 
+      /// MARK: SwapInner                                                     
       /// Swap the first element. Gracefully handling transitions between     
       /// embedded and unembedded handles.                                    
       ///   @param rhs - right hand side                                      

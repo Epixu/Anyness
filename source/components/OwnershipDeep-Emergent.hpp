@@ -973,10 +973,10 @@ namespace Langulus::Anyness::Component
                return;
          }
 
-         static_assert(not CT::Cloned<I>,
+         /*static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations"
-         );
+         );*/ // Generally true on construction, but we want this to happen after assignment!
 
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.template GetIndirections<SID>();
