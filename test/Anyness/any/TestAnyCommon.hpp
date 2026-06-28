@@ -391,7 +391,7 @@ void Any_CheckState_Abandoned(const C& any) {
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) {
    auto& e = e_with_intent.what;
-   using E = typename Decay<Deint<I>>::Type;
+   using E = typename Decay<Deint<I>>::CTTI_Typed;
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == uses);
    REQUIRE(pack.GetReserved() >= (uses ? 1 : 0));

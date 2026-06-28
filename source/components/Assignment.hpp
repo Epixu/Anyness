@@ -110,6 +110,12 @@ namespace Langulus::Anyness::Component
             auto& data = self.template AccessProvider<ID>();
             data = LglsFwd(argument);
          }
+         else if constexpr (CT::Handle<A>) {
+            // This container is on the stack, and by extension         
+            // statically-typed and always initialized                  
+            auto& data = self.template AccessProvider<ID>();
+            data = LglsFwd(argument);
+         }
          else {
             // This container is heap-allocated                         
             using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;

@@ -39,12 +39,12 @@ static_assert(sizeof(pptr32rt) == 4);
 template<::Langulus::CT::CustomPointer T>
 struct ScopedElementPacked {
    using CTTI_ReflectAs = void;
-   using Type = T;
-   using Inner = typename T::Type;
-   using Allocation = Langulus::Allocation;
-   using AllocationPtr = Langulus::AllocationPtr;
-   using Allocator = Langulus::Allocator;
-   using pot_t = Langulus::pot_t;
+   using CTTI_Typed     = T;
+   using Inner          = typename T::Type;
+   using Allocation     = Langulus::Allocation;
+   using AllocationPtr  = Langulus::AllocationPtr;
+   using Allocator      = Langulus::Allocator;
+   using pot_t          = Langulus::pot_t;
    static constexpr bool Managed = true;
 
    T* element = nullptr;

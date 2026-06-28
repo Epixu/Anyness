@@ -178,6 +178,6 @@ namespace Langulus::CTTI
    /// Convert Set -> Text                                                    
    template<Anyness::StateValue SORT>
    struct Converter<Anyness::Inner::Set<SORT>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Inner::Set<SORT> const& from) -> Anyness::Text;
+      static constexpr auto Convert(Anyness::Inner::Set<SORT> const&) -> Anyness::Text;
    };
 }

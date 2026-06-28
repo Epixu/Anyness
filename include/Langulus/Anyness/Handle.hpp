@@ -6,6 +6,10 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "Langulus/CT/Deep.hpp"
+#include "Langulus/Core.hpp"
+#include "source/Component.hpp"
+#include "source/Container.hpp"
 #include <source/components/Typed-Stack.hpp>
 #include <source/components/Typed-Static.hpp>
 #include <source/components/Heap-Reference.hpp>
@@ -737,6 +741,31 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
+      constexpr THandle() noexcept = default;
+
+      /// Absorb constructors                                                 
+      constexpr THandle(THandle const& other) {
+         this->Absorb(Refer(other));
+      }
+
+      constexpr THandle(THandle&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+
+      constexpr THandle(Inner::Absorb, CT::Container auto&& other) {
+         this->Absorb(LglsFwd(other));
+      }
+
+      /// Piecewise constructors                                              
+      /// (for local dense handles, piecewise == stackwise)                   
+      constexpr THandle(Inner::Stackwise, auto&& a)
+      requires requires { T{LglsFwd(a)}; }
+         : Base {Stackwise, LglsFwd(a)} {}
+
+      constexpr THandle(Inner::Stackwise, CT::Intent auto&& a)
+      requires (not requires { T{LglsFwd(a)}; })
+         : Base {Stackwise, DeintCast(a)} {}
+
       constexpr THandle(Inner::Piecewise, auto&& a)
       requires requires { T{LglsFwd(a)}; }
          : Base {Stackwise, LglsFwd(a)} {}
@@ -745,23 +774,13 @@ namespace Langulus::Anyness
       requires (not requires { T{LglsFwd(a)}; })
          : Base {Stackwise, DeintCast(a)} {}
 
-      template<NotTag ALT_T>
+      template<NotTag ALT_T> requires (not CT::DeepDense<ALT_T>)
       constexpr THandle(ALT_T&& a) requires requires { T{LglsFwd(a)}; }
          : Base {Stackwise, LglsFwd(a)} {}
 
-      template<NotTag ALT_T> requires CT::Intent<ALT_T>
+      template<NotTag ALT_T> requires (CT::Intent<ALT_T> and not CT::DeepDense<ALT_T>)
       constexpr THandle(ALT_T&& a) requires (not requires { T{LglsFwd(a)}; })
          : Base {Stackwise, DeintCast(a)} {}
-
-      constexpr THandle() noexcept = default;
-
-      constexpr THandle(THandle const& other) {
-         this->Absorb(Refer(other));
-      }
-
-      constexpr THandle(THandle&& other) noexcept {
-         this->Absorb(Move(other));
-      }
 
       constexpr ~THandle() noexcept {
          this->Destroy();
@@ -847,5 +866,51 @@ namespace Langulus::Anyness
          static_assert(SID == 0, "No such dimension");
          return LglsFwd(self);
       }
+   };
+}
+
+namespace Langulus::CTTI
+{
+   /// MARK: Converters                                                       
+   /// Convert Handle -> Text                                                 
+   template<>
+   struct Converter<Anyness::Handle, Anyness::Text> {
+      static constexpr auto Convert(Anyness::Handle const&) -> Anyness::Text;
+   };
+
+   /// Convert HandleMut -> Text                                              
+   template<>
+   struct Converter<Anyness::HandleMut, Anyness::Text> {
+      static constexpr auto Convert(Anyness::HandleMut const&) -> Anyness::Text;
+   };
+   
+   /// Convert HandleDisowned -> Text                                         
+   template<>
+   struct Converter<Anyness::HandleDisowned, Anyness::Text> {
+      static constexpr auto Convert(Anyness::HandleDisowned const&) -> Anyness::Text;
+   };
+   
+   /// Convert HandleDisownedMut -> Text                                      
+   template<>
+   struct Converter<Anyness::HandleDisownedMut, Anyness::Text> {
+      static constexpr auto Convert(Anyness::HandleDisownedMut const&) -> Anyness::Text;
+   };
+   
+   /// Convert THandle -> Text                                                
+   template<class T>
+   struct Converter<Anyness::THandle<T>, Anyness::Text> {
+      static constexpr auto Convert(Anyness::THandle<T> const&) -> Anyness::Text;
+   };
+   
+   /// Convert THandleDisowned -> Text                                        
+   template<class T>
+   struct Converter<Anyness::THandleDisowned<T>, Anyness::Text> {
+      static constexpr auto Convert(Anyness::THandleDisowned<T> const&) -> Anyness::Text;
+   };
+   
+   /// Convert THandleEmergent -> Text                                        
+   template<class T>
+   struct Converter<Anyness::THandleEmergent<T>, Anyness::Text> {
+      static constexpr auto Convert(Anyness::THandleEmergent<T> const&) -> Anyness::Text;
    };
 }

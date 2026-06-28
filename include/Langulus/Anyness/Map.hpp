@@ -234,6 +234,6 @@ namespace Langulus::CTTI
    /// Convert Map -> Text                                                    
    template<Anyness::StateValue SORT>
    struct Converter<Anyness::Inner::Map<SORT>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Inner::Map<SORT> const& from) -> Anyness::Text;
+      static constexpr auto Convert(Anyness::Inner::Map<SORT> const&) -> Anyness::Text;
    };
 }

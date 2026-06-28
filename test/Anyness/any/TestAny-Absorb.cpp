@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestAnyCommon.hpp"
+#include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Assume.hpp>
 
@@ -129,6 +130,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
+   constexpr bool Sparse  = CT::Sparse<E>;
+   constexpr bool Reffed  = CT::Referenced<Decay<E>>;
+
    
    #if LANGULUS(BENCHMARK)
       using stdany = ::std::any;
@@ -202,7 +206,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       const ScopedE originalElement {556};
       const ScopedE element {555};
 
-      if constexpr (CT::Referenced<Decay<E>>) {
+      if constexpr (Reffed) {
          REQUIRE(DenseCast(*originalElement).GetReferences() == 1);
       }
 
@@ -211,21 +215,21 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       T piecewise3{Piecewise, *originalElement};
       T piecewise4{Piecewise, *originalElement};
 
-      if constexpr (CT::Referenced<Decay<E>>) {
-         REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 5 : 1));
+      if constexpr (Reffed) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == (Sparse ? 5 : 1));
       }
 
       T pack_referred1{Absorb,             piecewise1};
       T pack_referred2{Absorb,       Refer(piecewise1)};
 
-      if constexpr (CT::Referenced<Decay<E>>) {
-         REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 7 : 1));
+      if constexpr (Reffed) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == (Sparse ? 7 : 1));
       }
 
       T pack_copied   {Absorb,        Copy(piecewise1)};
 
-      if constexpr (CT::Referenced<Decay<E>>) {
-         REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
+      if constexpr (Reffed) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == (Sparse ? 8 : 1));
       }
 
       T pack_cloned   {Absorb,       Clone(piecewise1)};
@@ -234,8 +238,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       T pack_abandoned{Absorb,     Abandon(piecewise4)};
       T pack_disowned {Absorb,      Disown(piecewise1)};
 
-      if constexpr (CT::Referenced<Decay<E>>) {
-         REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
+      if constexpr (Reffed) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == (Sparse ? 8 : 1));
       }
 
       WHEN("Absorb-constructed") {
@@ -261,7 +265,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          }
          else Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
 
-         if constexpr (CT::Referenced<Decay<E>>) {
+         if constexpr (Reffed) {
             REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
          }
 
@@ -880,7 +884,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       }
       
       WHEN("Absorbed by copy") {
-         const bool managed_sparse = CT::Sparse<E> and Managed;
+         const bool managed_sparse = Sparse and Managed;
          auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) {
             T absorbed {Copy {a}};
 
@@ -891,20 +895,20 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
             REQUIRE(absorbed.template As<E>() == a.template As<E>());
 
-            if constexpr (CT::Sparse<E>) {
+            if constexpr (Sparse) {
                auto entry = *absorbed.GetEntries();
                if (entry_refs == 0)
                   REQUIRE(entry == nullptr);
 
                if (entry) {
                   REQUIRE(entry->GetUses() == entry_refs);
-                  if constexpr (CT::Referenced<Decay<E>>) {
+                  if constexpr (Reffed) {
                      auto e = absorbed.template As<E>();
                      REQUIRE(DenseCast(e).GetReferences() == entry_refs);
                   }
                }
                else {
-                  if constexpr (CT::Referenced<Decay<E>>) {
+                  if constexpr (Reffed) {
                      auto e = absorbed.template As<E>();
                      REQUIRE(DenseCast(e).GetReferences() == 9);
                   }
@@ -961,6 +965,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          absorb_construct_clone(pack_disowned,  0);
       }
       
+      /// MARK: Emplace                                                       
       WHEN("Emplace (overwrite)") {
          auto emplace_overwrite = [&](T& a, [[maybe_unused]] const char* intent) {
             ScopedE i666{666};
@@ -1005,6 +1010,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          emplace_overwrite(pack_disowned,  "Disown");
       }
 
+      /// MARK: Emplace (describe)                                            
       WHEN("Emplace (overwrite, describe)") {
          auto emplace_overwrite_describe = [&](T& a, [[maybe_unused]] const char* intent) {
             ScopedE i666{666};
@@ -1039,6 +1045,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          emplace_overwrite_describe(pack_disowned,  "Disown");
       }
       
+      /// MARK: Clear                                                         
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent) {
             BenchmarkAnyStd("Absorb/" + intent + "/Clear", 30, 100,
@@ -1068,6 +1075,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          Any_CheckState_Default<E>(pack_disowned, true);
       }
 
+      /// MARK: Reset                                                         
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
             BenchmarkAnyStd("Absorb/" + intent + "/Reset", 30, 100,
@@ -1109,6 +1117,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          }
       }
 
+      /// MARK: Compare                                                       
       WHEN("Compared") {
          ScopedE e1 {1};
          T another_pack1 {Piecewise, *e1};
@@ -1145,6 +1154,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          compared_full(pack_disowned,  "Disown");
       }
 
+      /// MARK: Contains                                                      
       WHEN("Contains when full") {
          ScopedE e1 {1};
          
@@ -1157,7 +1167,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          contains_full(pack_referred2);
          contains_full(pack_copied);
 
-         if constexpr (CT::Sparse<E>) {
+         if constexpr (Sparse) {
             REQUIRE      (pack_cloned.GetDense().Contains(DenseCast(*originalElement)));
             REQUIRE_FALSE(pack_cloned.Contains(*originalElement));
             REQUIRE_FALSE(pack_cloned.Contains(*e1));
@@ -1175,140 +1185,143 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          );
       }
       
+      /// MARK: GetHandle                                                     
       WHEN("GetHandle is called on mutable container") {
-         auto h = pack.GetHandle();
+         auto handle = pack_referred1.GetHandle();
+         auto data   = handle.Get();
+         auto entry  = handle.GetEntries();
 
          if constexpr (CT::Untyped<T>)
-            static_assert(::std::same_as<decltype(h), HandleMut>);
+            static_assert(::std::same_as<decltype(handle), HandleMut>);
          else
-            static_assert(::std::same_as<decltype(h), THandle<E&>>);
+            static_assert(::std::same_as<decltype(handle), THandle<E&>>);
 
-         Any_CheckState_OwnedFull<E>(h);
+         Handle_CheckState_OwnedFull<E>(handle);
 
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(h.GetEntry());
-            REQUIRE(h.GetEntry()->GetUses() == (CT::Sparse<E> ? 3 : 1));
-         #endif
+         REQUIRE(handle.GetEntries());
+         REQUIRE(handle.GetEntries()[0]->GetUses() == (Sparse ? 3 : 1));
 
-         if constexpr (CT::Referenced<Decay<E>>) {
-            REQUIRE(DenseCast(h.Get()).GetReferences() == 1);
-            REQUIRE(DenseCast(h.Get()).destroyed == false);
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(handle.Get()).GetReferences() == 1);
+            REQUIRE(DenseCast(handle.Get()).destroyed == false);
          }
             
          THEN("Handle assigned to another container") {
-            TMany<T> next = CreateManagedElements<T>(0);
-            THandle<T&> n = next.GetHandle();
-            auto const n0e = n.GetEntry();
-            IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
+            ScopedE e0 {0};
+            T next {*e0};
+            auto n = next.GetHandle();
+            auto const n0e = n.GetEntries();
+            REQUIRE(n0e[0]->GetUses() == 1);
 
-            n.AssignWithIntent(Move(h0));
+            n.Assign(Move(handle));
 
-            if constexpr (REFFED) {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == nullptr);
-                  REQUIRE(h0.GetEntry() == nullptr);
+            if constexpr (Reffed) {
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == nullptr);
+                  REQUIRE(handle.GetEntry() == nullptr);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntry() == entry);
                   REQUIRE(n.Get()->GetReferences() == 1);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
-                  REQUIRE(n.Get()->data == h0p->data);
+                  REQUIRE(n.GetEntries()->GetUses() == 3);
+                  REQUIRE(n.Get()->data == data->data);
                   REQUIRE(n.Get()->destroyed == false);
                   REQUIRE(n.Get()->moved_in == false);
                   REQUIRE(n.Get()->moved_out == false);
                }
                else {
-                  REQUIRE(h0.Get().GetReferences() == 1);
-                  REQUIRE(h0.Get().destroyed == false);
-                  REQUIRE(h0.Get().moved_in == false);
-                  REQUIRE(h0.Get().moved_out == true);
+                  REQUIRE(handle.Get()->GetReferences() == 1);
+                  REQUIRE(handle.Get()->destroyed == false);
+                  REQUIRE(handle.Get()->moved_in == false);
+                  REQUIRE(handle.Get()->moved_out == true);
 
-                  REQUIRE(n.Get().GetReferences() == 1);
-                  REQUIRE(n.Get().data == h0p->data);
-                  REQUIRE(n.GetEntry() == n0e);
-                  REQUIRE(n.Get().destroyed == false);
-                  REQUIRE(n.Get().moved_in == true);
-                  REQUIRE(n.Get().moved_out == false);
+                  REQUIRE(n.Get()->GetReferences() == 1);
+                  REQUIRE(n.Get()->data == data->data);
+                  REQUIRE(n.GetEntries() == n0e);
+                  REQUIRE(n.Get()->destroyed == false);
+                  REQUIRE(n.Get()->moved_in == true);
+                  REQUIRE(n.Get()->moved_out == false);
                }
             }
             else {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == nullptr);
-                  REQUIRE(h0.GetEntry() == nullptr);
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == nullptr);
+                  REQUIRE(handle.GetEntry() == nullptr);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == entry);
+                  REQUIRE(n.GetEntries()->GetUses() == 3);
                }
                else {
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == n0e);
-                  REQUIRE(h0.GetEntry() == h0e);
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == n0e);
+                  REQUIRE(handle.GetEntries() == entry);
                }
             }
          }
          
          THEN("Handle is swapped with another container's handle") {
-            TMany<T> next = CreateManagedElements<T>(0);
-            THandle<T&> n = next.GetHandle();
-            T const n0p = n.Get();
-            auto const n0e = n.GetEntry();
-            IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
+            ScopedE e0 {0};
+            T next {*e0};
+            auto n = next.GetHandle();
+            auto n0p = n.Get();
+            auto n0e = n.GetEntries();
+            REQUIRE(n0e[0]->GetUses() == 1);
 
-            n.Swap(h0);
+            n.Swap(handle);
 
-            if constexpr (REFFED) {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == n0e);
-                  REQUIRE(h0.Get()->GetReferences() == 1);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(h0.GetEntry()->GetUses() == 1));
-                  REQUIRE(h0.Get()->data == n0p->data);
-                  REQUIRE(h0.Get()->destroyed == false);
-                  REQUIRE(h0.Get()->moved_in == false);
-                  REQUIRE(h0.Get()->moved_out == false);
+            if constexpr (Reffed) {
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == n0e);
+                  REQUIRE(handle.Get()->GetReferences() == 1);
+                  REQUIRE(handle.GetEntries()->GetUses() == 1);
+                  REQUIRE(handle.Get()->data == n0p->data);
+                  REQUIRE(handle.Get()->destroyed == false);
+                  REQUIRE(handle.Get()->moved_in == false);
+                  REQUIRE(handle.Get()->moved_out == false);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == entry);
                   REQUIRE(n.Get()->GetReferences() == 1);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
-                  REQUIRE(n.Get()->data == h0p->data);
+                  REQUIRE(n.GetEntries()->GetUses() == 3);
+                  REQUIRE(n.Get()->data == data->data);
                   REQUIRE(n.Get()->destroyed == false);
                   REQUIRE(n.Get()->moved_in == false);
                   REQUIRE(n.Get()->moved_out == false);
                }
                else {
-                  REQUIRE(h0.Get().data == n0p.data);
-                  REQUIRE(h0.GetEntry() == h0e);
-                  REQUIRE(h0.Get().GetReferences() == 1);
-                  REQUIRE(h0.Get().destroyed == false);
-                  REQUIRE(h0.Get().moved_in == true);
-                  REQUIRE(h0.Get().moved_out == false);
+                  REQUIRE(handle.Get().data == n0p.data);
+                  REQUIRE(handle.GetEntries() == entry);
+                  REQUIRE(handle.Get()->GetReferences() == 1);
+                  REQUIRE(handle.Get().destroyed == false);
+                  REQUIRE(handle.Get().moved_in == true);
+                  REQUIRE(handle.Get().moved_out == false);
 
-                  REQUIRE(n.Get().data == h0p->data);
-                  REQUIRE(n.GetEntry() == n0e);
-                  REQUIRE(n.Get().GetReferences() == 1);
+                  REQUIRE(n.Get().data == data->data);
+                  REQUIRE(n.GetEntries() == n0e);
+                  REQUIRE(n.Get()->GetReferences() == 1);
                   REQUIRE(n.Get().destroyed == false);
                   REQUIRE(n.Get().moved_in == true);
                   REQUIRE(n.Get().moved_out == false);
                }
             }
             else {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == n0e);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(h0.GetEntry()->GetUses() == 1));
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == n0e);
+                  REQUIRE(handle.GetEntries()->GetUses() == 1);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == entry);
+                  REQUIRE(n.GetEntries()->GetUses() == 3);
                }
                else {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == h0e);
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == entry);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == n0e);
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == n0e);
                }
             }
 
@@ -1317,74 +1330,75 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          }
 
          THEN("Handle is swapped with managed local") {
-            TMany<T> next = CreateManagedElements<T>(0);
-            THandle<T> n = next[0];
-            T const n0p = n.Get();
-            auto const n0e = n.GetEntry();
+            ScopedE e0 {0};
+            T next {*e0};
+            auto n = next.GetHandle();
+            auto n0p = n.Get();
+            auto n0e = n.GetEntries();
 
-            if constexpr (SPARSE)
-               IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 2));
+            if constexpr (Sparse)
+               REQUIRE(n0e[0]->GetUses() == 2);
             else
                REQUIRE(n0e == nullptr);
 
-            n.Swap(h0);
+            n.Swap(handle);
 
-            if constexpr (REFFED) {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == n0e);
+            if constexpr (Reffed) {
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntry() == n0e);
                   #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     REQUIRE(h0.Get()->GetReferences() == 2);
+                     REQUIRE(handle.Get()->GetReferences() == 2);
                   #else
-                     REQUIRE(h0.Get()->GetReferences() == 1);
+                     REQUIRE(handle.Get()->GetReferences() == 1);
                   #endif
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(h0.GetEntry()->GetUses() == 2));
-                  REQUIRE(h0.Get()->data == n0p->data);
-                  REQUIRE(h0.Get()->destroyed == false);
-                  REQUIRE(h0.Get()->moved_in == false);
-                  REQUIRE(h0.Get()->moved_out == false);
+                  REQUIRE(n0e->GetUses() == 2);
+                  REQUIRE(handle.Get()->data == n0p->data);
+                  REQUIRE(handle.Get()->destroyed == false);
+                  REQUIRE(handle.Get()->moved_in == false);
+                  REQUIRE(handle.Get()->moved_out == false);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntry() == entry);
                   REQUIRE(n.Get()->GetReferences() == 1);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
-                  REQUIRE(n.Get()->data == h0p->data);
+                  REQUIRE(entry->GetUses() == 3);
+                  REQUIRE(n.Get()->data == data->data);
                   REQUIRE(n.Get()->destroyed == false);
                   REQUIRE(n.Get()->moved_in == false);
                   REQUIRE(n.Get()->moved_out == false);
                }
                else {
-                  REQUIRE(h0.Get().data == n0p->data);
-                  REQUIRE(h0.GetEntry() == h0e);
-                  REQUIRE(h0.Get().GetReferences() == 1);
-                  REQUIRE(h0.Get().destroyed == false);
-                  REQUIRE(h0.Get().moved_in == true);
-                  REQUIRE(h0.Get().moved_out == false);
+                  REQUIRE(handle.Get().data == n0p->data);
+                  REQUIRE(handle.GetEntry() == entry);
+                  REQUIRE(handle.Get()->GetReferences() == 1);
+                  REQUIRE(handle.Get().destroyed == false);
+                  REQUIRE(handle.Get().moved_in == true);
+                  REQUIRE(handle.Get().moved_out == false);
 
-                  REQUIRE(n.Get().data == h0p->data);
+                  REQUIRE(n.Get().data == data->data);
                   REQUIRE(n.GetEntry() == n0e);
-                  REQUIRE(n.Get().GetReferences() == 1);
+                  REQUIRE(n.Get()->GetReferences() == 1);
                   REQUIRE(n.Get().destroyed == false);
                   REQUIRE(n.Get().moved_in == true);
                   REQUIRE(n.Get().moved_out == false);
                }
             }
             else {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == n0e);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(h0.GetEntry()->GetUses() == 2));
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == n0e);
+                  REQUIRE(n0e->GetUses() == 2);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == entry);
+                  REQUIRE(entry->GetUses() == 3);
                }
                else {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == h0e);
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == entry);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == n0e);
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == n0e);
                }
             }
 
@@ -1393,70 +1407,73 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          }
 
          THEN("Handle is swapped with an unmanaged local") {
-            THandle<T> n = CreateHandle<T>(42);
-            T const n0p = n.Get();
-            auto const n0e = n.GetEntry();
-            REQUIRE(n0e == nullptr);
+            ScopedE e42 {42};
+            THandle<E> n {*e42};
+            auto n0p = n.Get();
 
-            n.Swap(h0);
+            if constexpr (Sparse)
+               REQUIRE(n.GetEntries() == nullptr);
+            else
+               static_assert(not requires { n.GetEntries(); });
 
-            if constexpr (REFFED) {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == n0e);
-                  REQUIRE(h0.Get()->GetReferences() == 1);
-                  REQUIRE(h0.Get()->data == n0p->data);
-                  REQUIRE(h0.Get()->destroyed == false);
-                  REQUIRE(h0.Get()->moved_in == false);
-                  REQUIRE(h0.Get()->moved_out == false);
+            n.Swap(handle);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
+            if constexpr (Reffed) {
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == nullptr);
+                  REQUIRE(handle.Get()->GetReferences() == 1);
+                  REQUIRE(handle.Get()->data == n0p->data);
+                  REQUIRE(handle.Get()->destroyed == false);
+                  REQUIRE(handle.Get()->moved_in == false);
+                  REQUIRE(handle.Get()->moved_out == false);
+
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == entry);
                   REQUIRE(n.Get()->GetReferences() == 1);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
-                  REQUIRE(n.Get()->data == h0p->data);
+                  REQUIRE(n.GetEntries()->GetUses() == 3);
+                  REQUIRE(n.Get()->data == data->data);
                   REQUIRE(n.Get()->destroyed == false);
                   REQUIRE(n.Get()->moved_in == false);
                   REQUIRE(n.Get()->moved_out == false);
                }
                else {
-                  REQUIRE(h0.Get().data == n0p->data);
-                  REQUIRE(h0.GetEntry() == h0e);
-                  REQUIRE(h0.Get().GetReferences() == 1);
-                  REQUIRE(h0.Get().destroyed == false);
-                  REQUIRE(h0.Get().moved_in == true);
-                  REQUIRE(h0.Get().moved_out == false);
+                  REQUIRE(handle.Get().data == n0p->data);
+                  REQUIRE(handle.GetEntries() == entry);
+                  REQUIRE(handle.Get()->GetReferences() == 1);
+                  REQUIRE(handle.Get().destroyed == false);
+                  REQUIRE(handle.Get().moved_in == true);
+                  REQUIRE(handle.Get().moved_out == false);
 
-                  REQUIRE(n.Get().data == h0p->data);
-                  REQUIRE(n.GetEntry() == n0e);
-                  REQUIRE(n.Get().GetReferences() == 1);
+                  REQUIRE(n.Get().data == data->data);
+                  REQUIRE(n.GetEntries() == entry);
+                  REQUIRE(n.Get()->GetReferences() == 1);
                   REQUIRE(n.Get().destroyed == false);
                   REQUIRE(n.Get().moved_in == true);
                   REQUIRE(n.Get().moved_out == false);
                }
             }
             else {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == n0e);
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == nullptr);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == h0e);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n.GetEntry()->GetUses() == 3));
+                  REQUIRE(n.Get() == data);
+                  REQUIRE(n.GetEntries() == entry);
+                  REQUIRE(n.GetEntries()->GetUses() == 3);
                }
                else {
-                  REQUIRE(h0.Get() == n0p);
-                  REQUIRE(h0.GetEntry() == h0e);
+                  REQUIRE(handle.Get() == n0p);
+                  REQUIRE(handle.GetEntries() == entry);
 
-                  REQUIRE(n.Get() == h0p);
-                  REQUIRE(n.GetEntry() == n0e);
+                  REQUIRE(n.Get() == data);
                }
             }
 
-            if constexpr (SPARSE) {
-               if constexpr (REFFED)
-                  REQUIRE(h0.Get()->Reference(-1) == 0);
-               delete h0.Get();
+            if constexpr (Sparse) {
+               if constexpr (Reffed)
+                  REQUIRE(handle.Get()->Reference(-1) == 0);
+               delete handle.Get();
             }
 
             if constexpr (CT::Referenced<T>)
@@ -1464,30 +1481,30 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          }
 
          THEN("Handle moved into a local handle") {
-            THandle<T> local = Move(h0);
+            THandle<E> local {Absorb, Move(handle)};
 
-            if constexpr (REFFED) {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == nullptr);
-                  REQUIRE(h0.GetEntry() == nullptr);
+            if constexpr (Reffed) {
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == nullptr);
+                  REQUIRE(handle.GetEntries() == nullptr);
 
-                  REQUIRE(local.Get() == h0p);
-                  REQUIRE(local.GetEntry() == h0e);
+                  REQUIRE(local.Get() == data);
+                  REQUIRE(local.GetEntries() == entry);
                   REQUIRE(local.Get()->GetReferences() == 1);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(local.GetEntry()->GetUses() == 3));
-                  REQUIRE(local.Get()->data == h0p->data);
+                  REQUIRE(local.GetEntry()->GetUses() == 3);
+                  REQUIRE(local.Get()->data == data->data);
                   REQUIRE(local.Get()->destroyed == false);
                   REQUIRE(local.Get()->moved_in == false);
                   REQUIRE(local.Get()->moved_out == false);
                }
                else {
-                  REQUIRE(h0.Get().GetReferences() == 1);
-                  REQUIRE(h0.Get().destroyed == false);
-                  REQUIRE(h0.Get().moved_in == false);
-                  REQUIRE(h0.Get().moved_out == true);
+                  REQUIRE(handle.Get()->GetReferences() == 1);
+                  REQUIRE(handle.Get().destroyed == false);
+                  REQUIRE(handle.Get().moved_in == false);
+                  REQUIRE(handle.Get().moved_out == true);
 
-                  REQUIRE(local.Get().GetReferences() == 1);
-                  REQUIRE(local.Get().data == h0p->data);
+                  REQUIRE(local.Get()->GetReferences() == 1);
+                  REQUIRE(local.Get().data == data->data);
                   REQUIRE(local.GetEntry() == nullptr);
                   REQUIRE(local.Get().destroyed == false);
                   REQUIRE(local.Get().moved_in == true);
@@ -1495,17 +1512,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                }
             }
             else {
-               if constexpr (SPARSE) {
-                  REQUIRE(h0.Get() == nullptr);
-                  REQUIRE(h0.GetEntry() == nullptr);
+               if constexpr (Sparse) {
+                  REQUIRE(handle.Get() == nullptr);
+                  REQUIRE(handle.GetEntries() == nullptr);
 
-                  REQUIRE(local.Get() == h0p);
-                  REQUIRE(local.GetEntry() == h0e);
-                  IF_LANGULUS_MANAGED_MEMORY(REQUIRE(local.GetEntry()->GetUses() == 3));
+                  REQUIRE(local.Get() == data);
+                  REQUIRE(local.GetEntries() == entry);
+                  REQUIRE(local.GetEntry()->GetUses() == 3);
                }
                else {
-                  REQUIRE(local.Get() == h0p);
-                  REQUIRE(local.GetEntry() == nullptr);
+                  REQUIRE(local.Get() == data);
                }
             }
          }
@@ -1513,23 +1529,23 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
 
       WHEN("GetHandle is called on constant container") {
          T const pack_constant;
-         auto h = pack_constant.GetHandle();
+         auto handle = pack_constant.GetHandle();
 
          if constexpr (CT::Untyped<T>)
-            static_assert(::std::same_as<decltype(h), Handle>);
+            static_assert(::std::same_as<decltype(handle), Handle>);
          else
-            static_assert(::std::same_as<decltype(h), THandle<E const&>>);
+            static_assert(::std::same_as<decltype(handle), THandle<E const&>>);
 
-         Any_CheckState_OwnedFull<E>(h);
+         Any_CheckState_OwnedFull<E>(handle);
          
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(h.GetEntry());
-            REQUIRE(h.GetEntry()->GetUses() == (CT::Sparse<E> ? 3 : 1));
+            REQUIRE(handle.GetEntries());
+            REQUIRE(handle.GetEntries()[0]->GetUses() == (Sparse ? 3 : 1));
          #endif
 
-         if constexpr (CT::Referenced<Decay<E>>) {
-            REQUIRE(DenseCast(h.Get()).GetReferences() == 1);
-            REQUIRE(DenseCast(h.Get()).destroyed == false);
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(handle.Get()).GetReferences() == 1);
+            REQUIRE(DenseCast(handle.Get()).destroyed == false);
          }
       }
    }

@@ -175,6 +175,6 @@ namespace Langulus::CTTI
    /// Convert Many -> Text                                                   
    template<>
    struct Converter<Anyness::Many, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Many const& from) -> Anyness::Text;
+      static constexpr auto Convert(Anyness::Many const&) -> Anyness::Text;
    };
 }

@@ -285,8 +285,8 @@ void Pair_CheckState_Abandoned(C const& pack) {
 /// MARK: Accessors                                                           
 template<CT::Container T, CT::Intent I1, CT::Intent I2> requires CT::NoIntent<T>
 void Pair_VerifyAccessorInterface(T const& pack, I1&&, I2&&) {
-   using E1 = typename Decay<Deint<I1>>::Type;
-   using E2 = typename Decay<Deint<I2>>::Type;
+   using E1 = typename Decay<Deint<I1>>::CTTI_Typed;
+   using E2 = typename Decay<Deint<I2>>::CTTI_Typed;
 
    // The Get method always adds a pointer, because it interfaces the   
    // heap directly                                                     
@@ -413,8 +413,8 @@ void Pair_CheckState_ContainsOne(T const& pack, IK&& key_with_intent, IV&& val_w
 
    auto& e1 = key_with_intent.what;
    auto& e2 = val_with_intent.what;
-   using E1 = typename Decay<Deint<IK>>::Type;
-   using E2 = typename Decay<Deint<IV>>::Type;
+   using E1 = typename Decay<Deint<IK>>::CTTI_Typed;
+   using E2 = typename Decay<Deint<IV>>::CTTI_Typed;
 
    if constexpr (CT::DeepDense<E1>) {
       REQUIRE(pack.template KeyAs<E1 >().template IsSame<int>());
