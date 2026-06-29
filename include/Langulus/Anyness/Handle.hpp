@@ -217,8 +217,8 @@ namespace Langulus::Anyness
          : Inner::TypeErasedHandleMut {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      HandleMut& operator = (HandleMut const& other) = delete;
-      HandleMut& operator = (HandleMut&& other) = delete;
+      HandleMut& operator = (HandleMut const&) = delete;
+      HandleMut& operator = (HandleMut&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -276,8 +276,8 @@ namespace Langulus::Anyness
          : Inner::TypeErasedHandleMutDisowned {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      HandleDisownedMut& operator = (HandleDisownedMut const& other) = delete;
-      HandleDisownedMut& operator = (HandleDisownedMut&& other) = delete;
+      HandleDisownedMut& operator = (HandleDisownedMut const&) = delete;
+      HandleDisownedMut& operator = (HandleDisownedMut&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -340,8 +340,8 @@ namespace Langulus::Anyness
          : Inner::TypeErasedHandle {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      Handle& operator = (Handle const& other) = delete;
-      Handle& operator = (Handle&& other) = delete;
+      Handle& operator = (Handle const&) = delete;
+      Handle& operator = (Handle&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -402,8 +402,8 @@ namespace Langulus::Anyness
          : Inner::TypeErasedHandleDisowned {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      HandleDisowned& operator = (HandleDisowned const& other) = delete;
-      HandleDisowned& operator = (HandleDisowned&& other) = delete;
+      HandleDisowned& operator = (HandleDisowned const&) = delete;
+      HandleDisowned& operator = (HandleDisowned&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -465,8 +465,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedDense<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandle& operator = (THandle const& other) = delete;
-      THandle& operator = (THandle&& other) = delete;
+      THandle& operator = (THandle const&) = delete;
+      THandle& operator = (THandle&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -521,8 +521,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedSparse<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandle& operator = (THandle const& other) = delete;
-      THandle& operator = (THandle&& other) = delete;
+      THandle& operator = (THandle const&) = delete;
+      THandle& operator = (THandle&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -584,8 +584,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedDenseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandleEmergent& operator = (THandleEmergent const& other) = delete;
-      THandleEmergent& operator = (THandleEmergent&& other) = delete;
+      THandleEmergent& operator = (THandleEmergent const&) = delete;
+      THandleEmergent& operator = (THandleEmergent&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -644,8 +644,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedSparseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandleEmergent& operator = (THandleEmergent const& other) = delete;
-      THandleEmergent& operator = (THandleEmergent&& other) = delete;
+      THandleEmergent& operator = (THandleEmergent const&) = delete;
+      THandleEmergent& operator = (THandleEmergent&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -706,8 +706,8 @@ namespace Langulus::Anyness
          : Inner::THandleDisownedEmbedded<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandleDisowned& operator = (THandleDisowned const& other) = delete;
-      THandleDisowned& operator = (THandleDisowned&& other) = delete;
+      THandleDisowned& operator = (THandleDisowned const&) = delete;
+      THandleDisowned& operator = (THandleDisowned&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -787,8 +787,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandle& operator = (THandle const& other) = delete;
-      THandle& operator = (THandle&& other) = delete;
+      THandle& operator = (THandle const&) = delete;
+      THandle& operator = (THandle&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -828,6 +828,7 @@ namespace Langulus::Anyness
          this->ConstructDefault();
       }
 
+      /// Absorb constructors                                                 
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
@@ -836,22 +837,33 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      /// Piecewise constructor                                               
-      template<class A>
-      THandle(Inner::Piecewise, A&& pointer) {
+      constexpr THandle(Inner::Absorb, CT::Container auto&& other) {
+         this->Absorb(LglsFwd(other));
+      }
+
+      /// Piecewise constructors                                              
+      /// (for local dense handles, piecewise == stackwise)                   
+      constexpr THandle(Inner::Piecewise, auto&& pointer) {
          if (DeintCast(pointer))
             this->EmplaceConstruct(LglsFwd(pointer));
          else
             this->ConstructDefault();
       }
 
+      constexpr THandle(NotTag auto&& pointer) {
+         if (DeintCast(pointer))
+            this->EmplaceConstruct(LglsFwd(pointer));
+         else
+            this->ConstructDefault();
+      }
+      
       constexpr ~THandle() noexcept {
          this->Destroy();
       }
 
       /// Assignment is disabled                                              
-      THandle& operator = (THandle const& other) = delete;
-      THandle& operator = (THandle&& other) = delete;
+      THandle& operator = (THandle const&) = delete;
+      THandle& operator = (THandle&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        

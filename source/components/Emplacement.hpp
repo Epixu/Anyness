@@ -507,11 +507,11 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.template GetRaw<SID>(), "Invalid heap");
          LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");
          decltype(auto) rhs = LglsFwd(intent.what);
-         static_assert(not CT::Copied<I> or not CT::HeapAllocated<C>,
+         /*static_assert(not CT::Copied<I> or not CT::HeapAllocated<C>,
             "Since this function assumes container has been preallocated, "
             "it makes no sense to copy here unless data is on the stack - "
             "it should be handled outside this call."
-         );
+         );*/ // this is generally true, but EmplaceWithIntent may be used on assignment, and in those cases this usage is valid
 
          if constexpr (CT::Cloned<I>) {
             // Clone a handle or element                                
@@ -537,21 +537,25 @@ namespace Langulus::Anyness::Component
                void* const src = rhs.template GetRawVoid<SID>();
 
                if constexpr (CT::Moved<I>) {
-                  if (rhs.template IsConstant<SID>())
+                  /*if (rhs.template IsConstant<SID>())
                      T.GetReferConstructor()(src, dst);
-                  else
+                  else*/
                      T.GetMoveConstructor()(src, dst);
                }
                else if constexpr (CT::Abandoned<I>) {
-                  if (rhs.template IsConstant<SID>())
+                  /*if (rhs.template IsConstant<SID>())
                      T.GetReferConstructor()(src, dst);
-                  else
+                  else*/
                      T.GetAbandonConstructor()(src, dst);
                }
                else if constexpr (CT::Referred<I>)
                   T.GetReferConstructor()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownConstructor()(src, dst);
+               else if constexpr (CT::Copied<I>)
+                  T.GetCopyConstructor()(src, dst);
+               else if constexpr (CT::Cloned<I>)
+                  T.GetCloneConstructor()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
             }
@@ -565,10 +569,10 @@ namespace Langulus::Anyness::Component
                   LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
 
                using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT, SID>>;
-               if constexpr (CT::Mutable<T> or not I::IsMoved())
+               //if constexpr (CT::Mutable<T> or not I::IsMoved())
                   IntentNew(dst, I::Nest(*rhs.template GetRawAs<T, SID>()));
-               else
-                  IntentNew(dst, Refer(*rhs.template GetRawAs<T, SID>()));
+               //else
+               //   IntentNew(dst, Refer(*rhs.template GetRawAs<T, SID>()));
             }
                
             if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
@@ -591,6 +595,10 @@ namespace Langulus::Anyness::Component
                   T.GetReferConstructor()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownConstructor()(src, dst);
+               else if constexpr (CT::Copied<I>)
+                  T.GetCopyConstructor()(src, dst);
+               else if constexpr (CT::Cloned<I>)
+                  T.GetCloneConstructor()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
             }

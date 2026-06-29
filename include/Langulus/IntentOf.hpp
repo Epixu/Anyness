@@ -833,7 +833,7 @@ namespace Langulus
          if constexpr (CT::HasMoveConstructor<T>)
             return new (placement) T {LglsFwd(intent)};
          else if constexpr (::std::move_constructible<T>)
-            return new (placement) T {intent.what};
+            return new (placement) T {LglsFwd(intent.what)};
          else {
             static_assert(FAKE, "Can't move-construct type");
             return Unsupported {};
@@ -846,7 +846,7 @@ namespace Langulus
          else if constexpr (CT::HasMoveConstructor<T>)
             return new (placement) T {Move(intent.what)};
          else if constexpr (::std::move_constructible<T>)
-            return new (placement) T {intent.what};
+            return new (placement) T {LglsFwd(intent.what)};
          else {
             static_assert(FAKE,
                "Can't abandon-construct destructible type"
@@ -918,9 +918,11 @@ namespace Langulus
    ///   @param lhs left hand side (what are we assigning to)                 
    ///   @param rhs right hand side (what are we assigning)                   
    ///   @return whatever the assignment operator returns                     
-   template<bool FAKE = false, template<class> class S, CT::NoIntent T>
-   requires CT::Intent<S<T>> LANGULUS(INLINED)
-   constexpr decltype(auto) IntentAssign(T& lhs, S<T>&& rhs) {
+   template<bool FAKE = false, CT::NoIntent T> LANGULUS(INLINED)
+   constexpr decltype(auto) IntentAssign(T& lhs, CT::Intent auto&& rhs) {
+      using S = IntentOf(rhs);
+      static_assert(Same<T, Deint<S>>,
+         "Argument doesn't match T");
       static_assert(CT::Mutable<T>,
          "T has to be mutable in order to be assigned");
       static_assert(CT::Complete<T>,
@@ -928,7 +930,7 @@ namespace Langulus
       static_assert(not CT::Reference<T>,
          "T can't be a reference in order to be assigned");
 
-      if constexpr (CT::Referred<S<T>>) {
+      if constexpr (CT::Referred<S>) {
          // Refer                                                       
          if constexpr (CT::HasReferAssign<T>)
             return (lhs = LglsFwd(rhs));
@@ -939,25 +941,25 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Moved<S<T>>) {
+      else if constexpr (CT::Moved<S>) {
          // Move                                                        
          if constexpr (CT::HasMoveAssign<T>)
             return (lhs = LglsFwd(rhs));
          else if constexpr (::std::is_move_assignable_v<T>)
-            return (lhs = rhs.what);
+            return (lhs = LglsFwd(rhs.what));
          else {
             static_assert(FAKE, "Can't move-assign type");
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Abandoned<S<T>>) {
+      else if constexpr (CT::Abandoned<S>) {
          // Abandon                                                     
          if constexpr (CT::HasAbandonAssign<T>)
             return (lhs = LglsFwd(rhs));
          else if constexpr (CT::HasMoveAssign<T>)
             return (lhs = Move(rhs.what));
          else if constexpr (::std::is_move_assignable_v<T>)
-            return (lhs = rhs.what);
+            return (lhs = LglsFwd(rhs.what));
          else {
             static_assert(FAKE,
                "Can't abandon-assign destructible type"
@@ -965,7 +967,7 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Cloned<S<T>>) {
+      else if constexpr (CT::Cloned<S>) {
          // Clone                                                       
          // @attention - assumes that all levels of indirection have    
          //    been allocated and pointers point to valid memory        
@@ -1000,7 +1002,7 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Copied<S<T>>) {
+      else if constexpr (CT::Copied<S>) {
          // Copy                                                        
          if constexpr (CT::HasCopyAssign<T>)
             return (lhs = LglsFwd(rhs));
@@ -1013,7 +1015,7 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Disowned<S<T>>) {
+      else if constexpr (CT::Disowned<S>) {
          // Disown                                                      
          if constexpr (CT::HasDisownAssign<T>)
             return (lhs = LglsFwd(rhs));

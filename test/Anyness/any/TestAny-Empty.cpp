@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestAnyCommon.hpp"
+#include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
 namespace Langulus::Anyness
@@ -737,7 +738,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          else
             static_assert(::std::same_as<decltype(h), THandle<E&>>);
 
-         Any_CheckState_Default<E>(h);
+         Handle_CheckState_Default<E>(h);
       }
 
       WHEN("GetHandle is called on constant container") {
@@ -747,9 +748,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          if constexpr (CT::Untyped<T>)
             static_assert(::std::same_as<decltype(h), Handle>);
          else
-            static_assert(::std::same_as<decltype(h), THandle<E const&>>);
+            static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
 
-         Any_CheckState_Default<E>(h);
+         Handle_CheckState_Default<ConstAll<E> const>(h);
       }
    }
 

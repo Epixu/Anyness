@@ -547,9 +547,9 @@ namespace Langulus
             if constexpr (CT::CustomPointer<T>)
                return Types<typename T::MakeConstAll> {};
             else
-               return Types</*const*/ T> {};
+               return Types<T> {};
          }
-         else return Types</*const*/ T> {};
+         else return Types<T> {};
       }
 
       /// Count the number of indirections, including custom pointers.        

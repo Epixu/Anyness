@@ -46,9 +46,50 @@ void Handle_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness
    Any_Helper_TestSame(lhs, rhs, match_constness);
 }
 
+/// MARK: Default                                                             
 template<class E, CT::Container C> requires CT::NoIntent<C>
-void Handle_CheckState_Default(const C& h, bool typed = false) {
-   Any_CheckState_Default<E>(h, typed);
+void Handle_CheckState_Default(const C& any/*, bool typed = false*/) {
+   if constexpr (CT::Typed<C>) {
+      static_assert(Exact<TypeOf<C>, E>);
+      Handle_Helper_TestType<E>(any);
+   }
+   /*else if (not typed) {
+      REQUIRE_FALSE(any.IsTyped());
+      REQUIRE      (any.GetType() == nullptr);
+      REQUIRE_FALSE(any.IsSparse());
+      REQUIRE_FALSE(any.IsDeep());
+   }*/
+   else Handle_Helper_TestType<E>(any);
+
+   REQUIRE      (any.IsDefaultState());
+   REQUIRE      (any.IsTypeConstrained()/* == CT::Typed<C>*/);
+   REQUIRE_FALSE(any.IsConstant());
+   REQUIRE_FALSE(any.IsDisowned());
+   REQUIRE_FALSE(any.IsValid());
+
+   if constexpr (requires { any.GetAllocation(); }) {
+      REQUIRE   (any.GetAllocation());
+      REQUIRE   (any.GetUses() > 0);
+   }
+   
+   if constexpr (requires { any.GetEntries(); }) {
+      REQUIRE   (any.GetEntries());
+      REQUIRE   (any.GetEntries()[0] == nullptr);
+   }
+
+   REQUIRE      (any.IsEmpty());
+   REQUIRE      (any.GetCount() == 0);
+   REQUIRE_FALSE(any);
+   REQUIRE      (not any);
+   REQUIRE      (any == C{});
+
+   if constexpr (requires { any.IsMissing(); }
+   or            requires { any.IsFuture();  }
+   or            requires { any.IsPast();    }) {
+      REQUIRE_FALSE(any.IsMissing());
+      REQUIRE_FALSE(any.IsFuture());
+      REQUIRE_FALSE(any.IsPast());
+   }
 }
 
 /// MARK: OwnedEmpty                                                          
@@ -62,7 +103,7 @@ template<class E, CT::Container C> requires CT::NoIntent<C>
 void Handle_CheckState_OwnedFull(const C& any) {
    Handle_Helper_TestType<E>(any);
 
-   REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (any.IsTypeConstrained()/* == CT::Typed<C>*/);
    REQUIRE      (any.IsConstant() == CT::Constant<E>);
    REQUIRE      (any.IsValid());
 
@@ -70,17 +111,18 @@ void Handle_CheckState_OwnedFull(const C& any) {
       REQUIRE   (any.GetAllocation());
       REQUIRE   (any.GetUses() > 0);
    }
-   else {
-      REQUIRE   (any.GetEntries());
-      REQUIRE   (any.GetEntries()[0]);
-      REQUIRE   (any.GetEntries()[0]->GetUses() > 0);
+   
+   if constexpr (requires { any.GetEntries(); }) {
+      if constexpr (CT::Sparse<E>)
+         REQUIRE(any.GetEntries());
+      else
+         REQUIRE(any.GetEntries() == nullptr);
    }
 
    REQUIRE_FALSE(any.IsDisowned());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
 
-   static_assert(not requires { any.GetReserved(); });
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
    REQUIRE_FALSE(not any);

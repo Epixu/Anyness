@@ -173,7 +173,7 @@ namespace Langulus::Anyness::Component
                            }
                         }
 
-                        ++t2;
+                        if_available(++t2);
                         return true;
                      });
 

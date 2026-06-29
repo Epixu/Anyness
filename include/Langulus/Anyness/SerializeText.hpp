@@ -22,6 +22,7 @@
 
 namespace Langulus::CTTI
 {
+   /// MARK: Serialize many                                                   
    /// A rule for serializing any deep container that contains multiple items.
    /// This includes Many, Map, Set, Neat etc...                              
    /// as well as their templated equivalents. It basically places scopes,    
@@ -52,6 +53,7 @@ namespace Langulus::CTTI
       }
    }
 
+   /// MARK: Serialize one                                                    
    /// A rule for serializing any deep container that contains single item.   
    /// This includes Any, Handle, Own, Ref, Pair and their templated          
    /// equivalents. Notice that Pair technically contains one item, but with  
@@ -120,6 +122,7 @@ namespace Langulus::CTTI
       });
    }
 
+   /// MARK: Code                                                             
    /// Rule for serializing Code to Text. Wraps it in {} symbols.             
    inline void SerializationRule<Anyness::Text, Anyness::Code>::Serialize(
       const Anyness::Code& item, Anyness::Text& out, Context*
@@ -129,6 +132,7 @@ namespace Langulus::CTTI
       out += Serial::CloseCode;
    }
    
+   /// MARK: Text                                                             
    /// Rule for serializing Text to Text. Wraps it in "".                     
    inline void SerializationRule<Anyness::Text, Anyness::Text>::Serialize(
       const Anyness::Text& item, Anyness::Text& out, Context*
@@ -138,6 +142,7 @@ namespace Langulus::CTTI
       out += Serial::CloseString;
    }
    
+   /// MARK: Characters                                                       
    /// Rule for serializing characters to Text. Wraps them in ''.             
    template<CT::Character C>
    void SerializationRule<Anyness::Text, C>::Serialize(
@@ -148,6 +153,7 @@ namespace Langulus::CTTI
       out += Serial::CloseCharacter;
    }
 
+   /// MARK: Bytes                                                            
    /// Rule for serializing Bytes to Text. Prepends 0x.                       
    inline void SerializationRule<Anyness::Text, Anyness::Bytes>::Serialize(
       const Anyness::Bytes& item, Anyness::Text& out, Context*
@@ -168,7 +174,7 @@ namespace Langulus::CTTI
 
 
    ///                                                                        
-   /// Any/TAny                                                               
+   /// MARK: Any/TAny                                                         
    ///                                                                        
    
    /// Convert Any -> Text                                                    
@@ -199,7 +205,7 @@ namespace Langulus::CTTI
 
 
    ///                                                                        
-   /// Many/TMany                                                             
+   /// MARK: Many/TMany                                                       
    ///                                                                        
 
    /// Convert Many -> Text                                                   
@@ -230,7 +236,7 @@ namespace Langulus::CTTI
 
 
    ///                                                                        
-   /// Set/TSet                                                               
+   /// MARK: Sets                                                             
    ///                                                                        
 
    /// Convert Set -> Text                                                    
@@ -262,7 +268,7 @@ namespace Langulus::CTTI
 
 
    ///                                                                        
-   /// Pair/TPair                                                             
+   /// MARK: Pairs                                                            
    ///                                                                        
 
    /// Convert Pair -> Text                                                   
@@ -293,7 +299,7 @@ namespace Langulus::CTTI
 
 
    ///                                                                        
-   /// Map/TMap                                                               
+   /// MARK: Maps                                                             
    ///                                                                        
 
    /// Convert Map -> Text                                                    
@@ -313,6 +319,100 @@ namespace Langulus::CTTI
    template<CT::NotVoid K, CT::NotVoid V, Anyness::StateValue SORT>
    constexpr auto Converter<Anyness::TMap<K, V, SORT>, Anyness::Text>::Convert(
       Anyness::TMap<K, V, SORT> const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+
+
+
+   ///                                                                        
+   /// MARK: Handles                                                          
+   ///                                                                        
+
+   /// Convert Handle -> Text                                                 
+   constexpr auto Converter<Anyness::Handle, Anyness::Text>::Convert(
+      Anyness::Handle const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+
+   /// Convert HandleMut -> Text                                              
+   constexpr auto Converter<Anyness::HandleMut, Anyness::Text>::Convert(
+      Anyness::HandleMut const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+
+   
+   /// Convert HandleDisowned -> Text                                         
+   constexpr auto Converter<Anyness::HandleDisowned, Anyness::Text>::Convert(
+      Anyness::HandleDisowned const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+   
+   /// Convert HandleDisownedMut -> Text                                      
+   constexpr auto Converter<Anyness::HandleDisownedMut, Anyness::Text>::Convert(
+      Anyness::HandleDisownedMut const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+   
+   /// Convert THandle -> Text                                                
+   template<class T>
+   constexpr auto Converter<Anyness::THandle<T>, Anyness::Text>::Convert(
+      Anyness::THandle<T> const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+   
+   /// Convert THandleDisowned -> Text                                        
+   template<class T>
+   constexpr auto Converter<Anyness::THandleDisowned<T>, Anyness::Text>::Convert(
+      Anyness::THandleDisowned<T> const& from
+   ) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+   
+   /// Convert THandleEmergent -> Text                                        
+   template<class T>
+   constexpr auto Converter<Anyness::THandleEmergent<T>, Anyness::Text>::Convert(
+      Anyness::THandleEmergent<T> const& from
    ) -> Anyness::Text {
       if (from.IsEmpty())
          return {};

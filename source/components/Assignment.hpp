@@ -99,7 +99,7 @@ namespace Langulus::Anyness::Component
       ///   @return reference to self                                         
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument)
-      requires (CT::RangeAssignable<C, A> /*and CT::Contiguous<C>*/) {
+      /*requires (CT::RangeAssignable<C, A> and CT::Contiguous<C>)*/ {
          using I = IntentOf(argument);
 
          if constexpr (not CT::Contiguous<C>) {
@@ -121,10 +121,10 @@ namespace Langulus::Anyness::Component
                self.DeduceType(LglsFwd(argument));
 
             Id::ForEach([&]<Cid D>{
-               if constexpr (CT::Cloned<I>)
+               //if constexpr (CT::Cloned<I>)
                   self.template AssignWithIntent<D>(FWDIntent(argument));
-               else
-                  self.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
+               //else
+               //   self.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
             });
          }
          else {
@@ -158,22 +158,27 @@ namespace Langulus::Anyness::Component
                // Container has at least one element                    
                //if constexpr (not CT::Cloned<I> and CT::UnfoldAssignable<T, A&&>) {
                   // Reduce to one item and reassign if possible        
-                  auto first = self.GetHandle();
+                  //auto first = self.GetHandle();
 
                   if (self.PrepareForReassignment()) {
                      Id::ForEach([&]<Cid D>{
-                        if constexpr (CT::Cloned<I>)
-                           first.template AssignWithIntent<D>(FWDIntent(argument));
-                        else
-                           first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
+                        //if constexpr (CT::Cloned<I>)
+                           self.template AssignWithIntent<D>(FWDIntent(argument));
+                           //first.template AssignWithIntent<D>(FWDIntent(argument));
+                        //else
+                        //   first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
                      });
                   }
                   else {
                      Id::ForEach([&]<Cid D>{
-                        if constexpr (CT::Cloned<I>)
+                        //if constexpr (CT::Cloned<I>)
+                           self.template EmplaceWithIntent<D>(FWDIntent(argument));
+                        //else
+                        //   self.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                        /*if constexpr (CT::Cloned<I>)
                            first.template EmplaceWithIntent<D>(FWDIntent(argument));
                         else
-                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));*/
                      });
                   }
                /*}
