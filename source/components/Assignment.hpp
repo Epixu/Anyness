@@ -9,6 +9,7 @@
 #include "../Container.hpp"
 #include "Langulus/CT/Contiguous.hpp"
 #include "Langulus/IntentOf.hpp"
+#include "Langulus/Typenav.hpp"
 #include "source/Component.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
@@ -206,8 +207,8 @@ namespace Langulus::Anyness::Component
       }
 
       /// Swap the value of the first element, if that element is initialized.
-      /// If the element isn't initialized yet it will be constructed, with   
-      /// the argument ending up default.                                     
+      /// If the element isn't initialized yet it will be move-constructed,   
+      /// with the argument ending up as default.                             
       ///   @param argument the argument to swap with                         
       ///   @return reference to self                                         
       template<CT::ContainsOne C, CT::ContainsOne A> requires CT::NoIntent<A>//TODO this is completely wrong. test it!
@@ -215,69 +216,48 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::HeapAllocated<C>) {
             self.SwapInner(argument);
          }
-         else if constexpr (CT::Handle<C>) {
-            // This container is heap-allocated                         
+         else /*if constexpr (CT::Handle<C>)*/ {
+            // Handles are never allowed to reallocate                  
             if constexpr (CT::Handle<A>)
                self.AbsorbType(Copy(argument));
             else
                self.DeduceType(LglsFwd(argument));
 
-            TODO();
+            self.SwapInner(argument);
          }
-         else {
+         /*else {
             // This container is heap-allocated                         
             using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;
             self.template SetType<T>();
 
             if (self.IsEmpty()) {
                // Container is empty, we might have to fresh-allocate   
-               //if constexpr (CT::UnfoldConstructible<T, A&&>) {
-                  // Just construct the first element                   
-                  self.PrepareForReconstruction();
+               self.PrepareForReconstruction();
 
-                  auto first = self.GetHandle();
-                  Id::ForEach([&]<Cid D>{
-                     first.template EmplaceWithIntent<D>(Move(argument));
-                  });
-               //}
-               //else static_assert(false, "T can't be reconstructed");
+               auto first = self.GetHandle();
+               Id::ForEach([&]<Cid D>{
+                  first.template EmplaceWithIntent<D>(Move(argument));
+               });
             }
             else {
                // Container has at least one element                    
-               //if constexpr (not CT::Cloned<IntentOf(argument)> and CT::UnfoldAssignable<T, A&&>) {
-                  // Reduce to one item and reassign if possible        
-                  auto first = self.GetHandle();
-                  if (self.PrepareForReassignment()) {
-                     Id::ForEach([&]<Cid D>{
-                        first.template AssignWithIntent<D>(Move(argument));
-                     });
-                  }
-                  else {
-                     Id::ForEach([&]<Cid D>{
-                        first.template EmplaceWithIntent<D>(Move(argument));
-                     });
-                  }
-                  TODO();
-               /*}
-               else if constexpr (CT::UnfoldConstructible<T, A&&>) {
-                  // Assignment isn't available for T - destroy all     
-                  // items and reconstruct the first one                
-                  self.PrepareForReconstruction();
-
-                  auto first = self.GetHandle();
+               // Reduce to one item and reassign if possible           
+               auto first = self.GetHandle();
+               if (self.PrepareForReassignment()) {
                   Id::ForEach([&]<Cid D>{
-                     if constexpr (CT::Copied<IntentOf(argument)>)
-                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                     else
-                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                     first.template AssignWithIntent<D>(Move(argument));
                   });
                }
-               else static_assert(false, "T can't be reassigned or reconstructed");*/
+               else {
+                  Id::ForEach([&]<Cid D>{
+                     first.template EmplaceWithIntent<D>(Move(argument));
+                  });
+               }
             }
 
             if_available(self.SetCountInner(1));
             if_available(self.SetHashInner(0));
-         }
+         }*/
          
          return self;
       }
@@ -562,9 +542,9 @@ namespace Langulus::Anyness::Component
                    rhs.template GetEntriesInner<SID>();
                }) {
                   // Both entry arrays are available, just swap them    
-                  auto lhs_entry = self.template GetEntriesInner<SID>();
-                  auto rhs_entry =  rhs.template GetEntriesInner<SID>();
-                  for (int i = 0; i < T.GetIndirections(); ++i) {
+                  auto lhs_entry = DecvqAllCast(self.template GetEntriesInner<SID>());
+                  auto rhs_entry = DecvqAllCast( rhs.template GetEntriesInner<SID>());
+                  for (size_t i = 0; i < T.GetIndirections(); ++i) {
                      ::std::swap(*lhs_entry, *rhs_entry);
                      ++lhs_entry;
                      ++rhs_entry;
@@ -574,7 +554,7 @@ namespace Langulus::Anyness::Component
                   // Left entry array is available, right is emergent   
                   // Find the entries and reference them if we have to  
                   auto lhs_entry = self.template GetEntriesInner<SID>();
-                  for (int i = 0; i < T.GetIndirections(); ++i) {
+                  for (size_t i = 0; i < T.GetIndirections(); ++i) {
                      ++lhs_entry;
                      TODO();
                   }
@@ -583,7 +563,7 @@ namespace Langulus::Anyness::Component
                   // Right entry array is available, left is emergent   
                   // Find the entries and reference them if we have to  
                   auto rhs_entry = rhs.template GetEntriesInner<SID>();
-                  for (int i = 0; i < T.GetIndirections(); ++i) {
+                  for (size_t i = 0; i < T.GetIndirections(); ++i) {
                      ++rhs_entry;
                      TODO();
                   }
