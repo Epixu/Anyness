@@ -214,7 +214,6 @@ namespace Langulus::Anyness::Component
          void** src;
          
          if constexpr (CT::Handle<IT>) {
-            //static_assert(not CT::Pair<IT>);
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
                T = rhs.template GetType<SID>();
                LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");               
@@ -805,8 +804,12 @@ namespace Langulus::Anyness::Component
                   }
                }
                else {
-                  if constexpr (STRAT != AllocationStrategy::DontAllocate)
-                     self.DeduceType(arguments...);
+                  if constexpr (STRAT != AllocationStrategy::DontAllocate) {
+                     if constexpr (CT::Handle<A1>)
+                        self.AbsorbType(Copy(arguments)...);
+                     else
+                        self.DeduceType(arguments...);
+                  }
 
                   // Allocate if we have to                             
                   if constexpr (STRAT == AllocationStrategy::FreshAllocate)
@@ -841,6 +844,13 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
+            if constexpr (STRAT != AllocationStrategy::DontAllocate) {
+               if constexpr (CT::Handle<A...>)
+                  self.AbsorbType(Copy(arguments)...);
+               else
+                  self.DeduceType(arguments...);
+            }
+
             if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
                if_available(self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1)));
             }
@@ -850,7 +860,7 @@ namespace Langulus::Anyness::Component
 
             // Construct the first element                              
             using T = TypeOf<C, SID>;
-            if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>)) {
+            if constexpr (sizeof...(A) == 1) {
                if constexpr (CT::Copied<IntentOf(arguments)...>)
                   ThisCom::template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                else

@@ -37,6 +37,7 @@ namespace Langulus::Anyness::Component
 
       static constexpr uint InitialSize  = INITIAL_SIZE;
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
+      static constexpr bool Reallocatable = true;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 
@@ -89,8 +90,6 @@ namespace Langulus::Anyness::Component
             // Verify that all dimensions are copiable/clonable, and    
             // make sure that 'count' and 'reserve' are consistent      
             // across all dimensions.                                   
-            //TODO experimental: when constructing from containers on the stack, this routine defualts to a copy intent
-            //TODO make sure this is reflected in all other components that have different behafior or copy/clone
             Id::ForEach([&]<Cid D> {
                LglsAssumeDev(from.template GetCount<D>() == from.template GetCount<Id::First>(),
                   "Inconsistent count across dimensions");

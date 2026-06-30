@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Langulus/Assume.hpp"
 #include "Langulus/CT/Contiguous.hpp"
 #include "Langulus/IntentOf.hpp"
 #include "Langulus/Typenav.hpp"
@@ -99,9 +100,8 @@ namespace Langulus::Anyness::Component
       ///   @param argument the argument to assign                            
       ///   @return reference to self                                         
       template<CT::Container C, class A>
-      C& Assign(this C& self, A&& argument)
-      /*requires (CT::RangeAssignable<C, A> and CT::Contiguous<C>)*/ {
-         using I = IntentOf(argument);
+      C& Assign(this C& self, A&& argument) {
+         //using I = IntentOf(argument);
 
          if constexpr (not CT::Contiguous<C>) {
             // Assignment for maps/sets falls back to merge             
@@ -114,89 +114,55 @@ namespace Langulus::Anyness::Component
             auto& data = self.template AccessProvider<ID>();
             data = LglsFwd(argument);
          }
-         else if constexpr (CT::Handle<C>) {
-            // This container is heap-allocated                         
+         /*else if constexpr (CT::Handle<C>) {
+            // Handles can't reallocate                                 
             if constexpr (CT::Handle<A>)
                self.AbsorbType(Copy(argument));
             else
                self.DeduceType(LglsFwd(argument));
 
             Id::ForEach([&]<Cid D>{
-               //if constexpr (CT::Cloned<I>)
-                  self.template AssignWithIntent<D>(FWDIntent(argument));
-               //else
-               //   self.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
+               self.template AssignWithIntent<D>(FWDIntent(argument));
             });
-         }
+         }*/
          else {
             // This container is heap-allocated                         
-            //using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;
-
             if constexpr (CT::Handle<A>)
                self.AbsorbType(Copy(argument));
             else
                self.DeduceType(LglsFwd(argument));
 
-            //self.template SetType<T>();
-
-            if (self.IsEmpty()) {
-               // Container is empty, we might have to fresh-allocate   
-               //if constexpr (CT::UnfoldConstructible<T, A&&>) {
-                  // Just construct the first element                   
+            if constexpr (not CT::Handle<C>) {
+               if (self.IsEmpty()) {
+                  // Container is empty, we might have to fresh-allocate
                   self.PrepareForReconstruction();
 
                   auto first = self.GetHandle();
                   Id::ForEach([&]<Cid D>{
-                     if constexpr (CT::Cloned<I>)
+                     //if constexpr (CT::Cloned<I>)
                         first.template EmplaceWithIntent<D>(FWDIntent(argument));
-                     else
-                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                     //else
+                     //   first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
                   });
-               //}
-               //else static_assert(false, "T can't be reconstructed");
+
+                  if_available(self.SetCountInner(1));
+                  if_available(self.SetHashInner(0));
+                  return self;
+               }
+            }
+            else LglsAssumeDev(not self.IsEmpty(),
+               "Can't assign to empty handle");
+         
+            // Container has at least one element, try to reuse it      
+            if (self.PrepareForReassignment()) {
+               Id::ForEach([&]<Cid D>{
+                  self.template AssignWithIntent<D>(FWDIntent(argument));
+               });
             }
             else {
-               // Container has at least one element                    
-               //if constexpr (not CT::Cloned<I> and CT::UnfoldAssignable<T, A&&>) {
-                  // Reduce to one item and reassign if possible        
-                  //auto first = self.GetHandle();
-
-                  if (self.PrepareForReassignment()) {
-                     Id::ForEach([&]<Cid D>{
-                        //if constexpr (CT::Cloned<I>)
-                           self.template AssignWithIntent<D>(FWDIntent(argument));
-                           //first.template AssignWithIntent<D>(FWDIntent(argument));
-                        //else
-                        //   first.template AssignWithIntent<D>(Refer(LglsFwd(argument)));
-                     });
-                  }
-                  else {
-                     Id::ForEach([&]<Cid D>{
-                        //if constexpr (CT::Cloned<I>)
-                           self.template EmplaceWithIntent<D>(FWDIntent(argument));
-                        //else
-                        //   self.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                        /*if constexpr (CT::Cloned<I>)
-                           first.template EmplaceWithIntent<D>(FWDIntent(argument));
-                        else
-                           first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));*/
-                     });
-                  }
-               /*}
-               else if constexpr (CT::UnfoldConstructible<T, A&&>) {
-                  // Assignment isn't available for T - destroy all     
-                  // items and reconstruct the first one                
-                  self.PrepareForReconstruction();
-
-                  auto first = self.GetHandle();
-                  Id::ForEach([&]<Cid D>{
-                     if constexpr (CT::Cloned<I>)
-                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
-                     else
-                        first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
-                  });
-               }
-               else static_assert(false, "T can't be reassigned or reconstructed");*/
+               Id::ForEach([&]<Cid D>{
+                  self.template EmplaceWithIntent<D>(FWDIntent(argument));
+               });
             }
 
             if_available(self.SetCountInner(1));
@@ -226,7 +192,7 @@ namespace Langulus::Anyness::Component
             // well.                                                    
             self.AbsorbType(Copy(argument));
 
-            if constexpr (requires { self.EmplaceConstruct(Move{argument.GetHandle()}); }) {
+            if constexpr (CT::Reallocatable<C>) {
                if (self.IsEmpty()) {
                   self.EmplaceConstruct(Move{argument.GetHandle()});
                   return self;
@@ -246,6 +212,7 @@ namespace Langulus::Anyness::Component
 
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         
+      ///   @attention for non-handles only, may cause reallocation.          
       ///   @attention operates in all relevant dimensions simultaneously     
       template<CT::HeapAllocated C> requires CT::NotHandle<C>
       void PrepareForReconstruction(this C& self) {
@@ -309,6 +276,25 @@ namespace Langulus::Anyness::Component
             auto reqhp = &P::template RequestHeap<P::Id::First, C>;
             alloc(self, reqhp(self, 1));
          });
+      }
+
+      /// A helper for clearing and allocating memory before construction.    
+      ///   @attention for handles only. releases shared pointers.            
+      ///   @attention operates in all relevant dimensions simultaneously     
+      template<CT::HeapAllocated C> requires CT::Handle<C>
+      void PrepareForReconstruction(this C& self) {
+         static_assert(CT::Contiguous<C>,
+             "Can be used only for contiguous containers");
+
+         /*using PROVIDERS = decltype(C::FindProviders(Id{}));
+         static_assert(not PROVIDERS::Empty);
+         PROVIDERS::ForEachAnd([&]<class P> {
+            const auto a = self.template GetAllocation<P::Id::First>();
+            LglsAssert(a and a->GetUses() == 1);
+         });*/
+
+         // We have to free all shared elements                         
+         self.template Free<false>();
       }
 
       /// A helper for clearing and allocating memory before assignment.      
@@ -498,12 +484,10 @@ namespace Langulus::Anyness::Component
       ///   @param rhs - right hand side                                      
       ///   @attention Assumes types are the same                             
       ///   @attention Assumes both sides are allocated and initialized       
+      ///   @attention Doesn't reallocate any of the containers!              
       ///   @attention Works in one dimension at a time!                      
-      template<Cid SID = ID, CT::ContainsOne C, CT::ContainsOne RHS> requires Relevant<SID>
-      void SwapInner(this C&& self, RHS& rhs) /*requires CT::ContainsOne<C, RHS> */{
-         /*static_assert(CT::ContainsOne<C, RHS>,
-            "Swapping only first element in a container with many. GetHandle() first?");*/
-
+      template<Cid SID = ID, CT::ContainsOne C, CT::ContainsOne RHS>
+      void SwapInner(this C&& self, RHS& rhs) requires Relevant<SID> {
          if constexpr (CT::TypeErased<C, RHS>) {
             auto T = self.template GetType<SID>();
             auto S = T.GetSize();
@@ -547,12 +531,53 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
-               TODO();
-               /*T tmp{Abandon(self.template Get<T>())};
-               self.DestroyElement();
-               self.EmplaceWithIntent(Abandon(rhs));
-               rhs.DestroyElement();
-               rhs.EmplaceWithIntent(Abandon(tmp));*/
+               const auto size = static_cast<pot_t>(Roof2(S));
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  auto temporary = Allocator::Allocate(T, size);
+               #else
+                  auto temporary = Allocator::Allocate(T.GetAlignment(), size);
+               #endif
+               LglsAssert(temporary, "Out of memory");
+               auto tmp_data = temporary->GetBlockStart();
+               auto lhs_data = self.template GetRaw<SID>();
+               auto rhs_data = rhs.template GetRaw<SID>();
+   
+               if (auto abandon_constructor = T.GetAbandonConstructor()) {
+                  // Abandon semantics are most optimal                 
+                  abandon_constructor(lhs_data, tmp_data);
+                  abandon_constructor(rhs_data, lhs_data);
+                  abandon_constructor(tmp_data, rhs_data);
+               }
+               else {
+                  auto move_constructor = T.GetMoveConstructor();
+                  auto destructor = T.GetDestructor();
+                  LglsAssumeDevAndOptimize(move_constructor,
+                     "Can't swap item due to missing move-constructor",
+                     " of type ", T);
+                  LglsAssumeDevAndOptimize(destructor,
+                     "Can't swap item due to missing destructor",
+                     " of type ", T);
+               
+                  if (auto move_assigner = T.GetMoveAssigner()) {
+                     // Move-assignment is second best                  
+                     move_constructor(lhs_data, tmp_data);
+                     move_assigner(rhs_data, lhs_data);
+                     move_assigner(tmp_data, rhs_data);
+                     destructor(tmp_data);
+                  }
+                  else {
+                     // Fallback to move-construction, destroyng        
+                     // each item before reconstructing it in place.    
+                     move_constructor(lhs_data, tmp_data);
+                     destructor(lhs_data);
+                     move_constructor(rhs_data, lhs_data);
+                     destructor(rhs_data);
+                     move_constructor(tmp_data, rhs_data);
+                     destructor(tmp_data);
+                  }
+               }
+
+               Allocator::Deallocate(temporary);
             }
          }
          else {

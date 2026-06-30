@@ -43,6 +43,7 @@ namespace Langulus::Anyness::Component
          "All precedences should match");
 
       static constexpr bool HeapCanBeNull = Subcomponents::ForEachOr([]<class C> { return C::HeapCanBeNull; });
+      static constexpr bool Reallocatable = Subcomponents::ForEachOr([]<class C> { return C::Reallocatable; });
 
       #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
 

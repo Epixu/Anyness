@@ -42,6 +42,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool Shared = sizeof...(ENTRYN) > 0;
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = true;
+      static constexpr bool Reallocatable = false;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 

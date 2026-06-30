@@ -247,11 +247,6 @@ namespace Langulus::Anyness::Component
          return const_cast<void*>(static_cast<const void*>(&ThisCom::GetStackInner()));
       }
 
-      /// Default-initialize the variable                                     
-      constexpr void ConstructDefault(this auto& self) noexcept requires CT::NotReference<T> {
-         ThisCom::SetStackInner({});
-      }
-
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetStackInner(this auto&& self) noexcept {
          return self.template AccessStack<Stack>();
@@ -260,6 +255,11 @@ namespace Langulus::Anyness::Component
       /// Set the heap pointer (inner)                                        
       constexpr void SetStackInner(this auto& self, T&& data) noexcept {
          ThisCom::GetStackInner() = LglsFwd(data);
+      }
+
+      /// Default-initialize the variable                                     
+      constexpr void ConstructDefault(this auto& self) noexcept requires CT::NotReference<T> {
+         ThisCom::SetStackInner({});
       }
    };
 

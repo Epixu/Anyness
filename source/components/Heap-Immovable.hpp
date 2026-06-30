@@ -17,7 +17,6 @@ namespace Langulus::Anyness::Component
    /// Adds a pointer member to the raw byte memory                           
    /// The pointer is not allowed to move on reallocation, and instead        
    /// multiple allocations are chained together                              
-   ///   @tparam ID multiple heap interfaces are supported                    
    ///   @tparam INITIAL_SIZE the initial size (in elements). Used in hashed  
    ///      containers in order to control hash table size. If 0, the heap    
    ///      will use reflected type properties only.                          
@@ -25,17 +24,20 @@ namespace Langulus::Anyness::Component
    ///      containers in order to control hash table growth on reallocation. 
    ///      If 0, the heap will grow according to reflected type properties.  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<Cid ID, uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
+   template<uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::HeapEntry ENTRY0, CT::HeapEntry...ENTRYN>
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id             = Values<ID, SHARED...>;
+      using Id             = Values<ENTRY0::Id, ENTRYN::Id...>;
       using HeapProvider   = Id;
+      using StackRequest   = typename ENTRY0::T;
 
+      static constexpr bool Shared = sizeof...(ENTRYN) > 0;
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = true;
-      static constexpr uint InitialSize = INITIAL_SIZE;
-      static constexpr uint GrowthFactor = GROWTH_FACTOR;
+      static constexpr bool Reallocatable = true;
+      static constexpr uint InitialSize   = INITIAL_SIZE;
+      static constexpr uint GrowthFactor  = GROWTH_FACTOR;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
 

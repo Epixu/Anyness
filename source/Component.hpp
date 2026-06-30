@@ -169,6 +169,11 @@ namespace Langulus::CT
    concept ContainsMany = Container<T...>
        and (ShedDeref<T>::ContainsMany and ...);
    
+   /// Check if listed types are containers that can be reallocated           
+   template<class...T>
+   concept Reallocatable = Container<T...>
+       and (ShedDeref<T>::Reallocatable and ...);
+   
    /// Check if listed types are containers that can have single element      
    template<class...T>
    concept ContainsOne = Container<T...>
