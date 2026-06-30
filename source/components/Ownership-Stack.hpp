@@ -170,11 +170,11 @@ namespace Langulus::Anyness::Component
                   else ThisCom::SetAllocationInner(nullptr);
                }
             }
-            else if constexpr (not requires { IT::Owned; }) {
+            /*else if constexpr (not requires { IT::Owned; }) { //TODO this should be done only if no GetAllocationInner or GetAllocation is available
                // No ownership on the right side - we must search the   
                // memory allocation ourselves.                          
                ThisCom::FindAllocationInner();
-            }
+            }*/
             else if constexpr (CT::Referred<I>) {
                // Refer                                                 
                if constexpr (requires { from.template GetAllocationInner<ID>(); }) {

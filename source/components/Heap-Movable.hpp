@@ -187,8 +187,9 @@ namespace Langulus::Anyness::Component
             //    allocated                                             
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
-            if constexpr (CT::Moved<I>) {
-               // We are moving 'from' - it needs to be fully reset     
+            if constexpr (CT::Moved<I> and CT::OwnedStrong<I>) {
+               // We are moving 'from'. If it is owned on destruction,  
+               // it needs to be fully reset.                           
                from.template SetHeapInner<Id::First>(nullptr);
             }
             else if constexpr (CT::Abandoned<I> and CT::OwnedStrong<I>) {

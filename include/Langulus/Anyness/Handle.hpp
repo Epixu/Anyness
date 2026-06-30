@@ -837,12 +837,17 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
+      /// Local sparse handles have a very specific kind of absorption        
+      /// Instead of directly absorbing the container, we allocate locally,   
+      /// and then transfer the first element with the desired intent.        
       constexpr THandle(Inner::Absorb, CT::Container auto&& other) {
-         this->Absorb(LglsFwd(other));
+         if (not DeintCast(other).IsEmpty())
+            this->EmplaceConstruct(IntentOf(other) {DeintCast(other).GetHandle()});
+         else
+            this->ConstructDefault();
       }
 
       /// Piecewise constructors                                              
-      /// (for local dense handles, piecewise == stackwise)                   
       constexpr THandle(Inner::Piecewise, auto&& pointer) {
          if (DeintCast(pointer))
             this->EmplaceConstruct(LglsFwd(pointer));

@@ -211,53 +211,30 @@ namespace Langulus::Anyness::Component
       /// with the argument ending up as default.                             
       ///   @param argument the argument to swap with                         
       ///   @return reference to self                                         
-      template<CT::ContainsOne C, CT::ContainsOne A> requires CT::NoIntent<A>//TODO this is completely wrong. test it!
+      template<CT::ContainsOne C, CT::ContainsOne A> requires CT::NoIntent<A>
       C& Swap(this C& self, A& argument) {
+         LglsAssumeUser(not argument.IsEmpty(),
+            "Can't swap with empty container");
+
          if constexpr (not CT::HeapAllocated<C>) {
+            // Not on the heap. Stack is always allocated and always    
+            // statically typed, so no need to worry about those.       
             self.SwapInner(argument);
          }
-         else /*if constexpr (CT::Handle<C>)*/ {
-            // Handles are never allowed to reallocate                  
-            if constexpr (CT::Handle<A>)
-               self.AbsorbType(Copy(argument));
-            else
-               self.DeduceType(LglsFwd(argument));
+         else {
+            // Reallocate if a local handle or something. Type check as 
+            // well.                                                    
+            self.AbsorbType(Copy(argument));
 
-            self.SwapInner(argument);
-         }
-         /*else {
-            // This container is heap-allocated                         
-            using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;
-            self.template SetType<T>();
-
-            if (self.IsEmpty()) {
-               // Container is empty, we might have to fresh-allocate   
-               self.PrepareForReconstruction();
-
-               auto first = self.GetHandle();
-               Id::ForEach([&]<Cid D>{
-                  first.template EmplaceWithIntent<D>(Move(argument));
-               });
-            }
-            else {
-               // Container has at least one element                    
-               // Reduce to one item and reassign if possible           
-               auto first = self.GetHandle();
-               if (self.PrepareForReassignment()) {
-                  Id::ForEach([&]<Cid D>{
-                     first.template AssignWithIntent<D>(Move(argument));
-                  });
-               }
-               else {
-                  Id::ForEach([&]<Cid D>{
-                     first.template EmplaceWithIntent<D>(Move(argument));
-                  });
+            if constexpr (requires { self.EmplaceConstruct(Move{argument.GetHandle()}); }) {
+               if (self.IsEmpty()) {
+                  self.EmplaceConstruct(Move{argument.GetHandle()});
+                  return self;
                }
             }
 
-            if_available(self.SetCountInner(1));
-            if_available(self.SetHashInner(0));
-         }*/
+            self.SwapInner(argument);
+         }
          
          return self;
       }
