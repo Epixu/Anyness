@@ -1510,7 +1510,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          else
             static_assert(::std::same_as<decltype(handle), THandle<ConstAll<E&>>>);
 
-         Handle_CheckState_OwnedFull<E>(handle);
+         Handle_CheckState_OwnedFull<E const>(handle);
          
          if constexpr (Sparse) {
             auto entries = handle.GetEntries();

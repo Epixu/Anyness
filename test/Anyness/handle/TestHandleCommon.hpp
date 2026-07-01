@@ -35,8 +35,17 @@ namespace doctest
 /// MARK: TestType                                                            
 /// Tests if a container is of a particular type                              
 template<class E, CT::Container C> requires CT::NoIntent<C>
-void Handle_Helper_TestType(const C& h) {
-   Any_Helper_TestType<E>(h);
+void Handle_Helper_TestType(const C& any) {
+   /// @attention constness for type-erased handles is achieved         
+   /// through either the lack or presence of an Assignment component,  
+   /// in order to avoid the overhead of navigating to the const type.  
+   REQUIRE(any.template IsSame<E>());
+   //REQUIRE(any.template IsExact<E>());
+   REQUIRE(any.template Is<E>());
+   REQUIRE(any.IsSparse() == CT::Sparse<E>);
+   REQUIRE(any.IsDeep() == CT::Deep<E>);
+   REQUIRE(any.GetType().GetOrigin() == MetaDataOf<Decay<E>>());
+   REQUIRE(any.IsTyped());
 }
 
 /// MARK: TestSame                                                            
