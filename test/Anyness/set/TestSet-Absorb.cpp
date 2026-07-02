@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestSetCommon.hpp"
+#include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
 namespace Langulus::Anyness
@@ -128,6 +129,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
+   constexpr bool Sparse  = CT::Sparse<E>;
+   constexpr bool Reffed  = CT::Referenced<Decay<E>>;
 
    #if LANGULUS(BENCHMARK)
       using stdset = ::std::unordered_set<E>;
@@ -230,7 +233,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          }
          else Set_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
 
-         if constexpr (CT::Referenced<Decay<E>>) {
+         if constexpr (Reffed) {
             REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
          }
 
@@ -834,7 +837,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
       }
       
       WHEN("Absorbed by copy") {
-         const bool managed_sparse = CT::Sparse<E> and Managed;
+         const bool managed_sparse = Sparse and Managed;
          auto absorb_construct_copy = [&](T& a, int uses, int entry_refs, int indi_refs) {
             T absorbed {Copy {a}};
 
@@ -845,13 +848,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
             REQUIRE(absorbed.template AsAt<E>(0) == a.template AsAt<E>(0));
 
-            if constexpr (CT::Sparse<E>) {
+            if constexpr (Sparse) {
                auto entry = *absorbed.GetEntries();
 
                if (entry)
                   REQUIRE(entry->GetUses() == entry_refs);
 
-               if constexpr (CT::Referenced<Decay<E>>) {
+               if constexpr (Reffed) {
                   auto e = absorbed.template AsAt<E>(0);
                   REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
@@ -1101,7 +1104,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          contains_full(pack_referred2);
          contains_full(pack_copied);
 
-         if constexpr (CT::Sparse<E>) {
+         if constexpr (Sparse) {
             REQUIRE      (pack_cloned.GetDenseAt(0).Contains(DenseCast(*originalElement)));
             REQUIRE_FALSE(pack_cloned.Contains(*originalElement));
             REQUIRE_FALSE(pack_cloned.Contains(*e1));
@@ -1117,6 +1120,362 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          BenchmarkSet("Absorb/Contains", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
          );
+      }
+   }
+
+   GIVEN("Two absorb-constructed containers") {
+      const ScopedE e556 {556};
+      const ScopedE e6   {6};
+
+      T piecewise1{Piecewise, *e556};
+      T piecewise2{Piecewise, *e6};
+      T src {Absorb, Abandon(piecewise1)};
+      T dst {Absorb, Abandon(piecewise2)};
+
+      /// MARK: GetHandle                                                     
+      WHEN("GetHandle is called on mutable container") {
+         auto src_handle_default = src.GetHandle();
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(src_handle_default), Handle>);
+         else
+            static_assert(::std::same_as<decltype(src_handle_default), THandle<ConstAll<E&>>>);
+
+         auto src_handle = src_handle_default.ForceMutable();
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(src_handle), HandleMut>);
+         else
+            static_assert(::std::same_as<decltype(src_handle), THandle<E&>>);
+
+         auto src_valid_element = src.GetAt(0);
+         while(src_handle.Get() != src_valid_element)
+            ++src_handle;
+
+         auto src_data = src_handle.template Get<E>();
+         AllocationPtr const* src_entries = nullptr;
+
+         Handle_CheckState_OwnedFull<E>(src_handle);
+
+         if constexpr (Sparse) {
+            src_entries = src_handle.GetEntries();
+            REQUIRE(*src_entries == e556.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e556.entries[1]->GetUses() == 2);
+         }
+
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(src_data).GetReferences() == (Sparse ? 2 : 1));
+            REQUIRE(DenseCast(src_data).destroyed == false);
+         }
+
+         auto dst_handle = dst.GetHandle().ForceMutable();
+         auto dst_valid_element = dst.GetAt(0);
+         while(dst_handle.Get() != dst_valid_element)
+            ++dst_handle;
+
+         auto dst_data = dst_handle.template Get<E>();
+         AllocationPtr const* dst_entries = nullptr;
+
+         Handle_CheckState_OwnedFull<E>(dst_handle);
+
+         if constexpr (Sparse) {
+            dst_entries = dst_handle.GetEntries();
+            REQUIRE(*dst_entries == e6.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e6.entries[1]->GetUses() == 2);
+            REQUIRE(dst_entries != src_entries);
+         }
+
+         REQUIRE(dst_data != src_data);
+
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(dst_data).GetReferences() == (Sparse ? 2 : 1));
+            REQUIRE(DenseCast(dst_data).destroyed == false);
+         }
+
+         THEN("Handle assigned to another container") {
+            REQUIRE_NOTHROW(dst_handle.Assign(Move(src_handle)));
+
+            Handle_CheckState_OwnedFull<E>(src_handle);
+            Handle_CheckState_OwnedFull<E>(dst_handle);
+            REQUIRE(src_handle.template Get<E>() == src_data);
+            REQUIRE(dst_handle.template Get<E>() == dst_data);
+            
+            auto& moved_in = DenseCast(dst_data);
+            if constexpr (Sparse) {
+               REQUIRE(src_handle.GetEntries() == src_entries);
+               REQUIRE(*src_data == nullptr);
+               REQUIRE(*src_entries == nullptr);
+
+               REQUIRE(dst_handle.GetEntries() == dst_entries);
+               REQUIRE(*dst_data == *e556);
+               REQUIRE(*dst_entries == e556.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+                  REQUIRE(e6.entries[1]->GetUses() == 1);
+               }
+
+               if constexpr (Reffed) {
+                  REQUIRE(DenseCast(*e6).GetReferences() == 1);
+                  REQUIRE(moved_in.GetReferences() == 2);
+                  REQUIRE(moved_in.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == false);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data);
+               if constexpr (Reffed) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == true);
+
+                  REQUIRE(moved_in.GetReferences() == 1);
+                  REQUIRE(moved_in.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == true);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+         }
+         
+         THEN("Handle is swapped with another container's handle") {
+            REQUIRE_NOTHROW(dst_handle.Swap(src_handle));
+
+            Handle_CheckState_OwnedFull<E>(src_handle);
+            Handle_CheckState_OwnedFull<E>(dst_handle);
+            REQUIRE(src_handle.template Get<E>() == src_data);
+            REQUIRE(dst_handle.template Get<E>() == dst_data);
+            
+            auto& moved_in  = DenseCast(dst_data);
+            auto& moved_out = DenseCast(src_data);
+
+            REQUIRE(moved_in  == DenseCast(*e556));
+            REQUIRE(moved_out == DenseCast(*e6));
+
+            if constexpr (Sparse) {
+               REQUIRE(src_handle.GetEntries() == src_entries);
+               REQUIRE(dst_handle.GetEntries() == dst_entries);
+   
+               REQUIRE(*dst_entries == e556.entries[1]);
+               REQUIRE(*src_entries == e6.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+                  REQUIRE(e6.entries[1]->GetUses() == 2);
+               }
+
+               if constexpr (Reffed) {
+                  REQUIRE(moved_out.GetReferences() == 2);
+                  REQUIRE(moved_out.data == DenseCast(*e6).data);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == false);
+
+                  REQUIRE(moved_in.GetReferences() == 2);
+                  REQUIRE(moved_in.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == false);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+            else {
+               if constexpr (Reffed) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == true);
+                  REQUIRE(moved_out.moved_out == false);
+
+                  REQUIRE(moved_in.GetReferences() == 1);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == true);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+
+            // We should be able to do this indefinitely                
+            for(int i = 0; i < 101; ++i)
+               dst_handle.Swap(src_handle);
+         }
+         
+         THEN("Handle moved into a local handle") {
+            THandle<E> local {Absorb, Move(src_handle)};
+
+            Handle_CheckState_OwnedFull<E>(src_handle);
+            Handle_CheckState_OwnedFull<E>(local);
+            REQUIRE(src_handle.template Get<E>() == src_data);
+            REQUIRE(local.template Get<E>() != src_data);
+            
+            auto& moved_in = DenseCast(local.template Get<E>());
+            REQUIRE(moved_in == DenseCast(*e556));
+
+            if constexpr (Sparse) {
+               REQUIRE(src_handle.GetEntries() == src_entries);
+               REQUIRE(local.GetEntries() != src_entries);
+
+               REQUIRE(*src_data == nullptr);
+               REQUIRE(*src_entries == nullptr);
+
+               REQUIRE(local.GetEntries()[0] == e556.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+                  REQUIRE(e6.entries[1]->GetUses() == 2);
+               }
+
+               if constexpr (Reffed) {
+                  REQUIRE(DenseCast(*e6).GetReferences() == 2);
+                  REQUIRE(moved_in.GetReferences() == 2);
+                  REQUIRE(moved_in.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == false);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data);
+
+               if constexpr (Reffed) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == true);
+
+                  REQUIRE(moved_in.GetReferences() == 1);
+                  REQUIRE(moved_in.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == true);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+         }
+
+         THEN("Handle is swapped with local handle, and then back to container") {
+            THandle<E> local;
+            REQUIRE_NOTHROW(local.Swap(src_handle));
+            auto local_data = local.template Get<E>();
+            AllocationPtr const* local_entries = nullptr;
+
+            Handle_CheckState_OwnedFull<E>(src_handle);
+            Handle_CheckState_OwnedFull<E>(local);
+            REQUIRE(src_handle.template Get<E>() == src_data);
+            REQUIRE(local_data);
+            REQUIRE(local_data != src_data);
+
+            auto& moved_in = DenseCast(local_data);
+            REQUIRE(moved_in == DenseCast(*e556));
+
+            if constexpr (Sparse) {
+               REQUIRE(src_handle.GetEntries() == src_entries);
+               local_entries = local.GetEntries();
+               REQUIRE(local_entries != nullptr);
+               REQUIRE(local_entries != src_entries);
+
+               REQUIRE(*src_data == nullptr);
+               REQUIRE(*src_entries == nullptr);
+
+               REQUIRE(*local_entries == e556.entries[1]);
+               if constexpr (Managed)
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+
+               if constexpr (Reffed) {
+                  REQUIRE(moved_in.GetReferences() == 2);
+                  REQUIRE(moved_in.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == false);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data);
+
+               if constexpr (Reffed) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == true);
+                  REQUIRE(moved_out.moved_out == false);
+
+                  REQUIRE(moved_in.GetReferences() == 1);
+                  REQUIRE(moved_in.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == true);
+                  REQUIRE(moved_in.moved_out == false);
+               }
+            }
+
+            REQUIRE_NOTHROW(local.Swap(src_handle));
+            REQUIRE(src_handle.template Get<E>() == src_data);
+            REQUIRE(local.template Get<E>() == local_data);
+
+            if constexpr (Sparse) {
+               REQUIRE(src_handle.GetEntries() == src_entries);
+               REQUIRE(local.GetEntries() != src_entries);
+               REQUIRE(local.GetEntries() == local_entries);
+               REQUIRE(*local_entries == nullptr);
+               REQUIRE(*src_data != nullptr);
+
+               REQUIRE(*src_entries == e556.entries[1]);
+               if constexpr (Managed)
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+
+               if constexpr (Reffed) {
+                  auto& moved_out = DenseCast(src_data);
+                  REQUIRE(moved_out.GetReferences() == 2);
+                  REQUIRE(moved_out.data == DenseCast(*e556).data);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data);
+
+               if constexpr (Reffed) {
+                  REQUIRE(moved_in.GetReferences() == 1);
+                  REQUIRE(moved_in.destroyed == false);
+                  REQUIRE(moved_in.moved_in == true);
+                  REQUIRE(moved_in.moved_out == false);
+
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.data == DenseCast(*e556).data);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == true);
+                  REQUIRE(moved_out.moved_out == false);
+               }
+            }
+
+            // We should be able to do this indefinitely                
+            for(int i = 0; i < 101; ++i)
+               local.Swap(src_handle);
+         }
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const& pack_constant = src;
+         auto handle = pack_constant.GetHandle();
+         auto first_valid_element = pack_constant.GetAt(0);
+         while(handle.Get() != first_valid_element)
+            ++handle;
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(handle), Handle>);
+         else
+            static_assert(::std::same_as<decltype(handle), THandle<ConstAll<E&>>>);
+            
+         Handle_CheckState_OwnedFull<E const>(handle);
+         
+         if constexpr (Sparse) {
+            auto entries = handle.GetEntries();
+            REQUIRE(entries);
+            REQUIRE(*entries == e556.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e556.entries[1]->GetUses() == 2);
+         }
+
+         if constexpr (Reffed) {
+            auto& data = DenseCast(handle.template Get<E>());
+            REQUIRE(data.GetReferences() == (Sparse ? 2 : 1));
+            REQUIRE(data.destroyed == false);
+         }
       }
    }
 

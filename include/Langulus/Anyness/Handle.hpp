@@ -8,6 +8,7 @@
 #pragma once
 #include "Langulus/CT/Deep.hpp"
 #include "Langulus/Core.hpp"
+#include "Langulus/Typenav.hpp"
 #include "source/Component.hpp"
 #include "source/Container.hpp"
 #include <source/components/Typed-Stack.hpp>
@@ -480,8 +481,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
-         return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
+      auto ForceMutable() noexcept -> THandle<DecvqAll<T>>& {
+         return *reinterpret_cast<THandle<DecvqAll<T>>*>(this);
       }
 
       /// Pick a specific dimension if handle is complex (like THandlePair).  
@@ -536,8 +537,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
-         return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
+      auto ForceMutable() noexcept -> THandle<DecvqAll<T>>& {
+         return *reinterpret_cast<THandle<DecvqAll<T>>*>(this);
       }
 
       /// Pick a specific dimension if handle is complex (like THandlePair).  
@@ -599,8 +600,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
-         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
+      auto ForceMutable() noexcept -> THandleEmergent<DecvqAll<T>>& {
+         return *reinterpret_cast<THandleEmergent<DecvqAll<T>>*>(this);
       }
 
       /// Pick a specific dimension if handle is complex (like THandlePair).  
@@ -659,8 +660,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
-         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
+      auto ForceMutable() noexcept -> THandleEmergent<DecvqAll<T>>& {
+         return *reinterpret_cast<THandleEmergent<DecvqAll<T>>*>(this);
       }
 
       /// Pick a specific dimension if handle is complex (like THandlePair).  
@@ -721,7 +722,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandleDisowned<Decvq<Deref<T>>&>& {
+      auto ForceMutable() noexcept -> THandleDisowned<DecvqAll<T>>& {
          return *this;
       }
 
@@ -809,7 +810,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandle<Decvq<T>>& {
+      auto ForceMutable() noexcept -> THandle<DecvqAll<T>>& {
          return *this;
       }
 
@@ -889,7 +890,7 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() noexcept -> THandle<Decvq<T>>& {
+      auto ForceMutable() noexcept -> THandle<DecvqAll<T>>& {
          return *this;
       }
 
