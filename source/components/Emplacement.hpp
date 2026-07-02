@@ -568,10 +568,10 @@ namespace Langulus::Anyness::Component
                   LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
 
                using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT, SID>>;
-               //if constexpr (CT::Mutable<T> or not I::IsMoved())
+               if constexpr (CT::Mutable<T> or not I::IsMoved())
                   IntentNew(dst, I::Nest(*rhs.template GetRawAs<T, SID>()));
-               //else
-               //   IntentNew(dst, Refer(*rhs.template GetRawAs<T, SID>()));
+               else
+                  IntentNew(dst, Refer(*rhs.template GetRawAs<T, SID>()));
             }
                
             if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
@@ -844,12 +844,12 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
-            if constexpr (STRAT != AllocationStrategy::DontAllocate) {
+            /*if constexpr (STRAT != AllocationStrategy::DontAllocate) {
                if constexpr (CT::Handle<A...>)
                   self.AbsorbType(Copy(arguments)...);
                else
                   self.DeduceType(arguments...);
-            }
+            }*/
 
             if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
                if_available(self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1)));
@@ -860,7 +860,7 @@ namespace Langulus::Anyness::Component
 
             // Construct the first element                              
             using T = TypeOf<C, SID>;
-            if constexpr (sizeof...(A) == 1) {
+            if constexpr (sizeof...(A) == 1 and (Same<T, Deint<A>...> or CT::Handle<A...>)) {
                if constexpr (CT::Copied<IntentOf(arguments)...>)
                   ThisCom::template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                else
@@ -869,7 +869,11 @@ namespace Langulus::Anyness::Component
             else {
                static_assert(CT::Dense<T>,
                   "Too many arguments for emplacing a sparse instance");
-               ThisCom::template EmplaceWithIntent<SID>(Abandon {Decvq<T> {LglsFwd(arguments)...}});
+
+               if constexpr (requires { Decvq<T> {LglsFwd(arguments)...}; } )
+                  ThisCom::template EmplaceWithIntent<SID>(Abandon {Decvq<T> {LglsFwd(arguments)...}});
+               else
+                  ThisCom::template EmplaceWithIntent<SID>(Abandon {Decvq<T> {LglsFwd(arguments.what)...}});
             }
          }
          

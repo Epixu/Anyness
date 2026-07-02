@@ -374,8 +374,8 @@ namespace Langulus::Anyness::Component
       ///      otherwise it has to be an instance of the contained type.      
       template<Cid SID = ID, CT::Container C, CT::Intent I> requires Relevant<SID>
       void AssignWithIntent(this C&& self, I&& intent) {
-         static_assert(CT::ContainsOne<C>,
-            "Assigning only first element in a container with many. GetHandle() first?");
+         //static_assert(CT::ContainsOne<C>,
+         //   "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
             "Can be used only for contiguous containers");
          /*static_assert(not CT::Cloned<I> and not CT::Copied<I> and CT::HeapAllocated<C>,

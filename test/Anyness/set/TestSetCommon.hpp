@@ -137,7 +137,7 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    Many_VerifyAccessorInterface(set, LglsFwd(e_with_intent));
 
    auto& e = e_with_intent.what;
-   using E = typename Decay<Deint<I>>::Type;
+   using E = typename Decay<Deint<I>>::CTTI_Typed;
 
    if constexpr (CT::DeepDense<E>)
       REQUIRE(set.template AsAt<E*>(0)->template IsSame<int>());
@@ -207,7 +207,7 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, int uses = 1) {
    auto& e = e_scoped_with_intent.what;
-   //using E = typename Decay<Deint<I>>::Type;
+   //using E = typename Decay<Deint<I>>::CTTI_Typed;
 
    REQUIRE(set.GetCount() == n);
    REQUIRE(set.GetUses() == uses);
@@ -222,7 +222,7 @@ void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, 
 template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
 void Set_CheckState_ContainsArray(const T& set, I&& e_scoped_array_with_intent) {
    auto  e = e_scoped_array_with_intent.what;
-   //using E = typename Decay<Deint<I>>::Type;
+   //using E = typename Decay<Deint<I>>::CTTI_Typed;
    constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;
 
    REQUIRE(set.GetCount() == n);

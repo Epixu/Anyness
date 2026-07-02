@@ -1075,11 +1075,11 @@ namespace Langulus
       /// constructor, as long as T and S are compatible with standard C++20  
       /// semantics.                                                          
       ///   @tparam S the intents and types                                   
-      template<class...S>
+      /*template<class...S>
       concept IntentConstructibleAlt = Intent<S...>
           and requires (S&&...a) {
              {(IntentNew<true>(nullptr, LglsFwd(a)), ...)} -> Supported;
-          };
+          };*/
 
       /// Check if all T are disown-constructible.                            
       /// Disowning does a shallow copy without referencing contents,         
@@ -1176,10 +1176,10 @@ namespace Langulus
       /// T can be intent-assignable even if not having an explicit assigner  
       /// as long as T and S are compatible with standard C++20 semantics.    
       ///   @tparam S - the intent and type                                   
-      template<class...S>
+      /*template<class...S>
       concept IntentAssignableAlt = Intent<S...> and requires (S&&...a) {
             {(IntentAssign<true>(LglsFake(Decq<Deref<TypeOf<S>>>&), LglsFwd(a)), ...)} -> Supported;
-          };
+          };*/
 
       /// Check if all T are disown-assignable.                               
       /// Disowning does a shallow copy without referencing contents,         

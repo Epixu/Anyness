@@ -356,6 +356,11 @@ namespace Langulus::Anyness
          static_assert(SID == 0, "No such dimension");
          return LglsFwd(self);
       }
+
+      /// Immutable handles are always constant                               
+      constexpr bool IsConstant() const noexcept {
+         return true;
+      }
    };
    
 
@@ -417,6 +422,11 @@ namespace Langulus::Anyness
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
          static_assert(SID == 0, "No such dimension");
          return LglsFwd(self);
+      }
+      
+      /// Immutable handles are always constant                               
+      constexpr bool IsConstant() const noexcept {
+         return true;
       }
    };
 

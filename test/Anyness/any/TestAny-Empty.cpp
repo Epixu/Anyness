@@ -750,7 +750,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          else
             static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
 
-         Handle_CheckState_Default<ConstAll<E> const>(h);
+         Handle_CheckState_Default<E const>(h);
       }
    }
 

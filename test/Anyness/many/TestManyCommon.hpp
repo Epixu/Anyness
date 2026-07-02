@@ -136,7 +136,7 @@ void Many_CheckState_Abandoned(const C& many) {
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Many_VerifyAccessorInterface(T const& many, I&&) {
-   using E = typename Decay<Deint<I>>::Type;
+   using E = typename Decay<Deint<I>>::CTTI_Typed;
 
    // The Get method always adds a pointer, because it interfaces the   
    // heap directly                                                     
@@ -224,7 +224,7 @@ void Many_CheckState_ContainsOne(T const& many, I&& e_with_intent, int uses = 1)
    Many_VerifyAccessorInterface(many, LglsFwd(e_with_intent));
 
    auto& e = e_with_intent.what;
-   using E = typename Decay<Deint<I>>::Type;
+   using E = typename Decay<Deint<I>>::CTTI_Typed;
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
       //TODO test all kinds of ranged modifiers??
@@ -249,7 +249,7 @@ void Many_CheckState_ContainsOne(T const& many, I&& e_with_intent, int uses = 1)
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Many_CheckState_ContainsN(size_t n, const T& many, I&& e_scoped_with_intent, int uses = 1) {
    auto& e = e_scoped_with_intent.what;
-   using E = typename Decay<Deint<I>>::Type;
+   using E = typename Decay<Deint<I>>::CTTI_Typed;
 
    REQUIRE(many.GetCount() == n);
    REQUIRE(many.GetUses() == 1);
@@ -296,7 +296,7 @@ void Many_CheckState_ContainsN(size_t n, const T& many, I&& e_scoped_with_intent
 template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
 void Many_CheckState_ContainsArray(const T& many, I&& e_scoped_array_with_intent) {
    auto  e = e_scoped_array_with_intent.what;
-   using E = typename Decay<Deint<I>>::Type;
+   using E = typename Decay<Deint<I>>::CTTI_Typed;
    constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;
 
    REQUIRE(many.GetCount() == n);

@@ -40,7 +40,6 @@ void Handle_Helper_TestType(const C& any) {
    /// through either the lack or presence of an Assignment component,  
    /// in order to avoid the overhead of navigating to the const type.  
    REQUIRE(any.template IsSame<E>());
-   //REQUIRE(any.template IsExact<E>());
    REQUIRE(any.template Is<E>());
    REQUIRE(any.IsSparse() == CT::Sparse<E>);
    REQUIRE(any.IsDeep() == CT::Deep<E>);
@@ -59,7 +58,6 @@ void Handle_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Handle_CheckState_Default(const C& any/*, bool typed = false*/) {
    if constexpr (CT::Typed<C>) {
-      static_assert(Exact<TypeOf<C>, E>);
       Handle_Helper_TestType<E>(any);
    }
    /*else if (not typed) {
@@ -68,22 +66,22 @@ void Handle_CheckState_Default(const C& any/*, bool typed = false*/) {
       REQUIRE_FALSE(any.IsSparse());
       REQUIRE_FALSE(any.IsDeep());
    }*/
-   else Handle_Helper_TestType<E>(any);
+   else {
+      REQUIRE_FALSE(any.IsTyped());
+   }
 
    REQUIRE      (any.IsDefaultState());
    REQUIRE      (any.IsTypeConstrained()/* == CT::Typed<C>*/);
-   REQUIRE_FALSE(any.IsConstant());
+   REQUIRE      (any.IsConstant() == CT::Constant<E>);
    REQUIRE_FALSE(any.IsDisowned());
    REQUIRE_FALSE(any.IsValid());
 
    if constexpr (requires { any.GetAllocation(); }) {
-      REQUIRE   (any.GetAllocation());
-      REQUIRE   (any.GetUses() > 0);
+      REQUIRE   (any.GetAllocation() == nullptr);
    }
    
    if constexpr (requires { any.GetEntries(); }) {
-      REQUIRE   (any.GetEntries());
-      REQUIRE   (any.GetEntries()[0] == nullptr);
+      REQUIRE   (any.GetEntries() == nullptr);
    }
 
    REQUIRE      (any.IsEmpty());

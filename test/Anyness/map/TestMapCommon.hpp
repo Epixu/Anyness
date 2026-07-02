@@ -139,8 +139,8 @@ void Map_CheckState_Abandoned(C const& pack) {
 
 template<CT::Container T, CT::Intent I1, CT::Intent I2> requires CT::NoIntent<T>
 void Map_VerifyAccessorInterface(T const& map, I1&&, I2&&) {
-   using E1 = typename Decay<Deint<I1>>::Type;
-   using E2 = typename Decay<Deint<I2>>::Type;
+   using E1 = typename Decay<Deint<I1>>::CTTI_Typed;
+   using E2 = typename Decay<Deint<I2>>::CTTI_Typed;
 
    // The Get method always adds a pointer, because it interfaces the   
    // heap directly                                                     
@@ -266,8 +266,8 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
 
    auto& e1 = key_with_intent.what;
    auto& e2 = val_with_intent.what;
-   using E1 = typename Decay<Deint<IK>>::Type;
-   using E2 = typename Decay<Deint<IV>>::Type;
+   using E1 = typename Decay<Deint<IK>>::CTTI_Typed;
+   using E2 = typename Decay<Deint<IV>>::CTTI_Typed;
    /*using P1 = TPair<ConstAll<E1>, E2>; //TODO test pair containers separately
    using P2 = TPair<ConstAll<E1&>, E2&>;
    using P3 = Anyness::Pair;
@@ -402,7 +402,7 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Map_CheckState_ContainsN(size_t n, const T& map, I&& e_scoped_with_intent, int uses = 1) {
    auto& e = e_scoped_with_intent.what;
-   //using E = typename Decay<Deint<I>>::Type;
+   //using E = typename Decay<Deint<I>>::CTTI_Typed;
 
    REQUIRE(map.GetCount() == n);
    REQUIRE(map.GetUses() == uses);
@@ -417,7 +417,7 @@ void Map_CheckState_ContainsN(size_t n, const T& map, I&& e_scoped_with_intent, 
 template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
 void Map_CheckState_ContainsArray(const T& map, I&& e_scoped_array_with_intent) {
    auto  e = e_scoped_array_with_intent.what;
-   //using E = typename Decay<Deint<I>>::Type;
+   //using E = typename Decay<Deint<I>>::CTTI_Typed;
    constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;
 
    REQUIRE(map.GetCount() == n);

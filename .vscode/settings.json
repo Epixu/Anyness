@@ -4,7 +4,11 @@
    "cmake.showConfigureWithDebuggerNotification": false,
    "C_Cpp.intelliSenseEngine": "disabled",
    "workbench.colorCustomizations": {
-      "editor.selectionBackground":"#20354b"
+      "editor.selectionBackground":"#20354b",
+      "tab.activeBorder": "#00FFFF",     // line at the bottom
+      "tab.activeBorderTop": "#bb4602",  // line at the top
+      "tab.activeBackground": "#ff7707", // background for active tab
+      "tab.activeForeground": "#180404"  // text color
    },
    "workbench.editor.enablePreview": false,
    "clangd.fallbackFlags": [
