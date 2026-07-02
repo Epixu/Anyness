@@ -7,6 +7,7 @@
 ///                                                                           
 #include "../Main.hpp"
 #include "any/TestAnyCommon.hpp"
+#include "handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Bytes.hpp>
 #include <Langulus/Anyness/SerializeBytes.hpp>
 
@@ -149,10 +150,11 @@ void Bytes_CheckState_DisownedFullConst(const CT::Container auto& bytes) {
 
 SCENARIO("Testing byte container") {
    static MemoryState memoryState;
+   using E = TypeOf<Bytes>;
    using T = Bytes;
    static_assert(    CT::Typed<T>, "Container not typed");
    static_assert(not CT::Array<T>, "Wrongly typed container");
-   static_assert(    Exact<TypeOf<T>, Byte>, "Wrongly typed container");
+   static_assert(    Exact<E, Byte>, "Wrongly typed container");
 
    GIVEN("Default byte container") {
       T bytes;
@@ -200,6 +202,21 @@ SCENARIO("Testing byte container") {
       WHEN("Compared") {
          static_assert(T{} == T{});
          static_assert(not static_cast<bool>(T{}));
+      }
+      
+      WHEN("GetHandle is called on mutable container") {
+         auto h = bytes.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandle<E&>>);
+
+         Handle_CheckState_Default<E>(h);
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const pack_constant;
+         auto h = pack_constant.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
+
+         Handle_CheckState_Default<E const>(h);
       }
    }
 

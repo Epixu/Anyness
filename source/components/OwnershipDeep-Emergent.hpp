@@ -488,7 +488,8 @@ namespace Langulus::Anyness::Component
             const auto subT = T.GetDeptr();
             // If T is Text**, ptr becomes Text**                       
             const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
-            LglsAssumeDevAndOptimize(ptr, "Null pointer");
+            if (not ptr)
+               return;
 
             if (*entries and 1 == (*entries)->GetUses()) {
                if (subT.IsSparse()) {
@@ -643,7 +644,8 @@ namespace Langulus::Anyness::Component
 
             const auto subT = T.GetDeptr();
             const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
-            LglsAssumeDevAndOptimize(ptr, "Null pointer");
+            if (not ptr) 
+               return;
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
             entry = Allocator::Find(ptr);
@@ -668,8 +670,9 @@ namespace Langulus::Anyness::Component
                   else destructor(ptr);
                }
             }
-            else {
+            else
             #endif
+            {
                if (subT.IsSparse()) {
                   // Pointer to pointer.                                
                   // Dereference all indirection layers.                
@@ -688,9 +691,9 @@ namespace Langulus::Anyness::Component
                         subT.GetDestructor()(ptr);
                   }
                }
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
             }
 
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
             // Deallocate or dereference                                
             if (entry) {
                if (1 == entry->GetUses())

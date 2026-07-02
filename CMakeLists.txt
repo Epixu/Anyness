@@ -8,10 +8,6 @@ include(LangulusUtilities.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Langulus can be very demanding, and clang spawns too many compiler instances, each about 8 GB big.
-# This is here to remedy the situation and avoid bricking lower spec machines while compiling.
-set(CMAKE_BUILD_PARALLEL_LEVEL 4)
-
 if (MSVC)
     set(CMAKE_CXX_FLAGS             "${CMAKE_CXX_FLAGS}             ${LANGULUS_COVERAGE_COMPILER_FLAGS_MSVC}    ${LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC}")
     set(CMAKE_C_FLAGS               "${CMAKE_C_FLAGS}               ${LANGULUS_COVERAGE_COMPILER_FLAGS_MSVC}    ${LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC}")

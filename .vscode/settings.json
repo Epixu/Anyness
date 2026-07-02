@@ -205,5 +205,6 @@
     "lcov.info"
   ],
   "coverage-gutters.customizable.context-menu": false,
-  "editor.autoClosingComments": "never"
+  "editor.autoClosingComments": "never",
+  "workbench.editor.decorations.colors": false
 }

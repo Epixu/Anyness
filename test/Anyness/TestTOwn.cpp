@@ -10,6 +10,8 @@
 #include <Langulus/Anyness/SerializeText.hpp>
 #include "../TestTypes/ReferencedType.hpp"
 #include "../TestTypes/ScopedElement.hpp"
+#include "handle/TestHandleCommon.hpp"
+#include "source/Container.hpp"
 
 using namespace Langulus;
 using Anyness::TOwn;
@@ -26,7 +28,7 @@ TEST_CASE_TEMPLATE("Owned value", T
    , TOwn<const int*>
 ) {
    static MemoryState memoryState;
-   using TT = TypeOf<T>;
+   using E = TypeOf<T>;
    
    GIVEN("Default-initialized") {
       T pointer;
@@ -95,7 +97,7 @@ TEST_CASE_TEMPLATE("Owned value", T
             REQUIRE(pointer->GetReferences() == 1); //TODO major design change - TRef is no longer deep referenced for now, let's see how that goes
       }*/
 
-      ScopedElement<TT> raw {3};
+      ScopedElement<E> raw {3};
 
       WHEN("Given an xvalue pointer created via `new` statement") {
          pointer = ::std::move(*raw);
@@ -105,14 +107,14 @@ TEST_CASE_TEMPLATE("Owned value", T
          #if LANGULUS_FEATURE(NEWDELETE)
             REQUIRE(pointer.GetReferences() == 2);
          #else
-            if constexpr (CT::Referenced<TT>)
+            if constexpr (CT::Referenced<E>)
                REQUIRE(pointer->GetReferences() == 1);
          #endif
       }
 
       #if LANGULUS_FEATURE(NEWDELETE)
          WHEN("Given an immediate xvalue pointer created via `new` statement - a very bad practice, unless LANGULUS_FEATURE(NEWDELETE) is enabled!") {
-            pointer = new Decay<TT> {3};
+            pointer = new Decay<E> {3};
 
             #if LANGULUS_FEATURE(NEWDELETE)
                REQUIRE(pointer.GetAllocation());
@@ -140,7 +142,7 @@ TEST_CASE_TEMPLATE("Owned value", T
          #if LANGULUS_FEATURE(NEWDELETE)
             REQUIRE(pointer.GetReferences() == 2);
          #else
-            if constexpr (CT::Referenced<TT>)
+            if constexpr (CT::Referenced<E>)
                REQUIRE(pointer->GetReferences() == 1);
          #endif
       }
@@ -148,18 +150,33 @@ TEST_CASE_TEMPLATE("Owned value", T
       WHEN("Compared") {
          static_assert(not requires { static_cast<bool>(T{}); });
          static_assert(T{} == T{});
-         static_assert(T{} == TT{});
-         static_assert(TT{} == T{});
-         static_assert(T{ TT{} } == T{ TT{} });
-         static_assert(T{ TT{} } == TT{});
-         static_assert(TT{} == T{ TT{} });
+         static_assert(T{} == E{});
+         static_assert(E{} == T{});
+         static_assert(T{ E{} } == T{ E{} });
+         static_assert(T{ E{} } == E{});
+         static_assert(E{} == T{ E{} });
 
-         if constexpr (CT::Dense<TT>) {
-            static_assert(T{} != static_cast<TT>(1));
-            static_assert(static_cast<TT>(1) != T{});
-            static_assert(T{ TT{} } != static_cast<TT>(1));
-            static_assert(static_cast<TT>(1) != T{ TT{} });
+         if constexpr (CT::Dense<E>) {
+            static_assert(T{} != static_cast<E>(1));
+            static_assert(static_cast<E>(1) != T{});
+            static_assert(T{ E{} } != static_cast<E>(1));
+            static_assert(static_cast<E>(1) != T{ E{} });
          }
+      }
+      
+      WHEN("GetHandle is called on mutable container") {
+         auto h = pointer.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandleDisowned<E&>>);
+
+         Handle_CheckState_OwnedFull<E>(h);
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const pack_constant;
+         auto h = pack_constant.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandleDisowned<ConstAll<E&>>>);
+
+         Handle_CheckState_OwnedFull<E const>(h);
       }
    }
 

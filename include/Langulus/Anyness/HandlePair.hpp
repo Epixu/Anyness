@@ -79,11 +79,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      Handle GetKey()       noexcept { return {*this}; }
-      Handle GetKeyHandle() noexcept { return {*this}; }
-
-      Handle GetVal()       noexcept { return {Slice<1>, *this}; }
-      Handle GetValHandle() noexcept { return {Slice<1>, *this}; }
+      Handle GetKey()       const noexcept { return {*this}; }
+      Handle GetKeyHandle() const noexcept { return {*this}; }
+      
+      Handle GetVal()       const noexcept { return {Slice<1>, *this}; }
+      Handle GetValHandle() const noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -167,11 +167,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      HandleMut GetKey()       noexcept { return {*this}; }
-      HandleMut GetKeyHandle() noexcept { return {*this}; }
-
-      HandleMut GetVal()       noexcept { return {Slice<1>, *this}; }
-      HandleMut GetValHandle() noexcept { return {Slice<1>, *this}; }
+      HandleMut GetKey()       const noexcept { return {*this}; }
+      HandleMut GetKeyHandle() const noexcept { return {*this}; }
+      
+      HandleMut GetVal()       const noexcept { return {Slice<1>, *this}; }
+      HandleMut GetValHandle() const noexcept { return {Slice<1>, *this}; }
 
       /// Already as mutable as it gets                                       
       decltype(auto) ForceMutable(this auto&& self) noexcept {
@@ -254,11 +254,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      Handle    GetKey()       noexcept { return {*this}; }
-      Handle    GetKeyHandle() noexcept { return {*this}; }
-
-      HandleMut GetVal()       noexcept { return {Slice<1>, *this}; }
-      HandleMut GetValHandle() noexcept { return {Slice<1>, *this}; }
+      Handle    GetKey()       const noexcept { return {*this}; }
+      Handle    GetKeyHandle() const noexcept { return {*this}; }
+      
+      HandleMut GetVal()       const noexcept { return {Slice<1>, *this}; }
+      HandleMut GetValHandle() const noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -288,8 +288,8 @@ namespace Langulus::Anyness
                          Com::HeapReference<HeapEntry<1, Deref<V>*>>>,
       Com::CountStatic<1u, 0, 1>,
       Com::ReserveStatic<1u, 0, 1>,
-      //Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipEmergent<Com::WeakOwnership, 0>>,
-      //                  EnableComponentIf<CT::Dense<V>,  Com::OwnershipEmergent<Com::WeakOwnership, 1>>>,
+      Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipEmergent<Com::WeakOwnership, 0>>,
+                        EnableComponentIf<CT::Dense<V>,  Com::OwnershipEmergent<Com::WeakOwnership, 1>>>,
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepEmergent<Com::WeakOwnership, true, 0>>,
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepEmergent<Com::WeakOwnership, true, 1>>>,
       Com::HashEmergent<0, Hash, 1>,
@@ -338,23 +338,23 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      decltype(auto) GetKey() noexcept {
+      decltype(auto) GetKey() const noexcept {
          if constexpr (CT::Constant<K>)
             return *this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::Get();
          else
             return GetKeyHandle();
       }
 
-      KeyHandle GetKeyHandle() noexcept { return {*this}; }
+      KeyHandle GetKeyHandle() const noexcept { return {*this}; }
 
-      decltype(auto) GetVal() noexcept {
+      decltype(auto) GetVal() const noexcept {
          if constexpr (CT::Constant<V>)
             return *this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::Get();
          else
             return GetValHandle();
       }
 
-      ValHandle GetValHandle() noexcept { return {Slice<1>, *this}; }
+      ValHandle GetValHandle() const noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -387,8 +387,8 @@ namespace Langulus::Anyness
                          Com::HeapReference<HeapEntry<1, Deref<V>*>>>,
       Com::CountStatic<1u, 0, 1>,
       Com::ReserveStatic<1u, 0, 1>,
-      //Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipStack<Com::WeakOwnership, 0>>,
-      //                  EnableComponentIf<CT::Dense<V>,  Com::OwnershipStack<Com::WeakOwnership, 1>>>,
+      Com::Multiown    <EnableComponentIf<CT::Dense<K>,  Com::OwnershipStack<Com::WeakOwnership, 0>>,
+                        EnableComponentIf<CT::Dense<V>,  Com::OwnershipStack<Com::WeakOwnership, 1>>>,
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepReference<Com::WeakOwnership, true, 0>>,
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepReference<Com::WeakOwnership, true, 1>>>,
       Com::HashEmergent<0, Hash, 1>,
@@ -447,23 +447,23 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      decltype(auto) GetKey() noexcept {
+      decltype(auto) GetKey() const noexcept {
          if constexpr (CT::Constant<K>)
             return *this->Com::HeapReference<HeapEntry<0, Deref<K>*>>::Get();
          else
             return GetKeyHandle();
       }
 
-      KeyHandle GetKeyHandle() noexcept { return {*this}; }
+      KeyHandle GetKeyHandle() const noexcept { return {*this}; }
 
-      decltype(auto) GetVal() noexcept {
+      decltype(auto) GetVal() const noexcept {
          if constexpr (CT::Constant<V>)
             return *this->Com::HeapReference<HeapEntry<1, Deref<V>*>>::Get();
          else
             return GetValHandle();
       }
 
-      ValHandle GetValHandle() noexcept { return {Slice<1>, *this}; }
+      ValHandle GetValHandle() const noexcept { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -547,11 +547,11 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
-      auto GetKey()       noexcept -> KeyHandle { return {*this}; }
-      auto GetKeyHandle() noexcept -> KeyHandle { return {*this}; }
-
-      auto GetVal()       noexcept -> ValHandle { return {Slice<1>, *this}; }
-      auto GetValHandle() noexcept -> ValHandle { return {Slice<1>, *this}; }
+      auto GetKey()       const noexcept -> KeyHandle { return {*this}; }
+      auto GetKeyHandle() const noexcept -> KeyHandle { return {*this}; }
+      
+      auto GetVal()       const noexcept -> ValHandle { return {Slice<1>, *this}; }
+      auto GetValHandle() const noexcept -> ValHandle { return {Slice<1>, *this}; }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        

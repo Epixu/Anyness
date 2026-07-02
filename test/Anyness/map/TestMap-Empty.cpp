@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestMapCommon.hpp"
+#include "../handle/TestHandlePairCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
 namespace Langulus::Anyness
@@ -828,6 +829,29 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             Text owned_text = "666";
             pack = TPair {*element1, Text(owned_text.operator Token())};
          }
+      }
+
+      WHEN("GetHandle is called on mutable container") {
+         auto h = pack.GetHandle();
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(h), THandlePair<Handle, HandleMut>>);
+         else
+            static_assert(::std::same_as<decltype(h), THandlePair<THandle<ConstAll<E1&>>, THandle<E2&>>>);
+
+         HandlePair_CheckState_Default<E1 const, E2>(h);
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const pack_constant;
+         auto h = pack_constant.GetHandle();
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(h), THandlePair<Handle, Handle>>);
+         else
+            static_assert(::std::same_as<decltype(h), THandlePair<THandle<ConstAll<E1&>>, THandle<ConstAll<E2&>>>>);
+
+         HandlePair_CheckState_Default<E1 const, E2 const>(h);
       }
    }
 

@@ -7,6 +7,7 @@
 ///                                                                           
 #include "../Main.hpp"
 #include "any/TestAnyCommon.hpp"
+#include "handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Text.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
@@ -250,6 +251,21 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
          static_assert(nullptr == T{ nullptr });
          static_assert(T{ "" } == "");
          static_assert("" == T{ "" });
+      }
+      
+      WHEN("GetHandle is called on mutable container") {
+         auto h = text.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandle<E&>>);
+
+         Handle_CheckState_Default<E>(h);
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const pack_constant;
+         auto h = pack_constant.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
+
+         Handle_CheckState_Default<E const>(h);
       }
    }
 

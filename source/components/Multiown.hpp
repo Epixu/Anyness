@@ -46,6 +46,8 @@ namespace Langulus::Anyness::Component
       static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Owned == Owned; }),
          "Currently all shallow ownerships must be of the same style");
 
+      #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
+
       /// Get the allocation                                                  
       template<Cid SID = 0>
       constexpr auto GetAllocation(this auto const& self) noexcept {
@@ -77,17 +79,17 @@ namespace Langulus::Anyness::Component
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   
-      template<Cid SID = 0>
-      constexpr decltype(auto) GetAllocationInner(this auto&& self) noexcept {
-         using C = typename Subcomponents::template At<SID>;
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
+      constexpr decltype(auto) GetAllocationInner(this auto&& self) noexcept 
+      if_inherits(GetAllocationInner()) {
          return self.C::GetAllocationInner();
       }
       
       /// Set allocation (inner)                                              
       ///   @attention this will not dereference previous allocation          
-      template<Cid SID = 0>
-      constexpr void SetAllocationInner(this auto& self, Allocation const* a) noexcept {
-         using C = typename Subcomponents::template At<SID>;
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
+      constexpr void SetAllocationInner(this auto& self, Allocation const* a) noexcept 
+      if_inherits(SetAllocationInner(a)) {
          self.C::SetAllocationInner(a);
       }
 

@@ -10,6 +10,7 @@
 #include <Langulus/Anyness/SerializeText.hpp>
 #include "../TestTypes/ReferencedType.hpp"
 #include "../TestTypes/ScopedElement.hpp"
+#include "handle/TestHandleCommon.hpp"
 
 using namespace Langulus;
 using Anyness::TRef;
@@ -27,8 +28,8 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
    , Types<TRef<const int>, ScopedElement<int, true>>
 ) {
    static MemoryState memoryState;
-   using T  = typename TestType::First;
-   using TT = TypeOf<T>;
+   using T = typename TestType::First;
+   using E = TypeOf<T>;
    using ScopedE = typename TestType::Second;
 
    static_assert(T::CountHeapProviders() == 1);
@@ -69,7 +70,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
          REQUIRE(*pointer == 5);
          REQUIRE(pointer.GetAllocation());
          REQUIRE(pointer.GetUses() == 1);
-         if constexpr (CT::Referenced<TT>)
+         if constexpr (CT::Referenced<E>)
             REQUIRE(pointer->GetReferences() == 1);
       }
 
@@ -84,7 +85,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
          REQUIRE(pointer2.GetAllocation());
          REQUIRE(pointer.GetUses() == 2);
          REQUIRE(pointer2.GetUses() == 2);
-         if constexpr (CT::Referenced<TT>)
+         if constexpr (CT::Referenced<E>)
             REQUIRE(pointer->GetReferences() == 1);
       }
 
@@ -99,7 +100,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
          REQUIRE(pointer2.GetAllocation());
          REQUIRE(pointer.GetUses() == 0);
          REQUIRE(pointer2.GetUses() == 1);
-         if constexpr (CT::Referenced<TT>)
+         if constexpr (CT::Referenced<E>)
             REQUIRE(pointer2->GetReferences() == 1);
       }
 
@@ -123,7 +124,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
          REQUIRE(pointer2.GetAllocation());
          REQUIRE(pointer.GetAllocation());
          REQUIRE(pointer.GetUses() == 2);
-         if constexpr (CT::Referenced<TT>)
+         if constexpr (CT::Referenced<E>)
             REQUIRE(pointer->GetReferences() == 1);
       }
 
@@ -139,7 +140,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
             REQUIRE(pointer.GetAllocation() == nullptr);
          #endif
          REQUIRE(pointer.GetUses() == (pointer.GetUses() ? 2 : 0));
-         if constexpr (CT::Referenced<TT>)
+         if constexpr (CT::Referenced<E>)
             REQUIRE(pointer->GetReferences() == 1);
       }
 
@@ -154,7 +155,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
             REQUIRE(pointer.GetAllocation() == nullptr);
          #endif
          REQUIRE(pointer.GetUses() == (pointer.GetUses() ? 2 : 0));
-         if constexpr (CT::Referenced<TT>)
+         if constexpr (CT::Referenced<E>)
             REQUIRE(pointer->GetReferences() == 1);
       }
 
@@ -164,14 +165,29 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
          static_assert(T{} == T{});
          static_assert(T{} == nullptr);
          static_assert(nullptr == T{});
-         static_assert(T{} == (TT*) {});
-         static_assert((TT*) {} == T{});
+         static_assert(T{} == (E*) {});
+         static_assert((E*) {} == T{});
          static_assert(T{ nullptr } == T{ nullptr });
-         static_assert(T{ (TT*) {} } == T{ (TT*) {} });
+         static_assert(T{ (E*) {} } == T{ (E*) {} });
          static_assert(T{ nullptr } == nullptr);
          static_assert(nullptr == T{ nullptr });
-         static_assert(T{ (TT*) {} } == (TT*) {});
-         static_assert((TT*) {} == T{ (TT*) {} });
+         static_assert(T{ (E*) {} } == (E*) {});
+         static_assert((E*) {} == T{ (E*) {} });
+      }
+      
+      WHEN("GetHandle is called on mutable container") {
+         auto h = pointer.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandle<E&>>);
+
+         Handle_CheckState_Default<E>(h);
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const pack_constant;
+         auto h = pack_constant.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
+
+         Handle_CheckState_Default<E const>(h);
       }
    }
 

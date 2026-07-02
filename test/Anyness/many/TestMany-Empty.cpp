@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestManyCommon.hpp"
+#include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
 namespace Langulus::Anyness
@@ -909,6 +910,29 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
 
          REQUIRE(counter == 0);
+      }
+      
+      WHEN("GetHandle is called on mutable container") {
+         auto h = pack.GetHandle();
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(h), HandleMut>);
+         else
+            static_assert(::std::same_as<decltype(h), THandle<E&>>);
+
+         Handle_CheckState_Default<E>(h);
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const pack_constant;
+         auto h = pack_constant.GetHandle();
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(h), Handle>);
+         else
+            static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
+
+         Handle_CheckState_Default<E const>(h);
       }
    }
 
