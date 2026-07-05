@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestMapCommon.hpp"
+#include "../handle/TestHandlePairCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
 namespace Langulus::Anyness
@@ -130,6 +131,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
    using ScopedE1 = typename TestType::template At<2>;
    using ScopedE2 = typename TestType::template At<4>;
    constexpr bool Managed = ScopedE1::Managed;
+   constexpr bool Sparse1 = CT::Sparse<E1>;
+   constexpr bool Sparse2 = CT::Sparse<E2>;
+   constexpr bool Reffed1 = CT::Referenced<Decay<E1>>;
+   constexpr bool Reffed2 = CT::Referenced<Decay<E2>>;
    static_assert(ScopedE1::Managed == ScopedE2::Managed);
 
    #if LANGULUS(BENCHMARK)
@@ -251,10 +256,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          }
          else Map_CheckState_ContainsOne(pack_disowned, Disown(originalElement1), Disown(originalElement2), 3);
 
-         if constexpr (CT::Referenced<Decay<E1>>)
-            REQUIRE(DenseCast(*originalElement1).GetReferences() == (CT::Sparse<E1> ? 8 : 1));
-         if constexpr (CT::Referenced<Decay<E2>>)
-            REQUIRE(DenseCast(*originalElement2).GetReferences() == (CT::Sparse<E2> ? 8 : 1));
+         if constexpr (Reffed1)
+            REQUIRE(DenseCast(*originalElement1).GetReferences() == (Sparse1 ? 8 : 1));
+         if constexpr (Reffed2)
+            REQUIRE(DenseCast(*originalElement2).GetReferences() == (Sparse2 ? 8 : 1));
 
          BenchmarkMapStd("Empty/AbsorbConstructor", 30, 100,
             T temp,                                                     (new (&temp) T{Absorb, piecewise1}),
@@ -1196,6 +1201,619 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          BenchmarkMap("Absorb/Contains", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(TPair {*element1, *element2})
          );
+      }
+   }
+   
+   GIVEN("Two absorb-constructed containers") {
+      const ScopedE1 e556 {556};
+      const ScopedE2 e557 {557};
+      const ScopedE1 e6   {6};
+      const ScopedE2 e7   {7};
+
+      T piecewise1{Piecewise, TPair {*e556, *e557}};
+      T piecewise2{Piecewise, TPair {*e6,   *e7  }};
+      T src {Absorb, Abandon(piecewise1)};
+      T dst {Absorb, Abandon(piecewise2)};
+
+      /// MARK: GetHandle                                                     
+      WHEN("GetHandle is called on mutable container") {
+         auto src_handle_default = src.GetHandle();
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(src_handle_default), THandlePair<Handle, HandleMut>>);
+         else
+            static_assert(::std::same_as<decltype(src_handle_default), THandlePair<THandle<ConstAll<E1&>>, THandle<E2&>>>);
+
+         auto src_handle = src_handle_default.ForceMutable();
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(src_handle), THandlePair<HandleMut, HandleMut>>);
+         else
+            static_assert(::std::same_as<decltype(src_handle), THandlePair<THandle<E1&>, THandle<E2&>>>);
+
+         auto src_valid_element = src.GetAt(0);
+         while(src_handle.Get() != src_valid_element)
+            ++src_handle;
+
+         auto src_data1 = src_handle.template Get<E1, 0>();
+         auto src_data2 = src_handle.template Get<E2, 1>();
+         AllocationPtr const* src_entries1 = nullptr;
+         AllocationPtr const* src_entries2 = nullptr;
+
+         HandlePair_CheckState_OwnedFull<E1, E2>(src_handle);
+
+         if constexpr (Sparse1) {
+            src_entries1 = src_handle.GetEntries();
+            REQUIRE(*src_entries1 == e556.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e556.entries[1]->GetUses() == 2);
+         }
+
+         if constexpr (Sparse2) {
+            src_entries2 = src_handle.GetEntries();
+            REQUIRE(*src_entries2 == e557.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e557.entries[1]->GetUses() == 2);
+         }
+
+         if constexpr (Reffed1) {
+            REQUIRE(DenseCast(src_data1).GetReferences() == (Sparse1 ? 2 : 1));
+            REQUIRE(DenseCast(src_data1).destroyed == false);
+         }
+
+         if constexpr (Reffed2) {
+            REQUIRE(DenseCast(src_data2).GetReferences() == (Sparse2 ? 2 : 1));
+            REQUIRE(DenseCast(src_data2).destroyed == false);
+         }
+
+         auto dst_handle = dst.GetHandle().ForceMutable();
+         auto dst_valid_element = dst.GetAt(0);
+         while(dst_handle.Get() != dst_valid_element)
+            ++dst_handle;
+
+         auto dst_data1 = dst_handle.template Get<E1, 0>();
+         auto dst_data2 = dst_handle.template Get<E2, 1>();
+         AllocationPtr const* dst_entries1 = nullptr;
+         AllocationPtr const* dst_entries2 = nullptr;
+
+         HandlePair_CheckState_OwnedFull<E1, E2>(dst_handle);
+
+         if constexpr (Sparse1) {
+            dst_entries1 = dst_handle.GetEntries();
+            REQUIRE(*dst_entries1 == e6.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e6.entries[1]->GetUses() == 2);
+            REQUIRE(dst_entries1 != src_entries1);
+         }
+
+         if constexpr (Sparse2) {
+            dst_entries2 = dst_handle.GetEntries();
+            REQUIRE(*dst_entries2 == e7.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e7.entries[1]->GetUses() == 2);
+            REQUIRE(dst_entries2 != src_entries2);
+         }
+
+         REQUIRE(dst_data1 != src_data1);
+         REQUIRE(dst_data2 != src_data2);
+
+         if constexpr (Reffed1) {
+            REQUIRE(DenseCast(dst_data1).GetReferences() == (Sparse1 ? 2 : 1));
+            REQUIRE(DenseCast(dst_data1).destroyed == false);
+         }
+
+         if constexpr (Reffed2) {
+            REQUIRE(DenseCast(dst_data2).GetReferences() == (Sparse2 ? 2 : 1));
+            REQUIRE(DenseCast(dst_data2).destroyed == false);
+         }
+
+         THEN("Handle assigned to another container") {
+            REQUIRE_NOTHROW(dst_handle.Assign(Move(src_handle)));
+
+            HandlePair_CheckState_OwnedFull<E1, E2>(src_handle);
+            HandlePair_CheckState_OwnedFull<E1, E2>(dst_handle);
+            REQUIRE(src_handle.template Get<E1, 0>() == src_data1);
+            REQUIRE(src_handle.template Get<E2, 1>() == src_data2);
+            REQUIRE(dst_handle.template Get<E1, 0>() == dst_data1);
+            REQUIRE(dst_handle.template Get<E2, 1>() == dst_data2);
+            
+            auto& moved_in1 = DenseCast(dst_data1);
+            if constexpr (Sparse1) {
+               REQUIRE(src_handle.GetEntries() == src_entries1);
+               REQUIRE(*src_data1 == nullptr);
+               REQUIRE(*src_entries1 == nullptr);
+
+               REQUIRE(dst_handle.GetEntries() == dst_entries1);
+               REQUIRE(*dst_data1 == *e556);
+               REQUIRE(*dst_entries1 == e556.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+                  REQUIRE(e6.entries[1]->GetUses() == 1);
+               }
+
+               if constexpr (Reffed1) {
+                  REQUIRE(DenseCast(*e6).GetReferences() == 1);
+                  REQUIRE(moved_in1.GetReferences() == 2);
+                  REQUIRE(moved_in1.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == false);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data1);
+               if constexpr (Reffed1) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == true);
+
+                  REQUIRE(moved_in1.GetReferences() == 1);
+                  REQUIRE(moved_in1.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == true);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+
+            auto& moved_in2 = DenseCast(dst_data2);
+            if constexpr (Sparse2) {
+               REQUIRE(src_handle.GetEntries() == src_entries2);
+               REQUIRE(*src_data2 == nullptr);
+               REQUIRE(*src_entries2 == nullptr);
+
+               REQUIRE(dst_handle.GetEntries() == dst_entries2);
+               REQUIRE(*dst_data2 == *e557);
+               REQUIRE(*dst_entries2 == e557.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e557.entries[1]->GetUses() == 2);
+                  REQUIRE(e7.entries[1]->GetUses() == 1);
+               }
+
+               if constexpr (Reffed2) {
+                  REQUIRE(DenseCast(*e7).GetReferences() == 1);
+                  REQUIRE(moved_in2.GetReferences() == 2);
+                  REQUIRE(moved_in2.data == DenseCast(*e557).data);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == false);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data2);
+               if constexpr (Reffed2) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == true);
+
+                  REQUIRE(moved_in2.GetReferences() == 1);
+                  REQUIRE(moved_in2.data == DenseCast(*e557).data);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == true);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+         }
+         
+         THEN("Handle is swapped with another container's handle") {
+            REQUIRE_NOTHROW(dst_handle.Swap(src_handle));
+
+            HandlePair_CheckState_OwnedFull<E1, E2>(src_handle);
+            HandlePair_CheckState_OwnedFull<E1, E2>(dst_handle);
+            REQUIRE(src_handle.template Get<E1, 0>() == src_data1);
+            REQUIRE(src_handle.template Get<E2, 1>() == src_data2);
+            REQUIRE(dst_handle.template Get<E1, 0>() == dst_data1);
+            REQUIRE(dst_handle.template Get<E2, 1>() == dst_data2);
+            
+            auto& moved_in1  = DenseCast(dst_data1);
+            auto& moved_out1 = DenseCast(src_data1);
+            REQUIRE(moved_in1  == DenseCast(*e556));
+            REQUIRE(moved_out1 == DenseCast(*e6));
+
+            if constexpr (Sparse1) {
+               REQUIRE(src_handle.GetEntries() == src_entries1);
+               REQUIRE(dst_handle.GetEntries() == dst_entries1);
+   
+               REQUIRE(*dst_entries1 == e556.entries[1]);
+               REQUIRE(*src_entries1 == e6.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+                  REQUIRE(e6.entries[1]->GetUses() == 2);
+               }
+
+               if constexpr (Reffed1) {
+                  REQUIRE(moved_out1.GetReferences() == 2);
+                  REQUIRE(moved_out1.data == DenseCast(*e6).data);
+                  REQUIRE(moved_out1.destroyed == false);
+                  REQUIRE(moved_out1.moved_in == false);
+                  REQUIRE(moved_out1.moved_out == false);
+
+                  REQUIRE(moved_in1.GetReferences() == 2);
+                  REQUIRE(moved_in1.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == false);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+            else {
+               if constexpr (Reffed1) {
+                  REQUIRE(moved_out1.GetReferences() == 1);
+                  REQUIRE(moved_out1.destroyed == false);
+                  REQUIRE(moved_out1.moved_in == true);
+                  REQUIRE(moved_out1.moved_out == false);
+
+                  REQUIRE(moved_in1.GetReferences() == 1);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == true);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+
+            auto& moved_in2  = DenseCast(dst_data2);
+            auto& moved_out2 = DenseCast(src_data2);
+            REQUIRE(moved_in2  == DenseCast(*e557));
+            REQUIRE(moved_out2 == DenseCast(*e7));
+
+            if constexpr (Sparse2) {
+               REQUIRE(src_handle.GetEntries() == src_entries2);
+               REQUIRE(dst_handle.GetEntries() == dst_entries2);
+   
+               REQUIRE(*dst_entries2 == e557.entries[1]);
+               REQUIRE(*src_entries2 == e7.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e557.entries[1]->GetUses() == 2);
+                  REQUIRE(e7.entries[1]->GetUses() == 2);
+               }
+
+               if constexpr (Reffed2) {
+                  REQUIRE(moved_out2.GetReferences() == 2);
+                  REQUIRE(moved_out2.data == DenseCast(*e7).data);
+                  REQUIRE(moved_out2.destroyed == false);
+                  REQUIRE(moved_out2.moved_in == false);
+                  REQUIRE(moved_out2.moved_out == false);
+
+                  REQUIRE(moved_in2.GetReferences() == 2);
+                  REQUIRE(moved_in2.data == DenseCast(*e557).data);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == false);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+            else {
+               if constexpr (Reffed2) {
+                  REQUIRE(moved_out2.GetReferences() == 1);
+                  REQUIRE(moved_out2.destroyed == false);
+                  REQUIRE(moved_out2.moved_in == true);
+                  REQUIRE(moved_out2.moved_out == false);
+
+                  REQUIRE(moved_in2.GetReferences() == 1);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == true);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+
+            // We should be able to do this indefinitely                
+            for(int i = 0; i < 101; ++i)
+               dst_handle.Swap(src_handle);
+         }
+         
+         THEN("Handle moved into a local handle") {
+            THandlePair<THandle<E1>, THandle<E2>> local {Absorb, Move(src_handle)};
+
+            HandlePair_CheckState_OwnedFull<E1, E2>(src_handle);
+            HandlePair_CheckState_OwnedFull<E1, E2>(local, CT::Dense<E1, E2>);
+            REQUIRE(src_handle.template Get<E1, 0>() == src_data1);
+            REQUIRE(src_handle.template Get<E2, 1>() == src_data2);
+            REQUIRE(local.template Get<E1, 0>() != src_data1);
+            REQUIRE(local.template Get<E2, 1>() != src_data2);
+            
+            auto& moved_in1 = DenseCast(local.template Get<E1, 0>());
+            REQUIRE(moved_in1 == DenseCast(*e556));
+            if constexpr (Sparse1) {
+               REQUIRE(src_handle.GetEntries() == src_entries1);
+               REQUIRE(local.GetEntries() != src_entries1);
+
+               REQUIRE(*src_data1 == nullptr);
+               REQUIRE(*src_entries1 == nullptr);
+
+               REQUIRE(local.GetEntries()[0] == e556.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+                  REQUIRE(e6.entries[1]->GetUses() == 2);
+               }
+
+               if constexpr (Reffed1) {
+                  REQUIRE(DenseCast(*e6).GetReferences() == 2);
+                  REQUIRE(moved_in1.GetReferences() == 2);
+                  REQUIRE(moved_in1.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == false);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data1);
+
+               if constexpr (Reffed1) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == true);
+
+                  REQUIRE(moved_in1.GetReferences() == 1);
+                  REQUIRE(moved_in1.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == true);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+
+            auto& moved_in2 = DenseCast(local.template Get<E2, 1>());
+            REQUIRE(moved_in2 == DenseCast(*e557));
+            if constexpr (Sparse2) {
+               REQUIRE(src_handle.GetEntries() == src_entries2);
+               REQUIRE(local.GetEntries() != src_entries2);
+
+               REQUIRE(*src_data2 == nullptr);
+               REQUIRE(*src_entries2 == nullptr);
+
+               REQUIRE(local.GetEntries()[0] == e557.entries[1]);
+               if constexpr (Managed) {
+                  REQUIRE(e557.entries[1]->GetUses() == 2);
+                  REQUIRE(e7.entries[1]->GetUses() == 2);
+               }
+
+               if constexpr (Reffed2) {
+                  REQUIRE(DenseCast(*e7).GetReferences() == 2);
+                  REQUIRE(moved_in2.GetReferences() == 2);
+                  REQUIRE(moved_in2.data == DenseCast(*e557).data);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == false);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data2);
+
+               if constexpr (Reffed2) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == true);
+
+                  REQUIRE(moved_in2.GetReferences() == 1);
+                  REQUIRE(moved_in2.data == DenseCast(*e557).data);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == true);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+         }
+
+         THEN("Handle is swapped with local handle, and then back to container") {
+            THandlePair<THandle<E1>, THandle<E2>> local;
+            REQUIRE_NOTHROW(local.Swap(src_handle));
+            auto local_data1 = local.template Get<E1, 0>();
+            auto local_data2 = local.template Get<E2, 1>();
+            AllocationPtr const* local_entries1 = nullptr;
+            AllocationPtr const* local_entries2 = nullptr;
+
+            HandlePair_CheckState_OwnedFull<E1, E2>(src_handle);
+            HandlePair_CheckState_OwnedFull<E1, E2>(local, CT::Dense<E1, E2>);
+            REQUIRE(src_handle.template Get<E1, 0>() == src_data1);
+            REQUIRE(src_handle.template Get<E2, 1>() == src_data2);
+            REQUIRE(local_data1);
+            REQUIRE(local_data2);
+            REQUIRE(local_data1 != src_data1);
+            REQUIRE(local_data2 != src_data2);
+
+            auto& moved_in1 = DenseCast(local_data1);
+            REQUIRE(moved_in1 == DenseCast(*e556));
+            if constexpr (Sparse1) {
+               REQUIRE(src_handle.GetEntries() == src_entries1);
+               local_entries1 = local.GetEntries();
+               REQUIRE(local_entries1 != nullptr);
+               REQUIRE(local_entries1 != src_entries1);
+
+               REQUIRE(*src_data1 == nullptr);
+               REQUIRE(*src_entries1 == nullptr);
+
+               REQUIRE(*local_entries1 == e556.entries[1]);
+               if constexpr (Managed)
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+
+               if constexpr (Reffed1) {
+                  REQUIRE(moved_in1.GetReferences() == 2);
+                  REQUIRE(moved_in1.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == false);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data1);
+
+               if constexpr (Reffed1) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == true);
+                  REQUIRE(moved_out.moved_out == false);
+
+                  REQUIRE(moved_in1.GetReferences() == 1);
+                  REQUIRE(moved_in1.data == DenseCast(*e556).data);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == true);
+                  REQUIRE(moved_in1.moved_out == false);
+               }
+            }
+
+            auto& moved_in2 = DenseCast(local_data2);
+            REQUIRE(moved_in2 == DenseCast(*e557));
+            if constexpr (Sparse2) {
+               REQUIRE(src_handle.GetEntries() == src_entries2);
+               local_entries2 = local.GetEntries();
+               REQUIRE(local_entries2 != nullptr);
+               REQUIRE(local_entries2 != src_entries2);
+
+               REQUIRE(*src_data2 == nullptr);
+               REQUIRE(*src_entries2 == nullptr);
+
+               REQUIRE(*local_entries2 == e557.entries[1]);
+               if constexpr (Managed)
+                  REQUIRE(e557.entries[1]->GetUses() == 2);
+
+               if constexpr (Reffed2) {
+                  REQUIRE(moved_in2.GetReferences() == 2);
+                  REQUIRE(moved_in2.data == DenseCast(*e557).data);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == false);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data2);
+
+               if constexpr (Reffed2) {
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == true);
+                  REQUIRE(moved_out.moved_out == false);
+
+                  REQUIRE(moved_in2.GetReferences() == 1);
+                  REQUIRE(moved_in2.data == DenseCast(*e557).data);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == true);
+                  REQUIRE(moved_in2.moved_out == false);
+               }
+            }
+
+            REQUIRE_NOTHROW(local.Swap(src_handle));
+            REQUIRE(src_handle.template Get<E1, 0>() == src_data1);
+            REQUIRE(src_handle.template Get<E2, 1>() == src_data2);
+            REQUIRE(local.template Get<E1, 0>() == local_data1);
+            REQUIRE(local.template Get<E2, 1>() == local_data2);
+
+            if constexpr (Sparse1) {
+               REQUIRE(src_handle.GetEntries() == src_entries1);
+               REQUIRE(local.GetEntries() != src_entries1);
+               REQUIRE(local.GetEntries() == local_entries1);
+               REQUIRE(*local_entries1 == nullptr);
+               REQUIRE(*src_data1 != nullptr);
+
+               REQUIRE(*src_entries1 == e556.entries[1]);
+               if constexpr (Managed)
+                  REQUIRE(e556.entries[1]->GetUses() == 2);
+
+               if constexpr (Reffed1) {
+                  auto& moved_out = DenseCast(src_data1);
+                  REQUIRE(moved_out.GetReferences() == 2);
+                  REQUIRE(moved_out.data == DenseCast(*e556).data);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data1);
+
+               if constexpr (Reffed1) {
+                  REQUIRE(moved_in1.GetReferences() == 1);
+                  REQUIRE(moved_in1.destroyed == false);
+                  REQUIRE(moved_in1.moved_in == true);
+                  REQUIRE(moved_in1.moved_out == false);
+
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.data == DenseCast(*e556).data);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == true);
+                  REQUIRE(moved_out.moved_out == false);
+               }
+            }
+
+            if constexpr (Sparse2) {
+               REQUIRE(src_handle.GetEntries() == src_entries2);
+               REQUIRE(local.GetEntries() != src_entries2);
+               REQUIRE(local.GetEntries() == local_entries2);
+               REQUIRE(*local_entries2 == nullptr);
+               REQUIRE(*src_data2 != nullptr);
+
+               REQUIRE(*src_entries2 == e557.entries[1]);
+               if constexpr (Managed)
+                  REQUIRE(e557.entries[1]->GetUses() == 2);
+
+               if constexpr (Reffed2) {
+                  auto& moved_out = DenseCast(src_data2);
+                  REQUIRE(moved_out.GetReferences() == 2);
+                  REQUIRE(moved_out.data == DenseCast(*e557).data);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == false);
+                  REQUIRE(moved_out.moved_out == false);
+               }
+            }
+            else {
+               auto& moved_out = DenseCast(src_data2);
+
+               if constexpr (Reffed2) {
+                  REQUIRE(moved_in2.GetReferences() == 1);
+                  REQUIRE(moved_in2.destroyed == false);
+                  REQUIRE(moved_in2.moved_in == true);
+                  REQUIRE(moved_in2.moved_out == false);
+
+                  REQUIRE(moved_out.GetReferences() == 1);
+                  REQUIRE(moved_out.data == DenseCast(*e557).data);
+                  REQUIRE(moved_out.destroyed == false);
+                  REQUIRE(moved_out.moved_in == true);
+                  REQUIRE(moved_out.moved_out == false);
+               }
+            }
+
+            // We should be able to do this indefinitely                
+            for(int i = 0; i < 101; ++i)
+               local.Swap(src_handle);
+         }
+      }
+
+      WHEN("GetHandle is called on constant container") {
+         T const& pack_constant = src;
+         auto handle = pack_constant.GetHandle();
+         auto first_valid_element = pack_constant.GetAt(0);
+         while(handle.Get() != first_valid_element)
+            ++handle;
+
+         if constexpr (CT::Untyped<T>)
+            static_assert(::std::same_as<decltype(handle), THandlePair<Handle, Handle>>);
+         else
+            static_assert(::std::same_as<decltype(handle), THandlePair<THandle<ConstAll<E1&>>, THandle<ConstAll<E2&>>>>);
+            
+         HandlePair_CheckState_OwnedFull<E1 const, E2 const>(handle);
+         
+         if constexpr (Sparse1) {
+            auto entries = handle.GetEntries();
+            REQUIRE(entries);
+            REQUIRE(*entries == e556.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e556.entries[1]->GetUses() == 2);
+         }
+
+         if constexpr (Sparse2) {
+            auto entries = handle.GetEntries();
+            REQUIRE(entries);
+            REQUIRE(*entries == e557.entries[1]);
+            if constexpr (Managed)
+               REQUIRE(e557.entries[1]->GetUses() == 2);
+         }
+
+         if constexpr (Reffed1) {
+            auto& data = DenseCast(handle.template Get<E1, 0>());
+            REQUIRE(data.GetReferences() == (Sparse1 ? 2 : 1));
+            REQUIRE(data.destroyed == false);
+         }
+
+         if constexpr (Reffed2) {
+            auto& data = DenseCast(handle.template Get<E2, 1>());
+            REQUIRE(data.GetReferences() == (Sparse2 ? 2 : 1));
+            REQUIRE(data.destroyed == false);
+         }
       }
    }
 

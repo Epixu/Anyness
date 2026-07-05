@@ -107,7 +107,7 @@ void Handle_CheckState_OwnedEmpty(const C& h) {
 
 /// MARK: OwnedFull                                                           
 template<class E, CT::Container C> requires CT::NoIntent<C>
-void Handle_CheckState_OwnedFull(const C& any) {
+void Handle_CheckState_OwnedFull(const C& any, bool onTheStack = false) {
    Handle_Helper_TestType<E>(any);
 
    REQUIRE      (any.IsTypeConstrained()/* == CT::Typed<C>*/);
@@ -115,8 +115,14 @@ void Handle_CheckState_OwnedFull(const C& any) {
    REQUIRE      (any.IsValid());
 
    if constexpr (requires { any.GetAllocation(); }) {
-      REQUIRE   (any.GetAllocation());
-      REQUIRE   (any.GetUses() > 0);
+      if (onTheStack) {
+         REQUIRE(any.GetAllocation() == nullptr);
+         REQUIRE(any.GetUses() == 0);
+      }
+      else {
+         REQUIRE(any.GetAllocation());
+         REQUIRE(any.GetUses() > 0);
+      }
    }
    
    if constexpr (requires { any.GetEntries(); }) {

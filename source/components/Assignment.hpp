@@ -74,6 +74,10 @@ namespace Langulus::CT
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.Assignment<ID, SHARED...>
+
    ///                                                                        
    /// Implements element assignment for containers.                          
    /// Assignment acts on the first element, if container is contiguous.      
@@ -135,12 +139,12 @@ namespace Langulus::Anyness::Component
             if constexpr (not CT::Handle<C>) {
                if (self.IsEmpty()) {
                   // Container is empty, we might have to fresh-allocate
-                  self.PrepareForReconstruction();
+                  ThisCom::PrepareForReconstruction();
 
-                  auto first = self.GetHandle();
+                  //auto first = self.GetHandle();
                   Id::ForEach([&]<Cid D>{
                      //if constexpr (CT::Cloned<I>)
-                        first.template EmplaceWithIntent<D>(FWDIntent(argument));
+                        self.template EmplaceWithIntent<D>(FWDIntent(argument));
                      //else
                      //   first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
                   });
@@ -154,9 +158,9 @@ namespace Langulus::Anyness::Component
                "Can't assign to empty handle");
          
             // Container has at least one element, try to reuse it      
-            if (self.PrepareForReassignment()) {
+            if (ThisCom::PrepareForReassignment()) {
                Id::ForEach([&]<Cid D>{
-                  self.template AssignWithIntent<D>(FWDIntent(argument));
+                  ThisCom::template AssignWithIntent<D>(FWDIntent(argument));
                });
             }
             else {
@@ -182,12 +186,7 @@ namespace Langulus::Anyness::Component
          LglsAssumeUser(not argument.IsEmpty(),
             "Can't swap with empty container");
 
-         if constexpr (not CT::HeapAllocated<C>) {
-            // Not on the heap. Stack is always allocated and always    
-            // statically typed, so no need to worry about those.       
-            self.SwapInner(argument);
-         }
-         else {
+         if constexpr (CT::HeapAllocated<C>) {
             // Reallocate if a local handle or something. Type check as 
             // well.                                                    
             self.AbsorbType(Copy(argument));
@@ -199,9 +198,12 @@ namespace Langulus::Anyness::Component
                }
             }
 
-            self.SwapInner(argument);
          }
          
+         Id::ForEach([&]<Cid D>{
+            ThisCom::template SwapInner<D>(argument);
+         });
+
          return self;
       }
 
@@ -646,4 +648,6 @@ namespace Langulus::Anyness::Component
          }
       }
    };
+
+   #undef ThisCom
 }

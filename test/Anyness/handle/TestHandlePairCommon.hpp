@@ -64,9 +64,9 @@ void HandlePair_CheckState_OwnedEmpty(const C& any) {
 
 /// MARK: OwnedFull                                                           
 template<class E1, class E2, CT::Container C> requires CT::NoIntent<C>
-void HandlePair_CheckState_OwnedFull(const C& any) {
-   Handle_CheckState_OwnedFull<E1>(any.GetKeyHandle());
-   Handle_CheckState_OwnedFull<E2>(any.GetValHandle());
+void HandlePair_CheckState_OwnedFull(const C& any, bool onTheStack = false) {
+   Handle_CheckState_OwnedFull<E1>(any.GetKeyHandle(), onTheStack);
+   Handle_CheckState_OwnedFull<E2>(any.GetValHandle(), onTheStack);
 }
 
 /// MARK: DisownedFull                                                        

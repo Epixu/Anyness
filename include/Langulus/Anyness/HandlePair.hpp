@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Handle.hpp"
+#include "source/Container.hpp"
 #include <source/components/Multitype.hpp>
 #include <source/components/Multiprovider.hpp>
 #include <source/components/Multiown.hpp>
@@ -76,8 +77,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const& other) = delete;
-      THandlePair& operator = (THandlePair&& other) = delete;
+      THandlePair& operator = (THandlePair const&) = delete;
+      THandlePair& operator = (THandlePair&&) = delete;
 
       Handle GetKey()       const noexcept { return {*this}; }
       Handle GetKeyHandle() const noexcept { return {*this}; }
@@ -87,8 +88,8 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      decltype(auto) ForceMutable(this auto&& self) noexcept {
-         return reinterpret_cast<THandlePair<HandleMut, HandleMut>&&>(LglsFwd(self));
+      auto& ForceMutable() noexcept {
+         return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
       }
 
       /// Pick a specific dimension                                           
@@ -164,8 +165,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const& other) = delete;
-      THandlePair& operator = (THandlePair&& other) = delete;
+      THandlePair& operator = (THandlePair const&) = delete;
+      THandlePair& operator = (THandlePair&&) = delete;
 
       HandleMut GetKey()       const noexcept { return {*this}; }
       HandleMut GetKeyHandle() const noexcept { return {*this}; }
@@ -174,9 +175,7 @@ namespace Langulus::Anyness
       HandleMut GetValHandle() const noexcept { return {Slice<1>, *this}; }
 
       /// Already as mutable as it gets                                       
-      decltype(auto) ForceMutable(this auto&& self) noexcept {
-         return LglsFwd(self);
-      }
+      auto& ForceMutable() noexcept { return *this; }
 
       /// Pick a specific dimension                                           
       template<Cid SID>
@@ -251,8 +250,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const& other) = delete;
-      THandlePair& operator = (THandlePair&& other) = delete;
+      THandlePair& operator = (THandlePair const&) = delete;
+      THandlePair& operator = (THandlePair&&) = delete;
 
       Handle    GetKey()       const noexcept { return {*this}; }
       Handle    GetKeyHandle() const noexcept { return {*this}; }
@@ -262,10 +261,10 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      decltype(auto) ForceMutable(this auto&& self) noexcept {
-         return reinterpret_cast<THandlePair<HandleMut, HandleMut>&&>(LglsFwd(self));
+      auto& ForceMutable() noexcept {
+         return *reinterpret_cast<THandlePair<HandleMut, HandleMut>*>(this);
       }
-
+ 
       /// Pick a specific dimension                                           
       template<Cid SID>
       constexpr decltype(auto) PickDimension(this auto&& self) noexcept {
@@ -335,8 +334,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const& other) = delete;
-      THandlePair& operator = (THandlePair&& other) = delete;
+      THandlePair& operator = (THandlePair const&) = delete;
+      THandlePair& operator = (THandlePair&&) = delete;
 
       decltype(auto) GetKey() const noexcept {
          if constexpr (CT::Constant<K>)
@@ -358,11 +357,9 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      decltype(auto) ForceMutable(this auto&& self) noexcept {
-         return reinterpret_cast<THandlePair<
-            THandleEmergent<Decvq<Deref<K>>&>,
-            THandleEmergent<Decvq<Deref<V>>&>
-         >&&>(LglsFwd(self));
+      auto& ForceMutable() noexcept {
+         return *reinterpret_cast<THandlePair<THandleEmergent<DecvqAll<K>&>,
+                                              THandleEmergent<DecvqAll<V>&>>*>(this);
       }
 
       /// Pick a specific dimension                                           
@@ -444,8 +441,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const& other) = delete;
-      THandlePair& operator = (THandlePair&& other) = delete;
+      THandlePair& operator = (THandlePair const&) = delete;
+      THandlePair& operator = (THandlePair&&) = delete;
 
       decltype(auto) GetKey() const noexcept {
          if constexpr (CT::Constant<K>)
@@ -467,11 +464,9 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      decltype(auto) ForceMutable(this auto&& self) noexcept {
-         return reinterpret_cast<THandlePair<
-            THandle<Decvq<Deref<K>>&>,
-            THandle<Decvq<Deref<V>>&>
-         >&&>(LglsFwd(self));
+      auto& ForceMutable() noexcept {
+         return *reinterpret_cast<THandlePair<THandle<DecvqAll<K>&>,
+                                              THandle<DecvqAll<V>&>>*>(this);
       }
 
       /// Pick a specific dimension                                           
@@ -519,9 +514,6 @@ namespace Langulus::Anyness
 
       static constexpr bool ReferenceElements = true;
 
-      /// Handles can't be piecewise-initialized                              
-      //THandlePair(Inner::Piecewise, auto&&) = delete;
-
       constexpr THandlePair() noexcept {
          this->ConstructDefault();
       }
@@ -534,7 +526,23 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      constexpr THandlePair(auto&& a1, auto&& a2) noexcept {
+      /// Local dense handles have a very specific kind of absorption:        
+      /// Instead of directly absorbing the container, we use the stack,      
+      /// and transfer each element with the desired intent.                  
+      constexpr THandlePair(Inner::Absorb, CT::Pair auto&& other) noexcept {
+         if (not DeintCast(other).IsEmpty()) {
+            //using I = IntentOf(other);
+            Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(other));
+            Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(other));
+            //Com::Emplacement<0, 1>::template EmplaceConstruct<1>(I::Nest(DeintCast(other).GetValHandle()));
+         }
+         else this->ConstructDefault();
+      }
+
+      constexpr THandlePair(NotTag auto&& a1, auto&& a2) noexcept
+         : THandlePair {Piecewise, LglsFwd(a1), LglsFwd(a2)} {}
+
+      constexpr THandlePair(Inner::Piecewise, auto&& a1, auto&& a2) noexcept {
          Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(a1));
          Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(a2));
       }
@@ -544,8 +552,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const& other) = delete;
-      THandlePair& operator = (THandlePair&& other) = delete;
+      THandlePair& operator = (THandlePair const&) = delete;
+      THandlePair& operator = (THandlePair&&) = delete;
 
       auto GetKey()       const noexcept -> KeyHandle { return {*this}; }
       auto GetKeyHandle() const noexcept -> KeyHandle { return {*this}; }
@@ -555,8 +563,9 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      decltype(auto) ForceMutable(this auto&& self) noexcept {
-         return reinterpret_cast<THandlePair<THandle<Decvq<K>>, THandle<Decvq<V>>>&&>(self);
+      auto& ForceMutable() noexcept {
+         return *reinterpret_cast<THandlePair<THandle<DecvqAll<K>>,
+                                              THandle<DecvqAll<V>>>*>(this);
       }
 
       /// Pick a specific dimension                                           
