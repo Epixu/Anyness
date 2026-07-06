@@ -230,8 +230,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(not requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
       static_assert(    requires (T pack, E item) { pack.Merge(item); });
       static_assert(    requires (T pack)         { pack.MergeRange(pack); });
-      static_assert(    requires (T pack, E item) { pack.Remove(item); });
-      static_assert(not requires (T pack)         { pack.RemoveAt(Index::Front); });
+      static_assert(    requires (T pack, E item) { pack.Erase(item); });
+      static_assert(not requires (T pack)         { pack.EraseAt(Index::Front); });
       static_assert(    requires (T pack)         { pack.Reserve(20); });
       static_assert(not requires (T pack)         { pack.EnableOr(); });
       static_assert(not requires (T pack)         { pack.IsOr(); });

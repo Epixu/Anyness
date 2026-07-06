@@ -233,8 +233,8 @@ TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
       static_assert(not requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
       static_assert(not requires (T pack, E1 item){ pack.Merge(item); });
       static_assert(not requires (T pack)         { pack.MergeRange(pack); });
-      static_assert(not requires (T pack, E1 item){ pack.Remove(item); });
-      static_assert(not requires (T pack)         { pack.RemoveAt(Index::Front); });
+      static_assert(not requires (T pack, E1 item){ pack.Erase(item); });
+      static_assert(not requires (T pack)         { pack.EraseAt(Index::Front); });
       static_assert(not requires (T pack)         { pack.Reserve(20); });
       static_assert(not requires (T pack)         { pack.EnableOr(); });
       static_assert(not requires (T pack)         { pack.IsOr(); });

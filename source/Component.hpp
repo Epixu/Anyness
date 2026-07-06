@@ -558,25 +558,25 @@ namespace Langulus::Anyness
       #define LglsComAssignment(modifier) \
          template<Cid, Cid...> modifier struct Assignment
 
-      template<Cid = 0, class AS = void, Cid...> struct Insertion;
+      template<class AS = void, Cid = 0, Cid...> struct Insertion;
       #define LglsComInsertion(modifier) \
-         template<Cid, class, Cid...> modifier struct Insertion
+         template<class, Cid, Cid...> modifier struct Insertion
 
-      template<Cid = 0, class AS = void, Cid...> struct InsertionOperators;
+      template<class AS = void, Cid = 0, Cid...> struct InsertionOperators;
       #define LglsComInsertionOperators(modifier) \
-         template<Cid, class, Cid...> modifier struct InsertionOperators
+         template<class, Cid, Cid...> modifier struct InsertionOperators
 
-      template<Cid = 0, class AS = void, Cid...> struct InsertionOperatorsConcat;
+      template<class AS = void, Cid = 0, Cid...> struct InsertionOperatorsConcat;
       #define LglsComInsertionOperatorsConcat(modifier) \
-         template<Cid, class, Cid...> modifier struct InsertionOperatorsConcat
+         template<class, Cid, Cid...> modifier struct InsertionOperatorsConcat
 
-      template<Cid = 0, class AS = void, Cid...> struct Merging;
+      template<class AS = void, Cid = 0, Cid...> struct Merging;
       #define LglsComMerging(modifier) \
-         template<Cid, class, Cid...> modifier struct Merging
+         template<class, Cid, Cid...> modifier struct Merging
 
-      template<Cid = 0, class AS = void, Cid...> struct MergingOperators;
+      template<class AS = void, Cid = 0, Cid...> struct MergingOperators;
       #define LglsComMergingOperators(modifier) \
-         template<Cid, class, Cid...> modifier struct MergingOperators
+         template<class, Cid, Cid...> modifier struct MergingOperators
 
       template<Cid = 0, Cid...> struct Removal;
       #define LglsComRemoval(modifier) \

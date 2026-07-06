@@ -7,10 +7,15 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include <Langulus/CT/Index.hpp>
 
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.Removal<ID, SHARED...>
+
    ///                                                                        
    /// Implements removal for containers. This includes Trim, Clear, Reset    
    /// and other destruction-associated services.                             
@@ -21,35 +26,145 @@ namespace Langulus::Anyness::Component
    struct Removal {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int ComponentPrecedence = 3000;
 
    private:
-      template<CT::Container C>
-      using Count = typename Deref<C>::CountType;
+      //template<CT::Container C>
+      //using Count = typename Deref<C>::CountType;
       template<CT::Container C>
       using Iterator = typename Deref<C>::Iterator;
 
    public:
-      template<bool REVERSE = false, CT::Container C> requires CT::ContainsMany<C>
-      auto Remove(this C&, CT::NoIntent auto const&) -> Count<C>;
+      /// Erase all elements that match a value                               
+      ///   @param value the value to match                                   
+      ///   @return the number of removed elements that matched the value     
+      template<CT::ContainsMany C>
+      auto Erase(this C& self, CT::NoIntent auto const& value) -> size_t {
+         if (self.IsEmpty())
+            return 0;
 
-      template<CT::Container C> requires (CT::ContainsMany<C> and CT::IndexedLinearly<C>)
-      auto RemoveAt(this C&, CT::Index auto, Count<C> = 1) -> Count<C>;
+         size_t removed = 0;
+         if (not self.IsDisowned() and self.GetUses() == 1) {
+            // No need to branch-out                                    
+            // Start erasing matching elements, filling gaps on our way 
+            //TODO gaps won't form if container is not order-preserving by using swap and pop
+            using H = DecideHandle<C>;
+            H first_reusable;
+            self.Apply([&](H& element) {
+               if (element == value) {
+                  element.Free();
+                  if (not removed)
+                     first_reusable = element;
+                  ++removed;
+               }
+               else if (removed) {
+                  first_reusable.EmplaceWithIntent(Abandon {element}); //TODO multdimensional?
+                  ++first_reusable;
+               }
+            });
 
-      template<CT::Container C> requires CT::ContainsMany<C>
-      auto RemoveIt(this C&, Iterator<C> const&, Count<C> = 1) -> Iterator<C>;
+            self.SetCountInner(self.GetCountInner() - removed);
+         }
+         else {
+            // Branching out is required - insert nonmatching elements  
+            // into a new container.                                    
+            C shallow_clone;
+            shallow_clone.Reserve(self.GetCountInner());
+            self.Apply([&](auto const& element) {
+               if (element == value) 
+                  ++removed;
+               else
+                  shallow_clone.Insert(element);
+            });
+
+            // Then swap 'self' with the new container                  
+            self.Swap(shallow_clone);
+         }
+
+         return removed;
+      }
+
+      /// Erase a number of elements starting at a specific position          
+      ///   @param idx the starting location                                  
+      ///   @param count the number of elements to erase (1 by default)       
+      ///   @return the number of removed elements                            
+      template<CT::ContainsMany C> requires CT::IndexedLinearly<C>
+      auto EraseAt(this C& self, CT::Index auto&& idx, size_t count = 1) -> size_t {
+         if (self.IsEmpty())
+            return 0;
       
-      template<CT::Container C>
-      auto RemoveDeepAt(this C&, CT::Index auto) -> Count<C>;
+         const auto offset = self.SimplifyIndex(idx);
+         const auto limits = self.GetCountInner();
+         if (count > limits - offset)
+            count = limits - offset;
+         const auto remainder = limits - count;
+
+         if (not self.IsDisowned() and self.GetUses() == 1) {
+            // No need to branch-out                                    
+            if (not remainder) {
+               ThisCom::Clear();
+               return count;
+            }
+
+            // Start erasing matching elements, filling gaps on our way 
+            // First, destroy all relevant elements.                    
+            auto element = self.GetHandle() + offset;
+            const auto end = (element + count).GetRaw();
+            while(element.GetRaw() != end) {
+               element.Free();
+               ++element;
+            }
+
+            const auto absolute_end = self.GetRawEnd();
+            if (end != absolute_end) {
+               // A gap was formed, we have to fill it                  
+               auto gap = self.GetHandle() + offset;
+               while(element.GetRaw() != absolute_end) {
+                  gap.EmplaceWithIntent(Abandon {element}); //TODO multdimensional?
+                  ++element;
+                  ++gap;
+               }
+            }
+
+            self.SetCountInner(remainder);
+         }
+         else {
+            // Branching out is required - insert relevant elements     
+            // into a new container.                                    
+            const auto handle     = self.GetHandle() + offset;
+            const auto skip_start = handle.GetRaw();
+            const auto skip_end   = (handle + count).GetRaw();
+
+            C shallow_clone;
+            if (remainder) {
+               shallow_clone.Reserve(remainder);
+               self.Apply([&](auto const& element) {
+                  if (element.GetRaw() < skip_start or element.GetRaw() >= skip_end) 
+                     shallow_clone.Insert(element);
+               });
+            }
+
+            // Then swap 'self' with the new container                  
+            self.Swap(shallow_clone);
+         }
+
+         return count;
+      }
+
+      template<CT::ContainsMany C>
+      auto EraseIt(this C&, Iterator<C> const&, size_t = 1) -> Iterator<C>;
+      
+      template<CT::ContainsMany C>
+      auto EraseDeepAt(this C&, CT::Index auto&&) -> size_t;
 
       /// Sets a new smaller count by destroying elements on the back.        
       /// Does nothing if 'desiredCount' is larger or equals the current.     
       ///   @attention never reallocates                                      
       ///   @param desiredCount the new count                                 
-      template<CT::Container C> requires (CT::ContainsMany<C> and CT::IndexedLinearly<C>)
-      void Trim(this C& self, Count<C> desiredCount) noexcept {
+      template<CT::ContainsMany C> requires CT::IndexedLinearly<C>
+      void Trim(this C& self, size_t desiredCount) noexcept {
          const auto currentCount = self.GetCount();
          if (desiredCount >= currentCount)
             return;
@@ -78,7 +193,7 @@ namespace Langulus::Anyness::Component
          self.SetCount(desiredCount);
       }
 
-      template<CT::Container C> requires CT::ContainsMany<C>
+      template<CT::ContainsMany C>
       void Optimize(this C&);
 
       /// Destroy all elements but don't deallocate memory, unless we have to 
@@ -142,4 +257,6 @@ namespace Langulus::Anyness::Component
          if_available(self.ResetAllTypes());
       }
    };
+
+   #undef ThisCom
 }

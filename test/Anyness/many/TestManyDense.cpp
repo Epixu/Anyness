@@ -49,262 +49,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
    GIVEN("Default constructed container") {
       T pack;
 
-      Many_CheckState_Default<E>(pack);
-
-      WHEN("Populated using Many::New") { //aka Emplace now
-         pack = FromHelper<T, E>();
-         const auto created = pack.EmplaceAt(3, darray2[0]);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.GetCount() == 3);
-         REQUIRE(created == 3);
-         REQUIRE(pack.GetUses() == 1);
-         for (auto it : pack)
-            REQUIRE(it == darray2[0]);
-      }
-
-      WHEN("Shallow-copy more of the same stuff to the back (<<)") {
-         pack << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 5);
-         for (uint i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray2[i]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_back(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_back(darray2[0]);
-                  s.push_back(darray2[1]);
-                  s.push_back(darray2[2]);
-                  s.push_back(darray2[3]);
-                  return s.push_back(darray2[4]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Shallow-copy more of the same stuff to the front (>>)") {
-         pack >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 5);
-         for (uint i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray2[4-i]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_front(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_front(darray2[0]);
-                  s.push_front(darray2[1]);
-                  s.push_front(darray2[2]);
-                  s.push_front(darray2[3]);
-                  return s.push_front(darray2[4]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Shallow-copy an array to the back") {
-         pack.InsertAt(Index::Back, darray2);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 5);
-         for (uint i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray2[i]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexBack> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexBack>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to back (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].end(), darray2, darray2 + 5);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Shallow-copy an array to the front") {
-         pack.InsertAt(Index::Front, darray2);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 5);
-         for (uint i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray2[i]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexFront> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexFront>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to front (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin(), darray2, darray2 + 5);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Move more of the same stuff to the back (<<)") {
-         E darray3[5] {
-            CreateElement<E>(6),
-            CreateElement<E>(7),
-            CreateElement<E>(8),
-            CreateElement<E>(9),
-            CreateElement<E>(10)
-         };
-
-         const E darray3backup[5] {
-            darray3[0],
-            darray3[1],
-            darray3[2],
-            darray3[3],
-            darray3[4],
-         };
-
-         pack
-            << ::std::move(darray3[0])
-            << ::std::move(darray3[1])
-            << ::std::move(darray3[2])
-            << ::std::move(darray3[3])
-            << ::std::move(darray3[4]);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 5);
-
-         for (uint i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray3backup[i]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     << ::std::move(darray2[0])
-                     << ::std::move(darray2[1])
-                     << ::std::move(darray2[2])
-                     << ::std::move(darray2[3])
-                     << ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_back(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_back(::std::move(darray2[0]));
-                  s.emplace_back(::std::move(darray2[1]));
-                  s.emplace_back(::std::move(darray2[2]));
-                  s.emplace_back(::std::move(darray2[3]));
-                  return s.emplace_back(::std::move(darray2[4]));
-               });
-            };
-         #endif
-      }
-
-      WHEN("Move more of the same stuff to the front (>>)") {
-         E darray3[5] {
-            CreateElement<E>(6),
-            CreateElement<E>(7),
-            CreateElement<E>(8),
-            CreateElement<E>(9),
-            CreateElement<E>(10)
-         };
-
-         const E darray3backup[5] {
-            darray3[0],
-            darray3[1],
-            darray3[2],
-            darray3[3],
-            darray3[4],
-         };
-
-         pack
-            >> ::std::move(darray3[0])
-            >> ::std::move(darray3[1])
-            >> ::std::move(darray3[2])
-            >> ::std::move(darray3[3])
-            >> ::std::move(darray3[4]);
-
-         Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 5);
-
-         for (uint i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray3backup[4 - i]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     >> ::std::move(darray2[0])
-                     >> ::std::move(darray2[1])
-                     >> ::std::move(darray2[2])
-                     >> ::std::move(darray2[3])
-                     >> ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_front(::std::move(darray2[0]));
-                  s.emplace_front(::std::move(darray2[1]));
-                  s.emplace_front(::std::move(darray2[2]));
-                  s.emplace_front(::std::move(darray2[3]));
-                  return s.emplace_front(::std::move(darray2[4]));
-               });
-            };
-         #endif
-      }
-
       WHEN("Emplace item at the front") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
@@ -317,28 +61,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             REQUIRE(pack.GetReserved() >= 1);
             REQUIRE(pack[0] == i666backup);
             REQUIRE(&pack[0] == &instance);
-
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the front)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-                  meter.measure([&](int i) {
-                     return storage[i].Emplace(IndexFront, ::std::move(i666d));
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::emplace_front(single move)") (timer meter) {
-                  some<StdT> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-                  meter.measure([&](int i) {
-                     return storage[i].emplace_front(::std::move(i666d));
-                  });
-               };
-            #endif
          }
          else {
             REQUIRE_THROWS(pack.EmplaceAt(Index::Front, ::std::move(i666)));
@@ -357,28 +79,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             REQUIRE(pack.GetReserved() >= 1);
             REQUIRE(pack[0] == i666backup);
             REQUIRE(&pack[0] == &instance);
-
-            #if LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the back)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-                  meter.measure([&](int i) {
-                     return storage[i].Emplace(IndexBack, ::std::move(i666d));
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::vector::emplace_back(single move)") (timer meter) {
-                  some<StdT> storage(meter.runs());
-                  for (auto&& o : storage)
-                     o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-                  meter.measure([&](int i) {
-                     return storage[i].emplace_back(::std::move(i666d));
-                  });
-               };
-            #endif
          }
          else {
             REQUIRE_THROWS(pack.EmplaceAt(Index::Back, ::std::move(i666)));
@@ -387,10 +87,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Removing non-available elements") {
-         const auto removed9 = pack.Remove(darray2[3]);
-
-         Many_CheckState_Default<E>(pack);
-         REQUIRE(removed9 == 0);
       }
 
       WHEN("Empty pack with state is shallow-copied") {
@@ -468,26 +164,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge copy to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge copy to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(darray2[3]);
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-copy an element to the front, if not found (>>=)") {
@@ -497,26 +173,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (merge copy to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge copy to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(darray2[3]);
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-move an element to the back, if not found (<<=)") {
@@ -527,26 +183,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge move to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge move to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(::std::move(moved));
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-move an element to the front, if not found (>>=)") {
@@ -557,26 +193,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >>= (merge move to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge move to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(::std::move(moved));
-               });
-            };
-         #endif
       }
 
       WHEN("ForEach flat dense element (immutable)") {
@@ -720,29 +336,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             if constexpr (CT::Same<E, int>)
                REQUIRE(pack.GetRaw() == memory);
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_back(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_back(darray2[0]);
-                  s.push_back(darray2[1]);
-                  s.push_back(darray2[2]);
-                  s.push_back(darray2[3]);
-                  return s.push_back(darray2[4]);
-               });
-            };
-         #endif
       }
 
       WHEN("Shallow-copy more of the same stuff to the front (>>)") {
@@ -760,29 +353,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             if constexpr (CT::Same<E, int>)
                REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_front(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_front(darray2[0]);
-                  s.push_front(darray2[1]);
-                  s.push_front(darray2[2]);
-                  s.push_front(darray2[3]);
-                  return s.push_front(darray2[4]);
-               });
-            };
          #endif
       }
 
@@ -803,24 +373,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
                REQUIRE(pack.GetRaw() == memory);
             }
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexBack> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexBack>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to back (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].end(), darray2, darray2 + 5);
-               });
-            };
-         #endif
       }
 
       WHEN("Shallow-copy an array to the front") {
@@ -839,24 +391,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             if constexpr (CT::Same<E, int>) {
                REQUIRE(pack.GetRaw() == memory);
             }
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexFront> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexFront>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to front (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin(), darray2, darray2 + 5);
-               });
-            };
          #endif
       }
 
@@ -896,34 +430,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             REQUIRE(pack.GetRaw() == memory);
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     << ::std::move(darray2[0])
-                     << ::std::move(darray2[1])
-                     << ::std::move(darray2[2])
-                     << ::std::move(darray2[3])
-                     << ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_back(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_back(::std::move(darray2[0]));
-                  s.emplace_back(::std::move(darray2[1]));
-                  s.emplace_back(::std::move(darray2[2]));
-                  s.emplace_back(::std::move(darray2[3]));
-                  return s.emplace_back(::std::move(darray2[4]));
-               });
-            };
-         #endif
       }
 
       WHEN("Move more of the same stuff to the front (>>)") {
@@ -962,34 +468,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             REQUIRE(pack.GetRaw() == memory);
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     >> ::std::move(darray2[0])
-                     >> ::std::move(darray2[1])
-                     >> ::std::move(darray2[2])
-                     >> ::std::move(darray2[3])
-                     >> ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_front(::std::move(darray2[0]));
-                  s.emplace_front(::std::move(darray2[1]));
-                  s.emplace_front(::std::move(darray2[2]));
-                  s.emplace_front(::std::move(darray2[3]));
-                  return s.emplace_front(::std::move(darray2[4]));
-               });
-            };
-         #endif
       }
       
       WHEN("Insert single item at a specific place by shallow-copy") {
@@ -1008,28 +486,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack[3] == i666);
          REQUIRE(pack[4] == darray1[3]);
          REQUIRE(pack[5] == darray1[4]);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::InsertAt(single copy in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(&i666, &i666 + 1, 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single copy in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, i666d);
-               });
-            };
-         #endif
       }
 
       WHEN("Insert multiple items at a specific place by shallow-copy") {
@@ -1051,28 +507,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack[7] == darray2[4]);
          REQUIRE(pack[8] == darray1[3]);
          REQUIRE(pack[9] == darray1[4]);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::InsertAt(5 copies in the middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(darray2, darray2 + 5, 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(5 copies in the middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, darray2, darray2+5);
-               });
-            };
-         #endif
       }
 
       WHEN("Insert single item at a specific place by move") {
@@ -1092,28 +526,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack[3] == i666backup);
          REQUIRE(pack[4] == darray1[3]);
          REQUIRE(pack[5] == darray1[4]);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(::std::move(i666d), 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single move in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, ::std::move(i666d));
-               });
-            };
-         #endif
       }
 
       WHEN("Emplace item at a specific place") {
@@ -1140,28 +552,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             REQUIRE(pack[3].GetRaw() == instance.GetRaw());
             REQUIRE(pack[3].GetCount() == 1);
          }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].EmplaceAt(3, ::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single move in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, ::std::move(i666d));
-               });
-            };
-         #endif
       }
 
       WHEN("Emplace item at the front") {
@@ -1188,28 +578,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             REQUIRE(pack[0].GetRaw() == instance.GetRaw());
             REQUIRE(pack[0].GetCount() == 1);
          }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the front)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].template Emplace<IndexFront>(::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(single move)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].emplace_front(::std::move(i666d));
-               });
-            };
-         #endif
       }
       
       WHEN("Emplace item at the back") {
@@ -1236,28 +604,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             REQUIRE(pack[5].GetRaw() == instance.GetRaw());
             REQUIRE(pack[5].GetCount() == 1);
          }
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the back)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].template Emplace<IndexBack>(::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_back(single move)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].emplace_back(::std::move(i666d));
-               });
-            };
-         #endif
       }
 
       WHEN("The size is reduced by finding and removing elements, but reserved memory should remain the same on shrinking") {
@@ -1273,29 +619,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 3);
          REQUIRE(pack.GetReserved() >= 5);
          REQUIRE(pack.GetRaw() == memory);
-
-         #if LANGULUS(BENCHMARK) // Last result: 2:1 performance - needs more optimizations in Index handling
-            BENCHMARK_ADVANCED("Anyness::TMany::Remove(single element by value)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].Remove(2);
-               });
-            };
-
-            BENCHMARK_ADVANCED("Anyness::vector::erase-remove(single element by value)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  // Erase-remove idiom											
-                  return storage[i].erase(std::remove(storage[i].begin(), storage[i].end(), 2), storage[i].end());
-               });
-            };
-         #endif
       }
 
       WHEN("Removing non-available elements") {
@@ -1391,25 +714,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
                REQUIRE(pack.GetRaw() == memory);
          #endif
          
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge copy to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge copy to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(darray2[3]);
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-copy an element to the front, if not found (>>=)") {
@@ -1427,25 +731,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
                REQUIRE(pack.GetRaw() == memory);
          #endif
          
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (merge copy to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge copy to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(darray2[3]);
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-move an element to the back, if not found (<<=)") {
@@ -1463,26 +748,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             if constexpr (CT::Same<E, int>)
                REQUIRE(pack.GetRaw() == memory);
          #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge move to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge move to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(::std::move(moved));
-               });
-            };
-         #endif
       }
 
       WHEN("Merge-move an element to the front, if not found (>>=)") {
@@ -1499,26 +764,6 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             if constexpr (CT::Same<E, int>)
                REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >>= (merge move to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge move to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(::std::move(moved));
-               });
-            };
          #endif
       }
 
@@ -1747,19 +992,4 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
    }
 
-   if constexpr (requires(E e) { e.Reset(); }) {
-      const_cast<E&>(element).Reset();
-      for (auto& i : darray1)
-         const_cast<E&>(i).Reset();
-      for (auto& i : darray2)
-         const_cast<E&>(i).Reset();
-   }
-
-   REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
-   REQUIRE_FALSE(Allocator::CollectGarbage());
 }

@@ -190,9 +190,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //HandleMut(Inner::Piecewise, auto&&) = delete;
-
       constexpr HandleMut() noexcept {
          this->ConstructDefault();
       }
@@ -217,9 +214,8 @@ namespace Langulus::Anyness
       constexpr HandleMut(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::TypeErasedHandleMut {Stackwise, LglsFwd(arguments)...} {}
 
-      /// Assignment is disabled                                              
-      HandleMut& operator = (HandleMut const&) = delete;
-      HandleMut& operator = (HandleMut&&) = delete;
+      HandleMut& operator = (HandleMut const&) = default;
+      HandleMut& operator = (HandleMut&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -249,9 +245,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //HandleDisownedMut(Inner::Piecewise, auto&&) = delete;
-
       constexpr HandleDisownedMut() noexcept {
          this->ConstructDefault();
       }
@@ -276,9 +269,8 @@ namespace Langulus::Anyness
       constexpr HandleDisownedMut(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::TypeErasedHandleMutDisowned {Stackwise, LglsFwd(arguments)...} {}
 
-      /// Assignment is disabled                                              
-      HandleDisownedMut& operator = (HandleDisownedMut const&) = delete;
-      HandleDisownedMut& operator = (HandleDisownedMut&&) = delete;
+      HandleDisownedMut& operator = (HandleDisownedMut const&) = default;
+      HandleDisownedMut& operator = (HandleDisownedMut&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -313,9 +305,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //Handle(Inner::Piecewise, auto&&) = delete;
-
       constexpr Handle() noexcept {
          this->ConstructDefault();
       }
@@ -340,9 +329,8 @@ namespace Langulus::Anyness
       constexpr Handle(Inner::Stackwise, auto&&...arguments) noexcept
          : Inner::TypeErasedHandle {Stackwise, LglsFwd(arguments)...} {}
 
-      /// Assignment is disabled                                              
-      Handle& operator = (Handle const&) = delete;
-      Handle& operator = (Handle&&) = delete;
+      Handle& operator = (Handle const&) = default;
+      Handle& operator = (Handle&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -377,9 +365,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //HandleDisowned(Inner::Piecewise, auto&&) = delete;
-
       constexpr HandleDisowned() noexcept {
          this->ConstructDefault();
       }
@@ -408,8 +393,8 @@ namespace Langulus::Anyness
          : Inner::TypeErasedHandleDisowned {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      HandleDisowned& operator = (HandleDisowned const&) = delete;
-      HandleDisowned& operator = (HandleDisowned&&) = delete;
+      HandleDisowned& operator = (HandleDisowned const&) = default;
+      HandleDisowned& operator = (HandleDisowned&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -448,9 +433,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //THandle(Inner::Piecewise, auto&&) = delete;
-
       constexpr THandle() noexcept {
          this->ConstructDefault();
       }
@@ -476,8 +458,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedDense<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandle& operator = (THandle const&) = delete;
-      THandle& operator = (THandle&&) = delete;
+      THandle& operator = (THandle const&) = default;
+      THandle& operator = (THandle&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -504,9 +486,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //THandle(Inner::Piecewise, auto&&) = delete;
-
       constexpr THandle() noexcept {
          this->ConstructDefault();
       }
@@ -532,8 +511,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedSparse<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandle& operator = (THandle const&) = delete;
-      THandle& operator = (THandle&&) = delete;
+      THandle& operator = (THandle const&) = default;
+      THandle& operator = (THandle&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -567,9 +546,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //THandleEmergent(Inner::Piecewise, auto&&) = delete;
-
       constexpr THandleEmergent() noexcept {
          this->ConstructDefault();
       }
@@ -595,8 +571,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedDenseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandleEmergent& operator = (THandleEmergent const&) = delete;
-      THandleEmergent& operator = (THandleEmergent&&) = delete;
+      THandleEmergent& operator = (THandleEmergent const&) = default;
+      THandleEmergent& operator = (THandleEmergent&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -618,17 +594,11 @@ namespace Langulus::Anyness
    struct THandleEmergent<T> : Inner::THandleEmbeddedSparseEmergent<T> {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
-      //using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandleEmergent<Deptr<T>&>;
       using DeepType       = HandleDisowned; //TODO why disowned??
 
-      //static constexpr bool Emergent = true;
-
       template<CT::Handle, CT::Handle> friend struct THandlePair;
-
-      /// Handles can't be piecewise-initialized                              
-      //THandleEmergent(Inner::Piecewise, auto&&) = delete;
 
       constexpr THandleEmergent() noexcept {
          this->ConstructDefault();
@@ -655,8 +625,8 @@ namespace Langulus::Anyness
          : Inner::THandleEmbeddedSparseEmergent<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandleEmergent& operator = (THandleEmergent const&) = delete;
-      THandleEmergent& operator = (THandleEmergent&&) = delete;
+      THandleEmergent& operator = (THandleEmergent const&) = default;
+      THandleEmergent& operator = (THandleEmergent&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -689,9 +659,6 @@ namespace Langulus::Anyness
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
-      /// Handles can't be piecewise-initialized                              
-      //THandleDisowned(Inner::Piecewise, auto&&) = delete;
-
       constexpr THandleDisowned() noexcept {
          this->ConstructDefault();
       }
@@ -717,8 +684,8 @@ namespace Langulus::Anyness
          : Inner::THandleDisownedEmbedded<T> {Stackwise, LglsFwd(arguments)...} {}
 
       /// Assignment is disabled                                              
-      THandleDisowned& operator = (THandleDisowned const&) = delete;
-      THandleDisowned& operator = (THandleDisowned&&) = delete;
+      THandleDisowned& operator = (THandleDisowned const&) = default;
+      THandleDisowned& operator = (THandleDisowned&&) = default;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -803,10 +770,6 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      /// Assignment is disabled                                              
-      THandle& operator = (THandle const&) = delete;
-      THandle& operator = (THandle&&) = delete;
-
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
       auto ForceMutable() noexcept -> THandle<DecvqAll<T>>& {
@@ -882,10 +845,6 @@ namespace Langulus::Anyness
       constexpr ~THandle() noexcept {
          this->Destroy();
       }
-
-      /// Assignment is disabled                                              
-      THandle& operator = (THandle const&) = delete;
-      THandle& operator = (THandle&&) = delete;
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        

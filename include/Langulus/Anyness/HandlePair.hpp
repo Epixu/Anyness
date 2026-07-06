@@ -531,10 +531,8 @@ namespace Langulus::Anyness
       /// and transfer each element with the desired intent.                  
       constexpr THandlePair(Inner::Absorb, CT::Pair auto&& other) noexcept {
          if (not DeintCast(other).IsEmpty()) {
-            //using I = IntentOf(other);
             Com::Emplacement<0, 1>::template EmplaceConstruct<0>(LglsFwd(other));
             Com::Emplacement<0, 1>::template EmplaceConstruct<1>(LglsFwd(other));
-            //Com::Emplacement<0, 1>::template EmplaceConstruct<1>(I::Nest(DeintCast(other).GetValHandle()));
          }
          else this->ConstructDefault();
       }

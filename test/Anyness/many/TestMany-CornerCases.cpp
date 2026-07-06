@@ -8,31 +8,30 @@
 #include "TestManyCommon.hpp"
 
 
-SCENARIO("Pushing one sparse container, and then two more, one being the first", "[many]") {
-   static Allocator::State memoryState;
+SCENARIO("Pushing one sparse container, and then two more, one being the first") {
+   static MemoryState memoryState;
 
-   auto p1 = CreateElement<Many*, true>(1);
-   auto p2 = CreateElement<Many*, true>(2);
+   ScopedElement<Many*, true> p1 {1};
+   ScopedElement<Many*, true> p2 {1};
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      auto entry1 = Fractalloc::Allocator::Find(MetaOf<Many>(), p1);
-      auto entry2 = Fractalloc::Allocator::Find(MetaOf<Many>(), p2);
+      auto entry1 = p1.entries[1];
+      auto entry2 = p2.entries[1];
       REQUIRE(entry1->GetUses() == 1);
       REQUIRE(entry2->GetUses() == 1);
    #endif
-
 
    GIVEN("An empty container") {
       Many pack;
 
       WHEN("Pushed the first pointer") {
-         pack << p1;
+         pack << *p1;
 
-         REQUIRE(pack == p1);
+         REQUIRE(pack == *p1);
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.IsExact<Many*>());
-         REQUIRE(p1->GetUses() == 1);
-         REQUIRE(p2->GetUses() == 1);
+         REQUIRE(DenseCast(*p1).GetUses() == 1);
+         REQUIRE(DenseCast(*p2).GetUses() == 1);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             REQUIRE(entry1->GetUses() == 2);
@@ -40,7 +39,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first",
          #endif
 
          THEN("Push-back the first again and then the second") {
-            pack << p1;
+            pack << *p1;
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry1);
@@ -49,7 +48,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first",
                REQUIRE(entry2->GetUses() == 1);
             #endif
 
-            pack << p2;
+            pack << *p2;
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry1);
@@ -61,19 +60,19 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first",
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());
-            REQUIRE(p1->GetUses() == 1);
-            REQUIRE(p2->GetUses() == 1);
+            REQUIRE(DenseCast(*p1).GetUses() == 1);
+            REQUIRE(DenseCast(*p2).GetUses() == 1);
          }
 
          THEN("Push-front the first again and then the second") {
-            pack >> p1;
+            pack >> *p1;
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry1);
                REQUIRE(pack.GetEntries()[1] == entry1);
             #endif
 
-            pack >> p2;
+            pack >> *p2;
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry2);
@@ -83,8 +82,8 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first",
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());
-            REQUIRE(p1->GetUses() == 1);
-            REQUIRE(p2->GetUses() == 1);
+            REQUIRE(DenseCast(*p1).GetUses() == 1);
+            REQUIRE(DenseCast(*p2).GetUses() == 1);
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(entry1->GetUses() == 3);
@@ -93,12 +92,12 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first",
          }
 
          THEN("Smart-push-back the first again and then the second, but packed together") {
-            pack.SmartPushAt(Index::Back, Many {p1, p2});
+            pack.SmartPushAt(Index::Back, Many {*p1, *p2});
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());
-            REQUIRE(p1->GetUses() == 1);
-            REQUIRE(p2->GetUses() == 1);
+            REQUIRE(DenseCast(*p1).GetUses() == 1);
+            REQUIRE(DenseCast(*p2).GetUses() == 1);
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(entry1->GetUses() == 3);
@@ -107,12 +106,12 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first",
          }
 
          THEN("Smart-push-front the first again and then the second, but packed together") {
-            pack.SmartPushAt(Index::Front, Many {p1, p2});
+            pack.SmartPushAt(Index::Front, Many {*p1, *p2});
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());
-            REQUIRE(p1->GetUses() == 1);
-            REQUIRE(p2->GetUses() == 1);
+            REQUIRE(DenseCast(*p1).GetUses() == 1);
+            REQUIRE(DenseCast(*p2).GetUses() == 1);
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(entry1->GetUses() == 3);
@@ -122,22 +121,14 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first",
       }
    }
 
-   REQUIRE(p1->GetUses() == 1);
-   REQUIRE(p2->GetUses() == 1);
+   REQUIRE(DenseCast(*p1).GetUses() == 1);
+   REQUIRE(DenseCast(*p2).GetUses() == 1);
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       REQUIRE(entry1->GetUses() == 1);
       REQUIRE(entry2->GetUses() == 1);
-
-      DestroyElement<true>(p1);
-      DestroyElement<true>(p2);
    #endif
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }

@@ -354,13 +354,9 @@ namespace Langulus::Anyness::Component
       void SetType(this C& self) {
          static_assert(CT::NotSheddable<T>, "Strip all sheddables first");
          static_assert(CT::NotReference<T>, "Strip all references first");
-         
+         static_assert(TypeErased or Exact<T, TYPE>, "Type mismatch");
          if constexpr (TypeErased)
             ThisCom::SetType(MetaDataOf<T>());
-         else {
-            static_assert(Exact<T, TYPE>, "Type mismatch");         
-            //ThisCom::SetTypeInner(type);
-         }
       }
 
       /// Set the contained data type if possible.                            
@@ -404,9 +400,6 @@ namespace Langulus::Anyness::Component
          }
          else {
             // This container is statically typed                       
-            //if (not t)
-            //   t = MetaDataOf<TYPE>();
-
             auto local = MetaDataOf<TYPE>();
             LglsAssert(local.IsExact(type), "Type mismatch", ": ", local,
                " is not exactly ", type);

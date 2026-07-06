@@ -140,6 +140,6 @@ namespace Langulus::Anyness::Component
       auto Select(this C&&, CT::Index auto&&, Count<C>) assumptious -> PickRange<C>;
 
       template<CT::Container C>
-      void SwapIndices(this C&, CT::Index auto&&, CT::Index auto) assumptious;
+      void SwapContentsAt(this C&, CT::Index auto&&, CT::Index auto) assumptious;
    };
 }

@@ -20,15 +20,14 @@ namespace Langulus::Anyness::Component
    /// Merging (unlike emplacement) extends the memory space and may move     
    /// things around. It guarantees that nothing gets overwritten.            
    /// Merging (unlike insertion) disallows for duplicated elements.          
-   ///   @tparam ID heap we're merging to                                     
    ///   @tparam AS type to serialize as before merging. Useful for byte      
    ///      and text containers. Use void to insert without serialization.    
-   ///   @tparam SHARED other providers that share merge behavior             
-   template<Cid ID, class AS, Cid...SHARED>
+   ///   @tparam ID, SHARED providers that share the same merge behavior.     
+   template<class AS, Cid ID, Cid...SHARED>
    struct Merging {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = sizeof...(SHARED) > 0;

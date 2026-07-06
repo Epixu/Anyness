@@ -1395,7 +1395,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          }
          
          THEN("Handle is swapped with another container's handle") {
-            REQUIRE_NOTHROW(dst_handle.Swap(src_handle));
+            REQUIRE_NOTHROW(dst_handle.SwapContents(src_handle));
 
             HandlePair_CheckState_OwnedFull<E1, E2>(src_handle);
             HandlePair_CheckState_OwnedFull<E1, E2>(dst_handle);
@@ -1494,7 +1494,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
-               dst_handle.Swap(src_handle);
+               dst_handle.SwapContents(src_handle);
          }
          
          THEN("Handle moved into a local handle") {
@@ -1592,7 +1592,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
          THEN("Handle is swapped with local handle, and then back to container") {
             THandlePair<THandle<E1>, THandle<E2>> local;
-            REQUIRE_NOTHROW(local.Swap(src_handle));
+            REQUIRE_NOTHROW(local.SwapContents(src_handle));
             auto local_data1 = local.template Get<E1, 0>();
             auto local_data2 = local.template Get<E2, 1>();
             AllocationPtr const* local_entries1 = nullptr;
@@ -1687,7 +1687,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
                }
             }
 
-            REQUIRE_NOTHROW(local.Swap(src_handle));
+            REQUIRE_NOTHROW(local.SwapContents(src_handle));
             REQUIRE(src_handle.template Get<E1, 0>() == src_data1);
             REQUIRE(src_handle.template Get<E2, 1>() == src_data2);
             REQUIRE(local.template Get<E1, 0>() == local_data1);
@@ -1769,7 +1769,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
-               local.Swap(src_handle);
+               local.SwapContents(src_handle);
          }
       }
 

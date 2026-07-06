@@ -95,8 +95,8 @@ namespace Langulus::Index
    constexpr auto Last = Inner::Last {};
 
    /// An arithmetic index that is evaluated to false if equal to npos        
-   /// in order to easily use it in if statements instead of constantly       
-   /// comparing against npos like a chump                                    
+   /// in order to easily use it in 'if-statements' instead of constantly     
+   /// comparing against npos like a chump.                                   
    template<class T>
    struct At {
       using CTTI_Index = Yes<>;

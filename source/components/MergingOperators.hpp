@@ -13,15 +13,14 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Adds operators for front (>>=) and back (<<=) merge                    
-   ///   @tparam ID heap we're inserting to                                   
    ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization     
-   ///   @tparam SHARED other providers that share the same operators         
-   template<Cid ID, class AS, Cid...SHARED>
+   ///   @tparam ID, SHARED operators that share the same insertion behavior. 
+   template<class AS, Cid ID, Cid...SHARED>
    struct MergingOperators {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int ComponentPrecedence = 3000;
 

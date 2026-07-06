@@ -812,6 +812,11 @@ namespace Langulus::Anyness
          });
       }
 
+      /// Swaps the immediate contents of two compatible containers           
+      constexpr void Swap(Container& other) noexcept {
+         mStack.swap(other.mStack);
+      }
+
       /// Call Destroy in all components that implement it.                   
       /// You have to call it manually in your container's destructor, so     
       /// that 'deducing this' works appropriately.                           

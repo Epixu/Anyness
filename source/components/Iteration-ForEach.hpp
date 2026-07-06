@@ -41,14 +41,18 @@ namespace Langulus::Anyness::Component
    }
 
    ///                                                                        
-   /// Implements ForEach iteration interface for containers                  
-   ///   @tparam ID the provider we're iterating                              
-   ///   @tparam SHARED additional providers to simultaneously iterate        
+   /// Implements ForEach iteration interface for containers.                 
+   /// This iteration is much more flexible than the usual ranged-based one.  
+   /// It allows you to:                                                      
+   ///  - act only on types that you want;                                    
+   ///  - remove, add and swap elements while iterating;                      
+   ///  - control the flow of the loop.                                       
+   ///   @tparam ID, SHARED providers that get iterated together              
    template<Cid ID, Cid...SHARED>
    struct IterationForEach {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int ComponentPrecedence = 3000;
 
@@ -292,7 +296,7 @@ namespace Langulus::Anyness::Component
                         if (self.GetCount() == 1)
                            return Loop::Discard;
 
-                        handle = self.RemoveAt(handle);
+                        handle = self.EraseAt(handle);
                         --handle;
                      }
                      else {
@@ -570,7 +574,7 @@ namespace Langulus::Anyness::Component
                         return Loop::Discard;
 
                      const Count<C> idx = raw - data;
-                     self.RemoveAt(idx);
+                     self.EraseAt(idx);
 
                      // Block might BranchOut on RemoveIndex - make     
                      // sure 'raw', 'data' and 'dataEnd' are up-to-     

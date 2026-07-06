@@ -198,14 +198,6 @@ namespace Langulus::Anyness::Component
             if_available_gcc(C::template ConstructFrom<SELF, I>)(LglsFwd(intent), reserve);
          });
       }
-
-      /// Free this container and absorb from any other, respecting intents   
-      ///   @param intent the intent and container to assign from             
-      /*void AssignFrom(this auto& self, auto&& intent) {
-         Subcomponents::ForEach([&]<class C> {
-            self.C::AssignFrom(LglsFwd(intent));
-         });
-      }*/
       
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
@@ -265,29 +257,6 @@ namespace Langulus::Anyness::Component
          using C = typename Subcomponents::template At<SID>;
          self.C::BranchOut(elements);
       }
-      
-      /// Destroys only the first element.                                    
-      ///   @attention destroys one dimension at a time!                      
-      ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
-      ///      It will still destroy the element, but only when fully         
-      ///      dereferenced in all its indirections.                          
-      /*template<bool FORCE_DESTROY = true, Cid SID = 0>
-      void DestroyElement(this auto& self) assumptious { //TODO remove
-         using C = typename Subcomponents::template At<SID>;
-         self.C::template DestroyElement<FORCE_DESTROY>();
-      }*/
-
-      /// Destroys all elements.                                              
-      ///   @attention destroys all relevant dimensions at once!              
-      ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
-      ///      It will still destroy the element, but only when fully         
-      ///      dereferenced in all its indirections.                          
-      /*template<bool FORCE_DESTROY = true>
-      void DestroyAllElements(this auto& self) assumptious { //TODO remove
-         Subcomponents::ForEach([&]<class C> assumptious {
-            if_available_gcc(C::template DestroyAllElements<FORCE_DESTROY>)();
-         });
-      }*/
 
       #undef if_inherits
    };

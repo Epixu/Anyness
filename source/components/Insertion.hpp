@@ -16,7 +16,7 @@
 #include <Langulus/CT/Defaultable.hpp>
 
 
-namespace Langulus::CT
+/*namespace Langulus::CT
 {
    /// Check if container's elements are unfold-constructible                 
    ///   @attention type-erased elements are always insertable, and will fail 
@@ -68,7 +68,7 @@ namespace Langulus::CT
    /// container can be constructed                                           
    template<class C, class...A>
    concept DeepConstructible = Inner::DeepConstructible<C, A...>();
-}
+}*/
 
 namespace Langulus::Anyness::Component
 {
@@ -76,21 +76,22 @@ namespace Langulus::Anyness::Component
    /// Implements insertion for containers.                                   
    /// Insertion (unlike emplacement) extends the memory space and may move   
    /// things around. It guarantees that nothing gets overwritten.            
-   /// Insertion (unlike merging) allows for duplicated elements.             
-   ///   @tparam ID heap we're inserting to                                   
+   /// Insertion (unlike merging) allows for duplicated elements. That's why  
+   /// this component is omitted for containers like Map and Set.             
    ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization.    
-   template<Cid ID, class AS, Cid...SHARED>
+   ///   @tparam ID, SHARED providers that share the same insertion behavior. 
+   template<class AS, Cid ID, Cid...SHARED>
    struct Insertion {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int ComponentPrecedence = 3000;
 
    private:
-      template<CT::Container C>
-      using Count = typename Deref<C>::CountType;
+      //template<CT::Container C>
+      //using Count = typename Deref<C>::CountType;
       template<CT::Container C>
       using Deep  = typename Deref<C>::DeepType;
       template<CT::Container C>
@@ -99,38 +100,20 @@ namespace Langulus::Anyness::Component
       using PickRangeMut = typename Deref<C>::PickRangeMut;
 
    public:
-      /// Insert one or more elements at specific index                       
-      template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
-      auto InsertAt(this C&, CT::Index auto, A1&&, AN&&...)
-         -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
-
-      /// Insert a number of elements at a specific place, nullifying them if 
-      /// able to                                                             
-      template<CT::Contiguous C>
-      auto InsertNulledAt(this C&, CT::Index auto, Count<C>)
-         -> Count<C>;
-
-      /// Insert a number of elements at a specific place, default-           
-      /// constructing them if able to                                        
-      template<CT::Contiguous C>
-      auto InsertDefaultAt(this C&, CT::Index auto, Count<C>)
-         -> Count<C>;
-
-      template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
-      auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
-         -> Count<C>;
-
-      /// Insert one or more elements at the performance-optimal position.    
-      /// This usually means at the back of a contiguous container. Supports  
+      /// Insert one or more elements at the specified position. Supports     
       /// intents and arrays.                                                 
       ///   @tparam FORCE if true, the container is allowed to deepen in      
       ///      order to incorporate elements of different types. Otherwise    
       ///      a compile-time or runtime exception will be thrown, if an      
       ///      incompatible type is encountered.                              
-      ///   @param a1, an elements (and their intents) to insert              
+      ///   @attention If FORCE is enabled, and the index is somewhere in     
+      ///      the middle of the container, it will be split in more than 2   
+      ///      deep containers, so that insertion order is preserved.         
+      ///   @param idx the index to insert at                                 
+      ///   @param a1, an elements or arrays (and their intents) to insert    
       ///   @return the number of inserted elements                           
       template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
-      auto Insert(this C& self, A1&& a1, AN&&...an) -> Count<C> {
+      auto InsertAt(this C& self, CT::Index auto&& idx, A1&& a1, AN&&...an) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
@@ -138,21 +121,24 @@ namespace Langulus::Anyness::Component
          // Empty containers can't change type. If one of the type      
          // changes raises a conflict, this function will throw.        
          bool deepened = false;
-         Count<C> rhs_count = 0;
+         size_t rhs_count = 0;
           self.PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
          (self.PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
          if (not rhs_count)
             return 0;
          
          // Reallocate/branch out                                       
-         const Count<C> lhs_count = self.GetCount();
-         const Count<C> all_count = lhs_count + rhs_count;
-         self.BranchOut(all_count);
+         const size_t lhs_count = self.GetCount();
+         const size_t all_count = lhs_count + rhs_count;
+         self.BranchOut(all_count); //TODO when branching out, reinsert in a new container with the gap predefined, iinstead of always moving elements. See Erase for reference
+
+         TODO(); //TODO form a gap
          
          // Insert the new                                              
-         auto to = self.GetHandle() + lhs_count;
+         const auto offset = self.SimplifyIndex(idx);
+         auto to = self.GetHandle() + offset;
          auto insert = [&to](auto&& a) {
-            Values<ID, SHARED...>::ForEach([&]<Cid D>{
+            Id::ForEach([&]<Cid D>{
                if constexpr (CT::Copied<IntentOf(a)>)
                   to.template EmplaceWithIntent<D>(Refer(LglsFwd(a)));
                else
@@ -167,7 +153,77 @@ namespace Langulus::Anyness::Component
          }
          catch (...) {
             // Account for throws inside constructors                   
-            const Count<C> inserted = to - self.GetHandle();
+            const size_t inserted = to - self.GetHandle();
+            TODO(); //TODO a gap remains, move things back
+            self.SetCountInner(inserted);
+            throw;
+         }
+
+         self.SetCountInner(all_count);
+         return rhs_count;
+      }
+
+      /// Insert a number of elements at a specific place, nullifying them if 
+      /// able to                                                             
+      template<CT::Contiguous C>
+      auto InsertNulledAt(this C&, CT::Index auto, size_t) -> size_t;
+
+      /// Insert a number of elements at a specific place, default-           
+      /// constructing them if able to                                        
+      template<CT::Contiguous C>
+      auto InsertDefaultAt(this C&, CT::Index auto, size_t) -> size_t;
+
+      template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
+      auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {}) -> size_t;
+
+      /// Insert one or more elements at the performance-optimal position.    
+      /// This usually means at the back of a contiguous container. Supports  
+      /// intents and arrays.                                                 
+      ///   @tparam FORCE if true, the container is allowed to deepen in      
+      ///      order to incorporate elements of different types. Otherwise    
+      ///      a compile-time or runtime exception will be thrown, if an      
+      ///      incompatible type is encountered.                              
+      ///   @param a1, an elements (and their intents) to insert              
+      ///   @return the number of inserted elements                           
+      template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
+      auto Insert(this C& self, A1&& a1, AN&&...an) -> size_t {
+         static_assert(CT::ContainsMany<C>,
+            "Container should support multiple elements");
+
+         // Gather the number of all elements and types.                
+         // Empty containers can't change type. If one of the type      
+         // changes raises a conflict, this function will throw.        
+         bool deepened = false;
+         size_t rhs_count = 0;
+          self.PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
+         (self.PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
+         if (not rhs_count)
+            return 0;
+         
+         // Reallocate/branch out                                       
+         const size_t lhs_count = self.GetCount();
+         const size_t all_count = lhs_count + rhs_count;
+         self.BranchOut(all_count);
+         
+         // Insert the new                                              
+         auto to = self.GetHandle() + lhs_count;
+         auto insert = [&to](auto&& a) {
+            Id::ForEach([&]<Cid D>{
+               if constexpr (CT::Copied<IntentOf(a)>)
+                  to.template EmplaceWithIntent<D>(Refer(LglsFwd(a)));
+               else
+                  to.template EmplaceWithIntent<D>(FWDIntent(a));
+            });
+            ++to;
+         };
+
+         try {
+             insert(LglsFwd(a1));
+            (insert(LglsFwd(an)), ...);
+         }
+         catch (...) {
+            // Account for throws inside constructors                   
+            const size_t inserted = to - self.GetHandle();
             self.SetCountInner(inserted);
             throw;
          }
@@ -181,14 +237,14 @@ namespace Langulus::Anyness::Component
       /// inserted elements will be nullified.                                
       ///   @param count the number of elements to insert                     
       template<CT::Contiguous C>
-      auto InsertNulled(this C&, Count<C> count) -> Count<C>;
+      auto InsertNulled(this C&, size_t count) -> size_t;
 
       /// Insert a number of elements at the performance-optimal position.    
       /// This usually means at the back of a contiguous container. The       
       /// inserted elements will be default-constructed.                      
       ///   @param count the number of elements to insert                     
       template<CT::Contiguous C>
-      auto InsertDefault(this C& self, Count<C> count) -> Count<C> {
+      auto InsertDefault(this C& self, size_t count) -> size_t {
          const auto previousCount = self.GetCount();
          self.AllocateMore(previousCount + count);
 
@@ -226,8 +282,7 @@ namespace Langulus::Anyness::Component
                const auto stride = T.GetSize();
                memset(
                   self.template GetRawAs<uint8_t>() + previousCount * stride,
-                  0,
-                  count * stride
+                  0, count * stride
                );
             }
             else {
@@ -255,14 +310,13 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         // Success                                                     
+         // Complete success                                            
          self.SetCountInner(previousCount + count);
          return count;
       }
 
       template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
-      auto SmartPush(this C&, auto&&, State<C> = {})
-         -> Count<C>;
+      auto SmartPush(this C&, auto&&, State<C> = {}) -> size_t;
 
       template<bool TRANSFER_OR = true, CT::Contiguous C>
       auto Deepen(this C&) -> Deep<C>&;
@@ -300,7 +354,7 @@ namespace Langulus::Anyness::Component
       /// Concatenation at specific index.                                    
       /// Possible only for contiguous containers with multiple elements.     
       template<CT::Contiguous C>
-      auto ConcatAt(this C& self, CT::Index auto index, CT::Container auto&& data) -> Count<C> {
+      auto ConcatAt(this C& self, CT::Index auto index, CT::Container auto&& data) -> size_t {
          const auto rhs_count = DeintCast(data).GetCount();
          if (not rhs_count)
             return 0;
@@ -332,22 +386,22 @@ namespace Langulus::Anyness::Component
       ///      right of 'this'                                                
       ///   @return the number of concatenated elements                       
       template<CT::Contiguous C, CT::Container A1, CT::Container...AN>
-      auto Concat(this C& self, A1&& a1_intent, AN&&...an_intent) -> Count<C> {
+      auto Concat(this C& self, A1&& a1_intent, AN&&...an_intent) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
          // Gather the number of all elements and types.                
          // Empty containers can't change type. If one of the type      
          // changes raises a conflict, this function will throw.        
-         Count<C> rhs_count = 0;
+         size_t rhs_count = 0;
           self.PrepareForAbsorption(LglsFwd(a1_intent), rhs_count);
          (self.PrepareForAbsorption(LglsFwd(an_intent), rhs_count), ...);
          if (not rhs_count)
             return 0;
          
          // Reallocate/branch out                                       
-         const Count<C> lhs_count = self.GetCount();
-         const Count<C> all_count = lhs_count + rhs_count;
+         const size_t lhs_count = self.GetCount();
+         const size_t all_count = lhs_count + rhs_count;
          self.BranchOut(all_count);
          
          // Insert the new                                              
@@ -356,7 +410,7 @@ namespace Langulus::Anyness::Component
             auto item = DeintCast(a).GetHandle();
             auto const end = item + DeintCast(a).GetCount();
             while (item.GetRaw() != end.GetRaw()) {
-               Values<ID, SHARED...>::ForEach([&]<Cid D>{
+               Id::ForEach([&]<Cid D>{
                   to.template EmplaceWithIntent<D>(IntentOf(a)::Nest(item));
                });
                ++item; ++to;
@@ -369,7 +423,7 @@ namespace Langulus::Anyness::Component
          }
          catch (...) {
             // Account for throws inside constructors                   
-            const Count<C> inserted = to - self.GetHandle();
+            const size_t inserted = to - self.GetHandle();
             self.SetCountInner(inserted);
             throw;
          }
@@ -383,15 +437,13 @@ namespace Langulus::Anyness::Component
       /// An incompatible type will result in 'deepened' being true, and      
       /// 'out_count' being rewritten to reflect the number of required sub-  
       /// containers.                                                         
+      ///   @attention operates in all relevant dimensions simultaneously     
       template<CT::Contiguous C, class A>
-      void PrepareForInsertion(this C& self, A&& a, Count<C>& out_count, bool& deepened) {
-         using S = IntentOf(a);
-
+      void PrepareForInsertion(this C& self, A&& a, size_t& out_count, bool& deepened) {
          if constexpr (CT::Array<A>) {
-            using E = Decvq<Deref<DeextAll<Deint<S>>>>;
             if (not deepened) {
                try {
-                  self.template SetType<E>();
+                  self.DeduceType(LglsFwd(a));
                } catch(...) {
                   deepened = true;
                   out_count = 2;
@@ -401,12 +453,23 @@ namespace Langulus::Anyness::Component
             }
             else ++out_count;
          }
-         else {
-            using E = Decvq<Deref<Deint<S>>>;
-            self.template SetType<E>();
+         else if constexpr (CT::Handle<A>) {
             if (not deepened) {
                try {
-                  self.template SetType<E>();
+                  self.AbsorbType(Copy(a));
+               } catch(...) {
+                  deepened = true;
+                  out_count = 2;
+                  return;
+               }
+               ++out_count;
+            }
+            else ++out_count;
+         }
+         else {
+            if (not deepened) {
+               try {
+                  self.DeduceType(LglsFwd(a));
                } catch(...) {
                   deepened = true;
                   out_count = 2;
@@ -421,13 +484,14 @@ namespace Langulus::Anyness::Component
       /// Helper function that gathers the number of elements and types.      
       /// Empty containers can't change this container's type. If one of the  
       /// type changes raises a conflict the function will throw.             
+      ///   @attention operates in all relevant dimensions simultaneously     
       template<CT::Contiguous C, CT::Container A>
-      void PrepareForAbsorption(this C& self, A&& a, Count<C>& out_count) {
+      void PrepareForAbsorption(this C& self, A&& a, size_t& out_count) {
          const auto c = DeintCast(a).GetCount();
          if (not c)
             return;
 
-         self.AbsorbType(FWDIntent(a));
+         self.AbsorbType(Copy(a));
          out_count += c;
       }
    };

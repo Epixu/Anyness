@@ -44,9 +44,9 @@ namespace Langulus::Anyness
          Com::IndexedLinear<>,            // Indexed directly           
          Com::OwnershipStack<>,           // Allocation is referenced   
          Com::HashStack<>,                // Variable hash (cached)     
-         Com::Insertion<0, Text>,         // Serialize + insert         
-         Com::InsertionOperators<0, Text>,// << and >> insertion        
-         Com::InsertionOperatorsConcat<0, Text>,// + and += concat      
+         Com::Insertion<Text>,            // Serialize + insert         
+         Com::InsertionOperators<Text>,   // << and >> insertion        
+         Com::InsertionOperatorsConcat<Text>,// + and += concat      
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
          Com::Comparison<>,               // Allows for comparison      

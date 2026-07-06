@@ -190,8 +190,8 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
    static_assert(not requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; }); //TODO add pattern mathing?
    static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
    static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-   static_assert(    requires (T pack, E item) { pack.Remove(item); });
-   static_assert(    requires (T pack, E item) { pack.RemoveAt(Index::Front); });
+   static_assert(    requires (T pack, E item) { pack.Erase(item); });
+   static_assert(    requires (T pack, E item) { pack.EraseAt(Index::Front); });
    static_assert(    requires (T pack, E item) { pack.Reserve(20); });
    static_assert(not requires (T pack, E item) { pack.EnableOr(); });
    static_assert(not requires (T pack, E item) { pack.IsOr(); });

@@ -182,7 +182,7 @@ namespace Langulus::Anyness::Component
       ///   @param argument the argument to swap with                         
       ///   @return reference to self                                         
       template<CT::ContainsOne C, CT::ContainsOne A> requires CT::NoIntent<A>
-      C& Swap(this C& self, A& argument) {
+      C& SwapContents(this C& self, A& argument) {
          LglsAssumeUser(not argument.IsEmpty(),
             "Can't swap with empty container");
 
@@ -242,8 +242,6 @@ namespace Langulus::Anyness::Component
 
          const bool reusable = PROVIDERS::ForEachAnd([&]<class P> {
             const auto a = self.template GetAllocation<P::Id::First>();
-            //LglsAssumeDev(a, "Allocation should be valid");
-            //LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
             return a and a->GetUses() == 1;
          });
 
@@ -289,13 +287,6 @@ namespace Langulus::Anyness::Component
       void PrepareForReconstruction(this C& self) {
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
-
-         /*using PROVIDERS = decltype(C::FindProviders(Id{}));
-         static_assert(not PROVIDERS::Empty);
-         PROVIDERS::ForEachAnd([&]<class P> {
-            const auto a = self.template GetAllocation<P::Id::First>();
-            LglsAssert(a and a->GetUses() == 1);
-         });*/
 
          // We have to free all shared elements                         
          self.template Free<false>();

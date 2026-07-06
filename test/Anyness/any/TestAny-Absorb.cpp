@@ -1292,7 +1292,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          }
          
          THEN("Handle is swapped with another container's handle") {
-            REQUIRE_NOTHROW(dst_handle.Swap(src_handle));
+            REQUIRE_NOTHROW(dst_handle.SwapContents(src_handle));
 
             Handle_CheckState_OwnedFull<E>(src_handle);
             Handle_CheckState_OwnedFull<E>(dst_handle);
@@ -1346,7 +1346,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
-               dst_handle.Swap(src_handle);
+               dst_handle.SwapContents(src_handle);
          }
          
          THEN("Handle moved into a local handle") {
@@ -1402,7 +1402,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
 
          THEN("Handle is swapped with local handle, and then back to container") {
             THandle<E> local;
-            REQUIRE_NOTHROW(local.Swap(src_handle));
+            REQUIRE_NOTHROW(local.SwapContents(src_handle));
             auto local_data = local.template Get<E>();
             AllocationPtr const* local_entries = nullptr;
 
@@ -1453,7 +1453,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                }
             }
 
-            REQUIRE_NOTHROW(local.Swap(src_handle));
+            REQUIRE_NOTHROW(local.SwapContents(src_handle));
             REQUIRE(src_handle.template Get<E>() == src_data);
             REQUIRE(local.template Get<E>() == local_data);
 
@@ -1496,7 +1496,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
-               local.Swap(src_handle);
+               local.SwapContents(src_handle);
          }
       }
 

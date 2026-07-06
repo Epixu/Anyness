@@ -219,8 +219,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(    requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
       static_assert(    requires (T pack, E item) { pack.Merge(item); });
       static_assert(    requires (T pack)         { pack.MergeRange(pack); });
-      static_assert(    requires (T pack, E item) { pack.Remove(item); });
-      static_assert(    requires (T pack)         { pack.RemoveAt(Index::Front); });
+      static_assert(    requires (T pack, E item) { pack.Erase(item); });
+      static_assert(    requires (T pack)         { pack.EraseAt(Index::Front); });
       static_assert(    requires (T pack)         { pack.Reserve(20); });
       static_assert(    requires (T pack)         { pack.EnableOr(); });
       static_assert(    requires (T pack)         { pack.IsOr(); });
@@ -479,15 +479,6 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             Many_Helper_TestSame(pack, *element, false);
             REQUIRE(pack.IsConstant());
 
-            /*REQUIRE(pack.GetRaw() == element->GetRaw());
-            REQUIRE(pack.IsExact(element->GetType()));
-            REQUIRE(pack == *element);
-            REQUIRE(pack.IsDeep() == element->IsDeep());
-            REQUIRE(pack.IsConstant() != element->IsConstant());
-            REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
-            REQUIRE(pack.GetUses() == 0);
-            REQUIRE_FALSE(pack.GetAllocation());*/
-
             BenchmarkManyStd("Empty/AssignAbsorb/Disown", 30, 100,
                T temp,                       temp.AssignAbsorb(Disown(*element)),
                stdvec src_std (1, *element);
@@ -618,7 +609,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
 
       WHEN("Cleared") {
-         pack.Clear();
+         REQUIRE_NOTHROW(pack.Clear());
 
          Many_CheckState_Default<E>(pack);
 
@@ -629,13 +620,43 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
 
       WHEN("Reset") {
-         pack.Reset();
+         REQUIRE_NOTHROW(pack.Reset());
 
          Many_CheckState_Default<E>(pack);
 
          BenchmarkManyStd("Empty/Reset", 30, 100,
             T temp,              temp.Reset(),
             stdvec temp_std,     temp_std.clear()
+         );
+      }
+
+      WHEN("Erase non-existent value") {
+         size_t removed = 0;
+         REQUIRE_NOTHROW(removed = pack.Erase(*element));
+
+         Many_CheckState_Default<E>(pack);
+
+         REQUIRE(removed == 0);
+
+         BenchmarkManyStd("Empty/Erase", 30, 100,
+            T temp,              temp.Erase(*element),
+            stdvec temp_std,     temp_std.erase(std::remove_if(temp_std.begin(), temp_std.end(), [&element] (auto& value) {
+                                    return value == *element;
+                                 }), temp_std.end());
+         );
+      }
+
+      WHEN("Erase non-existent index") {
+         size_t removed = 0;
+         REQUIRE_NOTHROW(removed = pack.EraseAt(5));
+
+         Many_CheckState_Default<E>(pack);
+
+         REQUIRE(removed == 0);
+
+         BenchmarkManyStd("Empty/EraseAt", 30, 100,
+            T temp,              temp.EraseAt(5),
+            stdvec temp_std,     temp_std.erase(temp_std.begin() + 5)
          );
       }
 
@@ -740,6 +761,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// #MARK: Range                                                        
       WHEN("Range-iterated (default)") {
          IterateDefault strategy(pack);
          IterateDefault strategyConst(::std::as_const(pack));
@@ -912,6 +934,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          REQUIRE(counter == 0);
       }
       
+      /// #MARK: Handles                                                      
       WHEN("GetHandle is called on mutable container") {
          auto h = pack.GetHandle();
 
@@ -933,6 +956,167 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
 
          Handle_CheckState_Default<E const>(h);
+      }
+
+      /// #MARK: Insertion                                                    
+      const ScopedE darray1[5] {1, 2, 3, 4,  5};
+      const ScopedE darray2[5] {6, 7, 8, 9, 10};
+
+      const E immovable[5] {
+         *darray1[0], *darray1[1], *darray1[2], *darray1[3], *darray1[4]
+      };
+      E movable1[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+      E movable2[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+      E movable3[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+
+      WHEN("Insert an array to the back") {
+         size_t inserted = 0;
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back,           immovable));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Refer    {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Copy     {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Clone    {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Disown   {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, std::move(movable1)));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Move     {movable2}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Abandon  {movable3}));
+         REQUIRE(inserted == 5*8);
+
+         Many_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (CT::DeepDense<E>) {
+            for (int i = 0; i < 5; ++i) {
+               Many_CheckState_Default<int>  (movable1[i]);
+               Many_CheckState_Default<int>  (movable2[i]);
+               Many_CheckState_Abandoned<int>(movable3[i]);
+            }
+         }
+
+         REQUIRE(pack.GetCount() == 5*8);
+         REQUIRE(pack.GetReserved() >= 5*8);
+
+         for (uint i = 0; i < 5*5; ++i)
+            REQUIRE(pack[i] == *darray1[i%5]);
+
+         for (uint i = 25; i < 25 + 3*5; ++i)
+            REQUIRE(pack[i] == *darray2[i%5]);
+
+         BenchmarkManyStd("Empty/Insert/Array/Back", 30, 100,
+            T temp,              temp.InsertAt(Index::Back, immovable),
+            stdvec temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+         );
+      }
+
+      WHEN("Insert an array to the front") {
+         size_t inserted = 0;
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front,           immovable));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Refer    {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Copy     {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Clone    {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Disown   {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, std::move(movable1)));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Move     {movable2}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Abandon  {movable3}));
+         REQUIRE(inserted == 5*8);
+
+         Many_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (CT::DeepDense<E>) {
+            for (int i = 0; i < 5; ++i) {
+               Many_CheckState_Default<int>  (movable1[i]);
+               Many_CheckState_Default<int>  (movable2[i]);
+               Many_CheckState_Abandoned<int>(movable3[i]);
+            }
+         }
+
+         REQUIRE(pack.GetCount() == 5*8);
+         REQUIRE(pack.GetReserved() >= 5*8);
+
+         for (uint i = 0; i < 3*5; ++i)
+            REQUIRE(pack[i] == *darray2[i%5]);
+
+         for (uint i = 15; i < 15 + 5*5; ++i)
+            REQUIRE(pack[i] == *darray1[i%5]);
+
+         BenchmarkManyStd("Empty/Insert/Array/Front", 30, 100,
+            T temp,              temp.InsertAt(Index::Front, darray1),
+            stdvec temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
+         );
+      }
+
+      WHEN("Insert an array to a non-existent index") {
+         REQUIRE_THROWS(pack.InsertAt(5, immovable));
+      }
+
+      WHEN("Insert at the back by using << operator)") {
+         pack <<           immovable[0]
+              << Refer    {immovable[1]}
+              << Clone    {immovable[2]}
+              << Copy     {immovable[3]}
+              << Disown   {immovable[4]}
+              << std::move(movable1[0])
+              << Move     {movable2[0]}
+              << Abandon  {movable3[0]};
+
+         Many_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (CT::DeepDense<E>) {
+            Many_CheckState_Default<int>  (movable1[0]);
+            Many_CheckState_Default<int>  (movable2[0]);
+            Many_CheckState_Abandoned<int>(movable3[0]);
+         }
+
+         REQUIRE(pack.GetCount() == 8);
+         REQUIRE(pack.GetReserved() >= 8);
+
+         for (int i = 0; i < 5; ++i)
+            REQUIRE(pack[i] == *darray1[i%5]);
+
+         for (int i = 5; i < 8; ++i)
+            REQUIRE(pack[i] == *darray2[i%5]);
+
+         BenchmarkManyStd("Empty/Insert/Element/Back", 30, 100,
+            T temp,              temp << immovable[0],
+            stdvec temp_std,     temp_std.emplace_back(immovable[0])
+         );
+      }
+
+      WHEN("Insert at the front by using >> operator)") {
+         pack >>           immovable[0]
+              >> Refer    {immovable[1]}
+              >> Clone    {immovable[2]}
+              >> Copy     {immovable[3]}
+              >> Disown   {immovable[4]}
+              >> std::move(movable1[0])
+              >> Move     {movable2[0]}
+              >> Abandon  {movable3[0]};
+
+         Many_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (CT::DeepDense<E>) {
+            Many_CheckState_Default<int>  (movable1[0]);
+            Many_CheckState_Default<int>  (movable2[0]);
+            Many_CheckState_Abandoned<int>(movable3[0]);
+         }
+
+         REQUIRE(pack.GetCount() == 8);
+         REQUIRE(pack.GetReserved() >= 8);
+
+         for (int i = 0; i < 3; ++i)
+            REQUIRE(pack[i] == *darray2[2 - i%5]);
+
+         for (int i = 3; i < 8; ++i)
+            REQUIRE(pack[i] == *darray1[4 - (i - 3)%5]);
+
+         BenchmarkManyStd("Empty/Insert/Element/Front", 30, 100,
+            T temp,              temp >> immovable[0],
+            stdvec temp_std,     temp_std.emplace_front(immovable[0])
+         );
       }
    }
 

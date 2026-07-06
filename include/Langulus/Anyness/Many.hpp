@@ -99,7 +99,7 @@ namespace Langulus::Anyness
 
       /// Construction that either absorbs the provided containers, or        
       /// emplaces all A in the container                                     
-      template<class A1, class...AN>
+      template<NotTag A1, class...AN>
       constexpr Many(A1&& a1, AN&&...an) {
          if constexpr (sizeof...(AN) == 0) {
             if constexpr (CT::DeepDense<Deint<A1>>) {

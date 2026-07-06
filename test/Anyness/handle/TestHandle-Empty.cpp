@@ -161,7 +161,7 @@ TEST_CASE_TEMPLATE("Test empty Handle/THandle", T
 
             // factory1[0] == 1                                         
             // swapped with swapper (referring to factory2[0] == 100)   
-            h.Swap(swapper);
+            h.SwapContents(swapper);
 
             // Swapper now only thing that refers to factory1[0]        
             REQUIRE(DenseCast(swapper.Get()) == *e1);
@@ -183,63 +183,63 @@ TEST_CASE_TEMPLATE("Test empty Handle/THandle", T
             auto h = factory1.GetHandle() + 1;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 2;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries[0]()->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 3;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 4;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 5;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 6;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 7;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 8;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          {
             auto h = factory1.GetHandle() + 9;
             if constexpr (SPARSE)
                REQUIRE(h.GetEntries()[0]->GetUses() == refs1);
-            h.Swap(swapper);
+            h.SwapContents(swapper);
          }
 
          #if LANGULUS(SAFE)
