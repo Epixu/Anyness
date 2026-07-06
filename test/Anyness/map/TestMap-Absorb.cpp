@@ -1241,14 +1241,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          HandlePair_CheckState_OwnedFull<E1, E2>(src_handle);
 
          if constexpr (Sparse1) {
-            src_entries1 = src_handle.GetEntries();
+            src_entries1 = src_handle.template GetEntries<0>();
             REQUIRE(*src_entries1 == e556.entries[1]);
             if constexpr (Managed)
                REQUIRE(e556.entries[1]->GetUses() == 2);
          }
 
          if constexpr (Sparse2) {
-            src_entries2 = src_handle.GetEntries();
+            src_entries2 = src_handle.template GetEntries<1>();
             REQUIRE(*src_entries2 == e557.entries[1]);
             if constexpr (Managed)
                REQUIRE(e557.entries[1]->GetUses() == 2);
@@ -1277,7 +1277,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          HandlePair_CheckState_OwnedFull<E1, E2>(dst_handle);
 
          if constexpr (Sparse1) {
-            dst_entries1 = dst_handle.GetEntries();
+            dst_entries1 = dst_handle.template GetEntries<0>();
             REQUIRE(*dst_entries1 == e6.entries[1]);
             if constexpr (Managed)
                REQUIRE(e6.entries[1]->GetUses() == 2);
@@ -1285,7 +1285,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          }
 
          if constexpr (Sparse2) {
-            dst_entries2 = dst_handle.GetEntries();
+            dst_entries2 = dst_handle.template GetEntries<1>();
             REQUIRE(*dst_entries2 == e7.entries[1]);
             if constexpr (Managed)
                REQUIRE(e7.entries[1]->GetUses() == 2);
@@ -1317,11 +1317,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             
             auto& moved_in1 = DenseCast(dst_data1);
             if constexpr (Sparse1) {
-               REQUIRE(src_handle.GetEntries() == src_entries1);
+               REQUIRE(src_handle.template GetEntries<0>() == src_entries1);
                REQUIRE(*src_data1 == nullptr);
                REQUIRE(*src_entries1 == nullptr);
 
-               REQUIRE(dst_handle.GetEntries() == dst_entries1);
+               REQUIRE(dst_handle.template GetEntries<0>() == dst_entries1);
                REQUIRE(*dst_data1 == *e556);
                REQUIRE(*dst_entries1 == e556.entries[1]);
                if constexpr (Managed) {
@@ -1356,11 +1356,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
 
             auto& moved_in2 = DenseCast(dst_data2);
             if constexpr (Sparse2) {
-               REQUIRE(src_handle.GetEntries() == src_entries2);
+               REQUIRE(src_handle.template GetEntries<1>() == src_entries2);
                REQUIRE(*src_data2 == nullptr);
                REQUIRE(*src_entries2 == nullptr);
 
-               REQUIRE(dst_handle.GetEntries() == dst_entries2);
+               REQUIRE(dst_handle.template GetEntries<1>() == dst_entries2);
                REQUIRE(*dst_data2 == *e557);
                REQUIRE(*dst_entries2 == e557.entries[1]);
                if constexpr (Managed) {
@@ -1410,8 +1410,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             REQUIRE(moved_out1 == DenseCast(*e6));
 
             if constexpr (Sparse1) {
-               REQUIRE(src_handle.GetEntries() == src_entries1);
-               REQUIRE(dst_handle.GetEntries() == dst_entries1);
+               REQUIRE(src_handle.template GetEntries<0>() == src_entries1);
+               REQUIRE(dst_handle.template GetEntries<0>() == dst_entries1);
    
                REQUIRE(*dst_entries1 == e556.entries[1]);
                REQUIRE(*src_entries1 == e6.entries[1]);
@@ -1454,8 +1454,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             REQUIRE(moved_out2 == DenseCast(*e7));
 
             if constexpr (Sparse2) {
-               REQUIRE(src_handle.GetEntries() == src_entries2);
-               REQUIRE(dst_handle.GetEntries() == dst_entries2);
+               REQUIRE(src_handle.template GetEntries<1>() == src_entries2);
+               REQUIRE(dst_handle.template GetEntries<1>() == dst_entries2);
    
                REQUIRE(*dst_entries2 == e557.entries[1]);
                REQUIRE(*src_entries2 == e7.entries[1]);
@@ -1510,13 +1510,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             auto& moved_in1 = DenseCast(local.template Get<E1, 0>());
             REQUIRE(moved_in1 == DenseCast(*e556));
             if constexpr (Sparse1) {
-               REQUIRE(src_handle.GetEntries() == src_entries1);
-               REQUIRE(local.GetEntries() != src_entries1);
+               REQUIRE(src_handle.template GetEntries<0>() == src_entries1);
+               REQUIRE(local.template GetEntries<0>() != src_entries1);
 
                REQUIRE(*src_data1 == nullptr);
                REQUIRE(*src_entries1 == nullptr);
 
-               REQUIRE(local.GetEntries()[0] == e556.entries[1]);
+               REQUIRE(local.template GetEntries<0>()[0] == e556.entries[1]);
                if constexpr (Managed) {
                   REQUIRE(e556.entries[1]->GetUses() == 2);
                   REQUIRE(e6.entries[1]->GetUses() == 2);
@@ -1551,13 +1551,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             auto& moved_in2 = DenseCast(local.template Get<E2, 1>());
             REQUIRE(moved_in2 == DenseCast(*e557));
             if constexpr (Sparse2) {
-               REQUIRE(src_handle.GetEntries() == src_entries2);
-               REQUIRE(local.GetEntries() != src_entries2);
+               REQUIRE(src_handle.template GetEntries<1>() == src_entries2);
+               REQUIRE(local.template GetEntries<1>() != src_entries2);
 
                REQUIRE(*src_data2 == nullptr);
                REQUIRE(*src_entries2 == nullptr);
 
-               REQUIRE(local.GetEntries()[0] == e557.entries[1]);
+               REQUIRE(local.template GetEntries<1>()[0] == e557.entries[1]);
                if constexpr (Managed) {
                   REQUIRE(e557.entries[1]->GetUses() == 2);
                   REQUIRE(e7.entries[1]->GetUses() == 2);
@@ -1610,8 +1610,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             auto& moved_in1 = DenseCast(local_data1);
             REQUIRE(moved_in1 == DenseCast(*e556));
             if constexpr (Sparse1) {
-               REQUIRE(src_handle.GetEntries() == src_entries1);
-               local_entries1 = local.GetEntries();
+               REQUIRE(src_handle.template GetEntries<0>() == src_entries1);
+               local_entries1 = local.template GetEntries<0>();
                REQUIRE(local_entries1 != nullptr);
                REQUIRE(local_entries1 != src_entries1);
 
@@ -1650,8 +1650,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             auto& moved_in2 = DenseCast(local_data2);
             REQUIRE(moved_in2 == DenseCast(*e557));
             if constexpr (Sparse2) {
-               REQUIRE(src_handle.GetEntries() == src_entries2);
-               local_entries2 = local.GetEntries();
+               REQUIRE(src_handle.template GetEntries<1>() == src_entries2);
+               local_entries2 = local.template GetEntries<1>();
                REQUIRE(local_entries2 != nullptr);
                REQUIRE(local_entries2 != src_entries2);
 
@@ -1694,9 +1694,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             REQUIRE(local.template Get<E2, 1>() == local_data2);
 
             if constexpr (Sparse1) {
-               REQUIRE(src_handle.GetEntries() == src_entries1);
-               REQUIRE(local.GetEntries() != src_entries1);
-               REQUIRE(local.GetEntries() == local_entries1);
+               REQUIRE(src_handle.template GetEntries<0>() == src_entries1);
+               REQUIRE(local.template GetEntries<0>() != src_entries1);
+               REQUIRE(local.template GetEntries<0>() == local_entries1);
                REQUIRE(*local_entries1 == nullptr);
                REQUIRE(*src_data1 != nullptr);
 
@@ -1731,9 +1731,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             }
 
             if constexpr (Sparse2) {
-               REQUIRE(src_handle.GetEntries() == src_entries2);
-               REQUIRE(local.GetEntries() != src_entries2);
-               REQUIRE(local.GetEntries() == local_entries2);
+               REQUIRE(src_handle.template GetEntries<1>() == src_entries2);
+               REQUIRE(local.template GetEntries<1>() != src_entries2);
+               REQUIRE(local.template GetEntries<1>() == local_entries2);
                REQUIRE(*local_entries2 == nullptr);
                REQUIRE(*src_data2 != nullptr);
 
@@ -1788,7 +1788,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          HandlePair_CheckState_OwnedFull<E1 const, E2 const>(handle);
          
          if constexpr (Sparse1) {
-            auto entries = handle.GetEntries();
+            auto entries = handle.template GetEntries<0>();
             REQUIRE(entries);
             REQUIRE(*entries == e556.entries[1]);
             if constexpr (Managed)
@@ -1796,7 +1796,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
          }
 
          if constexpr (Sparse2) {
-            auto entries = handle.GetEntries();
+            auto entries = handle.template GetEntries<1>();
             REQUIRE(entries);
             REQUIRE(*entries == e557.entries[1]);
             if constexpr (Managed)

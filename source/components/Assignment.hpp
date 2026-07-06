@@ -193,17 +193,19 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Reallocatable<C>) {
                if (self.IsEmpty()) {
-                  self.EmplaceConstruct(Move{argument.GetHandle()});
+                  Id::ForEach([&]<Cid D>{
+                     self.template EmplaceConstruct<D>(
+                        Move{argument.GetHandle()}
+                     );
+                  });
                   return self;
                }
             }
-
          }
          
          Id::ForEach([&]<Cid D>{
             ThisCom::template SwapInner<D>(argument);
          });
-
          return self;
       }
 
