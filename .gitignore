@@ -1,9 +1,11 @@
 /out
 /build
 /.vs
+/.ccache
 /external
 /Testing
 *.user
 *.bak
 *.hint
 *.TMP
+compile_commands.json

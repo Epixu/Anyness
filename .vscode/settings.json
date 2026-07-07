@@ -2,6 +2,7 @@
    "chat.agent.enabled": false,
    "chat.disableAIFeatures": true,
    "cmake.showConfigureWithDebuggerNotification": false,
+   "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
    "C_Cpp.intelliSenseEngine": "disabled",
    "workbench.colorCustomizations": {
       "editor.selectionBackground":"#20354b",
