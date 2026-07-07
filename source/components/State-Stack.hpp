@@ -101,7 +101,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      /// Check if container has future/past linking point states             
+      /// Check if container supports any of the mentioned states             
       template<StateUid...ID>
       static consteval bool CheckStateSupport() {
          return StateList::ForEachOr([]<class S> noexcept {

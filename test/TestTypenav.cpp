@@ -58,6 +58,12 @@ static_assert(not CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing bounded array types", TestType
    , SheddableType<ArrayType>
+   , Refer<ArrayType>
+   , Clone<ArrayType>
+   , Copy<ArrayType>
+   , Move<ArrayType>
+   , Abandon<ArrayType>
+   , Disown<ArrayType>
    , ArrayType
    , ArrayType2
    , ArrayTypeRef
@@ -69,6 +75,12 @@ TEST_CASE_TEMPLATE("Testing bounded array types", TestType
 
 TEST_CASE_TEMPLATE("Testing non-array types", TestType
    , SheddableType<int>
+   , Refer<ArrayType*>
+   , Clone<ArrayType*>
+   , Copy<ArrayType*>
+   , Move<ArrayType*>
+   , Abandon<ArrayType*>
+   , Disown<ArrayType*>
    , PointerType
    , PointerType2
    , ArrayType*

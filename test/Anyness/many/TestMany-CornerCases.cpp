@@ -92,7 +92,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
          }
 
          THEN("Smart-push-back the first again and then the second, but packed together") {
-            pack.SmartPushAt(Index::Back, Many {*p1, *p2});
+            pack.Compose(Many {*p1, *p2});
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());
@@ -106,7 +106,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
          }
 
          THEN("Smart-push-front the first again and then the second, but packed together") {
-            pack.SmartPushAt(Index::Front, Many {*p1, *p2});
+            pack.ComposeAt(Index::Front, Many {*p1, *p2});
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());

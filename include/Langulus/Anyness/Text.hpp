@@ -631,6 +631,7 @@ namespace Langulus::CTTI
    /// separators and state decorators, depending on the kind of container.   
    template<CT::Deep C>
    struct SerializationRule<Anyness::Text, C> {
+      static_assert(CT::Decayed<C>, "Strip all decorations first");
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
       using Count = Anyness::Text::CountType;
@@ -660,6 +661,7 @@ namespace Langulus::CTTI
    /// Rule for serializing characters to Text. Wraps them in ''.             
    template<CT::Character C>
    struct SerializationRule<Anyness::Text, C> {
+      static_assert(CT::Decayed<C>, "Strip all decorations first");
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
@@ -702,6 +704,7 @@ namespace Langulus::CTTI
    /// Convert Number -> Text                                                 
    template<CT::Number T>
    struct Converter<T, Anyness::Text> {
+      static_assert(CT::Decayed<T>, "Strip all decorations first");
       static constexpr auto Convert(T const& from) -> Anyness::Text {
          return Anyness::Text::FromNumber(from);
       }

@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Handle.hpp"
+#include "Langulus/IntentOf.hpp"
 #include <source/components/Typed-Static.hpp>
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Count-Stack.hpp>
@@ -83,11 +84,43 @@ namespace Langulus::Anyness
          this->Absorb(LglsFwd(bytes));
       }
 
-      /// Construction from any kind of POD bounded array                     
-      template<CT::POD T, size_t SIZE> requires (SIZE > 0)
+      /// Construction from any kind of POD value                             
+      template<CT::POD T> requires (not CT::Array<T>)
+      explicit constexpr Bytes(T&& source) {
+         this->SetHeapInner(static_cast<const void*>(&source));
+         this->SetCountInner(sizeof(T));
+         this->ResetHash();
+         this->SetAllocationInner(nullptr);
+
+         if constexpr (CT::Copied<T> or CT::Cloned<T>)
+            this->TakeOwnership();
+         else if constexpr (not CT::Disowned<T>){
+            this->SetAllocationInner(Allocator::Find(&DeintCast(source)));
+            this->Keep();
+         }
+      }
+
+      /// Construction from any kind of POD bounded array with intent         
+      template<CT::POD T> requires CT::Array<T>
+      explicit constexpr Bytes(T&& source) {
+         this->SetHeapInner(static_cast<const void*>(DeintCast(source)));
+         this->SetCountInner(sizeof(Deint<T>));
+         this->ResetHash();
+         this->SetAllocationInner(nullptr);
+
+         if constexpr (CT::Copied<T> or CT::Cloned<T>)
+            this->TakeOwnership();
+         else if constexpr (not CT::Disowned<T>){
+            this->SetAllocationInner(Allocator::Find(DeintCast(source)));
+            this->Keep();
+         }
+      }
+
+      /// Construction from constexpr POD bounded array                       
+      template<CT::POD T, size_t SIZE> requires CT::NoIntent<T>
       explicit constexpr Bytes(const T(&source)[SIZE]) {
          this->SetHeapInner(static_cast<const void*>(source));
-         this->SetCountInner(SIZE * sizeof(T));
+         this->SetCountInner(sizeof(source));
          this->ResetHash();
          this->SetAllocationInner(nullptr);
       }

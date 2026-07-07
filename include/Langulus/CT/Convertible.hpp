@@ -134,8 +134,12 @@ namespace Langulus
    using MorphismsFrom = decltype(CT::Inner::GetMorphismsFrom<Decvq<Deref<T>>>());
       
    /// Convert from one type to another, utilizing CTTI definitions.          
-   /// This can work even if no CTTI::MapsTo or CTTI::MapsFrom are defined.   
+   /// This works even if no `CTTI::MapsTo` or `CTTI::MapsFrom` are defined,  
+   /// as long as the types involved have the required constructors and casts.
    ///   @attention assumes 'from' is constructed                             
+   ///   @attention does not utilize serialization directly, as this is the   
+   ///      lower level conversion routine. It's the other way around:        
+   ///      serialization uses this one as a fallback.                        
    template<class TO, class FROM>
    constexpr auto Convert(FROM& from) -> TO {
       static_assert(CT::NotReference<TO, FROM>, "Strip references first");

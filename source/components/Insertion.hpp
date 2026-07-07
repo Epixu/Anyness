@@ -7,14 +7,18 @@
 ///                                                                           
 #pragma once
 #include "../Component.hpp"
+#include "Langulus/Assume.hpp"
 #include "Langulus/IntentOf.hpp"
 #include "Langulus/Utils/Types.hpp"
+#include "source/Container.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/Contiguous.hpp>
 #include <Langulus/CT/Nullable.hpp>
 #include <Langulus/CT/Defaultable.hpp>
+#include <Langulus/CT/Serializer.hpp>
+#include <Langulus/CT/Deep.hpp>
 
 
 /*namespace Langulus::CT
@@ -83,6 +87,18 @@ namespace Langulus::Anyness::Component
    /// things around. It guarantees that nothing gets overwritten.            
    /// Insertion (unlike merging) allows for duplicated elements. That's why  
    /// this component is omitted for containers like Map and Set.             
+   /// Supports five kinds of insertion:                                      
+   ///   1. Insert/InsertAt - conventional insertion, where the container is  
+   ///      expanded to incorporate the new elements at the desired position. 
+   ///   2. Concat/ConcatAt - concatenation that inserts the contents of      
+   ///      any container at the desired position, dsiregarding any state     
+   ///      differences.                                                      
+   ///   3. Compose/ComposeAt - a structure-preserving insertion that respects
+   ///      states and disownment in order to form more complex containers.   
+   ///   4. And/AndAt - an or-state-preserving insertion that deepens the     
+   ///      container if `IsOr() == true`, and then inserts the new content.  
+   ///   5. Or/OrAt - an or-state-preserving insertion that deepens the       
+   ///      container if `IsOr() == false`, and then inserts the new content. 
    ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization.    
    ///   @tparam ID, SHARED providers that share the same insertion behavior. 
@@ -117,47 +133,61 @@ namespace Langulus::Anyness::Component
       ///      deep containers, so that insertion order is preserved.         
       ///   @param idx the index to insert at                                 
       ///   @param a1, an elements or arrays (and their intents) to insert    
-      ///   @return the number of inserted elements                           
+      ///   @return the number of inserted elements (after any conversions)   
       template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
       auto InsertAt(this C& self, CT::Index auto&& idx, A1&& a1, AN&&...an) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         // Gather the number of all elements and types.                
-         // Empty containers can't change type. If one of the type      
-         // changes raises a conflict, this function will throw.        
-         bool deepened = false;
-         size_t rhs_count = 0;
-          self.PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
-         (self.PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
-         if (not rhs_count)
-            return 0;
-         
-         // Reallocate/branch out                                       
-         const size_t lhs_count = self.GetCount();
-         const size_t all_count = lhs_count + rhs_count;
-         self.BranchOut(all_count); //TODO when branching out, reinsert in a new container with the gap predefined, iinstead of always moving elements. See Erase for reference
-
-         TODO(); //TODO form a gap
-         
-         // Insert the new                                              
-         const auto offset = self.SimplifyIndex(idx);
-         auto to = self.GetHandle() + offset;
-
-         try {
-             ThisCom::InsertInner(to, LglsFwd(a1));
-            (ThisCom::InsertInner(to, LglsFwd(an)), ...);
+         if constexpr (CT::NotVoid<AS> and not Same<TypeOf<AS>, Deint<A1>, Deint<AN>...>) {
+            // Conversion to AS required.                               
+            static_assert(Exact<C, AS>, "Serializing insertion type mismatch");
+            const size_t initial_count = self.GetCountInner();
+            size_t offset = self.SimplifyIndex(idx);
+            // ConvertInsertInner uses ConcatAt, so any exceptions will 
+            // be handled there                                         
+            ThisCom::ConvertInsertInner(offset, LglsFwd(a1));
+           (ThisCom::ConvertInsertInner(offset, LglsFwd(an)), ...);
+            return self.GetCountInner() - initial_count;
          }
-         catch (...) {
-            // Account for throws inside constructors                   
-            const size_t inserted = to - self.GetHandle();
-            TODO(); //TODO a gap remains, move things back
-            self.SetCountInner(inserted);
-            throw;
-         }
+         else {
+            // No conversion required.                                  
+            // Gather the number of all elements and types.             
+            // Empty containers can't change type. If one of the type   
+            // changes raises a conflict, this function will throw.     
+            bool deepened = false;
+            size_t rhs_count = 0;
+            ThisCom::PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
+           (ThisCom::PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
+            if (not rhs_count)
+               return 0;
+            
+            // Reallocate/branch out                                    
+            const size_t lhs_count = self.GetCount();
+            const size_t all_count = lhs_count + rhs_count;
+            self.BranchOut(all_count); //TODO when branching out, reinsert in a new container with the gap predefined, iinstead of always moving elements. See Erase for reference
 
-         self.SetCountInner(all_count);
-         return rhs_count;
+            TODO(); //TODO form a gap
+            
+            // Insert the new                                           
+            const auto offset = self.SimplifyIndex(idx);
+            auto to = self.GetHandle() + offset;
+
+            try {
+               ThisCom::InsertInner(to, LglsFwd(a1));
+              (ThisCom::InsertInner(to, LglsFwd(an)), ...);
+            }
+            catch (...) {
+               // Account for throws inside constructors                
+               const size_t inserted = to - self.GetHandle();
+               TODO(); //TODO a gap remains, move things back
+               self.SetCountInner(inserted);
+               throw;
+            }
+
+            self.SetCountInner(all_count);
+            return rhs_count;
+         }
       }
 
       /// Insert a number of elements at a specific place, nullifying them if 
@@ -170,8 +200,51 @@ namespace Langulus::Anyness::Component
       template<CT::Contiguous C>
       auto InsertDefaultAt(this C&, CT::Index auto, size_t) -> size_t;
 
+      /// MARK: ComposeAt                                                     
+      /// Structure-preserving insertion that uses the best approach in order 
+      /// to keep current hierarchy and states, but also reuse memory.        
+      ///   @attention any disowned data will remain disowned                 
+      ///   @tparam CONCAT whether or not concatenation is allowed            
+      ///   @tparam FORCE insert even if types mismatch by deepening          
+      ///   @param index the index at which to insert (if needed)             
+      ///   @param value the value to smart-push                              
+      ///   @param state a state to apply after pushing is done               
+      ///   @return the number of pushed items (zero if unsuccessful)         
       template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
-      auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {}) -> size_t;
+      auto ComposeAt(
+         this C& self, CT::Index auto&& idx, auto&& value, State<C> state = {}
+      ) -> size_t {
+         using I = IntentOf(value);
+         using T = Deint<I>;
+   
+         if constexpr (CT::Deep<T>) {
+            // We're inserting a deep item, so we can do various smart  
+            // things before inserting, like absorbing and concatenating
+            if (not DeintCast(value).IsValid())
+               return 0;
+   
+            const bool stateCompliant = self.CanFitState(DeintCast(value));
+            if (self.IsEmpty() and stateCompliant) {
+               // We can directly absorb                                
+               self.Free();
+               self.Absorb(LglsFwd(value));
+               return 1;
+            }
+   
+            if constexpr (CONCAT) {
+               // Let's try concatenating.                              
+               // If FORCE is enabled, this will deepen in order to     
+               // preserve disowned data instead of copying it.         
+               if (ThisCom::SmartConcatAt<FORCE>(LglsFwd(idx), stateCompliant, LglsFwd(value), state))
+                  return 1;
+            }
+         }
+   
+         // If reached, then none of the above succeeded - just push.   
+         // If FORCE is enabled, this will deepen in order to preserve  
+         // disowned data instead of copying it.                        
+         return ThisCom::ComposeAtInner<FORCE>(LglsFwd(idx), LglsFwd(value), state);
+      }
 
       /// MARK: Insert                                                        
       /// Insert one or more elements at the performance-optimal position.    
@@ -182,42 +255,56 @@ namespace Langulus::Anyness::Component
       ///      a compile-time or runtime exception will be thrown, if an      
       ///      incompatible type is encountered.                              
       ///   @param a1, an elements (and their intents) to insert              
-      ///   @return the number of inserted elements                           
+      ///   @return the number of inserted elements (after any conversions)   
       template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
       auto Insert(this C& self, A1&& a1, AN&&...an) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         // Gather the number of all elements and types.                
-         // Empty containers can't change type. If one of the type      
-         // changes raises a conflict, this function will throw.        
-         bool deepened = false;
-         size_t rhs_count = 0;
-          self.PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
-         (self.PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
-         if (not rhs_count)
-            return 0;
-         
-         // Reallocate/branch out                                       
-         const size_t lhs_count = self.GetCount();
-         const size_t all_count = lhs_count + rhs_count;
-         self.BranchOut(all_count);
-         
-         // Insert the new                                              
-         auto to = self.GetHandle() + lhs_count;
-         try {
-             ThisCom::InsertInner(to, LglsFwd(a1));
-            (ThisCom::InsertInner(to, LglsFwd(an)), ...);
+         if constexpr (CT::NotVoid<AS> and not Same<TypeOf<AS>, Deint<A1>, Deint<AN>...>) {
+            // Conversion to AS required.                               
+            static_assert(Exact<C, AS>, "Serializing insertion type mismatch");
+            const size_t initial_count = self.GetCountInner();
+            size_t offset = initial_count;
+            // ConvertInsertInner uses ConcatAt, so any exceptions will 
+            // be handled there                                         
+            ThisCom::ConvertInsertInner(offset, LglsFwd(a1));
+           (ThisCom::ConvertInsertInner(offset, LglsFwd(an)), ...);
+            return offset - initial_count;
          }
-         catch (...) {
-            // Account for throws inside constructors                   
-            const size_t inserted = to - self.GetHandle();
-            self.SetCountInner(inserted);
-            throw;
-         }
+         else {
+            // No conversion required.                                  
+            // Gather the number of all elements and types.             
+            // Empty containers can't change type. If one of the type   
+            // changes raises a conflict, this function will throw.     
+            bool deepened = false;
+            size_t rhs_count = 0;
+            ThisCom::PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
+           (ThisCom::PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
+            if (not rhs_count)
+               return 0;
+            
+            // Reallocate/branch out                                    
+            const size_t lhs_count = self.GetCount();
+            const size_t all_count = lhs_count + rhs_count;
+            self.BranchOut(all_count);
+            
+            // Insert the new                                           
+            auto to = self.GetHandle() + lhs_count;
+            try {
+               ThisCom::InsertInner(to, LglsFwd(a1));
+              (ThisCom::InsertInner(to, LglsFwd(an)), ...);
+            }
+            catch (...) {
+               // Account for throws inside constructors                
+               const size_t inserted = to - self.GetHandle();
+               self.SetCountInner(inserted);
+               throw;
+            }
 
-         self.SetCountInner(all_count);
-         return rhs_count;
+            self.SetCountInner(all_count);
+            return rhs_count;
+         }
       }
 
       /// Insert a number of elements at the performance-optimal position.    
@@ -304,11 +391,64 @@ namespace Langulus::Anyness::Component
          return count;
       }
 
+      /// MARK: Compose                                                       
+      /// Structure-preserving insertion that uses the best approach in order 
+      /// to keep current hierarchy and states, but also reuse memory as much 
+      /// as possible.                                                        
+      ///   @attention any disowned data will remain disowned                 
+      ///   @tparam CONCAT whether or not concatenation is allowed            
+      ///   @tparam FORCE insert even if types mismatch by deepening          
+      ///   @param value the value to insert                                  
+      ///   @return the number of pushed items (zero if unsuccessful)         
       template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
-      auto SmartPush(this C&, auto&&, State<C> = {}) -> size_t;
+      auto Compose(this C& self, auto&& value) -> size_t {
+         using I = IntentOf(value);
+         using T = Deint<I>;
+         auto& other = DeintCast(value);
+         const bool stateCompliant = ThisCom::CheckState(other);
+   
+         if constexpr (CT::DeepDense<T>) {
+            // We're inserting a deep item, so we can do various smart  
+            // things before inserting, like absorbing and concatenating
+            if (not other.IsValid())
+               return 0;
+   
+            if (stateCompliant) {
+               if (self.IsEmpty()) {
+                  // We can directly absorb                             
+                  self.AssignAbsorb(LglsFwd(value));
+                  return 1;
+               }
+      
+               if constexpr (CONCAT) {
+                  // We are allowed to attempt concatenatenation        
+                  if (ThisCom::Concat(LglsFwd(value)))
+                     return 1;
+               }
+            }
+         }
+   
+         // If reached, then none of the above succeeded - just push.   
+         // If FORCE is enabled, this will deepen in order to preserve  
+         // state, in the case there's conflict.                        
+         return ThisCom::template ComposeInner<FORCE>(
+            stateCompliant, Index::Back, LglsFwd(value)
+         );
+      }
 
-      template<bool TRANSFER_OR = true, CT::Contiguous C>
-      auto Deepen(this C&) -> Deep<C>&;
+      /// MARK: Deepen                                                        
+      /// Wrap all contained elements inside a sub-block                      
+      ///   @return a reference to the newly created inner container          
+      template<CT::Deep C>
+      auto Deepen(this C& self) -> C& {
+         LglsAssert(not self.IsTypeConstrained() or self.template IsSame<C>(),
+            "Can't deepen with incompatible type");
+      
+         // Allocate a new T and move this inside it                    
+         C temp {Piecewise, Abandon {self}};
+         self.Swap(temp);
+         return *self.template Get<C>();
+      }
 
       /// Extend the container's memory and return the newly allocated range  
       ///   @attention if extending memory without ownership, the container   
@@ -344,31 +484,51 @@ namespace Langulus::Anyness::Component
       /// Concatenation at specific index.                                    
       /// Possible only for contiguous containers with multiple elements.     
       template<CT::Contiguous C>
-      auto ConcatAt(this C& self, CT::Index auto index, CT::Container auto&& data) -> size_t {
+      auto ConcatAt(this C& self, CT::Index auto&& idx, CT::Container auto&& data) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         const auto rhs_count = DeintCast(data).GetCount();
+         const size_t rhs_count = DeintCast(data).GetCount();
          if (not rhs_count)
             return 0;
 
          self.AbsorbType(FWDIntent(data));
-         self.BranchOut();
-         const auto lhs_count = self.GetCount();
-         const auto idx = self.template SimplifyIndex<false>(index);
-         self.AllocateMore(lhs_count + rhs_count);
 
-         if (idx < lhs_count) {
+         // Reallocate/branch out                                       
+         const size_t lhs_count = self.GetCount();
+         const size_t all_count = lhs_count + rhs_count;
+         self.BranchOut(all_count);
+
+         const size_t offset = self.SimplifyIndex(idx);
+         auto handle = self.GetHandle() + offset;
+         if (offset < lhs_count) {
             // We're moving to the right, so make sure we do it in      
             // reverse to avoid any potential overlap                   
-            const auto moved = lhs_count - idx;
-            self.SelectInner(idx + rhs_count, moved).template CreateWithIntent<true>(
-               Abandon(self.SelectInner(idx, moved)));
+            //TODO batch optimization for PODs
+            const size_t moved = lhs_count - offset;
+            auto from = handle + (moved - 1);
+            auto to   = self.GetHandle() + (all_count - 1);
+            auto const end = (from - moved).GetRaw();
+            while (from.GetRaw() != end) {
+               Id::ForEach([&]<Cid D>{
+                  to.template EmplaceWithIntent<D>(Abandon {from});
+               });
+               --from; --to;
+            }
          }
 
-         // Construct data in place                                     
-         self.SelectInner(idx, rhs_count).CreateWithIntent(LglsFwd(data));
-         self.SetCount(lhs_count + rhs_count);
+         // Initialize the new elements                                 
+         //TODO batch optimization for PODs
+         auto source = DeintCast(data).GetHandle();
+         auto const end = (handle + rhs_count).GetRaw();
+         while (handle.GetRaw() != end) {
+            Id::ForEach([&]<Cid D>{
+               handle.template EmplaceWithIntent<D>(Abandon {source});
+            });
+            ++handle; ++source;
+         }
+
+         self.SetCountInner(all_count);
          return rhs_count;
       }
 
@@ -412,8 +572,8 @@ namespace Langulus::Anyness::Component
          };
 
          try {
-             insert(LglsFwd(a1_intent));
-            (insert(LglsFwd(an_intent)), ...);
+            insert(LglsFwd(a1_intent));
+           (insert(LglsFwd(an_intent)), ...);
          }
          catch (...) {
             // Account for throws inside constructors                   
@@ -435,47 +595,33 @@ namespace Langulus::Anyness::Component
       ///   @attention operates in all relevant dimensions simultaneously     
       template<CT::Contiguous C, class A>
       void PrepareForInsertion(this C& self, A&& a, size_t& out_count, bool& deepened) {
-         if constexpr (CT::NotVoid<AS>) {
-            // The component demands serialization to AS before insert. 
-            // This means that container is not mutable beyond AS.      
-            // All we have to do here is calculate the `out_count`.     
-            //static_assert(not CT::TypeErased<C>,
-            //   "Serializing insertion requires a statically-typed container");
-            static_assert(Exact<C, AS>,
-               "Serializing insertion type mismatch");
-            out_count = GetAllExtentsOf(a);
+         if constexpr (CT::Handle<A>) {
+            // Inserting handles                                        
+            if (not deepened) {
+               try {
+                  self.AbsorbType(Copy(a));
+               } catch(...) {
+                  deepened = true;
+                  out_count = 2;
+                  return;
+               }
+               ++out_count;
+            }
+            else ++out_count;
          }
          else {
-            // Non-serializing insertion. The container can mutate and  
-            // deepen freely.                                           
-            if constexpr (CT::Handle<A>) {
-               // Inserting handles                                     
-               if (not deepened) {
-                  try {
-                     self.AbsorbType(Copy(a));
-                  } catch(...) {
-                     deepened = true;
-                     out_count = 2;
-                     return;
-                  }
-                  ++out_count;
+            // Inserting element or an array                            
+            if (not deepened) {
+               try {
+                  self.DeduceType(LglsFwd(a));
+               } catch(...) {
+                  deepened = true;
+                  out_count = 2;
+                  return;
                }
-               else ++out_count;
+               out_count += GetAllExtentsOf(a);
             }
-            else {
-               // Inserting element or an array                         
-               if (not deepened) {
-                  try {
-                     self.DeduceType(LglsFwd(a));
-                  } catch(...) {
-                     deepened = true;
-                     out_count = 2;
-                     return;
-                  }
-                  out_count += GetAllExtentsOf(a);
-               }
-               else ++out_count;
-            }
+            else ++out_count;
          }
       }
 
@@ -493,62 +639,156 @@ namespace Langulus::Anyness::Component
          out_count += c;
       }
 
+      /// MARK: ConvertInsertInner                                            
+      template<CT::Contiguous C, class T>
+      void ConvertInsertInner(this C& self, size_t& at, T&& a) {
+         using I  = IntentOf(a);
+         using IT = DeextAll<Deint<I>>;
+         static_assert(CT::NotVoid<AS> and not Same<TypeOf<AS>, IT>,
+            "Use InsertInner instead");
+      
+         AS converted;
+         if constexpr (CT::Array<T>) {
+            for (size_t i = 0; i < ExtentOf<T>; ++i)
+               Langulus::Serialize(DeintCast(a)[i], converted);
+         }
+         else Langulus::Serialize(DeintCast(a), converted);
+
+         const size_t offset = converted.GetCount();
+         ThisCom::ConcatAt(at, Abandon {converted});
+         at += offset;
+      }
+
       /// MARK: InsertInner                                                   
       /// A deeply unsafe function, that places 'a' at handle 'to'            
       /// and moves handle further. Supports T being a bounded array.         
+      /// Does not perform conversion.                                        
       template<CT::Handle H, class T>
       static void InsertInner(H& to, T&& a) {
-         using I = IntentOf(a);
+         using I  = IntentOf(a);
+         using IT = DeextAll<Deint<T>>;
+         static_assert(CT::Void<AS> or Same<TypeOf<AS>, IT>,
+            "Use ConvertInsertInner instead");
 
-         if constexpr (CT::NotVoid<AS> and not Same<AS, DeextAll<Deint<T>>>) {
-            // The component demands convertion to AS before insert     
-            if constexpr (CT::Array<T>) {
-               for (size_t i = 0; i < ExtentOf<T>; ++i) {
-                  AS converted;
-                  Langulus::Serialize(DeintCast(a)[i], converted);
-                  Id::ForEach([&]<Cid D>{
-                     to.template EmplaceWithIntent<D>(Abandon(converted));
-                  });
-                  
-                  ++to;
-               }
-            }
-            else {
-               AS converted;
-               Langulus::Serialize(DeintCast(a), converted);
+         // Non-converting insertion                                    
+         if constexpr (CT::Array<T>) {
+            for (size_t i = 0; i < ExtentOf<T>; ++i) {
                Id::ForEach([&]<Cid D>{
-                  to.template EmplaceWithIntent<D>(Abandon(converted));
+                  if constexpr (CT::Copied<I>)
+                     to.template EmplaceWithIntent<D>(Refer(DeintCast(a)[i]));
+                  else
+                     to.template EmplaceWithIntent<D>(I::Nest(DeintCast(a)[i]));
                });
-
+               
                ++to;
             }
          }
          else {
-            // Non-converting insertion                                 
-            if constexpr (CT::Array<T>) {
-               for (size_t i = 0; i < ExtentOf<T>; ++i) {
-                  Id::ForEach([&]<Cid D>{
-                     if constexpr (CT::Copied<I>)
-                        to.template EmplaceWithIntent<D>(Refer(DeintCast(a)[i]));
-                     else
-                        to.template EmplaceWithIntent<D>(I::Nest(DeintCast(a)[i]));
-                  });
-                  
-                  ++to;   
-               }
-            }
-            else {
-               Id::ForEach([&]<Cid D>{
-                  if constexpr (CT::Copied<I>)
-                     to.template EmplaceWithIntent<D>(Refer(LglsFwd(a)));
-                  else
-                     to.template EmplaceWithIntent<D>(FWDIntent(a));
-               });
+            Id::ForEach([&]<Cid D>{
+               if constexpr (CT::Copied<I>)
+                  to.template EmplaceWithIntent<D>(Refer(LglsFwd(a)));
+               else
+                  to.template EmplaceWithIntent<D>(FWDIntent(a));
+            });
 
-               ++to;
-            }
+            ++to;
          }
-      };
+      }
+      
+      /// MARK: CheckState                                                    
+      /// Check state compatibility for composition. Rules are:               
+      /// 1. An invalid container is compatible with any other                
+      /// 2. If one or more of the containers is disowned, they are always    
+      ///    incompatible.                                                    
+      /// 3. Missing containers are not compatible with non-missing ones.     
+      ///    If both containers are missing, they are compatible only if they 
+      ///    both are either past or future at the same time.                 
+      /// 4. In order to be compatible, a container has to be either capable  
+      ///    of being deepened, or matching the other type exactly.           
+      /// 5. Containers of different or-ness are only compatible if one of    
+      ///    the containers has count <= 1. That's the one case when or-ness  
+      ///    does not matter at all.                                          
+      ///   @param other - the block to check                                 
+      ///   @return true if state is compatible                               
+      constexpr bool CheckState(this auto const& self, CT::Container auto const& other) noexcept {
+         return not self.IsValid() or self.IsDisowned() or other.IsDisowned() or (
+                (not self.IsTypeConstrained() or other.IsExact(self)) //TODO IsTypeConstrained is allowed as long as it is deepenable
+            and (self.GetCount() <= 1 or other.GetCount() <= 1 or self.IsOr() == other.IsOr())
+            and ((not self.IsMissing() and not other.IsMissing()) or self.IsFuture() == other.IsFuture())
+         );
+      }
+
+      /// Inner composition function                                          
+      ///   @tparam FORCE - insert even if types mismatch, by making this     
+      ///      container deeper.                                              
+      ///   @param index - the place to insert at                             
+      ///   @param value - the value to concatenate                           
+      ///   @param state - the state to apply after concatenation             
+      ///   @return the number of inserted elements                           
+      template<bool FORCE, class C>
+      auto ComposeInner(
+          this C& self, bool stateCompliant, CT::Index auto&& index, auto&& value
+      ) -> size_t {
+         using I = IntentOf(value);
+         using T = Deint<I>;
+         auto& other = DeintCast(value);
+
+         if constexpr (CT::TypeErased<C>) {
+            if ((IsUntyped() and IsInvalid()) or IsSimilar<T>()) {
+               // Mutate-insert inside untyped container                   
+               return ThisCom::template InsertAt<false>(index, LglsFwd(value));
+            }
+            else if (IsEmpty() and IsTyped() and not IsTypeConstrained()) {
+               // If incompatibly typed but empty and not constrained, we  
+               // can still reset the container and reuse it               
+               Reset();
+               return ThisCom::template InsertAt<false>(index, LglsFwd(value));
+            }
+            else if (IsDeep()) {
+               // Already deep, push value wrapped in a container          
+               if (not stateCompliant) {
+                  // If container is not or-compliant after insertion, we  
+                  // need to add another layer                             
+                  self.Deepen();
+               }
+
+               return ThisCom::template InsertAt<false>(
+                  index, Deep<C> {LglsFwd(value)} //TODO are we allowed to absorb here? should we use Piecewise?
+               );
+            }
+
+            if constexpr (FORCE) {
+               // If this is reached, all else failed, but we are allowed  
+               // to deepen, so just do it                                 
+               self.Deepen();
+               return ThisCom::template InsertAt<false>(
+                  index, Deep<C> {LglsFwd(value)} //TODO are we allowed to absorb here? should we use Piecewise?
+               );
+            }
+            else return 0;
+         }
+         else {
+            if constexpr (Same<TypeOf<C>, T>) {
+               // Insert to a same-typed container                         
+               return ThisCom::template InsertAt<false>(
+                  index, LglsFwd(value)
+               );
+            }
+            else if constexpr (CT::Deep<TypeOf<C>>) {
+               // Already deep, push value wrapped in a container          
+               if (not stateCompliant) {
+                  // If container is not or-compliant after insertion, we  
+                  // need to add another layer                             
+                  self.Deepen();
+               }
+
+               return ThisCom::template InsertAt<false>(
+                  index, Deep<C> {LglsFwd(value)} //TODO are we allowed to absorb here? should we use Piecewise?
+               );
+            }
+            else return 0;
+         }
+      }
    };
 
    #undef ThisCom
