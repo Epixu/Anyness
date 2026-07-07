@@ -6,11 +6,10 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Insertion.hpp"
+#include "../Component.hpp"
 #include "Langulus/CT/Contiguous.hpp"
 #include "Langulus/IntentOf.hpp"
 #include "Langulus/Typenav.hpp"
-#include "source/Component.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -43,7 +42,7 @@ namespace Langulus::Anyness::Component
       /// Merging at specific index                                           
       template<class A1, class...AN, CT::IndexedLinearly C>
       auto MergeAt(this C&, CT::Index auto, A1&&, AN&&...)
-         -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
+         -> Count<C> /*requires CT::RangeInsertable<C, A1, AN...>*/;
 
       template<CT::IndexedLinearly C>
       auto MergeRangeAt(this C&, CT::Index auto, CT::Container auto&&)

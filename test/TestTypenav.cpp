@@ -8,6 +8,7 @@
 #include "Main.hpp"
 #include <Langulus/Typenav.hpp>
 #include <Langulus/CT/Akin.hpp>
+#include "TestTypes/CommonTypes.hpp"
 
 using namespace Langulus;
 
@@ -16,17 +17,6 @@ using namespace Langulus;
 ///                                                                           
 /// MARK: CT::Sheddable                                                       
 ///                                                                           
-namespace
-{
-   template<class T>
-   struct SheddableType { using CTTI_Sheddable = T; };
-   struct SheddableTypeDerived     : SheddableType<int&> {};
-   struct NonSheddableTypeDerived1 : SheddableType<int&> { using CTTI_Sheddable = No; };
-   struct NonSheddableTypeDerived2 : SheddableType<int&> { using CTTI_Sheddable = void; };
-   struct NonSheddableTypeDerived3 : SheddableType<int&> { using CTTI_Sheddable = Yes<>; };
-   struct IncompleteType;
-}
-
 TEST_CASE_TEMPLATE("Testing sheddable types", TestType
    , SheddableType<int&>
    , SheddableTypeDerived
@@ -66,19 +56,6 @@ static_assert(not CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived
 ///                                                                           
 /// MARK: CT::Array                                                           
 ///                                                                           
-namespace
-{
-   using ArrayType = int[50];
-   using ArrayType2 = int[50][2];
-   using ArrayTypeRef = int(&)[50];
-   using ArrayTypeRef2 = int(&)[50][2];
-   using PointerType = int*;
-   using PointerType2 = int**;
-   struct CustomArrayType { using CTTI_Array = Yes<56>; };
-   struct CustomNonArrayTypeDerived : CustomArrayType { using CTTI_Array = No; };
-   struct CustomNonArrayType {};
-}
-
 TEST_CASE_TEMPLATE("Testing bounded array types", TestType
    , SheddableType<ArrayType>
    , ArrayType
@@ -114,6 +91,12 @@ static_assert(not CT::Array<ArrayType, ArrayType2, CustomNonArrayType>);
 ///                                                                           
 SCENARIO("Getting the extent of bounded array types") {
    static_assert(ExtentOf<SheddableType<ArrayType>> == 50);
+   static_assert(ExtentOf<Refer<ArrayType>> == 50);
+   static_assert(ExtentOf<Move<ArrayType>> == 50);
+   static_assert(ExtentOf<Abandon<ArrayType>> == 50);
+   static_assert(ExtentOf<Copy<ArrayType>> == 50);
+   static_assert(ExtentOf<Clone<ArrayType>> == 50);
+   static_assert(ExtentOf<Disown<ArrayType>> == 50);
    static_assert(ExtentOf<ArrayType> == 50);
    static_assert(ExtentOf<ArrayType*> == 1);
    static_assert(ExtentOf<ArrayType2> == 50);
@@ -131,14 +114,36 @@ SCENARIO("Getting the extent of bounded array types") {
 
 
 ///                                                                           
-/// MARK: CT::Sparse / CT::Dense                                              
+/// MARK: AllExtentsOf                                                        
 ///                                                                           
-namespace
-{
-   struct CustomPointerType { using CTTI_Sparse = Yes<>; };
-   struct CustomNonPointerType {};
+SCENARIO("Getting the extent of bounded array types") {
+   static_assert(AllExtentsOf<SheddableType<ArrayType>> == 50);
+   static_assert(AllExtentsOf<Refer<ArrayType>> == 50);
+   static_assert(AllExtentsOf<Move<ArrayType>> == 50);
+   static_assert(AllExtentsOf<Abandon<ArrayType>> == 50);
+   static_assert(AllExtentsOf<Copy<ArrayType>> == 50);
+   static_assert(AllExtentsOf<Clone<ArrayType>> == 50);
+   static_assert(AllExtentsOf<Disown<ArrayType>> == 50);
+   static_assert(AllExtentsOf<Disown<ArrayType2>> == 100);
+   static_assert(AllExtentsOf<ArrayType> == 50);
+   static_assert(AllExtentsOf<ArrayType*> == 1);
+   static_assert(AllExtentsOf<ArrayType2> == 100);
+   static_assert(AllExtentsOf<Deext<ArrayType2>> == 2);
+   static_assert(AllExtentsOf<ArrayTypeRef> == 50);
+   static_assert(AllExtentsOf<ArrayTypeRef2> == 100);
+   static_assert(AllExtentsOf<Deext<ArrayTypeRef2>> == 2);
+   static_assert(AllExtentsOf<PointerType> == 1);
+   static_assert(AllExtentsOf<PointerType2> == 1);
+   static_assert(AllExtentsOf<CustomArrayType> == 56);
+   static_assert(AllExtentsOf<CustomNonArrayType> == 1);
+   static_assert(AllExtentsOf<CustomNonArrayTypeDerived> == 1);
+   //static_assert(AllExtentsOf<IncompleteType> == 1); // shouldn't compile
 }
 
+
+///                                                                           
+/// MARK: CT::Sparse / CT::Dense                                              
+///                                                                           
 TEST_CASE_TEMPLATE("Testing sparse types", TestType
    , SheddableType<PointerType>
    , PointerType
@@ -369,63 +374,43 @@ static_assert(not CT::NotEnum<SheddableType<EnumType*>, NonEnumTypeDerived, Actu
 ///                                                                           
 /// MARK: CT::Aggregate                                                       
 ///                                                                           
-namespace
-{
-   struct AggregateType {
-      using CTTI_Aggregate = Yes<>;
-      int force_not_aggregate;
-
-      AggregateType()
-         : force_not_aggregate(666) {
-         --force_not_aggregate;
-      }
-   };
-   struct AggregateTypeDerived : AggregateType {};
-   struct NonAggregateTypeDerived : AggregateType {
-      using CTTI_Aggregate = No;
-
-      NonAggregateTypeDerived()
-         : AggregateType() {
-         --force_not_aggregate;
-      }
-   };
-   struct ActualAggregate { int one; int two; };
-}
-
 TEST_CASE_TEMPLATE("Testing aggregate types", TestType
-   , SheddableType<AggregateType>
+   , SheddableType<ActualAggregateType>
+   , SheddableType<CustomAggregateType>
+   , CustomAggregateType
    , AggregateTypeDerived
    , AggregateTypeDerived&
-   , ActualAggregate
-   , ActualAggregate&
-   , SheddableType<ActualAggregate&>
+   , ActualAggregateType
+   , ActualAggregateType&
+   , SheddableType<ActualAggregateType&>
+   //, IncompleteType    // shouldn't compile
 ) {
    static_assert(    CT::Aggregate<TestType>);
    static_assert(not CT::NotAggregate<TestType>);
 }
 
 TEST_CASE_TEMPLATE("Testing non-aggregate types", TestType
-   , SheddableType<AggregateType*>
-   , AggregateType*
-   , ActualAggregate*
+   , SheddableType<ActualAggregateType*>
+   , SheddableType<CustomAggregateType*>
+   , CustomAggregateType*
+   , ActualAggregateType*
    , NonAggregateTypeDerived
    , NonAggregateTypeDerived&
    , SheddableType<NonAggregateTypeDerived&>
-   //, IncompleteType    // shouldn't compile out
-   , int
-   , int&
+   , int, int&
+   //, IncompleteType    // shouldn't compile
 ) {
    static_assert(not CT::Aggregate<TestType>);
    static_assert(    CT::NotAggregate<TestType>);
 }
 
 //static_assert(CT::Aggregate<>); // shouldn't compile at all
-static_assert(    CT::Aggregate<SheddableType<AggregateType>, ActualAggregate, AggregateTypeDerived>);
-static_assert(not CT::Aggregate<SheddableType<AggregateType>, ActualAggregate, NonAggregateTypeDerived>);
+static_assert(    CT::Aggregate<SheddableType<ActualAggregateType>, ActualAggregateType, AggregateTypeDerived>);
+static_assert(not CT::Aggregate<SheddableType<ActualAggregateType>, ActualAggregateType, NonAggregateTypeDerived>);
 
 //static_assert(CT::NotAggregate<>); // shouldn't compile at all
-static_assert(    CT::NotAggregate<SheddableType<AggregateType*>, NonAggregateTypeDerived, int>);
-static_assert(not CT::NotAggregate<SheddableType<AggregateType*>, NonAggregateTypeDerived, ActualAggregate>);
+static_assert(    CT::NotAggregate<SheddableType<ActualAggregateType*>, NonAggregateTypeDerived, int>);
+static_assert(not CT::NotAggregate<SheddableType<ActualAggregateType*>, NonAggregateTypeDerived, ActualAggregateType>);
 
 
 ///                                                                           

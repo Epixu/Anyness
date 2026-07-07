@@ -12,11 +12,10 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Adds operators for front (>>) and back (<<) insertion                  
-   ///   @tparam AS type to serialize as before inserting. Useful for byte    
-   ///      and text containers. Use void to insert without serialization     
+   /// Adds operators for concatenation (+ and +=)                            
    ///   @tparam ID, SHARED operators that share the same insertion behavior. 
-   template<class AS, Cid ID, Cid...SHARED>
+   ///   @attention this relies on Com::Insertion being present               
+   template<Cid ID, Cid...SHARED>
    struct InsertionOperatorsConcat {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -24,16 +23,19 @@ namespace Langulus::Anyness::Component
 
       static constexpr int ComponentPrecedence = 3000;
 
-      /// Copy left side and push back rhs                                    
+      /// Copy `lhs` and push `rhs` to the back                               
       template<CT::Container C>
       C operator + (this C const& lhs, CT::NotContainer auto&& rhs) {
-         return C {Copy {lhs}} << LglsFwd(rhs);
+         C temp {Copy {lhs}};
+         temp.Insert(LglsFwd(rhs));
+         return temp;
       }
 
-      /// Same as push back operator (<<)                                     
+      /// Insert `rhs` at the back                                            
       template<CT::Container C>
-      C& operator += (this C& self, CT::NotContainer auto&& rhs) {
-         return self << LglsFwd(rhs);
+      C& operator += (this C& lhs, CT::NotContainer auto&& rhs) {
+         lhs.Insert(LglsFwd(rhs));
+         return lhs;
       }
 
       /// Concatenate another container at the back, resulting in a new one   

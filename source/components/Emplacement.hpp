@@ -7,8 +7,8 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "IndexedLinear.hpp"
 #include <Langulus/CT/Describable.hpp>
+#include <Langulus/CT/Index.hpp>
 #include <Langulus/Allocator.hpp>
 #include <Langulus/MetaOf.hpp>
 

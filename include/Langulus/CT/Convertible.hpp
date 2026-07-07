@@ -148,7 +148,7 @@ namespace Langulus
       else if constexpr (CT::ConvertibleImplicit<DFROM, DTO>)
          return DTO(from);
       else if constexpr (CT::ConvertibleExplicit<DFROM, DTO>)
-         return DTO{static_cast<DTO>(from)};
+         return DTO{static_cast<DTO>(DecvqAllCast(from))};
       else {
          static_assert(false,
             "FROM can't be converted to TO - add CTTI::Converter, "

@@ -1,26 +1,39 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include <Langulus/Typenav.hpp>
 #include <Langulus/Tag.hpp>
 #include <string>
 
 using namespace Langulus;
+
+
+///                                                                           
+/// The types in this file act as a comprehensive list for testing with       
+/// each and every function, container and pattern the framework provides.    
+///                                                                           
+
+/// MARK: Metas                                                               
 using RTTI::DMeta;
 using RTTI::TMeta;
 using RTTI::CMeta;
 using RTTI::VMeta;
 
-
+/// MARK: Incomplete                                                          
 class IncompleteType;
 
-
-//template<class T>
-//struct SheddableType { using CTTI_Sheddable = T; };
-
+/// MARK: Enum                                                                
 enum class Pi {
    Number = 314,
    ConflictingNumber = 666
 };
 
+/// MARK: Reflectable                                                         
 struct NotReflectable       { using CTTI_ReflectAs = void; };
 struct NotReflectableIntern { using CTTI_ReflectAs = No;   };
 struct NotReflectableExtern {};
@@ -28,6 +41,7 @@ struct ReflectableIntern    { using CTTI_ReflectAs = char; };
 struct ReflectableExtern    {};
 struct ReflectableAsSelf    { using CTTI_ReflectAs = ReflectableAsSelf; };
 
+/// MARK: Sheddable                                                           
 template<class T>
 struct SheddableType;
 
@@ -38,7 +52,8 @@ struct SheddableType<T> {
 
    T instance;
 
-   SheddableType(T t) : instance {LglsFwd(t)} {}
+   /// @attention volatile arguments are deprecated in modern C++       
+   SheddableType(Devq<T> t) : instance {LglsFwd(t)} {}
 };
 
 template<CT::Void T>
@@ -71,24 +86,43 @@ struct SheddableTypeCastableUsingMethod : SheddableType<T> {
    auto TypedCast() const noexcept -> T const& { return instance; }
 };
 
+struct SheddableTypeDerived     : SheddableType<int&> {};
+struct NonSheddableTypeDerived1 : SheddableType<int&> { using CTTI_Sheddable = No; };
+struct NonSheddableTypeDerived2 : SheddableType<int&> { using CTTI_Sheddable = void; };
+struct NonSheddableTypeDerived3 : SheddableType<int&> { using CTTI_Sheddable = Yes<>; };
+
+/// MARK:Typed                                                                
 struct CustomTypedType { using CTTI_Typed = int; };
 struct CustomTypedTypeDerived : CustomTypedType { };
 struct CustomUntypedType : CustomTypedType { using CTTI_Typed = void; };
 enum TypedEnum : int64_t {one1, two2};
 enum class TypedEnumClass : int64_t {one1, two2};
 
-
-/// Proper type, reflected as abstract                                        
+/// MARK: Deep                                                                
 struct ForcedDeepExternally {};
 struct ForcedDeepInternally {
    using CTTI_Deep = Yes<>;
 };
 
-/// Types that can inherit deepness                                           
 struct InheritedDeep1 : ForcedDeepInternally {};
 struct InheritedDeep1Disabled : ForcedDeepInternally { using CTTI_Deep = No; };
 struct InheritedDeep1ButPrivate : private ForcedDeepInternally {};
 struct InheritedDeepExternally : ForcedDeepExternally {};
+
+/// Arrays                                                                    
+using ArrayType = int[50];
+using ArrayType2 = int[50][2];
+using ArrayTypeRef = int(&)[50];
+using ArrayTypeRef2 = int(&)[50][2];
+using PointerType = int*;
+using PointerType2 = int**;
+struct CustomArrayType { using CTTI_Array = Yes<56>; };
+struct CustomNonArrayTypeDerived : CustomArrayType { using CTTI_Array = No; };
+struct CustomNonArrayType {};
+
+/// Custom pointers                                                           
+struct CustomPointerType { using CTTI_Sparse = Yes<>; };
+struct CustomNonPointerType {};
 
 namespace Langulus::CTTI
 {
@@ -106,6 +140,7 @@ namespace Langulus::CTTI
    struct Deep<ForcedDeepExternally> {};
 }
 
+/// MARK: Tags                                                                
 namespace Langulus::Tags
 {
    struct Name {
@@ -132,6 +167,7 @@ namespace Langulus::Flow
    struct Verb {};
 }
 
+/// MARK: Verbs                                                               
 namespace Langulus::Verbs
 {
    /// Defines a verb                                                         
@@ -240,22 +276,6 @@ namespace Langulus::Verbs
    };
 }
 
-
-
-struct ConvertibleToInt {
-   using CTTI_MapsTo = int;
-
-   ConvertibleToInt(int inner = 666)
-      : member{inner} {}
-
-   explicit operator int() const noexcept {
-      return member;
-   }
-
-private:
-   int member;
-};
-
 struct ImplicitlyReflectedData {
    enum Named { One, Two, Three };
 
@@ -356,8 +376,8 @@ struct CheckingWhatGetsInherited : ImplicitlyReflectedDataWithTraits {
    Logger::Verbose("Executed FunctionForTesting");
 }*/
 
-
-/// Built-in abstract type via a pure virtual function                     
+/// MARK: Abstract                                                            
+/// Built-in abstract type via a pure virtual function                        
 struct PureAbstract {
    PureAbstract() = delete;
    virtual ~PureAbstract() {}
@@ -365,17 +385,17 @@ struct PureAbstract {
    [[maybe_unused]] virtual auto PureVirtualMethod() -> size_t = 0;
 };
 
-/// Proper type, reflected as abstract                                     
+/// Proper type, reflected as abstract                                        
 struct ForcedAbstractExternally {};
 struct ForcedAbstractInternally {
    using CTTI_Abstract = Yes<>;
 };
 
-/// Types that can inherit abstractness                                    
+/// Types that can inherit abstractness                                       
 struct InheritedAbstract1 : ForcedAbstractInternally { };
 struct InheritedAbstract2 : PureAbstract { };
 
-/// Types that can inherit abstractness privately                          
+/// Types that can inherit abstractness privately                             
 struct ImpureVirtual {
    virtual ~ImpureVirtual() {}
 };
@@ -383,24 +403,32 @@ struct InheritedAbstract1ButPrivate : private ForcedAbstractInternally {};
 struct InheritedAbstract2ButPrivate : private PureAbstract {};
 struct InheritedAbstractExternally  : ForcedAbstractExternally {};
 
-
-
-
-/// Type that has a virtual base                                           
+/// MARK: Virtual base                                                        
+/// Type that has a virtual base                                              
 struct VirtuallyDerived : virtual ImpureVirtual {
    using CTTI_Bases = Types<ImpureVirtual, int>;
 };
 
-/// Type that has a private non-virtual base                               
+/// Type that has a private non-virtual base                                  
 struct PrivatelyDerived : private ImpureVirtual {
    using CTTI_Bases = Types<ImpureVirtual, int, float>;
 };
 
+/// MARK: Convertible                                                         
+struct ConvertibleToInt {
+   using CTTI_MapsTo = int;
 
+   ConvertibleToInt(int inner = 666)
+      : member{inner} {}
 
+   explicit operator int() const noexcept {
+      return member;
+   }
 
-///                                                                        
-/// Convertible from int                                                   
+private:
+   int member;
+};
+
 struct BuiltinConvertibleFromIntViaConstructor {
    int inner = 0;
    BuiltinConvertibleFromIntViaConstructor(int x) : inner {x} {}
@@ -437,7 +465,7 @@ public:
    }
 };
 
-/// Types that inherit convertible properties                              
+/// Types that inherit convertible properties                                 
 struct InheritedConvertibleFromInt1
    : ConvertibleFromIntInternally {};
 struct InheritedConvertibleFromInt1Disabled
@@ -449,15 +477,15 @@ struct InheritedConvertibleFromInt3
 struct InheritedConvertibleFromInt4
    : BuiltinConvertibleFromIntViaExplicitConstructor {};
 
-/// Types that inherit convertible properties privately                    
+/// Types that inherit convertible properties privately                       
 struct InheritedConvertibleFromInt1ButPrivate : private ConvertibleFromIntInternally {};
 struct InheritedConvertibleFromInt2ButPrivate : private BuiltinConvertibleFromIntViaConstructor {};
 struct InheritedConvertibleFromInt3ButPrivate : private BuiltinConvertibleFromIntViaExplicitConstructor {};
 struct InheritedConvertibleFromIntExternally : ConvertibleFromIntExternally {};
 
 
-///                                                                        
-/// Convertible to int                                                     
+///                                                                           
+/// Convertible to int                                                        
 class BuiltinConvertibleToIntViaOperator {
    int inner = 0;
 public:
@@ -508,7 +536,7 @@ struct ConvertibleToIntInternally {
    using CTTI_MapsTo = int;
 };
 
-/// Types that inherit convertible properties                              
+/// Types that inherit convertible properties                                 
 struct InheritedConvertibleToInt1
    : ConvertibleToIntInternally {};
 struct InheritedConvertibleToInt1Disabled
@@ -524,12 +552,13 @@ struct InheritedConvertibleToInt5
 struct InheritedConvertibleToInt6
    : BuiltinConvertibleToIntViaExplicitOperatorMutable {};
 
-/// Types that inherit convertible properties privately                    
+/// Types that inherit convertible properties privately                       
 struct InheritedConvertibleToInt1ButPrivate : private ConvertibleToIntInternally {};
 struct InheritedConvertibleToInt2ButPrivate : private BuiltinConvertibleToIntViaOperator {};
 struct InheritedConvertibleToInt3ButPrivate : private BuiltinConvertibleToIntViaExplicitOperator {};
 struct InheritedConvertibleToIntExternally : ConvertibleToIntExternally {};
 
+/// MARK: Container                                                           
 /// For testing container related concepts                                    
 struct CustomContainer {
    using CTTI_Container = Yes<>;
@@ -625,7 +654,7 @@ namespace Langulus::CTTI
    };
 }
 
-
+/// MARK: Empty                                                               
 struct EmptyType {};
 static_assert(CT::POD<EmptyType>);
 static_assert(::std::is_copy_constructible_v<EmptyType>);
@@ -633,21 +662,42 @@ static_assert(::std::is_move_constructible_v<EmptyType>);
 static_assert(::std::is_copy_assignable_v<EmptyType>);
 static_assert(::std::is_move_assignable_v<EmptyType>);
 
-struct AggregateType {
+/// MARK: Aggregate                                                           
+struct ActualAggregateType {
    int i;
    float f;
 };
-static_assert(CT::POD<AggregateType>);
-static_assert(::std::is_copy_constructible_v<AggregateType>);
-static_assert(::std::is_move_constructible_v<AggregateType>);
-static_assert(::std::is_copy_assignable_v<AggregateType>);
-static_assert(::std::is_move_assignable_v<AggregateType>);
+static_assert(CT::POD<ActualAggregateType>);
+static_assert(::std::is_copy_constructible_v<ActualAggregateType>);
+static_assert(::std::is_move_constructible_v<ActualAggregateType>);
+static_assert(::std::is_copy_assignable_v<ActualAggregateType>);
+static_assert(::std::is_move_assignable_v<ActualAggregateType>);
 
-/// Explicitly deleted destructor                                          
-/// @attention this hits a nasty compiler bug on MSVC v143 when intents    
-///   are implicitly cast to built-in move/copy semantics                  
-///   They are disabled because of this, as well as other compiler bugs    
-///   https://stackoverflow.com/questions/79665049                         
+struct CustomAggregateType {
+   using CTTI_Aggregate = Yes<>;
+   int force_not_aggregate;
+
+   CustomAggregateType()
+      : force_not_aggregate(666) {
+      --force_not_aggregate;
+   }
+};
+struct AggregateTypeDerived : CustomAggregateType {};
+struct NonAggregateTypeDerived : CustomAggregateType {
+   using CTTI_Aggregate = No;
+
+   NonAggregateTypeDerived()
+      : CustomAggregateType() {
+      --force_not_aggregate;
+   }
+};
+
+/// MARK: Destructible                                                        
+/// Explicitly deleted destructor                                             
+/// @attention this hits a nasty compiler bug on MSVC v143 when intents       
+///   are implicitly cast to built-in move/copy semantics                     
+///   They are disabled because of this, as well as other compiler bugs       
+///   https://stackoverflow.com/questions/79665049                            
 struct NonDestructible {
    ~NonDestructible() = delete;
 };
@@ -669,7 +719,8 @@ static_assert(::std::is_move_constructible_v<DestructibleType>);
 static_assert(::std::is_copy_assignable_v<DestructibleType>);
 static_assert(::std::is_move_assignable_v<DestructibleType>);
 
-/// Has no explicit intent constructors and assigners                      
+/// MARK: Constructible                                                       
+/// Has no explicit intent constructors and assigners                         
 struct NonIntentConstructible {
    NonIntentConstructible(CT::NoIntent auto&&) {}
 };
@@ -679,7 +730,7 @@ static_assert(::std::is_move_constructible_v<NonIntentConstructible>);
 static_assert(::std::is_copy_assignable_v<NonIntentConstructible>);
 static_assert(::std::is_move_assignable_v<NonIntentConstructible>);
 
-/// Default-constructible, but only privately                              
+/// Default-constructible, but only privately                                 
 class PrivatelyConstructible {
    PrivatelyConstructible() = default;
    PrivatelyConstructible(PrivatelyConstructible const&) = default;
@@ -691,8 +742,8 @@ static_assert(not ::std::is_move_constructible_v<PrivatelyConstructible>);
 static_assert(not ::std::is_copy_assignable_v<PrivatelyConstructible>);
 static_assert(not ::std::is_move_assignable_v<PrivatelyConstructible>);
 
-/// Has explicit copy, move, refer, clone, abandon, disown constructors    
-/// Because they're explicit, there are no implicit intent-assigners       
+/// Has explicit copy, move, refer, clone, abandon, disown constructors       
+/// Because they're explicit, there are no implicit intent-assigners          
 struct PartiallyIntentConstructible {
    template<template<class> class S, class T>
    explicit PartiallyIntentConstructible(S<T>&&) requires CT::Intent<S<T>> {}
@@ -703,16 +754,16 @@ static_assert(::std::is_move_constructible_v<PartiallyIntentConstructible>);
 static_assert(::std::is_copy_assignable_v<PartiallyIntentConstructible>);
 static_assert(::std::is_move_assignable_v<PartiallyIntentConstructible>);
 
-/// Has implicit copy, move, refer, clone, abandon, disown constructors    
-/// Because they're implicit, the type should also have all intent-assigs  
-///   @attention this hits a lot of compiler bugs on different compilers:  
-///   - it causes ambiguity on Clang 19.1 for refer intents, because       
-///     the compiler can't decide whether to implicit-cast to && or        
-///     const&
-///   - it causes ambiguity on GCC 14.2 for move/abandon intents, because  
-///     the compiler can't decide how to implicit-cast to && or            
-///     const&
-///   @note implicit coversion of intents has been disabled to cope        
+/// Has implicit copy, move, refer, clone, abandon, disown constructors       
+/// Because they're implicit, the type should also have all intent-assigs     
+///   @attention this hits a lot of compiler bugs on different compilers:     
+///   - it causes ambiguity on Clang 19.1 for refer intents, because          
+///     the compiler can't decide whether to implicit-cast to && or           
+///     const&                                                                
+///   - it causes ambiguity on GCC 14.2 for move/abandon intents, because     
+///     the compiler can't decide how to implicit-cast to && or               
+///     const&                                                                
+///   @note implicit coversion of intents has been disabled to cope           
 struct PartiallyIntentConstructibleButImplicitly {
    template<template<class> class S, class T>
    PartiallyIntentConstructibleButImplicitly(S<T>&&) requires CT::Intent<S<T>> {}
@@ -723,36 +774,27 @@ static_assert(::std::is_move_constructible_v<PartiallyIntentConstructibleButImpl
 static_assert(::std::is_copy_assignable_v<PartiallyIntentConstructibleButImplicitly>);
 static_assert(::std::is_move_assignable_v<PartiallyIntentConstructibleButImplicitly>);
 
-/// Has all intent constructors                                            
-/// Making constructor explicit makes sure, that no implicit intent assign 
-/// happens                                                                
+/// Has all intent constructors                                               
+/// Making constructor explicit makes sure, that no implicit intent assign    
+/// happens                                                                   
 struct AllIntentConstructible {
    explicit AllIntentConstructible(CT::Intent auto&&) {}
 };
    
-/// Has all intent constructors                                            
-/// Making constructor implicit also allows for implicit intent assignments
+/// Has all intent constructors                                               
+/// Making constructor implicit also allows for implicit intent assignments   
 struct AllIntentConstructibleImplicit {
    AllIntentConstructibleImplicit(CT::Intent auto&&) {}
 };
 
-/// Has all intent constructors and assigners                              
+/// Has all intent constructors and assigners                                 
 struct AllIntentConstructibleAndAssignable {
    AllIntentConstructibleAndAssignable(CT::Intent auto&&) {}
    AllIntentConstructibleAndAssignable& operator = (CT::Intent auto&&) { return *this; }
 };
 
-/*template<class T>
-struct SheddableType {
-   using CTTI_Sheddable = T;
-   using CTTI_Typed = T;
-
-   T instance;
-
-   SheddableType(T t) : instance {LglsFwd(t)} {}
-};*/
-   
-/// Implicit assignment is disabled due to custom copy/move constructors   
+/// MARK: Complex                                                             
+/// Implicit assignment is disabled due to custom copy/move constructors      
 struct alignas(128) Complex {
    int  member;
    bool anotherMember {};
@@ -777,14 +819,14 @@ class ContainsComplex {
    Complex mData;
 };
 
-/// A complex aggregate type                                               
+/// A complex aggregate type                                                  
 struct AggregateTypeComplex {
    int m1, m2, m3, m4;
    bool m5;
    Complex mData;
 };
    
-/// Constructible but not assignable                                       
+/// Constructible but not assignable                                          
 struct ReferConstructibleButNotAssignable {
    int m;
    explicit ReferConstructibleButNotAssignable(const ReferConstructibleButNotAssignable& a) : m {a.m} {}
@@ -853,7 +895,8 @@ static_assert(not ::std::is_trivially_move_constructible_v<CloneConstructibleBut
 static_assert(not ::std::is_trivially_copy_assignable_v<CloneConstructibleButNotAssignable>);
 static_assert(not ::std::is_trivially_move_assignable_v<CloneConstructibleButNotAssignable>);
 
-/// Assignable but not constructible                                       
+/// MARK: Assignable                                                          
+/// Assignable but not constructible                                          
 struct ReferAssignableButNotConstructible {
    int m;
    ReferAssignableButNotConstructible& operator = (Refer<ReferAssignableButNotConstructible>&& a) {
@@ -908,7 +951,7 @@ struct CloneAssignableButNotConstructible {
 };
 static_assert(::std::is_assignable_v<CloneAssignableButNotConstructible, Clone<CloneAssignableButNotConstructible>>);
 
-/// Custom POD type                                                        
+/// MARK: POD                                                                 
 struct ForcefullyPod {
    using CTTI_POD = Yes<>;
    Complex mData;

@@ -41,8 +41,8 @@ namespace Langulus::Anyness
          Com::OwnershipStack<>,              // Allocation is referenced
          Com::HashStack<>,                   // Variable hash (cached)  
          Com::Insertion<Bytes>,              // Serialize + insert      
-         Com::InsertionOperators<Bytes>,     // << and >> insertion     
-         Com::InsertionOperatorsConcat<Text>,// + and += concat      
+         Com::InsertionOperators<>,          // << and >> insertion     
+         Com::InsertionOperatorsConcat<>,    // + and += concat         
          Com::Removal<>,                     // Allows removal          
          Com::Assignment<>,                  // Allows assignment       
          Com::Comparison<>,                  // Allows for comparison   

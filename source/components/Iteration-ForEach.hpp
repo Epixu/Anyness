@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Container.hpp"
 #include "Iteration-Range.hpp"
 #include <Langulus/CT/Deep.hpp>
 #include <Langulus/CT/ReflectAs.hpp>

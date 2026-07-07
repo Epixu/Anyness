@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Typenav.hpp"
+#include "Langulus/IntentOf.hpp"
 
 
 namespace Langulus::CTTI
@@ -62,9 +63,8 @@ namespace Langulus
    using SerializerOf = decltype(CT::Inner::GetSerializer<Shed<T>>());
 
    /// Serialize                                                              
-   template<class FROM, CT::Serializer TO>
-   auto Serialize(FROM& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr)
-   -> typename TO::CountType {
+   template<class FROM, CT::Serializer TO> requires CT::NoIntent<FROM, TO>
+   auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
       const typename DTO::CountType initial = to.GetCount();

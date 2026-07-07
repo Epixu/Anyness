@@ -761,7 +761,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
-      /// #MARK: Range                                                        
+      /// MARK: Range                                                         
       WHEN("Range-iterated (default)") {
          IterateDefault strategy(pack);
          IterateDefault strategyConst(::std::as_const(pack));
@@ -934,7 +934,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          REQUIRE(counter == 0);
       }
       
-      /// #MARK: Handles                                                      
+      /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto h = pack.GetHandle();
 
@@ -958,7 +958,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          Handle_CheckState_Default<E const>(h);
       }
 
-      /// #MARK: Insertion                                                    
+      /// MARK: Insertion                                                     
       const ScopedE darray1[5] {1, 2, 3, 4,  5};
       const ScopedE darray2[5] {6, 7, 8, 9, 10};
 

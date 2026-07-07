@@ -5,6 +5,7 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
+#include "Langulus/Typenav.hpp"
 #include "Main.hpp"
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/MetaOf.hpp>
@@ -385,7 +386,8 @@ TEST_CASE_TEMPLATE("Testing not CT::HasReferConstructor", TestType
    //, IncompleteType             // should not compile at all
    , NonIntentConstructible
    , DestructibleType
-   , EmptyType, AggregateType
+   , EmptyType
+   , ActualAggregateType
    , NonDestructible
    , PrivatelyConstructible
    , ForcefullyPod
@@ -438,7 +440,7 @@ TEST_CASE_TEMPLATE("Testing CT::HasCopyConstructor", TestType
 
 TEST_CASE_TEMPLATE("Testing not CT::HasCopyConstructor", TestType
    //, IncompleteType // should not compile at all
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonIntentConstructible
@@ -495,7 +497,7 @@ TEST_CASE_TEMPLATE("Testing CT::HasCloneConstructor", TestType
 
 TEST_CASE_TEMPLATE("Testing not CT::HasCloneConstructor", TestType
    //, IncompleteType // should not compile at all
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonIntentConstructible
@@ -552,7 +554,7 @@ TEST_CASE_TEMPLATE("Testing CT::HasDisownConstructor", TestType
 
 TEST_CASE_TEMPLATE("Testing not CT::HasDisownConstructor", TestType
    //, IncompleteType // should not compile at all
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonIntentConstructible
@@ -608,7 +610,7 @@ TEST_CASE_TEMPLATE("Testing CT::HasAbandonConstructor", TestType
 
 TEST_CASE_TEMPLATE("Testing not CT::HasAbandonConstructor", TestType
    //, IncompleteType // should not compile at all
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonDestructible
@@ -664,7 +666,7 @@ TEST_CASE_TEMPLATE("Testing CT::HasMoveConstructor", TestType
 
 TEST_CASE_TEMPLATE("Testing not CT::HasMoveConstructor", TestType
    //, IncompleteType // should not compile at all
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonDestructible
@@ -719,7 +721,8 @@ TEST_CASE_TEMPLATE("Testing CT::HasReferAssign", TestType
 TEST_CASE_TEMPLATE("Testing not CT::HasReferAssign", TestType
    //, IncompleteType   // should not compile at all
    , DestructibleType
-   , EmptyType, AggregateType
+   , EmptyType
+   , ActualAggregateType
    , NonDestructible
    , AllIntentConstructible
    , NonIntentConstructible
@@ -778,7 +781,8 @@ TEST_CASE_TEMPLATE("Testing not CT::HasCopyAssign", TestType
    , AllIntentConstructible
    , NonIntentConstructible
    , DestructibleType
-   , EmptyType, AggregateType
+   , EmptyType
+   , ActualAggregateType
    , NonDestructible
    , PrivatelyConstructible
    , ForcefullyPod
@@ -833,7 +837,8 @@ TEST_CASE_TEMPLATE("Testing not CT::HasCloneAssign", TestType
    , NonIntentConstructible
    , AllIntentConstructible
    , DestructibleType
-   , EmptyType, AggregateType
+   , EmptyType
+   , ActualAggregateType
    , NonDestructible
    , PrivatelyConstructible
    , ForcefullyPod
@@ -888,7 +893,8 @@ TEST_CASE_TEMPLATE("Testing not CT::HasDisownAssign", TestType
    , NonIntentConstructible
    , AllIntentConstructible
    , DestructibleType
-   , EmptyType, AggregateType
+   , EmptyType
+   , ActualAggregateType
    , NonDestructible
    , PrivatelyConstructible
    , ForcefullyPod
@@ -946,7 +952,8 @@ TEST_CASE_TEMPLATE("Testing not CT::HasAbandonAssign", TestType
    , PrivatelyConstructible
    , ForcefullyPod
    , DestructibleType
-   , EmptyType, AggregateType
+   , EmptyType
+   , ActualAggregateType
    , int
    
    , ReferConstructibleButNotAssignable
@@ -1001,7 +1008,8 @@ TEST_CASE_TEMPLATE("Testing not CT::HasMoveAssign", TestType
    , PrivatelyConstructible
    , ForcefullyPod
    , DestructibleType
-   , EmptyType, AggregateType
+   , EmptyType
+   , ActualAggregateType
    , int
    
    , ReferConstructibleButNotAssignable
@@ -1030,7 +1038,7 @@ static_assert(not CT::HasMoveAssign<AllIntentConstructibleAndAssignable, Private
 /// MARK: Refer intent                                                        
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing refer-constructible types", T
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonIntentConstructible
@@ -1116,7 +1124,7 @@ TEST_CASE_TEMPLATE("Testing non-refer-constructible types", T
 }
 
 TEST_CASE_TEMPLATE("Testing refer-assignable types", T
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , NonDestructible
    , DestructibleType
@@ -1199,7 +1207,7 @@ TEST_CASE_TEMPLATE("Testing non-refer-assignable types", T
 /// MARK: Move intents                                                        
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing move-constructible types", T
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonIntentConstructible
@@ -1274,7 +1282,7 @@ TEST_CASE_TEMPLATE("Testing non-move-constructible types", T
 
 TEST_CASE_TEMPLATE("Testing move-assignable types", T
    , NonDestructible
-   , AggregateType
+   , ActualAggregateType
    , EmptyType
    , DestructibleType
    , NonIntentConstructible
@@ -1357,7 +1365,7 @@ TEST_CASE_TEMPLATE("Testing non-move-assignable types", T
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing copy-constructible types", T
    , EmptyType
-   , AggregateType
+   , ActualAggregateType
    , AllIntentConstructible
    , AllIntentConstructibleImplicit
    , AllIntentConstructibleAndAssignable
@@ -1427,7 +1435,7 @@ TEST_CASE_TEMPLATE("Testing non-copy-constructible types", T
 
 TEST_CASE_TEMPLATE("Testing copy-assignable types", T
    , EmptyType
-   , AggregateType
+   , ActualAggregateType
    , AllIntentConstructibleImplicit
    , AllIntentConstructibleAndAssignable
    , PartiallyIntentConstructibleButImplicitly
@@ -1512,7 +1520,7 @@ TEST_CASE_TEMPLATE("Testing clone-constructible types", T
    , PartiallyIntentConstructibleButImplicitly
    , CloneConstructibleButNotAssignable
    , ForcefullyPod
-   , AggregateType
+   , ActualAggregateType
    , int
 ) {
    static_assert(    CT::Cloned<  Clone<int>>);
@@ -1577,7 +1585,7 @@ TEST_CASE_TEMPLATE("Testing clone-assignable types", T
    , EmptyType
    , AllIntentConstructibleImplicit
    , AllIntentConstructibleAndAssignable
-   , AggregateType
+   , ActualAggregateType
    , PartiallyIntentConstructibleButImplicitly
    , int
 ) {
@@ -1660,7 +1668,7 @@ TEST_CASE_TEMPLATE("Testing disown-constructible types", T
    , PartiallyIntentConstructibleButImplicitly
    , DisownConstructibleButNotAssignable
    , ForcefullyPod
-   , AggregateType
+   , ActualAggregateType
    , int
 ) {
    static_assert(    CT::Disowned< Disown<int>>);
@@ -1725,7 +1733,7 @@ TEST_CASE_TEMPLATE("Testing disown-assignable types", T
    , EmptyType
    , AllIntentConstructibleImplicit
    , AllIntentConstructibleAndAssignable
-   , AggregateType
+   , ActualAggregateType
    , PartiallyIntentConstructibleButImplicitly
    , int
 ) {
@@ -1812,7 +1820,7 @@ TEST_CASE_TEMPLATE("Testing abandon-constructible types", T
    , AbandonConstructibleButNotAssignable
    , MoveConstructibleButNotAssignable
    , ForcefullyPod
-   , AggregateType
+   , ActualAggregateType
    , int
 ) {
    static_assert(    CT::Abandoned<Abandon<int>>);
@@ -1876,7 +1884,7 @@ TEST_CASE_TEMPLATE("Testing abandon-assignable types", T
    , AllIntentConstructibleAndAssignable
    , PartiallyIntentConstructible
    , PartiallyIntentConstructibleButImplicitly
-   , AggregateType
+   , ActualAggregateType
    , int
 ) {
    static_assert(    CT::AbandonAssignable<T>);
@@ -1986,6 +1994,7 @@ TEMPLATE_TEST_CASE("Testing non-descriptor-makable types", "[ct]",
    REQUIRE_FALSE(meta->mDescriptorConstructor);
 }*/
 
+/// MARK: DeintCast                                                           
 TEST_CASE_TEMPLATE("Testing DeintCast (non-moving)", TestType
    , const int&
    , Copy<int>
@@ -2016,6 +2025,36 @@ TEST_CASE_TEMPLATE("Testing DeintCast (non-moving)", TestType
    delete value;
 }
 
+TEST_CASE_TEMPLATE("Testing DeintCast (non-moving arrays)", TestType
+   , const int(&)[5]
+   , Copy<int[5]>
+   , Refer<int[5]>
+   , Disown<int[5]>
+   , Clone<int[5]>
+) {
+   const int value[5] {656, 657, 658, 659, 660};
+   const TestType i {value};
+   static_assert(::std::same_as<decltype(DeintCast(i)), const int(&)[5]>);
+   REQUIRE(DeintCast(i)[0] == 656);
+   REQUIRE(DeintCast(i)[1] == 657);
+   REQUIRE(DeintCast(i)[4] == 660);
+
+   int const& store1 = DeintCast(value)[0];
+   REQUIRE(store1 == 656);
+   REQUIRE(&store1 == value);
+
+   int const& store2 = DeintCast(Copy{value})[0];
+   REQUIRE(store2 == 656);
+   REQUIRE(&store2 == value);
+
+   decltype(auto) store3 = DeintCast(Clone{value})[0];
+   static_assert(requires {
+      requires CT::Reference<decltype(store1)>;
+      requires CT::Reference<decltype(store2)>;
+      requires CT::Reference<decltype(store3)>;
+   });
+}
+
 TEST_CASE_TEMPLATE("Testing DeintCast (moving)", TestType
    , int&&
    , Move<int>
@@ -2034,7 +2073,7 @@ TEST_CASE_TEMPLATE("Testing DeintCast (moving)", TestType
    REQUIRE(store2 == 656);
    REQUIRE(&store2 == value);
 
-   decltype(auto) store3 = DeintCast(Abandon{*value});
+   decltype(auto) store3 = DeintCast(Abandon{value})[0];
    static_assert(requires {
       requires CT::Reference<decltype(store1)>;
       requires CT::Reference<decltype(store2)>;
@@ -2042,4 +2081,30 @@ TEST_CASE_TEMPLATE("Testing DeintCast (moving)", TestType
    });
 
    delete value;
+}
+
+TEST_CASE_TEMPLATE("Testing DeintCast (moving arrays)", TestType
+   , int(&&)[5]
+   , Move<int[5]>
+   , Abandon<int[5]>
+) {
+   int value[5] {656, 657, 658, 659, 660};
+   TestType i {static_cast<int(&&)[5]>(value)};
+   static_assert(::std::same_as<decltype(DeintCast(LglsFwd(i))), int(&&)[5]>);
+   REQUIRE(DeintCast(LglsFwd(i))[0] == 656);
+
+   int& store1 = DeintCast(value)[0];
+   REQUIRE(store1 == 656);
+   REQUIRE(&store1 == value);
+
+   int&& store2 = DeintCast(Move{value})[0];
+   REQUIRE(store2 == 656);
+   REQUIRE(&store2 == value);
+
+   decltype(auto) store3 = DeintCast(Abandon{value})[0];
+   static_assert(requires {
+      requires CT::Reference<decltype(store1)>;
+      requires CT::Reference<decltype(store2)>;
+      requires CT::Reference<decltype(store3)>;
+   });
 }

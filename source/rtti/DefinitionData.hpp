@@ -120,7 +120,7 @@ namespace Langulus::RTTI
       // only the main code is used, because it is most persistent.     
       using FUnary         = void (*)(void* self);
       using FBinary        = void (*)(void* from, void* to);
-      using FSerialize     = size_t (*)(void* from, void* to, void* context);
+      using FSerialize     = size_t (*)(void const* from, void* to, void* context);
       using FDescribe      = void (*)(void* self, const Anyness::Many& describe);
       using FCompare       = Compared (*)(const void* lhs, const void* rhs);
       using FCompareEqual  = bool (*)(const void* lhs, const void* rhs);
@@ -176,7 +176,7 @@ namespace Langulus::RTTI
          using CTTI_ReflectAs = void;
 
          // Simple converter, encapsulating a static_cast.              
-         FBinary convert;
+         FBinary convert;//TODO force these to be const on the left hand side
          // A serializer if supported, also takes in a context.         
          FSerialize serialize;
       };
