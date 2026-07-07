@@ -1,7 +1,7 @@
 /out
 /build
 /.vs
-/.ccache
+/.cache
 /external
 /Testing
 *.user
