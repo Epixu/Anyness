@@ -25,7 +25,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
       Many pack;
 
       WHEN("Pushed the first pointer") {
-         pack << *p1;
+         REQUIRE_NOTHROW(pack << *p1);
 
          REQUIRE(pack == *p1);
          REQUIRE(pack.GetCount() == 1);
@@ -39,7 +39,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
          #endif
 
          THEN("Push-back the first again and then the second") {
-            pack << *p1;
+            REQUIRE_NOTHROW(pack << *p1);
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry1);
@@ -48,7 +48,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
                REQUIRE(entry2->GetUses() == 1);
             #endif
 
-            pack << *p2;
+            REQUIRE_NOTHROW(pack << *p2);
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry1);
@@ -65,14 +65,14 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
          }
 
          THEN("Push-front the first again and then the second") {
-            pack >> *p1;
+            REQUIRE_NOTHROW(pack >> *p1);
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry1);
                REQUIRE(pack.GetEntries()[1] == entry1);
             #endif
 
-            pack >> *p2;
+            REQUIRE_NOTHROW(pack >> *p2);
 
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                REQUIRE(pack.GetEntries()[0] == entry2);
@@ -92,7 +92,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
          }
 
          THEN("Smart-push-back the first again and then the second, but packed together") {
-            pack.Compose(Many {*p1, *p2});
+            REQUIRE_NOTHROW(pack.Compose(Many {*p1, *p2}));
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());
@@ -106,7 +106,7 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
          }
 
          THEN("Smart-push-front the first again and then the second, but packed together") {
-            pack.ComposeAt(Index::Front, Many {*p1, *p2});
+            REQUIRE_NOTHROW(pack.ComposeAt(Index::Front, Many {*p1, *p2}));
 
             REQUIRE(pack.GetCount() == 3);
             REQUIRE(pack.IsExact<Many*>());

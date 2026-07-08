@@ -120,6 +120,55 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using PickRangeMut = typename Deref<C>::PickRangeMut;
 
+      template<CT::Handle H>
+      static void MakeGap(H const& start, size_t offset, size_t lhs_count, size_t rhs_count) {
+         if (offset >= lhs_count)
+            return;
+      
+         // We're moving to the right, so make sure we do it in         
+         // reverse to avoid any potential overlap                      
+         //TODO batch optimization for PODs
+         const size_t moved = lhs_count - offset;
+         auto src = start + (moved - 1);
+         auto dst = src + rhs_count;
+         auto const end = (src - moved).GetRaw();
+         while (src.GetRaw() != end) {
+            Id::ForEach([&]<Cid D>{
+               dst.template EmplaceWithIntent<D>(Abandon {src});
+            });
+            --src; --dst;
+         }
+      }
+
+      template<CT::Handle H1, CT::Handle H2>
+      static void CopyRegion(H1& src, H2& dst, size_t count) {
+         //TODO batch optimization for PODs
+         auto const end = (DeintCast(src) + count).GetRaw();
+         while (src.GetRaw() != end) {
+            Id::ForEach([&]<Cid D>{
+               dst.template EmplaceWithIntent<D>(Refer(src));
+            });
+            ++dst; ++src;
+         }
+      }
+      
+      template<CT::Container C1, CT::Handle H2>
+      static void CopyContainer(C1&& src_container, H2& dst) {
+         //TODO batch optimization for PODs
+         using I = IntentOf(src_container);
+         auto src = DeintCast(src_container).GetHandle();
+         auto const end = DeintCast(src_container).GetRawEnd();
+         while (src.GetRaw() != end) {
+            Id::ForEach([&]<Cid D>{
+               if constexpr (CT::Copied<I>)
+                  dst.template EmplaceWithIntent<D>(Refer(src));
+               else
+                  dst.template EmplaceWithIntent<D>(I::Nest(src));
+            });
+            ++dst; ++src;
+         }
+      }
+
    public:
       /// MARK: InsertAt                                                      
       /// Insert one or more elements at the specified position. Supports     
@@ -169,27 +218,51 @@ namespace Langulus::Anyness::Component
 
             if (not self.IsDisowned() and self.GetUses() == 1 and not deepened) {
                // No need to branch-out                                 
-               ThisCom::AllocateMore(all_count);
+               self.AllocateMore(all_count);
+               auto to = self.GetHandle() + offset;
+               MakeGap(to, offset, lhs_count, rhs_count);
 
+               try {
+                  InsertInner(to, LglsFwd(a1));
+                 (InsertInner(to, LglsFwd(an)), ...);
+               }
+               catch (...) {
+                  // Account for throws inside constructors             
+                  const size_t inserted = to - self.GetHandle();
+                  TODO(); //TODO a gap remains, move things back
+                  self.SetCountInner(inserted);
+                  throw;
+               }
             }
+            else {
+               // We need to branch-out: insert old and new elements    
+               // in another container, which we will later swap.       
+               C temp;
+               temp.Reserve(all_count);
+               auto src = self.GetHandle();
+               auto dst = temp.GetHandle();
 
-            self.BranchOut(all_count); //TODO when branching out, reinsert in a new container with the gap predefined, iinstead of always moving elements. See Erase for reference
+               // Copy original before 'offset'                         
+               CopyRegion(src, dst, offset);
 
-            TODO(); //TODO form a gap
-            
-            // Insert the new                                           
-            auto to = self.GetHandle() + offset;
+               // Copy new elements in the gap                          
+               try {
+                  InsertInner(dst, LglsFwd(a1));
+                 (InsertInner(dst, LglsFwd(an)), ...);
+               }
+               catch (...) {
+                  // Account for throws inside constructors             
+                  const size_t inserted = dst - self.GetHandle();
+                  TODO(); //TODO a gap remains, move things back
+                  self.SetCountInner(inserted);
+                  throw;
+               }
 
-            try {
-               ThisCom::InsertInner(to, LglsFwd(a1));
-              (ThisCom::InsertInner(to, LglsFwd(an)), ...);
-            }
-            catch (...) {
-               // Account for throws inside constructors                
-               const size_t inserted = to - self.GetHandle();
-               TODO(); //TODO a gap remains, move things back
-               self.SetCountInner(inserted);
-               throw;
+               // Copy original after 'offset'                          
+               CopyRegion(src, dst, lhs_count - offset);
+
+               // Swap                                                  
+               self.Swap(temp);
             }
 
             self.SetCountInner(all_count);
@@ -219,38 +292,40 @@ namespace Langulus::Anyness::Component
       ///   @return the number of pushed items (zero if unsuccessful)         
       template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
       auto ComposeAt(
-         this C& self, CT::Index auto&& idx, auto&& value, State<C> state = {}
+         this C& self, CT::Index auto&& idx, auto&& value
       ) -> size_t {
          using I = IntentOf(value);
          using T = Deint<I>;
+         auto& other = DeintCast(value);
+         const bool stateCompliant = ThisCom::CheckState(other);
    
-         if constexpr (CT::Deep<T>) {
+         if constexpr (CT::DeepDense<T>) {
             // We're inserting a deep item, so we can do various smart  
             // things before inserting, like absorbing and concatenating
-            if (not DeintCast(value).IsValid())
+            if (not other.IsValid())
                return 0;
    
-            const bool stateCompliant = self.CanFitState(DeintCast(value));
-            if (self.IsEmpty() and stateCompliant) {
-               // We can directly absorb                                
-               self.Free();
-               self.Absorb(LglsFwd(value));
-               return 1;
-            }
-   
-            if constexpr (CONCAT) {
-               // Let's try concatenating.                              
-               // If FORCE is enabled, this will deepen in order to     
-               // preserve disowned data instead of copying it.         
-               if (ThisCom::SmartConcatAt<FORCE>(LglsFwd(idx), stateCompliant, LglsFwd(value), state))
+            if (stateCompliant) {
+               if (self.IsEmpty()) {
+                  // We can directly absorb                             
+                  self.AssignAbsorb(LglsFwd(value));
                   return 1;
+               }
+      
+               if constexpr (CONCAT) {
+                  // We are allowed to attempt concatenatenation        
+                  if (ThisCom::ConcatAt(LglsFwd(idx), LglsFwd(value)))
+                     return 1;
+               }
             }
          }
    
          // If reached, then none of the above succeeded - just push.   
          // If FORCE is enabled, this will deepen in order to preserve  
-         // disowned data instead of copying it.                        
-         return ThisCom::ComposeAtInner<FORCE>(LglsFwd(idx), LglsFwd(value), state);
+         // state, in the case there's conflict.                        
+         return ThisCom::template ComposeInner<FORCE>(
+            stateCompliant, LglsFwd(idx), LglsFwd(value)
+         );
       }
 
       /// MARK: Insert                                                        
@@ -299,8 +374,8 @@ namespace Langulus::Anyness::Component
             // Insert the new                                           
             auto to = self.GetHandle() + lhs_count;
             try {
-               ThisCom::InsertInner(to, LglsFwd(a1));
-              (ThisCom::InsertInner(to, LglsFwd(an)), ...);
+               InsertInner(to, LglsFwd(a1));
+              (InsertInner(to, LglsFwd(an)), ...);
             }
             catch (...) {
                // Account for throws inside constructors                
@@ -507,9 +582,10 @@ namespace Langulus::Anyness::Component
          self.BranchOut(all_count);
 
          const size_t offset = self.SimplifyIndex(idx);
-         auto to = self.GetHandle() + offset;
-         ThisCom::MakeGap(to, offset, lhs_count, all_count);   //TODO catch user data exceptions on moves, fatal failure - reset contents
-         ThisCom::CopyRegion(to, rhs_count, LglsFwd(data));    //TODO catch user data exceptions on construction, partial success allowed
+         auto dst = self.GetHandle() + offset;
+         MakeGap(dst, offset, lhs_count, rhs_count);  //TODO catch user data exceptions on moves, fatal failure - reset contents
+         auto src = DeintCast(data).GetHandle();
+         CopyRegion(src, dst, rhs_count);             //TODO catch user data exceptions on construction, partial success allowed
          self.SetCountInner(all_count);
          return rhs_count;
       }
@@ -530,8 +606,8 @@ namespace Langulus::Anyness::Component
          // Empty containers can't change type. If one of the type      
          // changes raises a conflict, this function will throw.        
          size_t rhs_count = 0;
-          self.PrepareForAbsorption(LglsFwd(a1_intent), rhs_count);
-         (self.PrepareForAbsorption(LglsFwd(an_intent), rhs_count), ...);
+          ThisCom::PrepareForAbsorption(LglsFwd(a1_intent), rhs_count);
+         (ThisCom::PrepareForAbsorption(LglsFwd(an_intent), rhs_count), ...);
          if (not rhs_count)
             return 0;
          
@@ -543,8 +619,8 @@ namespace Langulus::Anyness::Component
          // Concatenate all new containers                              
          auto to = self.GetHandle() + lhs_count;
          try {
-            ThisCom::CopyRegion(to, DeintCast(a1_intent).GetCount(), LglsFwd(a1_intent));
-           (ThisCom::CopyRegion(to, DeintCast(an_intent).GetCount(), LglsFwd(an_intent)), ...);
+            CopyContainer(LglsFwd(a1_intent), to);
+           (CopyContainer(LglsFwd(an_intent), to), ...);
          }
          catch (...) {
             // Account for throws inside constructors                   
@@ -703,25 +779,25 @@ namespace Langulus::Anyness::Component
       ) -> size_t {
          using I = IntentOf(value);
          using T = Deint<I>;
-         auto& other = DeintCast(value);
+         //auto& other = DeintCast(value);
 
          if constexpr (CT::TypeErased<C>) {
-            if ((IsUntyped() and IsInvalid()) or IsSimilar<T>()) {
-               // Mutate-insert inside untyped container                   
+            if ((not self.IsTyped() and not self.IsValid()) or self.template IsSame<T>()) {
+               // Mutate-insert inside untyped container                
                return ThisCom::template InsertAt<false>(index, LglsFwd(value));
             }
-            else if (IsEmpty() and IsTyped() and not IsTypeConstrained()) {
-               // If incompatibly typed but empty and not constrained, we  
-               // can still reset the container and reuse it               
-               Reset();
+            else if (self.IsEmpty() and self.IsTyped() and not self.IsTypeConstrained()) {
+               // If incompatibly typed but empty and not constrained,  
+               // we can still reset the container and reuse it         
+               self.Reset();
                return ThisCom::template InsertAt<false>(index, LglsFwd(value));
             }
-            else if (IsDeep()) {
-               // Already deep, push value wrapped in a container          
+            else if (self.IsDeep()) {
+               // Already deep, push value wrapped in a container       
                if (not stateCompliant) {
-                  // If container is not or-compliant after insertion, we  
-                  // need to add another layer                             
-                  self.Deepen();
+                  // If container is not or-compliant after insertion,  
+                  // we need to add another layer                       
+                  ThisCom::Deepen();
                }
 
                return ThisCom::template InsertAt<false>(
@@ -730,9 +806,9 @@ namespace Langulus::Anyness::Component
             }
 
             if constexpr (FORCE) {
-               // If this is reached, all else failed, but we are allowed  
-               // to deepen, so just do it                                 
-               self.Deepen();
+               // If this is reached, all else failed, but we are       
+               // allowed to deepen, so just do it                      
+               ThisCom::Deepen();
                return ThisCom::template InsertAt<false>(
                   index, Deep<C> {LglsFwd(value)} //TODO are we allowed to absorb here? should we use Piecewise?
                );
@@ -741,17 +817,17 @@ namespace Langulus::Anyness::Component
          }
          else {
             if constexpr (Same<TypeOf<C>, T>) {
-               // Insert to a same-typed container                         
+               // Insert to a same-typed container                      
                return ThisCom::template InsertAt<false>(
                   index, LglsFwd(value)
                );
             }
             else if constexpr (CT::Deep<TypeOf<C>>) {
-               // Already deep, push value wrapped in a container          
+               // Already deep, push value wrapped in a container       
                if (not stateCompliant) {
-                  // If container is not or-compliant after insertion, we  
-                  // need to add another layer                             
-                  self.Deepen();
+                  // If container is not or-compliant after insertion,  
+                  // we need to add another layer                       
+                  ThisCom::Deepen();
                }
 
                return ThisCom::template InsertAt<false>(
@@ -759,42 +835,6 @@ namespace Langulus::Anyness::Component
                );
             }
             else return 0;
-         }
-      }
-
-      void MakeGap(this auto& self, auto& handle, size_t offset, size_t lhs_count, size_t all_count) {
-         //auto handle = self.GetHandle() + offset;
-         if (offset < lhs_count) {
-            // We're moving to the right, so make sure we do it in      
-            // reverse to avoid any potential overlap                   
-            //TODO batch optimization for PODs
-            const size_t moved = lhs_count - offset;
-            auto from = handle + (moved - 1);
-            auto to   = self.GetHandle() + (all_count - 1);
-            auto const end = (from - moved).GetRaw();
-            while (from.GetRaw() != end) {
-               Id::ForEach([&]<Cid D>{
-                  to.template EmplaceWithIntent<D>(Abandon {from});
-               });
-               --from; --to;
-            }
-         }
-      }
-
-      void CopyRegion(this auto& self, auto& handle, size_t rhs_count, CT::Container auto&& data) {
-         //TODO batch optimization for PODs
-         using I = IntentOf(data);
-         auto src = DeintCast(data).GetHandle();
-         //auto dst = self.GetHandle() + offset;
-         auto const end = (handle + rhs_count).GetRaw();
-         while (handle.GetRaw() != end) {
-            Id::ForEach([&]<Cid D>{
-               if constexpr (CT::Copied<I>)
-                  handle.template EmplaceWithIntent<D>(Refer(src));
-               else
-                  handle.template EmplaceWithIntent<D>(I::Nest(src));
-            });
-            ++handle; ++src;
          }
       }
    };
