@@ -165,12 +165,19 @@ namespace Langulus::Anyness::Component
             // Reallocate/branch out                                    
             const size_t lhs_count = self.GetCount();
             const size_t all_count = lhs_count + rhs_count;
+            const size_t offset    = self.SimplifyIndex(idx);
+
+            if (not self.IsDisowned() and self.GetUses() == 1 and not deepened) {
+               // No need to branch-out                                 
+               ThisCom::AllocateMore(all_count);
+
+            }
+
             self.BranchOut(all_count); //TODO when branching out, reinsert in a new container with the gap predefined, iinstead of always moving elements. See Erase for reference
 
             TODO(); //TODO form a gap
             
             // Insert the new                                           
-            const auto offset = self.SimplifyIndex(idx);
             auto to = self.GetHandle() + offset;
 
             try {
@@ -444,7 +451,7 @@ namespace Langulus::Anyness::Component
          LglsAssert(not self.IsTypeConstrained() or self.template IsSame<C>(),
             "Can't deepen with incompatible type");
       
-         // Allocate a new T and move this inside it                    
+         // Allocate a new container and move this one inside of it     
          C temp {Piecewise, Abandon {self}};
          self.Swap(temp);
          return *self.template Get<C>();
@@ -500,34 +507,9 @@ namespace Langulus::Anyness::Component
          self.BranchOut(all_count);
 
          const size_t offset = self.SimplifyIndex(idx);
-         auto handle = self.GetHandle() + offset;
-         if (offset < lhs_count) {
-            // We're moving to the right, so make sure we do it in      
-            // reverse to avoid any potential overlap                   
-            //TODO batch optimization for PODs
-            const size_t moved = lhs_count - offset;
-            auto from = handle + (moved - 1);
-            auto to   = self.GetHandle() + (all_count - 1);
-            auto const end = (from - moved).GetRaw();
-            while (from.GetRaw() != end) {
-               Id::ForEach([&]<Cid D>{
-                  to.template EmplaceWithIntent<D>(Abandon {from});
-               });
-               --from; --to;
-            }
-         }
-
-         // Initialize the new elements                                 
-         //TODO batch optimization for PODs
-         auto source = DeintCast(data).GetHandle();
-         auto const end = (handle + rhs_count).GetRaw();
-         while (handle.GetRaw() != end) {
-            Id::ForEach([&]<Cid D>{
-               handle.template EmplaceWithIntent<D>(Abandon {source});
-            });
-            ++handle; ++source;
-         }
-
+         auto to = self.GetHandle() + offset;
+         ThisCom::MakeGap(to, offset, lhs_count, all_count);   //TODO catch user data exceptions on moves, fatal failure - reset contents
+         ThisCom::CopyRegion(to, rhs_count, LglsFwd(data));    //TODO catch user data exceptions on construction, partial success allowed
          self.SetCountInner(all_count);
          return rhs_count;
       }
@@ -558,22 +540,11 @@ namespace Langulus::Anyness::Component
          const size_t all_count = lhs_count + rhs_count;
          self.BranchOut(all_count);
          
-         // Insert the new                                              
+         // Concatenate all new containers                              
          auto to = self.GetHandle() + lhs_count;
-         auto insert = [&to](auto&& a) {
-            auto item = DeintCast(a).GetHandle();
-            auto const end = item + DeintCast(a).GetCount();
-            while (item.GetRaw() != end.GetRaw()) {
-               Id::ForEach([&]<Cid D>{
-                  to.template EmplaceWithIntent<D>(IntentOf(a)::Nest(item));
-               });
-               ++item; ++to;
-            }
-         };
-
          try {
-            insert(LglsFwd(a1_intent));
-           (insert(LglsFwd(an_intent)), ...);
+            ThisCom::CopyRegion(to, DeintCast(a1_intent).GetCount(), LglsFwd(a1_intent));
+           (ThisCom::CopyRegion(to, DeintCast(an_intent).GetCount(), LglsFwd(an_intent)), ...);
          }
          catch (...) {
             // Account for throws inside constructors                   
@@ -663,6 +634,7 @@ namespace Langulus::Anyness::Component
       /// A deeply unsafe function, that places 'a' at handle 'to'            
       /// and moves handle further. Supports T being a bounded array.         
       /// Does not perform conversion.                                        
+      ///   @attention works in all dimensions at once                        
       template<CT::Handle H, class T>
       static void InsertInner(H& to, T&& a) {
          using I  = IntentOf(a);
@@ -721,9 +693,9 @@ namespace Langulus::Anyness::Component
       /// Inner composition function                                          
       ///   @tparam FORCE - insert even if types mismatch, by making this     
       ///      container deeper.                                              
-      ///   @param index - the place to insert at                             
-      ///   @param value - the value to concatenate                           
-      ///   @param state - the state to apply after concatenation             
+      ///   @param stateCompliant whether states are compatible               
+      ///   @param index the place to insert at                               
+      ///   @param value the value to concatenate                             
       ///   @return the number of inserted elements                           
       template<bool FORCE, class C>
       auto ComposeInner(
@@ -787,6 +759,42 @@ namespace Langulus::Anyness::Component
                );
             }
             else return 0;
+         }
+      }
+
+      void MakeGap(this auto& self, auto& handle, size_t offset, size_t lhs_count, size_t all_count) {
+         //auto handle = self.GetHandle() + offset;
+         if (offset < lhs_count) {
+            // We're moving to the right, so make sure we do it in      
+            // reverse to avoid any potential overlap                   
+            //TODO batch optimization for PODs
+            const size_t moved = lhs_count - offset;
+            auto from = handle + (moved - 1);
+            auto to   = self.GetHandle() + (all_count - 1);
+            auto const end = (from - moved).GetRaw();
+            while (from.GetRaw() != end) {
+               Id::ForEach([&]<Cid D>{
+                  to.template EmplaceWithIntent<D>(Abandon {from});
+               });
+               --from; --to;
+            }
+         }
+      }
+
+      void CopyRegion(this auto& self, auto& handle, size_t rhs_count, CT::Container auto&& data) {
+         //TODO batch optimization for PODs
+         using I = IntentOf(data);
+         auto src = DeintCast(data).GetHandle();
+         //auto dst = self.GetHandle() + offset;
+         auto const end = (handle + rhs_count).GetRaw();
+         while (handle.GetRaw() != end) {
+            Id::ForEach([&]<Cid D>{
+               if constexpr (CT::Copied<I>)
+                  handle.template EmplaceWithIntent<D>(Refer(src));
+               else
+                  handle.template EmplaceWithIntent<D>(I::Nest(src));
+            });
+            ++handle; ++src;
          }
       }
    };
