@@ -13,6 +13,7 @@
 using namespace Langulus;
 
 //TODO test custom pointers with all these!!
+//TODO test nested sheddables with all these!!
 
 ///                                                                           
 /// MARK: CT::Sheddable                                                       

@@ -164,7 +164,7 @@ namespace Langulus::Anyness
       /// Construction from all kinds of characters                           
       template<CT::Character T>
       constexpr Text(T&& ch) {
-         this->AllocateFresh(this->RequestHeap(1));
+         this->AllocateFresh(1 /*this->RequestHeap(1)*/);
          *this->GetRawAs<char>() = DeintCast(ch);
          this->SetCountInner(1);
          this->ResetHash();
@@ -225,7 +225,7 @@ namespace Langulus::Anyness
             if (dot == lastChar) {
                // There is no dot...                                    
                const auto c = static_cast<CountType>(lastChar - temp);
-               result.AllocateFresh(result.RequestHeap(c));
+               result.AllocateFresh(c /*result.RequestHeap(c)*/);
                memcpy(result.GetHeapInner(), temp, c);
                result.SetCountInner(c);
                result.ResetHash();
@@ -272,14 +272,14 @@ namespace Langulus::Anyness
             if (approximate) {
                // We've truncated the number, so prepend a '~' symbol   
                // to signify it's an approximate representation         
-               result.AllocateFresh(result.RequestHeap(c + 1));
+               result.AllocateFresh(c + 1 /*result.RequestHeap(c + 1)*/);
                auto heap = result.GetRawAs<char>();
                *heap = '~';
                memcpy(heap + 1, temp, c);
                result.SetCountInner(c + 1);
             }
             else {
-               result.AllocateFresh(result.RequestHeap(c));
+               result.AllocateFresh(c /*result.RequestHeap(c)*/);
                memcpy(result.GetHeapInner(), temp, c);
                result.SetCountInner(c);
             }
@@ -292,7 +292,7 @@ namespace Langulus::Anyness
             LglsAssert(errorCode == ::std::errc(), "std::to_chars failure");
 
             const auto c = static_cast<CountType>(lastChar - temp);
-            result.AllocateFresh(result.RequestHeap(c));
+            result.AllocateFresh(c /*result.RequestHeap(c)*/);
             memcpy(result.GetHeapInner(), temp, c);
             result.SetCountInner(c);
          }
@@ -307,7 +307,7 @@ namespace Langulus::Anyness
       ///   @return the resulting text                                        
       static Text Hex(const auto& from) {
          Text result;
-         result.AllocateFresh(result.RequestHeap(sizeof(from) * 2));
+         result.AllocateFresh(sizeof(from) * 2 /*result.RequestHeap(sizeof(from) * 2)*/);
          auto from_bytes = reinterpret_cast<const std::byte*>(&from);
          auto to_bytes = result.GetRaw();
          for (size_t i = 0; i < sizeof(from); ++i)

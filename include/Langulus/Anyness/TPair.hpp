@@ -162,7 +162,7 @@ namespace Langulus::Anyness
          this->DeduceType(a1, a2);
          
          if constexpr (Inner::PairOnHeap<K, V>) {
-            this->AllocateFresh(this->RequestHeap(1));
+            this->AllocateFresh(1 /*this->RequestHeap(1)*/);
             this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(FWDIntent(a1));
             this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(FWDIntent(a2));
          }
@@ -191,7 +191,7 @@ namespace Langulus::Anyness
          if constexpr (Inner::PairOnHeap<K, V>) {
             this->Reset();
             this->DeduceType(a1, a2);
-            this->AllocateFresh(this->RequestHeap(1));
+            this->AllocateFresh(1 /*this->RequestHeap(1)*/);
             this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
             this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
          }

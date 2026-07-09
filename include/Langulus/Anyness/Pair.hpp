@@ -91,7 +91,7 @@ namespace Langulus::Anyness
       constexpr Pair(NotTag auto&& a1, NotTag auto&& a2) {
          this->ResetState();
          this->DeduceType(a1, a2);
-         this->AllocateFresh(this->RequestHeap(1));
+         this->AllocateFresh(1 /*this->RequestHeap(1)*/);
          this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
          this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
       }
@@ -115,7 +115,7 @@ namespace Langulus::Anyness
       constexpr Pair& Assign(auto&& a1, auto&& a2) {
          this->Reset();
          this->DeduceType(a1, a2);
-         this->AllocateFresh(this->RequestHeap(1));
+         this->AllocateFresh(1 /*this->RequestHeap(1)*/);
          this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
          this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
          return *this;

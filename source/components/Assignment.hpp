@@ -234,8 +234,8 @@ namespace Langulus::Anyness::Component
                //WORKAROUND pacifies both...                            
                //self.P::AllocateFresh(self.P::RequestHeap(1));
                auto alloc = &P::template AllocateFresh<P::Id::First, C>;
-               auto reqhp = &P::template RequestHeap<P::Id::First, C>;
-               alloc(self, reqhp(self, 1));
+               //auto reqhp = &P::template RequestHeap<P::Id::First, C>;
+               alloc(self, 1 /*reqhp(self, 1)*/);
             });
             return;
          }
@@ -275,8 +275,8 @@ namespace Langulus::Anyness::Component
             //WORKAROUND pacifies both...                               
             //self.P::AllocateFresh(self.P::RequestHeap(1));
             auto alloc = &P::template AllocateFresh<P::Id::First, C>;
-            auto reqhp = &P::template RequestHeap<P::Id::First, C>;
-            alloc(self, reqhp(self, 1));
+            //auto reqhp = &P::template RequestHeap<P::Id::First, C>;
+            alloc(self, 1 /*reqhp(self, 1)*/);
          });
       }
 

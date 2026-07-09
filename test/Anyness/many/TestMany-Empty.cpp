@@ -1051,6 +1051,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
       WHEN("Insert an array to a non-existent index") {
          REQUIRE_THROWS(pack.InsertAt(5, immovable));
+
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Insert at the back by using << operator)") {

@@ -37,6 +37,19 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
+      /// Check if index is at zero                                           
+      ///   @param index the index to simplify                                
+      ///   @return a simple element offset into contiguous memory            
+      template<CT::Container C, CT::Index INDEX>
+      constexpr void AssertZeroIndex(this C const& self, INDEX index) {
+         LglsAssumeDev(self.IsEmpty(),
+            "Call this only when 'self' is empty inside *At method");
+         if constexpr (requires { index.index; })
+            LglsAssert(index.index == 0, "Explicit Index::At for empty container");
+         else if constexpr (CT::Integer<INDEX>)
+            LglsAssert(index == 0, "Explicit index for empty container");
+      }
+      
    public:
       /// Subscript operator for accessing element at a specific index        
       ///   @param idx the index                                              

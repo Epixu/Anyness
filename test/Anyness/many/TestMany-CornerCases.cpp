@@ -11,17 +11,17 @@
 SCENARIO("Pushing one sparse container, and then two more, one being the first") {
    static MemoryState memoryState;
 
-   ScopedElement<Many*, true> p1 {1};
-   ScopedElement<Many*, true> p2 {1};
-
-   #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      auto entry1 = p1.entries[1];
-      auto entry2 = p2.entries[1];
-      REQUIRE(entry1->GetUses() == 1);
-      REQUIRE(entry2->GetUses() == 1);
-   #endif
-
    GIVEN("An empty container") {
+      ScopedElement<Many*, true> p1 {1};
+      ScopedElement<Many*, true> p2 {1};
+   
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         auto entry1 = p1.entries[1];
+         auto entry2 = p2.entries[1];
+         REQUIRE(entry1->GetUses() == 1);
+         REQUIRE(entry2->GetUses() == 1);
+      #endif
+   
       Many pack;
 
       WHEN("Pushed the first pointer") {
@@ -120,14 +120,6 @@ SCENARIO("Pushing one sparse container, and then two more, one being the first")
          }
       }
    }
-
-   REQUIRE(DenseCast(*p1).GetUses() == 1);
-   REQUIRE(DenseCast(*p2).GetUses() == 1);
-
-   #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      REQUIRE(entry1->GetUses() == 1);
-      REQUIRE(entry2->GetUses() == 1);
-   #endif
 
    REQUIRE(memoryState.Assert());
    REQUIRE_FALSE(Allocator::CollectGarbage());

@@ -51,6 +51,7 @@ add_langulus_test(LangulusAnynessTest
                Anyness/many/TestMany-Absorb.cpp
                Anyness/many/TestMany-Piecewise.cpp
                Anyness/many/TestMany-Convert.cpp
+               Anyness/many/TestMany-CornerCases.cpp
                
                Anyness/set/TestSet-Empty.cpp
                Anyness/set/TestSet-Absorb.cpp

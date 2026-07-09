@@ -129,10 +129,10 @@ namespace Langulus::Anyness::Component
             // Allocate new memory and set count, so that handle        
             // iteration is valid                                       
             if constexpr (CT::Contiguous<C>)
-               ThisCom::AllocateFresh(ThisCom::RequestHeap(count > reserve ? count : reserve));
+               ThisCom::AllocateFresh(count > reserve ? count : reserve /*ThisCom::RequestHeap(count > reserve ? count : reserve)*/);
             else {
                const auto rhs_reserve = from.template GetReserved<Id::First>();
-               ThisCom::AllocateFresh(ThisCom::RequestHeap(rhs_reserve > reserve ? rhs_reserve : reserve));
+               ThisCom::AllocateFresh(rhs_reserve > reserve ? rhs_reserve : reserve /*ThisCom::RequestHeap(rhs_reserve > reserve ? rhs_reserve : reserve)*/);
             }
 
             if_available(self.template SetCountInner<Id::First>(count));
@@ -222,7 +222,9 @@ namespace Langulus::Anyness::Component
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
-      void AllocateFresh(this C& self, const Request& request) {
+      void AllocateFresh(this C&self, size_t elements /*const Request& request*/) {
+         const auto request = ThisCom::RequestHeap(elements);
+
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto al = Allocator::Allocate(self.template GetType<SID>(), request.mTotalBytes);
          #else
@@ -246,12 +248,11 @@ namespace Langulus::Anyness::Component
       void AllocateMore(this C& self, Count<C> elements) {
          LglsAssumeDev(elements > self.template GetCount<SID>(), "Bad element count");
          const auto al = DecvqAllCast(self.template GetAllocation<SID>());
-         const auto request = ThisCom::RequestHeap(elements);
 
          if (not al) {
             //                                                          
             // Allocate a fresh set of elements                         
-            ThisCom::AllocateFresh(request);
+            ThisCom::AllocateFresh(elements);
             return;
          }
 
@@ -260,6 +261,7 @@ namespace Langulus::Anyness::Component
             "Container should've branched-out prior to AllocateMore. "
          );
 
+         const auto request = ThisCom::RequestHeap(elements);
          if constexpr (CT::ContainsMany<C>) {
             if (self.template GetReserved<SID>() >= request.mReserved)
                return;
@@ -348,7 +350,7 @@ namespace Langulus::Anyness::Component
             // We have to branch out                                    
             const C backup {Abandon{self}};
             if_available(self.DisableDisowned());
-            ThisCom::AllocateFresh(ThisCom::RequestHeap(desiredReserve));
+            ThisCom::AllocateFresh(desiredReserve /*ThisCom::RequestHeap(desiredReserve)*/);
 
             // Reinsert only the relevant items                         
             auto to = self.GetHandle();
@@ -393,7 +395,7 @@ namespace Langulus::Anyness::Component
          if (request.mTotalBytes <= al->GetSize()) {
             // In some cases, no reallocation happens, but reserved     
             // count may still change, due to the allocation being      
-            // rounded to the closes power-of-two. Move heap footers    
+            // rounded to the closest power-of-two. Move heap footers   
             // accordingly in such cases.                               
             if_available(self.template RemapHeapRequests<SID>(request.mReserved));
             if_available(self.template SetReservedInner<SID>(request.mReserved));
@@ -549,7 +551,7 @@ namespace Langulus::Anyness::Component
 
          if (self.template IsEmpty<SID>()) {
             // Empty - do a fresh allocation                            
-            ThisCom::AllocateFresh(ThisCom::RequestHeap(newReserve));
+            ThisCom::AllocateFresh(newReserve /*ThisCom::RequestHeap(newReserve)*/);
             return;
          }
          else {

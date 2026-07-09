@@ -22,7 +22,8 @@ namespace Langulus::CTTI
    };
 }
 
-LANGULUS_CTTI_CONCEPT_DECVQ(Index);
+//LANGULUS_CTTI_CONCEPT_DECVQ(Index);
+LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(Index);
 
 namespace Langulus::Index
 {

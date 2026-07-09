@@ -91,13 +91,13 @@ namespace Langulus::Anyness::Component
    ///   1. Insert/InsertAt - conventional insertion, where the container is  
    ///      expanded to incorporate the new elements at the desired position. 
    ///   2. Concat/ConcatAt - concatenation that inserts the contents of      
-   ///      any container at the desired position, dsiregarding any state     
+   ///      any container at the desired position, disregarding any state     
    ///      differences.                                                      
    ///   3. Compose/ComposeAt - a structure-preserving insertion that respects
    ///      states and disownment in order to form more complex containers.   
-   ///   4. And/AndAt - an or-state-preserving insertion that deepens the     
+   ///   4. And/AndAt - an or-preserving insertion that deepens the           
    ///      container if `IsOr() == true`, and then inserts the new content.  
-   ///   5. Or/OrAt - an or-state-preserving insertion that deepens the       
+   ///   5. Or/OrAt - an or-preserving insertion that deepens the             
    ///      container if `IsOr() == false`, and then inserts the new content. 
    ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization.    
@@ -201,9 +201,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // No conversion required.                                  
-            // Gather the number of all elements and types.             
-            // Empty containers can't change type. If one of the type   
-            // changes raises a conflict, this function will throw.     
+            // Check all types, and gather the number of insertions.    
             bool deepened = false;
             size_t rhs_count = 0;
             ThisCom::PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
@@ -211,8 +209,37 @@ namespace Langulus::Anyness::Component
             if (not rhs_count)
                return 0;
             
-            // Reallocate/branch out                                    
             const size_t lhs_count = self.GetCount();
+            if (lhs_count == 0) {
+               self.AssertZeroIndex(idx);
+
+               if (not self.IsDisowned() and self.GetUses() == 1 and not deepened) {
+                  // This is empty, but preallocated                    
+                  TODO();
+               }
+               else {
+                  // This is empty and unallocated                      
+                  self.AllocateFresh(rhs_count);
+                  auto to = self.GetHandle();
+
+                  try {
+                     InsertInner(to, LglsFwd(a1));
+                    (InsertInner(to, LglsFwd(an)), ...);
+                  }
+                  catch (...) {
+                     // Account for throws inside constructors          
+                     const size_t inserted = to - self.GetHandle();
+                     TODO(); //TODO a gap remains, move things back
+                     self.SetCountInner(inserted);
+                     throw;
+                  }
+               }
+
+               self.SetCountInner(rhs_count);
+               return rhs_count;  
+            }
+
+            // Reallocate/branch out                                    
             const size_t all_count = lhs_count + rhs_count;
             const size_t offset    = self.SimplifyIndex(idx);
 
@@ -237,7 +264,7 @@ namespace Langulus::Anyness::Component
             else {
                // We need to branch-out: insert old and new elements    
                // in another container, which we will later swap.       
-               C temp;
+               C temp {Disown{self}};
                temp.Reserve(all_count);
                auto src = self.GetHandle();
                auto dst = temp.GetHandle();

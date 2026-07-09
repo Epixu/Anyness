@@ -45,16 +45,19 @@ namespace Langulus::Anyness::Component
       constexpr auto SimplifyIndex(this C const& self, INDEX index)
       assumptious -> Count<C> {
          LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
+         /*if (self.IsEmpty())
+            return 0;*/
 
-         if constexpr      (::std::same_as<INDEX, Index::Inner::All>)
-            static_assert(false, "Index::All can't be used here");
-         else if constexpr (::std::same_as<INDEX, Index::Inner::Many>)
-            static_assert(false, "Index::Many can't be used here");
-         else if constexpr (::std::same_as<INDEX, Index::Inner::Single>)
-            static_assert(false, "Index::Single can't be used here");
-         else if constexpr (::std::same_as<INDEX, Index::Inner::None>)
-            static_assert(false, "Index::None can't be used here");
-         else if constexpr (::std::same_as<INDEX, Index::Inner::Front>)
+         static_assert(not ::std::same_as<INDEX, Index::Inner::All>,
+            "Index::All can't be used here");
+         static_assert(not ::std::same_as<INDEX, Index::Inner::Many>,
+            "Index::Many can't be used here");
+         static_assert(not ::std::same_as<INDEX, Index::Inner::Single>,
+            "Index::Single can't be used here");
+         static_assert(not ::std::same_as<INDEX, Index::Inner::None>,
+            "Index::None can't be used here");
+
+         if constexpr (::std::same_as<INDEX, Index::Inner::Front>)
             return 0;
          else if constexpr (::std::same_as<INDEX, Index::Inner::Middle>)
             return self.GetCount() / 2;
@@ -82,10 +85,12 @@ namespace Langulus::Anyness::Component
             return index.index >= c ? CountMax<C> : index.index;
 
          }
-         else if constexpr (CT::Integer<INDEX>) {
-            // Unsafe, works only on assumptions                        
+         else {
+            static_assert(CT::Integer<INDEX>, "Unsupported index type");
+
+            // Unsafe, works only on assumptions.                       
             // Using an integer index explicitly makes a statement,     
-            // that you know what you're doing                          
+            // that you know what you're doing.                         
             LglsAssumeUser(static_cast<Count<C>>(index) < self.GetCount(),
                "Integer index out of range");
 
@@ -97,7 +102,6 @@ namespace Langulus::Anyness::Component
             }
             return index;
          }
-         else static_assert(false, "Unsupported index type");
       }
       
       /// Select a contiguous region from the memory block. Unsafe and may    
