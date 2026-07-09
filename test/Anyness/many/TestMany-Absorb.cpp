@@ -140,56 +140,56 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       const ScopedE element1{555};
       const ScopedE element2{111};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(*element2);
+      REQUIRE_NOTHROW(piecewise1.Assign(*element2));
    }
 
    GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {
       const ScopedE element1{555};
       const ScopedE element2{111};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(Refer(*element2));
+      REQUIRE_NOTHROW(piecewise1.Assign(Refer(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (copied), and then destroyed") {
       const ScopedE element1{555};
       const ScopedE element2{111};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(Copy(*element2));
+      REQUIRE_NOTHROW(piecewise1.Assign(Copy(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (cloned), and then destroyed") {
       const ScopedE element1{555};
       const ScopedE element2{111};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(Clone(*element2));
+      REQUIRE_NOTHROW(piecewise1.Assign(Clone(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (move), and then destroyed") {
       const ScopedE element1{555};
       ScopedE element2{111};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(::std::move(*element2));
+      REQUIRE_NOTHROW(piecewise1.Assign(::std::move(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (move using intent), and then destroyed") {
       const ScopedE element1{555};
       ScopedE element2{112};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(Move(*element2));
+      REQUIRE_NOTHROW(piecewise1.Assign(Move(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (abandon), and then destroyed") {
       const ScopedE element1{555};
       ScopedE element2{112};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(Abandon(*element2));
+      REQUIRE_NOTHROW(piecewise1.Assign(Abandon(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (disown), and then destroyed") {
       const ScopedE element1{555};
       const ScopedE element2{111};
       T piecewise1{Piecewise, *element1};
-      piecewise1.Assign(Disown(*element2));
+      REQUIRE_NOTHROW(piecewise1.Assign(Disown(*element2)));
    }
 
    GIVEN("Absorb-constructed container") {
@@ -246,7 +246,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
       WHEN("Assigned compatible referred value") {
          auto assign_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
-            a.Assign(*element);
+            REQUIRE_NOTHROW(a.Assign(*element));
 
             if constexpr (CT::DeepDense<E>) {
                static_assert(CT::Deep<E> and CT::Dense<E>);
@@ -308,7 +308,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             }
 
             auto absorb_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
-               a.AssignAbsorb(*element);
+               REQUIRE_NOTHROW(a.AssignAbsorb(*element));
 
                Many_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == element->GetUses());
@@ -333,7 +333,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       
       WHEN("Assigned compatible cloned value") {
          auto assign_clone = [&](T& a, [[maybe_unused]] const char* intent) {
-            a.Assign(Clone(*element));
+            REQUIRE_NOTHROW(a.Assign(Clone(*element)));
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
@@ -375,7 +375,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             }
 
             auto absorb_clone = [&](T& a, [[maybe_unused]] const char* intent) {
-               a.AssignAbsorb(Clone(*element));
+               REQUIRE_NOTHROW(a.AssignAbsorb(Clone(*element)));
 
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
                Many_Helper_TestSame(a, *element);
@@ -400,7 +400,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
       WHEN("Assigned compatible copied value") {
          auto assign_copy = [&](T& a, [[maybe_unused]] const char* intent) {
-            a.Assign(Copy(*element));
+            REQUIRE_NOTHROW(a.Assign(Copy(*element)));
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
@@ -442,7 +442,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             }
 
             auto absorb_copy = [&](T& a, [[maybe_unused]] const char* intent) {
-               a.AssignAbsorb(Copy(*element));
+               REQUIRE_NOTHROW(a.AssignAbsorb(Copy(*element)));
 
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
                Many_Helper_TestSame(a, *element);
@@ -468,7 +468,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       WHEN("Assigned compatible moved value") {
          auto assign_move = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
-            a.Assign(::std::move(movable));
+            REQUIRE_NOTHROW(a.Assign(::std::move(movable)));
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_Default<TypeOf<E>>(movable);
@@ -520,7 +520,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent) {
                auto movable = *element;
-               a.AssignAbsorb(::std::move(movable));
+               REQUIRE_NOTHROW(a.AssignAbsorb(::std::move(movable)));
 
                Many_CheckState_Default<TypeOf<E>>(movable);
                Many_Helper_TestSame(a, *element);
@@ -547,7 +547,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
       WHEN("Assigned compatible disowned value") {
          auto assign_disown = [&](T& a, [[maybe_unused]] const char* intent) {
-            a.Assign(Disown(*element));
+            REQUIRE_NOTHROW(a.Assign(Disown(*element)));
 
             Many_CheckState_OwnedFull<E>(a);
             Many_CheckState_ContainsOne(a, Disown(element));
@@ -587,7 +587,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             }
 
             auto absorb_disown = [&](T& a, [[maybe_unused]] const char* intent) {
-               a.AssignAbsorb(Disown(*element));
+               REQUIRE_NOTHROW(a.AssignAbsorb(Disown(*element)));
 
                REQUIRE(a.GetRaw() == element->GetRaw());
                REQUIRE(a.IsExact(element->GetType()));
@@ -617,7 +617,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       WHEN("Assigned compatible abandoned value") {
          auto assign_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
-            a.Assign(Abandon(movable));
+            REQUIRE_NOTHROW(a.Assign(Abandon(movable)));
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_Abandoned<TypeOf<E>>(movable);
@@ -668,7 +668,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             auto absorb_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
                auto movable = *element;
-               a.AssignAbsorb(Abandon(movable));
+               REQUIRE_NOTHROW(a.AssignAbsorb(Abandon(movable)));
 
                Many_CheckState_Abandoned<TypeOf<E>>(movable);
                Many_Helper_TestSame(a, *element);
@@ -696,7 +696,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
       WHEN("Assigned compatible empty self") {
          auto assign_empty_self = [&](T& a) {
-            a = T{};
+            REQUIRE_NOTHROW(a = T{});
             Many_CheckState_Default<E>(a);
          };
 
@@ -716,7 +716,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             const auto uses_before = a.GetUses();
             LglsDisableWarningPush
             LglsDisableWarning_SelfAssign
-               a = a;
+               REQUIRE_NOTHROW(a = a);
             LglsDisableWarningPop
             Many_Helper_TestSame(a, backup, not allow_change_in_constness);
             REQUIRE(a.GetUses() == uses_before);
@@ -1012,7 +1012,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                stdvec temp_std (1, *element),      temp_std.clear()
             );
 
-            a.Clear();
+            REQUIRE_NOTHROW(a.Clear());
 
             if (uses != 1)
                Many_CheckState_Default<E>(a, true);
@@ -1035,7 +1035,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                stdvec temp_std (1, *element),      temp_std.clear()
             );
 
-            a.Reset();
+            REQUIRE_NOTHROW(a.Reset());
 
             Many_CheckState_Default<E>(a);
          };
@@ -1154,7 +1154,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          else
             static_assert(::std::same_as<decltype(src_handle), THandle<E&>>);
 
-         auto src_data   = src_handle.template Get<E>();
+         auto src_data = src_handle.template Get<E>();
          AllocationPtr const* src_entries = nullptr;
 
          Handle_CheckState_OwnedFull<E>(src_handle);

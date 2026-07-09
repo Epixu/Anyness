@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Heap-Reference.hpp"
+#include "Langulus/Assume.hpp"
 #include "source/Component.hpp"
 
 
@@ -260,8 +261,16 @@ namespace Langulus::Anyness::Component
          );
 
          if constexpr (CT::ContainsMany<C>) {
-            if (self.template GetReserved<SID>() >= elements) {
-               // Required memory is already available                  
+            if (self.template GetReserved<SID>() >= request.mReserved)
+               return;
+
+            if (request.mTotalBytes <= al->GetSize()) {
+               // In some cases, no reallocation happens, but reserved  
+               // count may still change, due to the allocation being   
+               // rounded to the closes power-of-two. Move heap footers 
+               // accordingly in such cases.                            
+               if_available(self.template RemapHeapRequests<SID>(request.mReserved));
+               if_available(self.template SetReservedInner<SID>(request.mReserved));
                return;
             }
 
@@ -378,11 +387,22 @@ namespace Langulus::Anyness::Component
          }
 
          const auto request = ThisCom::RequestHeap(desiredReserve);
-         if (request.mTotalBytes == al->GetSize())
+         if (self.template GetReserved<SID>() == request.mReserved)
             return;
+      
+         if (request.mTotalBytes <= al->GetSize()) {
+            // In some cases, no reallocation happens, but reserved     
+            // count may still change, due to the allocation being      
+            // rounded to the closes power-of-two. Move heap footers    
+            // accordingly in such cases.                               
+            if_available(self.template RemapHeapRequests<SID>(request.mReserved));
+            if_available(self.template SetReservedInner<SID>(request.mReserved));
+            return;
+         }
 
          // Memory doesn't move, but reserved count changed so all      
-         // HeapRequests which are PerElement need to be moved around.  
+         // HeapRequests which are PerElement need to be moved around   
+         // _before_ we restrict the memory!                            
          if_available(self.template RemapHeapRequests<SID>(request.mReserved));
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -401,10 +421,13 @@ namespace Langulus::Anyness::Component
       /// Remap footer requests onto the new reserve                          
       ///   @param newReserved the newly reserved number of elements          
       ///   @attention works on one dimension at a time!                      
+      //TODO shouldn't this also move any dimensions != 0 as well, if in the same heap?????
       template<Cid SID = Id::First, CT::Container C>
       requires (C::template CountHeapFooterRequests<SID>() > 0 and Relevant<SID>)
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
          const auto reserved = self.template GetReserved<SID>();
+         LglsAssumeDev(newReserved != reserved,
+            "Should be called only when different");
          [[maybe_unused]]
          const auto indirect = self.template GetIndirections<SID>();
 
