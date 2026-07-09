@@ -322,14 +322,9 @@ namespace Langulus::Anyness::Component
                   }
                }
             }
-            else {
-               // Memory didn't move, but reserved count changed so all 
-               // HeapRequests which are PerElement need to be moved    
-               // around.                                               
-               if_available(self.template RemapHeapRequests<SID>(request.mReserved));
-               previous.template SetAllocationInner<SID>(nullptr);
-            }
+            else previous.template SetAllocationInner<SID>(nullptr);
 
+            if_available(self.template RemapHeapRequests<SID>(request.mReserved));
             if_available(self.template SetReservedInner<SID>(request.mReserved));
          }
       }
