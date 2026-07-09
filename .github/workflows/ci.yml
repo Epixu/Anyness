@@ -12,7 +12,7 @@ jobs:
         managed: [ON, OFF]
         os: [ubuntu-24.04, windows-2022]   # windows-latest uses vs2026, which uses clang 22, which is full of regressions in concept compilation
         build: [debug, release]
-        cxx: [g++-14, clang++-19, clangcl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
+        cxx: [g++-14, clang++-21, clangcl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
         arch: [x86, x64]
 
         exclude:
@@ -23,13 +23,13 @@ jobs:
           - os: windows-2022
             cxx: g++-14
           - os: windows-2022
-            cxx: clang++-19
+            cxx: clang++-21
 
         include:
           - cxx: g++-14
             c: gcc-14
-          - cxx: clang++-19
-            c: clang-19
+          - cxx: clang++-21
+            c: clang-21
           - os: ubuntu-24.04
             arch: x86
             cmake_args: "-DCMAKE_CXX_FLAGS=-m32"
@@ -61,13 +61,13 @@ jobs:
           sudo apt update
           sudo apt install g++-14-multilib
 
-      - if: matrix.cxx == 'clang++-19'
-        name: Installing Clang 19
+      - if: matrix.cxx == 'clang++-21'
+        name: Installing Clang 21
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-add-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main"
+          sudo apt-add-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main"
           sudo apt update
-          sudo apt install clang-19
+          sudo apt install clang-21
 
       - if: matrix.os == 'ubuntu-24.04'
         name: Configure (Linux)
