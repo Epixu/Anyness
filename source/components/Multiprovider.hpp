@@ -202,10 +202,10 @@ namespace Langulus::Anyness::Component
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
-      template<Cid SID = 0>
-      void AllocateFresh(this auto& self, size_t elements /*, const Request& request*/) {
-         using C = typename Subcomponents::template At<SID>;
-         self.C::AllocateFresh(elements /*self.C::RequestHeap(elements)*/);
+      template<Cid SID = 0, class C = typename Subcomponents::template At<SID>>
+      void AllocateFresh(this auto& self, size_t elements)
+      if_inherits(AllocateFresh(elements)) {
+         self.C::AllocateFresh(elements);
       }
 
       /// Allocate a number of elements, relying on the type of the container 
