@@ -128,7 +128,10 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
-   constexpr bool Managed = ScopedE::Managed;
+   constexpr bool Managed   = ScopedE::Managed;
+   constexpr bool Sparse    = CT::Sparse<E>;
+   constexpr bool Reffed    = CT::Referenced<Decay<E>>;
+   constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
 
    #if LANGULUS(BENCHMARK)
       using stdvec = ::std::vector<E>;
@@ -193,7 +196,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(::std::ranges::range<T>);
 
       // Can't be recognized as contiguous_range when iterators are handles
-      static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::ranges::contiguous_range<T>);
+      static_assert(CT::TypeErased<T> or Sparse or ::std::ranges::contiguous_range<T>);
       // Thankfully can be recognized as CT::Contiguous, though!
       static_assert(CT::Contiguous<T>);
 
@@ -231,8 +234,6 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
    static_assert(T::CountHeapProviders() == 1);
    //static_assert(T::template CountHeapFooterRequests<0>() == 1);
-
-   constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
    
    GIVEN("Default-constructed container") {
       const ScopedE element {555};
@@ -260,7 +261,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
 
       WHEN("Assigned value by referral") {
-         pack.Assign(*element);
+         REQUIRE_NOTHROW(pack.Assign(*element));
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsOne(pack, Refer(element));
@@ -281,17 +282,16 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
                return;
             }
 
-            pack.AssignAbsorb(*element);
+            REQUIRE_NOTHROW(pack.AssignAbsorb(*element));
 
             Many_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            [[maybe_unused]] ::std::vector<E> src_std {1, *element};
             BenchmarkManyStd("Empty/AssignAbsorb/Refer", 30, 100,
-               T temp,                 temp.AssignAbsorb(*element),
-               stdvec temp_std,        temp_std = src_std;
+               T temp,                                               temp.AssignAbsorb(*element),
+               stdvec src_std (1, *element); stdvec temp_std,        temp_std = src_std;
             );
          }
       }
@@ -306,7 +306,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       
       WHEN("Assigned value by move") {
          auto movable = *element;
-         pack.Assign(::std::move(movable));
+         REQUIRE_NOTHROW(pack.Assign(::std::move(movable)));
          
          if constexpr (CT::DeepDense<E>)
             Many_CheckState_Default<TypeOf<E>>(movable);
@@ -333,7 +333,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
                return;
             }
 
-            pack.AssignAbsorb(::std::move(movable));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(::std::move(movable)));
 
             Many_CheckState_Default<TypeOf<E>>(movable);
             Many_Helper_TestSame(pack, *element);
@@ -357,7 +357,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
       
       WHEN("Assigned copied value") {
-         pack.Assign(Copy(*element));
+         REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsOne(pack, Copy(element));
@@ -378,7 +378,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
                return;
             }
 
-            pack.AssignAbsorb(Copy(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Copy(*element)));
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -405,7 +405,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
       
       WHEN("Assigned cloned value") {
-         pack.Assign(Clone(*element));
+         REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsOne(pack, Clone(element));
@@ -426,7 +426,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
                return;
             }
 
-            pack.AssignAbsorb(Clone(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Clone(*element)));
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -452,7 +452,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
       
       WHEN("Assigned disowned value") {
-         pack.Assign(Disown(*element));
+         REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsOne(pack, Disown(element));
@@ -473,7 +473,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
                return;
             }
 
-            pack.AssignAbsorb(Disown(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Disown(*element)));
+
             Many_CheckState_OwnedFull<int>(*element);
             Many_CheckState_DisownedFull<int>(pack);
             Many_Helper_TestSame(pack, *element, false);
@@ -496,7 +497,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       
       WHEN("Assigned abandoned value") {
          auto movable = *element;
-         pack.Assign(Abandon(movable));
+         REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
 
          if constexpr (CT::DeepDense<E>)
             Many_CheckState_Abandoned<E>(movable);
@@ -522,7 +523,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
                return;
             }
 
-            pack.AssignAbsorb(Abandon(movable));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Abandon(movable)));
 
             Many_CheckState_Abandoned<E>(movable);
             Many_Helper_TestSame(pack, *element);
@@ -546,7 +547,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
       
       WHEN("Assigned empty self") {
-         pack.AssignAbsorb(pack);
+         REQUIRE_NOTHROW(pack.AssignAbsorb(pack));
 
          Many_CheckState_Default<E>(pack);
       }
@@ -757,7 +758,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       if constexpr (Exact<E, Text>) {
          WHEN("Given text that will be destroyed before the pack") {
             Text owned_text = "666";
-            pack = Text(owned_text.operator Token());
+            REQUIRE_NOTHROW(pack = Text(owned_text.operator Token()));
          }
       }
 
@@ -774,17 +775,17 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          static_assert(::std::input_or_output_iterator<IteratorConst>);
 
          // These are not possible to satisfy if C is type-erased       
-         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
-         static_assert(CT::TypeErased<T>                  or ::std::random_access_iterator<IteratorConst>);
-         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
-         static_assert(CT::TypeErased<T>                  or ::std::contiguous_iterator<IteratorConst>);
+         static_assert(CT::TypeErased<T> or Sparse or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T>           or ::std::random_access_iterator<IteratorConst>);
+         static_assert(CT::TypeErased<T> or Sparse or ::std::contiguous_iterator<Iterator>);
+         static_assert(CT::TypeErased<T>           or ::std::contiguous_iterator<IteratorConst>);
 
          size_t counter = 0;
          for (auto& it : pack) {
             (void) it;
             ++counter;
 
-            if constexpr (CT::TypeErased<T> or CT::Sparse<E>)
+            if constexpr (CT::TypeErased<T> or Sparse)
                static_assert(CT::Handle<decltype(it)>);
             else
                static_assert(Same<E, decltype(it)>);
@@ -804,7 +805,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             (void) it;
             ++counter;
 
-            if constexpr (CT::TypeErased<T> or CT::Sparse<E>)
+            if constexpr (CT::TypeErased<T> or Sparse)
                static_assert(CT::Handle<decltype(it)>);
             else
                static_assert(Same<E, decltype(it)>);
@@ -835,17 +836,17 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          static_assert(::std::input_or_output_iterator<IteratorConst>);
 
          // These are not possible to satisfy if C is type-erased       
-         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
-         static_assert(CT::TypeErased<T>                  or ::std::random_access_iterator<IteratorConst>);
-         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
-         static_assert(CT::TypeErased<T>                  or ::std::contiguous_iterator<IteratorConst>);
+         static_assert(CT::TypeErased<T> or Sparse or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T>           or ::std::random_access_iterator<IteratorConst>);
+         static_assert(CT::TypeErased<T> or Sparse or ::std::contiguous_iterator<Iterator>);
+         static_assert(CT::TypeErased<T>           or ::std::contiguous_iterator<IteratorConst>);
 
          size_t counter = 0;
          for (auto& it : strategy) {
             (void) it;
             ++counter;
 
-            if constexpr (CT::TypeErased<T> or CT::Sparse<E>)
+            if constexpr (CT::TypeErased<T> or Sparse)
                static_assert(CT::Handle<decltype(it)>);
             else
                static_assert(Same<E, decltype(it)>);
@@ -872,8 +873,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          static_assert(::std::input_or_output_iterator<Iterator>);
 
          // These are not possible to satisfy if C is type-erased       
-         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<typename Iterator::value_type>);
-         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<typename Iterator::value_type>);
+         static_assert(CT::TypeErased<T> or Sparse or ::std::random_access_iterator<typename Iterator::value_type>);
+         static_assert(CT::TypeErased<T> or Sparse or ::std::contiguous_iterator<typename Iterator::value_type>);
 
          size_t counter = 0;
          for (auto& it : strategy) {
@@ -925,7 +926,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             (void) it;
             ++counter;
 
-            if constexpr (CT::TypeErased<T> or CT::Sparse<E>)
+            if constexpr (CT::TypeErased<T> or Sparse)
                static_assert(CT::Handle<decltype(it.one()), decltype(it.two())>);
             else
                static_assert(Same<E, decltype(it.one()), decltype(it.two())>);
@@ -957,8 +958,10 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
          Handle_CheckState_Default<E const>(h);
       }
+   }
 
-      /// MARK: Insertion                                                     
+   /// MARK: Insertion                                                        
+   GIVEN("Default-constructed container and a couple of arrays") {
       const ScopedE darray1[5] {1, 2, 3, 4,  5};
       const ScopedE darray2[5] {6, 7, 8, 9, 10};
 
@@ -975,16 +978,18 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
       };
 
+      T pack;
+
       WHEN("Insert an array to the back") {
          size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back,           immovable));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Refer    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Copy     {immovable}));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Clone    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Disown   {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, std::move(movable1)));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Move     {movable2}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Abandon  {movable3}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Clone    {immovable}));
          REQUIRE(inserted == 5*8);
 
          Many_CheckState_OwnedFull<E>(pack);
@@ -1000,11 +1005,38 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          REQUIRE(pack.GetCount() == 5*8);
          REQUIRE(pack.GetReserved() >= 5*8);
 
-         for (uint i = 0; i < 5*5; ++i)
-            REQUIRE(pack[i] == *darray1[i%5]);
+         for (uint i = 0; i < 4*5; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
+            if constexpr (Reffed)
+               REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
+         }
 
-         for (uint i = 25; i < 25 + 3*5; ++i)
-            REQUIRE(pack[i] == *darray2[i%5]);
+         for (uint i = 20; i < 20 + 3*5; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray2[i%5]);
+            if constexpr (Reffed)
+               REQUIRE(DenseCast(*darray2[i%5]).GetReferences() == (Sparse ? 4 : 1));
+         }
+
+         // Last one is cloned and pointers won't match                 
+         if constexpr (Sparse) {
+            for (uint i = 35; i < 40; ++i) {
+               REQUIRE(*pack.template GetAt<E>(i) != *darray1[i%5]);
+               REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i%5]));
+               if constexpr (Reffed) {
+                  REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == 5);
+                  REQUIRE(DenseCast(pack.template GetAt<E>(i)).GetReferences() == 1);
+               }
+            }
+         }
+         else {
+            for (uint i = 35; i < 40; ++i) {
+               REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
+               if constexpr (Reffed) {
+                  REQUIRE(darray1[i%5]->GetReferences() == 1);
+                  REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
+               }
+            }
+         }
 
          BenchmarkManyStd("Empty/Insert/Array/Back", 30, 100,
             T temp,              temp.InsertAt(Index::Back, immovable),
@@ -1017,11 +1049,11 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front,           immovable));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Refer    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Copy     {immovable}));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Clone    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Disown   {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, std::move(movable1)));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Move     {movable2}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Abandon  {movable3}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Clone    {immovable}));
          REQUIRE(inserted == 5*8);
 
          Many_CheckState_OwnedFull<E>(pack);
@@ -1037,11 +1069,38 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          REQUIRE(pack.GetCount() == 5*8);
          REQUIRE(pack.GetReserved() >= 5*8);
 
-         for (uint i = 0; i < 3*5; ++i)
-            REQUIRE(pack[i] == *darray2[i%5]);
+         // First one is cloned and pointers won't match                
+         if constexpr (Sparse) {
+            for (uint i = 0; i < 5; ++i) {
+               REQUIRE(*pack.template GetAt<E>(i) != *darray1[i]);
+               REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i]));
+               if constexpr (Reffed) {
+                  REQUIRE(DenseCast(*darray1[i]).GetReferences() == 5);
+                  REQUIRE(DenseCast(pack.template GetAt<E>(i)).GetReferences() == 1);
+               }
+            }
+         }
+         else {
+            for (uint i = 0; i < 5; ++i) {
+               REQUIRE(*pack.template GetAt<E>(i) == *darray1[i]);
+               if constexpr (Reffed) {
+                  REQUIRE(darray1[i]->GetReferences() == 1);
+                  REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
+               }
+            }
+         }
 
-         for (uint i = 15; i < 15 + 5*5; ++i)
-            REQUIRE(pack[i] == *darray1[i%5]);
+         for (uint i = 5; i < 5 + 3*5; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray2[i%5]);
+            if constexpr (Reffed)
+               REQUIRE(DenseCast(*darray2[i%5]).GetReferences() == (Sparse ? 4 : 1));
+         }
+
+         for (uint i = 20; i < 20 + 4*5; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
+            if constexpr (Reffed)
+               REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
+         }
 
          BenchmarkManyStd("Empty/Insert/Array/Front", 30, 100,
             T temp,              temp.InsertAt(Index::Front, darray1),
@@ -1052,18 +1111,22 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Insert an array to a non-existent index") {
          REQUIRE_THROWS(pack.InsertAt(5, immovable));
 
-         Many_CheckState_Default<E>(pack);
+         // Residual type from the failed insertion remains.            
+         // Shouldn't be a problem, generally speaking, because an      
+         // empty container can mutate later, as long as it wasn't      
+         // allocated.                                                  
+         Many_CheckState_Default<E>(pack, true);
       }
 
       WHEN("Insert at the back by using << operator)") {
          pack <<           immovable[0]
               << Refer    {immovable[1]}
-              << Clone    {immovable[2]}
-              << Copy     {immovable[3]}
-              << Disown   {immovable[4]}
+              << Copy     {immovable[2]}
+              << Disown   {immovable[3]}
               << std::move(movable1[0])
               << Move     {movable2[0]}
-              << Abandon  {movable3[0]};
+              << Abandon  {movable3[0]}
+              << Clone    {immovable[4]};
 
          Many_CheckState_OwnedFull<E>(pack);
 
@@ -1076,11 +1139,24 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          REQUIRE(pack.GetCount() == 8);
          REQUIRE(pack.GetReserved() >= 8);
 
-         for (int i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == *darray1[i%5]);
+         for (int i = 0; i < 4; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i]);
+         }
 
-         for (int i = 5; i < 8; ++i)
-            REQUIRE(pack[i] == *darray2[i%5]);
+         for (int i = 4; i < 7; ++i)
+            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
+
+         // Last one is cloned and pointers won't match                 
+         if constexpr (Sparse) {
+            REQUIRE(*pack.template GetAt<E>(7) != *darray1[4]);
+            REQUIRE(DenseCast(pack.template GetAt<E>(7)) == DenseCast(*darray1[4]));
+         }
+         else REQUIRE(*pack.template GetAt<E>(7) == *darray1[4]);
+
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
+            REQUIRE(DenseCast(pack.template GetAt<E>(7)).GetReferences() == 1);
+         }
 
          BenchmarkManyStd("Empty/Insert/Element/Back", 30, 100,
             T temp,              temp << immovable[0],
@@ -1091,12 +1167,12 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Insert at the front by using >> operator)") {
          pack >>           immovable[0]
               >> Refer    {immovable[1]}
-              >> Clone    {immovable[2]}
-              >> Copy     {immovable[3]}
-              >> Disown   {immovable[4]}
+              >> Copy     {immovable[2]}
+              >> Disown   {immovable[3]}
               >> std::move(movable1[0])
               >> Move     {movable2[0]}
-              >> Abandon  {movable3[0]};
+              >> Abandon  {movable3[0]}
+              >> Clone    {immovable[4]};
 
          Many_CheckState_OwnedFull<E>(pack);
 
@@ -1109,11 +1185,23 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          REQUIRE(pack.GetCount() == 8);
          REQUIRE(pack.GetReserved() >= 8);
 
-         for (int i = 0; i < 3; ++i)
-            REQUIRE(pack[i] == *darray2[2 - i%5]);
+         // first one is cloned and pointers won't match                
+         if constexpr (Sparse) {
+            REQUIRE(*pack.template GetAt<E>(0) != *darray1[4]);
+            REQUIRE(DenseCast(pack.template GetAt<E>(0)) == DenseCast(*darray1[4]));
+         }
+         else REQUIRE(*pack.template GetAt<E>(0) == *darray1[4]);
 
-         for (int i = 3; i < 8; ++i)
-            REQUIRE(pack[i] == *darray1[4 - (i - 3)%5]);
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
+            REQUIRE(DenseCast(pack.template GetAt<E>(0)).GetReferences() == 1);
+         }
+
+         for (int i = 1; i < 4; ++i)
+            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
+
+         for (int i = 4; i < 8; ++i)
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[4 - (i - 3)%5]);
 
          BenchmarkManyStd("Empty/Insert/Element/Front", 30, 100,
             T temp,              temp >> immovable[0],
