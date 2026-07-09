@@ -94,10 +94,12 @@ namespace Langulus::Anyness
 
          if constexpr (CT::Copied<T> or CT::Cloned<T>)
             this->TakeOwnership();
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
          else if constexpr (not CT::Disowned<T>){
             this->SetAllocationInner(Allocator::Find(&DeintCast(source)));
             this->Keep();
          }
+         #endif
       }
 
       /// Construction from any kind of POD bounded array with intent         
@@ -110,10 +112,12 @@ namespace Langulus::Anyness
 
          if constexpr (CT::Copied<T> or CT::Cloned<T>)
             this->TakeOwnership();
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
          else if constexpr (not CT::Disowned<T>){
             this->SetAllocationInner(Allocator::Find(DeintCast(source)));
             this->Keep();
          }
+         #endif
       }
 
       /// Construction from constexpr POD bounded array                       

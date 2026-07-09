@@ -287,7 +287,7 @@ namespace Langulus
 
    /// Get the extent of an array argument, or 1 if T is not an array         
    template<class T>
-   consteval size_t GetExtentOf(T&&) { return ExtentOf<ShedDeref<T>>; }
+   constexpr size_t GetExtentOf(T&&) { return ExtentOf<ShedDeref<T>>; }
 
    /// Get all nested extents of a bounded array type, multiplied, or 1       
    /// if T is not an array                                                   
@@ -297,7 +297,7 @@ namespace Langulus
    /// Get all nested extents of a bounded array argument, multiplied, or 1   
    /// if T is not an array                                                   
    template<class T>
-   consteval size_t GetAllExtentsOf(T&&) { return AllExtentsOf<ShedDeref<T>>; }
+   constexpr size_t GetAllExtentsOf(T&&) { return AllExtentsOf<ShedDeref<T>>; }
 
    /// Remove a number of pointers from type. Supports custom pointer types.  
    ///   @attention may result in a reference                                 
