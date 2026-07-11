@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Langulus/Assume.hpp"
 #include <Langulus/CT/Index.hpp>
 
 
@@ -37,10 +38,11 @@ namespace Langulus::Anyness::Component
       using Iterator = typename Deref<C>::Iterator;
 
    public:
-      /// Erase all elements that match a value                               
+      /// Erase all elements that match a value.                              
+      /// Designed for linearly indexed containers.                           
       ///   @param value the value to match                                   
       ///   @return the number of removed elements that matched the value     
-      template<CT::ContainsMany C>
+      template<CT::ContainsMany C> requires CT::IndexedLinearly<C>
       auto Erase(this C& self, CT::NoIntent auto const& value) -> size_t {
          if (self.IsEmpty())
             return 0;
@@ -86,7 +88,21 @@ namespace Langulus::Anyness::Component
          return removed;
       }
 
-      /// Erase a number of elements starting at a specific position          
+      /// Erase a key from a non-linearly indexed container                   
+      ///   @param key - the key to search for                                
+      ///   @return the number of removed elements                            
+      template<CT::ContainsMany C> requires (not CT::IndexedLinearly<C>)
+      auto Erase(this C& self, CT::NoIntent auto const& key) -> size_t {
+         if (self.IsEmpty())
+            return 0;
+
+         auto h = self.Find(key).ForceMutable();
+         ThisCom::EraseFromTable(h);
+         return 1;
+      }
+
+      /// Erase a number of elements starting at a specific position.         
+      /// Designed for linearly indexed containers.                           
       ///   @param idx the starting location                                  
       ///   @param count the number of elements to erase (1 by default)       
       ///   @return the number of removed elements                            
@@ -196,7 +212,8 @@ namespace Langulus::Anyness::Component
       template<CT::ContainsMany C>
       void Optimize(this C&);
 
-      /// Destroy all elements but don't deallocate memory, unless we have to 
+      /// Destroy all elements but don't deallocate memory unless we really   
+      /// have to.                                                            
       ///   @attention will never reset state except disownment               
       ///   @attention will never reset type                                  
       void Clear(this auto& self) {
@@ -247,7 +264,7 @@ namespace Langulus::Anyness::Component
          if_available(self.DisableDisowned());
       }
 
-      /// Destroy all elements, deallocate block and reset state and type.    
+      /// Destroy all elements, deallocate memory and reset state and type.   
       ///   @attention notice that heap pointer is not zeroed here, as it     
       ///      is not a requirement. It is UB if you GetRaw while count is 0! 
       void Reset(this auto& self) {
@@ -255,6 +272,72 @@ namespace Langulus::Anyness::Component
          if_available(self.ResetAllAllocations());
          if_available(self.ResetState());
          if_available(self.ResetAllTypes());
+      }
+
+   protected:
+      /// Erases an element at a specific index from a hash table             
+      ///   @attention assumes that index points to a valid element           
+      ///   @attention operates on all dimensions at once                     
+      ///   @param index - the index to remove                                
+      template<CT::ContainsMany C> requires (not CT::IndexedLinearly<C>)
+      void EraseFromTable(this C& self, CT::Handle auto& h) assumptious {
+         const auto tableBeg = DecvqAllCast(self.template GetHashTable<ID>()); //TODO what if different tables per dimension?
+         auto psl = tableBeg + (h - self.GetHandle());
+         LglsAssumeDev(*psl,
+            "Removing an invalid key");
+         LglsAssumeDev(self.GetUses() == 1,
+            "Must branch-out before calling this method");
+
+         // Destroy the key and info at the start                       
+         //auto h = self.GetHandle() + index;
+         h.Free();
+         ++h;
+
+         *(psl++) = 0;
+
+      try_again:
+         // Shift backwards, until a zero or 1 is reached.              
+         // That way we move every entry that is far from its bucket    
+         // closer to it.                                               
+         while (*psl > 1) {
+            psl[-1] = (*psl) - 1;
+
+            auto prev_h = h - 1;
+            Id::ForEach([&prev_h, &h]<Cid D> {
+               prev_h.template EmplaceWithIntent<D>(Abandon(h));
+            });
+
+            h.Free();
+            ++h;
+
+            *(psl++) = 0;
+         }
+
+         // Be aware, that iterator might loop around                   
+         const auto tableEnd = self.template GetHashTableEnd<ID>(); //TODO what if different tables per dimension?
+         if (psl == tableEnd and *tableBeg > 1) {
+            const auto last = self.GetReserved() - 1;
+            psl = tableBeg;
+            tableBeg[last] = (*psl) - 1;
+
+            // Shift first entry to the back                            
+            h = self.GetHandle();
+            auto last_h = self.GetHandle().ForceMutable() + last;
+            Id::ForEach([&last_h, &h]<Cid D> {
+               last_h.template EmplaceWithIntent<D>(Abandon(h));
+            });
+
+            h.Free();
+            ++h;
+
+            *(psl++) = 0;
+
+            // And continue the vicious cycle                           
+            goto try_again;
+         }
+
+         // Success                                                     
+         --self.GetCountInner();
       }
    };
 

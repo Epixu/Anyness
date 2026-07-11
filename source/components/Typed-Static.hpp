@@ -91,6 +91,26 @@ namespace Langulus::Anyness::Component
       /// This can potentially happen at compile-time.                        
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param other the type to check for                                
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      constexpr void AssertTypesAreAkin(C const& other) const {
+         if constexpr (CT::TypeErased<C>) {
+            auto t1 = GetType();
+            auto t2 = other.template GetType<SID>();
+            if (t1 and t2) {
+               LglsAssert(t1.Is(t2), "Type mismatch", ": ",
+                  t1, " is not akin to ", t2, " (dimension #", SID, ")");
+            }
+         }
+         else {
+            (void) other;
+            static_assert(Akin<TYPE, TypeOf<C, SID>>, "Type mismatch");
+         }
+      }
+
+      /// Check if type origin is the same as another container's type.       
+      /// This can potentially happen at compile-time.                        
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @param other the type to check for                                
       ///   @return true if this container has similar data                   
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool Is(C const& other) const noexcept {
@@ -123,6 +143,26 @@ namespace Langulus::Anyness::Component
       /// This can potentially happen at compile-time.                        
       ///   @attention ignores only cv-qualifiers                             
       ///   @param other the container to check for                           
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      constexpr void AssertTypesAreSame(C const& other) const {
+         if constexpr (CT::TypeErased<C>) {
+            auto t1 = GetType();
+            auto t2 = other.template GetType<SID>();
+            if (t1 and t2) {
+               LglsAssert(t1.IsSame(t2), "Type mismatch", ": ",
+                  t1, " is not similar to ", t2, " (dimension #", SID, ")");
+            }
+         }
+         else {
+            (void) other;
+            static_assert(Same<TYPE, TypeOf<C, SID>>, "Type mismatch");
+         }
+      }
+
+      /// Check if unqualified type is the same as another container's type.  
+      /// This can potentially happen at compile-time.                        
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @param other the container to check for                           
       ///   @return true if this container has similar data                   
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool IsSame(C const& other) const noexcept {
@@ -147,6 +187,25 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires (SID == ID)
       bool IsExact(META type) const noexcept {
          return GetType().IsExact(type);
+      }
+
+      /// Check if this type is exactly another container's type              
+      /// This can potentially happen at compile-time                         
+      ///   @param other the block to match                                   
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      constexpr void AssertTypesAreExact(C const& other) const {
+         if constexpr (CT::TypeErased<C>) {
+            auto t1 = GetType();
+            auto t2 = other.template GetType<SID>();
+            if (t1 and t2) {
+               LglsAssert(t1.IsExact(t2), "Type mismatch", ": ",
+                  t1, " is not exactly ", t2, " (dimension #", SID, ")");
+            }
+         }
+         else {
+            (void) other;
+            static_assert(Exact<TYPE, TypeOf<C, SID>>, "Type mismatch");
+         }
       }
 
       /// Check if this type is exactly another container's type              

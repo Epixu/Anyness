@@ -183,8 +183,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    {
       static_assert(    CT::Deep<T>);
       static_assert(not CT::ContainsOne<T>);
-      static_assert(not CT::Handle<T>);
       static_assert(    CT::ContainsMany<T>);
+      static_assert(not CT::Handle<T>);
       static_assert(    CT::HasVariableCount<T>);
       static_assert(    CT::HeapAllocated<T>);
       static_assert(    CT::OwnedDeep<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
@@ -215,7 +215,9 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
       static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
       static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+      static_assert(    requires (T pack, E item) { pack.Insert(item); });
       static_assert(    requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+      static_assert(    requires (T pack, E item) { pack.Emplace(item); });
       static_assert(    requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
       static_assert(    requires (T pack)         { pack.Concat(pack); });
       static_assert(    requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
@@ -239,6 +241,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       const ScopedE element {555};
       T pack;
 
+      /// MARK: Gap test                                                      
       WHEN("Gap test") {
          Common_GapTest<T, ::std::vector<E>>();
          //static_assert(sizeof(T) <= sizeof(::std::vector<E>)); // bigger, because it precomputes and stores a hash on the stack
@@ -260,6 +263,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
+      /// MARK: Assign/Refer                                                  
       WHEN("Assigned value by referral") {
          REQUIRE_NOTHROW(pack.Assign(*element));
 
@@ -290,12 +294,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             BenchmarkManyStd("Empty/AssignAbsorb/Refer", 30, 100,
-               T temp,                                               temp.AssignAbsorb(*element),
-               stdvec src_std (1, *element); stdvec temp_std,        temp_std = src_std;
+               T temp,                         temp.AssignAbsorb(*element),
+               stdvec src_std (1, *element);
+               stdvec temp_std,                temp_std = src_std;
             );
          }
       }
 
+      /// MARK: Assign/Move                                                   
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign value by move") {
             auto movable = *element;
@@ -350,6 +356,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// MARK: Assign/Copy                                                   
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign copied value") {
             REQUIRE_THROWS(pack = Copy(*element));
@@ -398,6 +405,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// MARK: Assign/Clone                                                  
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign cloned value") {
             REQUIRE_THROWS(pack = Clone(*element));
@@ -427,6 +435,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             }
 
             REQUIRE_NOTHROW(pack.AssignAbsorb(Clone(*element)));
+            Any_CheckState_OwnedFull<int>(*element);
+            Any_CheckState_OwnedFull<int>(pack);
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -445,6 +455,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// MARK: Assign/Disown                                                 
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign disowned value") {
             REQUIRE_THROWS(pack = Disown(*element));
@@ -488,6 +499,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// MARK: Assign/Abandon                                                
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assigned abandoned value") {
             auto movable = *element;
@@ -539,6 +551,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// MARK: Assign empty                                                  
       WHEN("Ambigous assigned empty self") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
@@ -552,6 +565,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          Many_CheckState_Default<E>(pack);
       }
 
+      /// MARK: Emplace                                                       
       WHEN("Emplace (insert)") {
          ScopedE i666 {666};
          const auto i666backup = *i666;
@@ -586,6 +600,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// MARK: Describe                                                      
       WHEN("Emplace (insert, describe)") {
          ScopedE i666{666};
          const auto i666backup = *i666;
@@ -609,6 +624,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          }
       }
 
+      /// MARK: Clear                                                         
       WHEN("Cleared") {
          REQUIRE_NOTHROW(pack.Clear());
 
@@ -620,6 +636,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
+      /// MARK: Reset                                                         
       WHEN("Reset") {
          REQUIRE_NOTHROW(pack.Reset());
 
@@ -631,6 +648,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
+      /// MARK: Erase                                                         
       WHEN("Erase non-existent value") {
          size_t removed = 0;
          REQUIRE_NOTHROW(removed = pack.Erase(*element));
@@ -727,6 +745,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          Many_CheckState_Default<E>(pack);
       }
 
+      /// MARK: Compare                                                       
       WHEN("Compared empty") {
          T another_pack1;
          T another_pack2;
@@ -746,6 +765,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
+      /// MARK: Contains                                                      
       WHEN("Contains when empty") {
          REQUIRE_FALSE(pack.Contains(*element));
 
@@ -960,7 +980,6 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       }
    }
 
-   /// MARK: Insertion                                                        
    GIVEN("Default-constructed container and a couple of arrays") {
       const ScopedE darray1[5] {1, 2, 3, 4,  5};
       const ScopedE darray2[5] {6, 7, 8, 9, 10};
@@ -980,6 +999,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
       T pack;
 
+      /// MARK: Insert array                                                  
       WHEN("Insert an array to the back") {
          size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back,           immovable));
@@ -1108,6 +1128,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
+      /// MARK: Insert at                                                     
       WHEN("Insert an array to a non-existent index") {
          REQUIRE_THROWS(pack.InsertAt(5, immovable));
 
@@ -1118,6 +1139,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          Many_CheckState_Default<E>(pack, true);
       }
 
+      /// MARK: <<                                                            
       WHEN("Insert at the back by using << operator)") {
          pack <<           immovable[0]
               << Refer    {immovable[1]}
@@ -1164,6 +1186,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
+      /// MARK: >>                                                            
       WHEN("Insert at the front by using >> operator)") {
          pack >>           immovable[0]
               >> Refer    {immovable[1]}

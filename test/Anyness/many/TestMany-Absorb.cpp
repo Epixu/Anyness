@@ -303,7 +303,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                Many_CheckState_OwnedFull<E>(pack_abandoned);
 
                misabsorb_refer(pack_disowned,  3);
-               Any_CheckState_DisownedFull<E>(pack_disowned);
+               Many_CheckState_DisownedFull<E>(pack_disowned);
                return;
             }
 
@@ -925,6 +925,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          absorb_construct_clone(pack_disowned,  0);
       }
       
+      /// MARK: Emplace                                                       
       WHEN("Emplace (overwrite)") {
          auto emplace_overwrite = [&](T& a, [[maybe_unused]] const char* intent) {
             ScopedE i666{666};
@@ -971,6 +972,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          emplace_overwrite(pack_disowned,  "Disown");
       }
 
+      /// MARK: Describe                                                      
       WHEN("Emplace (overwrite, describe)") {
          auto emplace_overwrite_describe = [&](T& a, [[maybe_unused]] const char* intent) {
             ScopedE i666{666};
@@ -1005,6 +1007,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          emplace_overwrite_describe(pack_disowned,  "Disown");
       }
       
+      /// MARK: Clear                                                         
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent, int uses = 1) {
             BenchmarkManyStd("Absorb/" + intent + "/Clear", 30, 100,
@@ -1028,6 +1031,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          clear_full(pack_disowned,  "Disown", 0);
       }
 
+      /// MARK: Reset                                                         
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
             BenchmarkManyStd("Absorb/" + intent + "/Reset", 30, 100,
@@ -1069,6 +1073,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          }
       }
 
+      /// MARK: Compare                                                       
       WHEN("Compared") {
          ScopedE e1 {1};
          T another_pack1 {Piecewise, *e1};
@@ -1105,6 +1110,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          compared_full(pack_disowned,  "Disown");
       }
 
+      /// MARK: Contains                                                      
       WHEN("Contains when full") {
          ScopedE e1 {1};
          

@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Merging.hpp"
+#include "source/Component.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -31,9 +32,14 @@ namespace Langulus::Anyness::Component
       }
 
       /// Merge front                                                         
+      ///   @attention for maps, sets, or any containers that aren't          
+      ///      linearly indexed, this is equivalent to `<<=`.                 
       template<CT::ContainsMany C, class A>
       C& operator >>= (this C& lhs, A&& rhs) {
-         lhs.MergeAt(Index::Front, LglsFwd(rhs));
+         if constexpr (CT::IndexedLinearly<C>)
+            lhs.MergeAt(Index::Front, LglsFwd(rhs));
+         else
+            lhs.Merge(LglsFwd(rhs));
          return lhs;
       }
    };

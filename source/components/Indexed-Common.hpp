@@ -176,50 +176,6 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Handle<AS>) {
             const auto offset = self.SimplifyIndex(idx);
             return self.template GetHandle<AS, SID>() + offset;
-            /*if constexpr (CT::Pair<AS>) {
-               // User desires a pair, so we give them a pair           
-               static_assert(Shared, "Indexing must be shared to access as a pair");
-               using AS1 = typename AS::KeyHandle;
-               using AS2 = typename AS::ValHandle;
-               return AS {
-                  self.template AsAt<AS1, SID + 0>(idx),
-                  self.template AsAt<AS2, SID + 1>(idx)
-               };
-            }
-            else if constexpr (CT::TypeErased<AS>) {
-               // Type-erased handle                                    
-               if constexpr (requires { self.template GetEntries<SID>(); }) {
-                  return AS {
-                     self.template GetAt<void, SID>(LglsFwd(idx)),
-                     self.template GetEntries<SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-               else return AS {
-                  self.template GetAt<void, SID>(LglsFwd(idx)),
-                  self.template GetType<SID>()
-               };
-            }
-            else {
-               // Statically typed handle                               
-               using HT = Deref<TypeOf<AS>>;
-
-               if constexpr (CT::TypeErased<C>) {
-                  auto type = self.template GetType<SID>();
-                  auto requested = MetaDataOf<HT>();
-                  LglsAssert(type.IsSame(requested), "Type mismatch",
-                     ": ", type, " not same as ", requested);
-               }
-               else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
-
-               if constexpr (requires { self.template GetEntries<SID>(); }) {
-                  return AS {
-                     self.template GetAt<void, SID>(LglsFwd(idx)),
-                     self.template GetEntries<SID>()
-                  };
-               }
-               else return AS { self.template GetAt<void, SID>(LglsFwd(idx)) };
-            }*/
          }
          else {
             // Access directly or wrapped in a container                
@@ -239,37 +195,11 @@ namespace Langulus::Anyness::Component
                LglsAssert(type.Is(requested),
                   "Type mismatch", ": ", type, " not akin to ", requested);
 
-               //if (type.Is(requested)) {
-                  // Access directly                                    
-                  /*if constexpr (CT::DeepDense<AS>)
-                     return Decvq<AS> {Absorb, *self.template GetAt<AS, SID>(LglsFwd(idx))};
-                  else*/ if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *self.template GetAt<AS, SID>(LglsFwd(idx));
-                  else
-                     return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
-               /*}
-               else if constexpr (CT::DeepDense<AS>) {
-                  // Wrap in a container                                
-                  using H = DecideHandle<C>;
-                  if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
-                     //TODO magic numbers here, use H::PickDimension?
-                     if constexpr (SID == 0)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandle, 0>(LglsFwd(idx))};
-                     else if constexpr (SID == 1)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandle, 1>(LglsFwd(idx))};
-                     else
-                        static_assert(false, "Unsupported SID");
-                  }
-                  else return Decvq<AS> {Absorb, self.template AsAt<H, SID>(LglsFwd(idx))};
-               }
-               else {
-                  // Runtime type mismatch error                        
-                  LglsError("Type mismatch", ": ", type, " not akin to ", requested);
-                  if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *self.template GetAt<AS, SID>(LglsFwd(idx));
-                  else
-                     return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
-               }*/
+               // Access directly                                       
+               if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
+                  return *self.template GetAt<AS, SID>(LglsFwd(idx));
+               else
+                  return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
             }
             else {
                using T = TypeOf<C, SID>;

@@ -183,7 +183,7 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index to insert at                                 
       ///   @param a1, an elements or arrays (and their intents) to insert    
       ///   @return the number of inserted elements (after any conversions)   
-      template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
+      template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>
       auto InsertAt(this C& self, CT::Index auto&& idx, A1&& a1, AN&&...an) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
@@ -299,12 +299,12 @@ namespace Langulus::Anyness::Component
 
       /// Insert a number of elements at a specific place, nullifying them if 
       /// able to                                                             
-      template<CT::Contiguous C>
+      template<CT::IndexedLinearly C>
       auto InsertNulledAt(this C&, CT::Index auto, size_t) -> size_t;
 
       /// Insert a number of elements at a specific place, default-           
       /// constructing them if able to                                        
-      template<CT::Contiguous C>
+      template<CT::IndexedLinearly C>
       auto InsertDefaultAt(this C&, CT::Index auto, size_t) -> size_t;
 
       /// MARK: ComposeAt                                                     
@@ -317,7 +317,7 @@ namespace Langulus::Anyness::Component
       ///   @param value the value to smart-push                              
       ///   @param state a state to apply after pushing is done               
       ///   @return the number of pushed items (zero if unsuccessful)         
-      template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
+      template<bool CONCAT = true, bool FORCE = true, CT::IndexedLinearly C>
       auto ComposeAt(
          this C& self, CT::Index auto&& idx, auto&& value
       ) -> size_t {
@@ -365,7 +365,7 @@ namespace Langulus::Anyness::Component
       ///      incompatible type is encountered.                              
       ///   @param a1, an elements (and their intents) to insert              
       ///   @return the number of inserted elements (after any conversions)   
-      template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
+      template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>
       auto Insert(this C& self, A1&& a1, AN&&...an) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
@@ -420,7 +420,7 @@ namespace Langulus::Anyness::Component
       /// This usually means at the back of a contiguous container. The       
       /// inserted elements will be nullified.                                
       ///   @param count the number of elements to insert                     
-      template<CT::Contiguous C>
+      template<CT::IndexedLinearly C>
       auto InsertNulled(this C&, size_t count) -> size_t;
 
       /// MARK: InsertDefault                                                 
@@ -428,7 +428,7 @@ namespace Langulus::Anyness::Component
       /// This usually means at the back of a contiguous container. The       
       /// inserted elements will be default-constructed.                      
       ///   @param count the number of elements to insert                     
-      template<CT::Contiguous C>
+      template<CT::IndexedLinearly C>
       auto InsertDefault(this C& self, size_t count) -> size_t {
          const auto previousCount = self.GetCount();
          self.AllocateMore(previousCount + count);
@@ -509,7 +509,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam FORCE insert even if types mismatch by deepening          
       ///   @param value the value to insert                                  
       ///   @return the number of pushed items (zero if unsuccessful)         
-      template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
+      template<bool CONCAT = true, bool FORCE = true, CT::IndexedLinearly C>
       auto Compose(this C& self, auto&& value) -> size_t {
          using I = IntentOf(value);
          using T = Deint<I>;
@@ -592,7 +592,7 @@ namespace Langulus::Anyness::Component
       /// MARK: ConcatAt                                                      
       /// Concatenation at specific index.                                    
       /// Possible only for contiguous containers with multiple elements.     
-      template<CT::Contiguous C>
+      template<CT::IndexedLinearly C>
       auto ConcatAt(this C& self, CT::Index auto&& idx, CT::Container auto&& data) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
@@ -624,7 +624,7 @@ namespace Langulus::Anyness::Component
       ///   @param a1_intent, an_intent the containers to concatenate to the  
       ///      right of 'this'                                                
       ///   @return the number of concatenated elements                       
-      template<CT::Contiguous C, CT::Container A1, CT::Container...AN>
+      template<CT::IndexedLinearly C, CT::Container A1, CT::Container...AN>
       auto Concat(this C& self, A1&& a1_intent, AN&&...an_intent) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
@@ -667,7 +667,7 @@ namespace Langulus::Anyness::Component
       /// 'out_count' being rewritten to reflect the number of required sub-  
       /// containers.                                                         
       ///   @attention operates in all relevant dimensions simultaneously     
-      template<CT::Contiguous C, class A>
+      template<CT::IndexedLinearly C, class A>
       void PrepareForInsertion(this C& self, A&& a, size_t& out_count, bool& deepened) {
          if constexpr (CT::Handle<A>) {
             // Inserting handles                                        
@@ -703,7 +703,7 @@ namespace Langulus::Anyness::Component
       /// Empty containers can't change this container's type. If one of the  
       /// type changes raises a conflict the function will throw.             
       ///   @attention operates in all relevant dimensions simultaneously     
-      template<CT::Contiguous C, CT::Container A>
+      template<CT::IndexedLinearly C, CT::Container A>
       void PrepareForAbsorption(this C& self, A&& a, size_t& out_count) {
          const auto c = DeintCast(a).GetCount();
          if (not c)
@@ -714,7 +714,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// MARK: ConvertInsertInner                                            
-      template<CT::Contiguous C, class T>
+      template<CT::IndexedLinearly C, class T>
       void ConvertInsertInner(this C& self, size_t& at, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<I>>;
@@ -800,7 +800,7 @@ namespace Langulus::Anyness::Component
       ///   @param index the place to insert at                               
       ///   @param value the value to concatenate                             
       ///   @return the number of inserted elements                           
-      template<bool FORCE, class C>
+      template<bool FORCE, CT::IndexedLinearly C>
       auto ComposeInner(
           this C& self, bool stateCompliant, CT::Index auto&& index, auto&& value
       ) -> size_t {

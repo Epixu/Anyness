@@ -46,6 +46,12 @@
         }
       },
       {
+        "scope": "storage.type.class.doxygen.cpp",
+        "settings": {
+          "foreground": "#FFA657"
+        }
+      },
+      {
         "scope": "string",
         "settings": {
           "foreground": "#ff6e6e"
@@ -145,11 +151,11 @@
    "highlight.regexes": {
       "(/{2}(?!TODO).*)": [{
          "filterLanguageRegex": "c",
-         "backgroundColor": "#88ff8820"
+         "backgroundColor": "#88ff8840"
       }],
       "(/{3}(?!TODO).*)": [{
          "filterLanguageRegex": "c",
-         "backgroundColor": "#b0ffb040"
+         "backgroundColor": "#b0ffb060"
       }],
       "(/{2}TODO.*)": [{
         "filterLanguageRegex": "c",

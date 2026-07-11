@@ -161,7 +161,7 @@ namespace Langulus::Anyness::Component
       ///   @param type the type to check for                                 
       ///   @return true if this container's type is akin to 'type'           
       template<Cid SID = 0>
-      bool Is(this auto const& self, auto const& type) noexcept {
+      constexpr bool Is(this auto const& self, auto const& type) noexcept {
          using C = typename Subcomponents::template At<SID>;
          return self.C::Is(type);
       }
@@ -174,14 +174,46 @@ namespace Langulus::Anyness::Component
          return self.C::Is(type);
       }
 
+      /// Assert if any of the types aren't Akin                              
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @param other the container to compare with                        
+      template<CT::Container LHS, CT::Container RHS> requires CT::NoIntent<RHS>
+      void AssertTypesAreAkin(this LHS const& self, RHS const& other) {
+         Id::ForEach([&]<Cid D> {
+            if constexpr (CT::TypeErased<RHS> or CT::TypeErased<LHS>) {
+               auto t1 = self.template GetType<D>();
+               auto t2 = other.template GetType<D>();
+               if (t1 and t2) {
+                  LglsAssert(t1.Is(t2), "Type mismatch", ": ",
+                     t1, " is not akin to ", t2, " (dimension #", D, ")");
+               }
+            }
+            else {
+               (void) self;
+               (void) other;
+               static_assert(Akin<TypeOf<LHS, D>, TypeOf<RHS, D>>, "Type mismatch");
+            }
+         });
+      }
+
       /// Check if type origin is the same as another container's type        
       ///   @attention ignores sparsity and cv-qualifiers                     
-      ///   @param other the type to check for                                
-      ///   @return true if this container's type is akin to other's          
-      template<Cid SID = 0>
-      constexpr bool Is(this auto const& self, CT::Container auto const& other) noexcept {
-         using C = typename Subcomponents::template At<SID>;
-         return self.C::Is(other);
+      ///   @param other the container to compare with                        
+      ///   @return true if all container's type are Akin                     
+      template<CT::Container LHS, CT::Container RHS> requires CT::NoIntent<RHS>
+      constexpr bool Is(this LHS const& self, RHS const& other) noexcept {
+         return Id::ForEachAnd([&]<Cid D> noexcept {
+            if constexpr (CT::TypeErased<RHS> or CT::TypeErased<LHS>) {
+               auto t1 = self.template GetType<D>();
+               auto t2 = other.template GetType<D>();
+               return t1 and t2 and t1.Is(t2);
+            }
+            else {
+               (void) self;
+               (void) other;
+               return Akin<TypeOf<LHS, D>, TypeOf<RHS, D>>;
+            }
+         });
       }
       constexpr bool IsKey(this auto const& self, CT::Container auto const& other) noexcept {
          using C = typename Subcomponents::First;
@@ -217,7 +249,7 @@ namespace Langulus::Anyness::Component
       ///   @param type the type to check for                                 
       ///   @return true if this block contains similar data                  
       template<Cid SID = 0>
-      bool IsSame(this auto const& self, auto const& type) noexcept {
+      constexpr bool IsSame(this auto const& self, auto const& type) noexcept {
          using C = typename Subcomponents::template At<SID>;
          return self.C::IsSame(type);
       }
@@ -229,15 +261,47 @@ namespace Langulus::Anyness::Component
          using C = typename Subcomponents::Second;
          return self.C::IsSame(type);
       }
+      
+      /// Assert if any of the types aren't Same                              
+      ///   @attention ignores cv-qualifiers only                             
+      ///   @param other the container to compare with                        
+      template<CT::Container LHS, CT::Container RHS> requires CT::NoIntent<RHS>
+      void AssertTypesAreSame(this LHS const& self, RHS const& other) {
+         Id::ForEach([&]<Cid D> {
+            if constexpr (CT::TypeErased<RHS> or CT::TypeErased<LHS>) {
+               auto t1 = self.template GetType<D>();
+               auto t2 = other.template GetType<D>();
+               if (t1 and t2) {
+                  LglsAssert(t1.IsSame(t2), "Type mismatch", ": ",
+                     t1, " is not similar to ", t2, " (dimension #", D, ")");
+               }
+            }
+            else {
+               (void) self;
+               (void) other;
+               static_assert(Same<TypeOf<LHS, D>, TypeOf<RHS, D>>, "Type mismatch");
+            }
+         });
+      }
 
-      /// Check if unqualified type is the same as another container's type   
-      ///   @attention ignores only cv-qualifiers                             
-      ///   @param other the container to check for                           
-      ///   @return true if this container has similar data                   
-      template<Cid SID = 0>
-      constexpr bool IsSame(this auto const& self, CT::Container auto const& other) noexcept {
-         using C = typename Subcomponents::template At<SID>;
-         return self.C::IsSame(other);
+      /// Check if types are similar to another containers'                   
+      ///   @attention ignores cv-qualifiers only                             
+      ///   @param other the container to compare with                        
+      ///   @return true if all container's type are Same                     
+      template<CT::Container LHS, CT::Container RHS> requires CT::NoIntent<RHS>
+      constexpr bool IsSame(this LHS const& self, RHS const& other) noexcept {
+         return Id::ForEachAnd([&]<Cid D> noexcept {
+            if constexpr (CT::TypeErased<RHS> or CT::TypeErased<LHS>) {
+               auto t1 = self.template GetType<D>();
+               auto t2 = other.template GetType<D>();
+               return t1 and t2 and t1.IsSame(t2);
+            }
+            else {
+               (void) self;
+               (void) other;
+               return Same<TypeOf<LHS, D>, TypeOf<RHS, D>>;
+            }
+         });
       }
       constexpr bool IsKeySame(this auto const& self, CT::Container auto const& other) noexcept {
          using C = typename Subcomponents::First;
@@ -271,7 +335,7 @@ namespace Langulus::Anyness::Component
       ///   @param type the type to match                                     
       ///   @return true if data type matches type exactly                    
       template<Cid SID = 0>
-      bool IsExact(this auto const& self, auto&& type) noexcept {
+      constexpr bool IsExact(this auto const& self, auto&& type) noexcept {
          using C = typename Subcomponents::template At<SID>;
          return self.C::IsExact(type);
       }
@@ -283,14 +347,45 @@ namespace Langulus::Anyness::Component
          using C = typename Subcomponents::Second;
          return self.C::IsExact(type);
       }
+      
+      /// Assert if any of the types aren't Exact                             
+      ///   @param other the container to compare with                        
+      template<CT::Container LHS, CT::Container RHS> requires CT::NoIntent<RHS>
+      void AssertTypesAreExact(this LHS const& self, RHS const& other) {
+         Id::ForEach([&]<Cid D> {
+            if constexpr (CT::TypeErased<RHS> or CT::TypeErased<LHS>) {
+               auto t1 = self.template GetType<D>();
+               auto t2 = other.template GetType<D>();
+               if (t1 and t2) {
+                  LglsAssert(t1.IsExact(t2), "Type mismatch", ": ",
+                     t1, " is not exactly ", t2, " (dimension #", D, ")");
+               }
+            }
+            else {
+               (void) self;
+               (void) other;
+               static_assert(Exact<TypeOf<LHS, D>, TypeOf<RHS, D>>, "Type mismatch");
+            }
+         });
+      }
 
-      /// Check if this type is exactly another container's type              
-      ///   @param other the block to match                                   
-      ///   @return true if data type matches type exactly                    
-      template<Cid SID = 0>
-      constexpr bool IsExact(this auto const& self, CT::Container auto const& other) noexcept {
-         using C = typename Subcomponents::template At<SID>;
-         return self.C::IsExact(other);
+      /// Check if types are exactly the same as another containers'          
+      ///   @param other the container to compare with                        
+      ///   @return true if all container's type are Exact                    
+      template<CT::Container LHS, CT::Container RHS> requires CT::NoIntent<RHS>
+      constexpr bool IsExact(this LHS const& self, RHS const& other) noexcept {
+         return Id::ForEachAnd([&]<Cid D> noexcept {
+            if constexpr (CT::TypeErased<RHS> or CT::TypeErased<LHS>) {
+               auto t1 = self.template GetType<D>();
+               auto t2 = other.template GetType<D>();
+               return t1 and t2 and t1.IsExact(t2);
+            }
+            else {
+               (void) self;
+               (void) other;
+               return Exact<TypeOf<LHS, D>, TypeOf<RHS, D>>;
+            }
+         });
       }
       constexpr bool IsKeyExact(this auto const& self, CT::Container auto const& other) noexcept {
          using C = typename Subcomponents::First;

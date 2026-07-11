@@ -128,6 +128,10 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
+   //constexpr bool Managed   = ScopedE::Managed;
+   constexpr bool Sparse    = CT::Sparse<E>;
+   constexpr bool Reffed    = CT::Referenced<Decay<E>>;
+   constexpr bool Ambiguous = not Same<T, E> and CT::Set<E> and LANGULUS(SAFE);
 
    #if LANGULUS(BENCHMARK)
       using stdset = ::std::unordered_set<E>;
@@ -179,8 +183,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    {
       static_assert(    CT::Deep<T>);
       static_assert(not CT::ContainsOne<T>);
-      static_assert(not CT::Handle<T>);
       static_assert(    CT::ContainsMany<T>);
+      static_assert(not CT::Handle<T>);
       static_assert(    CT::HasVariableCount<T>);
       static_assert(    CT::HeapAllocated<T>);
       static_assert(    CT::OwnedDeep<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
@@ -193,20 +197,6 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(::std::input_or_output_iterator<decltype(LglsFake(T).end())>);
 
       static_assert(::std::ranges::range<T>);
-
-      T test;
-      for (auto& it : IterateInReverse(test)) {
-         (void) it;
-      }
-      for (auto& it : test) {
-         (void) it;
-      }
-      for (auto& it : IterateDefault(test)) {
-         (void) it;
-      }
-      for (auto& it : IterateNoDeref(test)) {
-         (void) it;
-      }
 
       static_assert(    requires (T pack)         { pack.Get(); });
       static_assert(not requires (T pack)         { pack.template As<E>(); });
@@ -223,7 +213,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
       static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
       static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+      static_assert(not requires (T pack, E item) { pack.Insert(item); });
       static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+      static_assert(not requires (T pack, E item) { pack.Emplace(item); });
       static_assert(not requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
       static_assert(not requires (T pack)         { pack.Concat(pack); });
       static_assert(not requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
@@ -240,12 +232,14 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(    requires (T pack)         { pack.ForEachRev([](const int&) {}); });
    }
 
-   constexpr bool Ambiguous = not Same<T, E> and CT::Set<E> and LANGULUS(SAFE);
+   static_assert(T::CountHeapProviders() == 1);
+   //static_assert(T::template CountHeapFooterRequests<0>() == 1);
 
    GIVEN("Default-constructed container") {
       const ScopedE element {555};
       T pack;
 
+      /// MARK: Gap test                                                      
       WHEN("Gap test") {
          Common_GapTest<T, ::std::unordered_set<E>>();
          static_assert(sizeof(T) <= sizeof(::std::unordered_set<E>));
@@ -267,8 +261,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
+      /// MARK: Assign/Refer                                                  
       WHEN("Assigned value by referral") {
-         pack.Assign(*element);
+         REQUIRE_NOTHROW(pack.Assign(*element));
 
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Refer(element));
@@ -289,7 +284,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                return;
             }
 
-            pack.AssignAbsorb(*element);
+            REQUIRE_NOTHROW(pack.AssignAbsorb(*element));
 
             Set_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
@@ -304,6 +299,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
 
+      /// MARK: Assign/Move                                                   
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign value by move") {
             auto movable = *element;
@@ -314,7 +310,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       
       WHEN("Assigned value by move") {
          auto movable = *element;
-         pack.Assign(::std::move(movable));
+         REQUIRE_NOTHROW(pack.Assign(::std::move(movable)));
          
          if constexpr (CT::Set<E>)
             Set_CheckState_Default<TypeOf<E>>(movable);
@@ -341,7 +337,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                return;
             }
 
-            pack.AssignAbsorb(::std::move(movable));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(::std::move(movable)));
 
             Set_CheckState_Default<TypeOf<E>>(movable);
             Set_Helper_TestSame(pack, *element);
@@ -358,6 +354,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
 
+      /// MARK: Assign/Copy                                                   
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign copied value") {
             REQUIRE_THROWS(pack = Copy(*element));
@@ -365,7 +362,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       }
       
       WHEN("Assigned copied value") {
-         pack.Assign(Copy(*element));
+         REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
 
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Copy(element));
@@ -386,7 +383,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                return;
             }
 
-            pack.AssignAbsorb(Copy(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Copy(*element)));
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -406,6 +403,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
 
+      /// MARK: Assign/Clone                                                  
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign cloned value") {
             REQUIRE_THROWS(pack = Clone(*element));
@@ -413,7 +411,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       }
       
       WHEN("Assigned cloned value") {
-         pack.Assign(Clone(*element));
+         REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
 
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Clone(element));
@@ -434,7 +432,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                return;
             }
 
-            pack.AssignAbsorb(Clone(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Clone(*element)));
+            Any_CheckState_OwnedFull<int>(*element);
+            Any_CheckState_OwnedFull<int>(pack);
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -453,6 +453,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
 
+      /// MARK: Assign/Disown                                                 
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign disowned value") {
             REQUIRE_THROWS(pack = Disown(*element));
@@ -460,7 +461,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       }
       
       WHEN("Assigned disowned value") {
-         pack.Assign(Disown(*element));
+         REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
 
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Disown(element));
@@ -481,16 +482,12 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                return;
             }
 
-            pack.AssignAbsorb(Disown(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Disown(*element)));
 
-            REQUIRE(pack.GetRaw() == element->GetRaw());
-            REQUIRE(pack.IsExact(element->GetType()));
-            REQUIRE(pack == *element);
-            REQUIRE(pack.IsDeep() == element->IsDeep());
-            REQUIRE(pack.IsConstant() != element->IsConstant());
-            REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
-            REQUIRE(pack.GetUses() == 0);
-            REQUIRE_FALSE(pack.GetAllocation());
+            Set_CheckState_OwnedFull<int>(*element);
+            Set_CheckState_DisownedFull<int>(pack);
+            Set_Helper_TestSame(pack, *element, false);
+            REQUIRE(pack.IsConstant());
 
             BenchmarkSetStd("Empty/AssignAbsorb/Disown", 30, 100,
                T temp,                          temp.AssignAbsorb(Disown(*element)),
@@ -500,6 +497,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
 
+      /// MARK: Assign/Abandon                                                
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assigned abandoned value") {
             auto movable = *element;
@@ -509,7 +507,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       
       WHEN("Assigned abandoned value") {
          auto movable = *element;
-         pack.Assign(Abandon(movable));
+         REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
 
          if constexpr (CT::Set<E>)
             Set_CheckState_Abandoned<E>(movable);
@@ -535,7 +533,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                return;
             }
 
-            pack.AssignAbsorb(Abandon(movable));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Abandon(movable)));
 
             Set_CheckState_Abandoned<E>(movable);
             Set_Helper_TestSame(pack, *element);
@@ -551,6 +549,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
 
+      /// MARK: Assign empty                                                  
       WHEN("Ambigous assigned empty self") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
@@ -559,62 +558,14 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       }
       
       WHEN("Assigned empty self") {
-         pack.AssignAbsorb(pack);
+         REQUIRE_NOTHROW(pack.AssignAbsorb(pack));
 
          Set_CheckState_Default<E>(pack);
       }
 
-      /*WHEN("Emplace (insert)") {
-         ScopedE i666 {666};
-         const auto i666backup = *i666;
-         decltype(auto) instance = pack.Emplace(::std::move(*i666));
-         Set_CheckState_OwnedFull<E>(pack);
-         if constexpr (CT::Handle<decltype(instance)>)
-            REQUIRE(instance.CompareOneEqual(i666backup));
-         else
-            REQUIRE(instance == i666backup);
-         REQUIRE(pack.GetCount() == 1);
-         REQUIRE(pack.GetReserved() >= 1);
-
-         if constexpr (CT::Typed<T>) {
-            REQUIRE(*pack == i666backup);
-            if constexpr (CT::Handle<decltype(instance)>)
-               REQUIRE(&*pack == &*instance);
-            else
-               REQUIRE(&*pack == &instance);
-         }
-
-         BenchmarkSet("Empty/Emplace(" + NameOf<E>() + ")", 30,
-            auto movable = *element; T temp,
-            temp.Emplace(::std::move(movable))
-         );
-      }*/
-
-      /*WHEN("Emplace (insert, describe)") {
-         ScopedE i666{666};
-         const auto i666backup = *i666;
-         Many descriptor {Piecewise, ::std::move(*i666)};
-         if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) {
-            decltype(auto) instance = pack.template Emplace<E>(Describe{descriptor});
-            Set_CheckState_OwnedFull<E>(pack);
-            REQUIRE(instance.CompareOneEqual(i666backup));
-            REQUIRE(pack.GetCount() == 1);
-            REQUIRE(pack.GetReserved() >= 1);
-
-            BenchmarkSet("Empty/Emplace(Describe(" + NameOf<E>() + "))", 30,
-               T temp,
-               temp.Emplace(Describe{descriptor})
-            );
-         }
-         else if constexpr (CT::TypeErased<T>) {
-            pack.template SetType<E>();
-            REQUIRE_THROWS(pack.Emplace(Describe{descriptor}));
-            Set_CheckState_Default<E>(pack, true);
-         }
-      }*/
-
+      /// MARK: Clear                                                         
       WHEN("Cleared") {
-         pack.Clear();
+         REQUIRE_NOTHROW(pack.Clear());
 
          Set_CheckState_Default<E>(pack);
 
@@ -624,14 +575,32 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
+      /// MARK: Reset                                                         
       WHEN("Reset") {
-         pack.Reset();
+         REQUIRE_NOTHROW(pack.Reset());
 
          Set_CheckState_Default<E>(pack);
 
          BenchmarkSetStd("Empty/Reset", 30, 100,
             T temp,              temp.Reset(),
             stdset temp_std,     temp_std.clear()
+         );
+      }
+      
+      /// MARK: Erase                                                         
+      WHEN("Erase non-existent value") {
+         size_t removed = 0;
+         REQUIRE_NOTHROW(removed = pack.Erase(*element));
+
+         Set_CheckState_Default<E>(pack);
+
+         REQUIRE(removed == 0);
+
+         BenchmarkSetStd("Empty/Erase", 30, 100,
+            T temp,              temp.Erase(*element),
+            stdvec temp_std,     temp_std.erase(std::remove_if(temp_std.begin(), temp_std.end(), [&element] (auto& value) {
+                                    return value == *element;
+                                 }), temp_std.end());
          );
       }
 
@@ -701,6 +670,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_Default<E>(pack);
       }
 
+      /// MARK: Compare                                                       
       WHEN("Compared empty") {
          T another_pack1;
          T another_pack2;
@@ -720,6 +690,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
+      /// MARK: Contains                                                      
       WHEN("Contains when empty") {
          REQUIRE_FALSE(pack.Contains(*element));
 
@@ -736,6 +707,180 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
       
+      /// MARK: Range                                                         
+      WHEN("Range-iterated (default)") {
+         IterateDefault strategy(pack);
+         IterateDefault strategyConst(::std::as_const(pack));
+         using Iterator = decltype(strategy.begin());
+         using IteratorConst = decltype(strategyConst.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::same_as<IteratorConst, decltype(strategyConst.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+         static_assert(::std::input_or_output_iterator<IteratorConst>);
+
+         // These are not possible to satisfy if type-erased            
+         static_assert(CT::TypeErased<T> or Sparse or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T>           or ::std::random_access_iterator<IteratorConst>);
+         //static_assert(CT::TypeErased<T> or Sparse or ::std::contiguous_iterator<Iterator>);
+         //static_assert(CT::TypeErased<T>           or ::std::contiguous_iterator<IteratorConst>);
+
+         size_t counter = 0;
+         for (auto& it : pack) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>/* or Sparse*/)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         for (auto& it : ::std::as_const(pack)) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>/* or Sparse*/)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         for (auto& it : strategyConst) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (reverse)") {
+         IterateInReverse strategy(pack);
+         IterateInReverse strategyConst(::std::as_const(pack));
+         using Iterator = decltype(strategy.begin());
+         using IteratorConst = decltype(strategyConst.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::same_as<IteratorConst, decltype(strategyConst.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+         static_assert(::std::input_or_output_iterator<IteratorConst>);
+
+         // These are not possible to satisfy if type-erased            
+         static_assert(CT::TypeErased<T> or Sparse or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T>           or ::std::random_access_iterator<IteratorConst>);
+         //static_assert(CT::TypeErased<T> or Sparse or ::std::contiguous_iterator<Iterator>);
+         //static_assert(CT::TypeErased<T>           or ::std::contiguous_iterator<IteratorConst>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>/* or Sparse*/)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         for (auto& it : strategyConst) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (noderef)") {
+         IterateNoDeref strategy(pack);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         static_assert(CT::TypeErased<T> or Sparse or ::std::random_access_iterator<typename Iterator::value_type>);
+         //static_assert(CT::TypeErased<T> or Sparse or ::std::contiguous_iterator<typename Iterator::value_type>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            static_assert(Same<typename IterateDefault<false, T>::Iterator, decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (handles)") {
+         IterateHandles strategy(pack);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         //static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<typename Iterator::value_type>);
+         //static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<typename Iterator::value_type>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            static_assert(CT::Handle<decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (together)") {
+         T pack2;
+         IterateTogether strategy(pack, pack2);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         //static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
+         //static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>/* or Sparse*/)
+               static_assert(CT::Handle<decltype(it.one()), decltype(it.two())>);
+            else
+               static_assert(Same<E, decltype(it.one()), decltype(it.two())>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+      
+      /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto h = pack.GetHandle();
 
@@ -757,6 +902,202 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
 
          Handle_CheckState_Default<E const>(h);
+      }
+   }
+
+   GIVEN("Default-constructed container and a couple of arrays") {
+      const ScopedE darray1[5] {1, 2, 3, 4,  5};
+      const ScopedE darray2[5] {6, 7, 8, 9, 10};
+
+      const E immovable[5] {
+         *darray1[0], *darray1[1], *darray1[2], *darray1[3], *darray1[4]
+      };
+      E movable1[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+      E movable2[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+      E movable3[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+
+      T pack;
+
+      /// MARK: Merge array                                                   
+      WHEN("Merge an array") {
+         size_t inserted = 0;
+         REQUIRE_NOTHROW(inserted += pack.Merge(          immovable));
+         REQUIRE_NOTHROW(inserted += pack.Merge(Refer    {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.Merge(Copy     {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.Merge(Disown   {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
+         REQUIRE_NOTHROW(inserted += pack.Merge(Move     {movable2}));
+         REQUIRE_NOTHROW(inserted += pack.Merge(Abandon  {movable3}));
+         REQUIRE_NOTHROW(inserted += pack.Merge(Clone    {immovable}));
+         REQUIRE(inserted == 5*8);
+
+         Set_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (CT::Set<E>) {
+            for (int i = 0; i < 5; ++i) {
+               Set_CheckState_Default<int>  (movable1[i]);
+               Set_CheckState_Default<int>  (movable2[i]);
+               Set_CheckState_Abandoned<int>(movable3[i]);
+            }
+         }
+
+         REQUIRE(pack.GetCount() == 5*8);
+         REQUIRE(pack.GetReserved() >= 5*8);
+
+         for (uint i = 0; i < 4*5; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
+            if constexpr (Reffed)
+               REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
+         }
+
+         for (uint i = 20; i < 20 + 3*5; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray2[i%5]);
+            if constexpr (Reffed)
+               REQUIRE(DenseCast(*darray2[i%5]).GetReferences() == (Sparse ? 4 : 1));
+         }
+
+         // Last one is cloned and pointers won't match                 
+         if constexpr (Sparse) {
+            for (uint i = 35; i < 40; ++i) {
+               REQUIRE(*pack.template GetAt<E>(i) != *darray1[i%5]);
+               REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i%5]));
+               if constexpr (Reffed) {
+                  REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == 5);
+                  REQUIRE(DenseCast(pack.template GetAt<E>(i)).GetReferences() == 1);
+               }
+            }
+         }
+         else {
+            for (uint i = 35; i < 40; ++i) {
+               REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
+               if constexpr (Reffed) {
+                  REQUIRE(darray1[i%5]->GetReferences() == 1);
+                  REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
+               }
+            }
+         }
+
+         BenchmarkSetStd("Empty/Merge/Array", 30, 100,
+            T temp,              temp.Merge(immovable),
+            stdset temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+         );
+      }
+
+      /// MARK: <<=                                                           
+      WHEN("Merge by using <<= operator)") {
+         /*pack <<=           immovable[0]
+              <<= Refer    {immovable[1]}
+              <<= Copy     {immovable[2]}
+              <<= Disown   {immovable[3]}
+              <<= std::move( movable1[0])
+              <<= Move     { movable2[0]}
+              <<= Abandon  { movable3[0]}
+              <<= Clone    {immovable[4]};*/
+
+         pack <<=           immovable[0];
+         pack <<= Refer    {immovable[1]};
+         pack <<= Copy     {immovable[2]};
+         pack <<= Disown   {immovable[3]};
+         pack <<= std::move( movable1[0]);
+         pack <<= Move     { movable2[0]};
+         pack <<= Abandon  { movable3[0]};
+         pack <<= Clone    {immovable[4]};
+
+         Set_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (CT::Set<E>) {
+            Set_CheckState_Default<int>  (movable1[0]);
+            Set_CheckState_Default<int>  (movable2[0]);
+            Set_CheckState_Abandoned<int>(movable3[0]);
+         }
+
+         REQUIRE(pack.GetCount() == 8);
+         REQUIRE(pack.GetReserved() >= 8);
+
+         for (int i = 0; i < 4; ++i) {
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i]);
+         }
+
+         for (int i = 4; i < 7; ++i)
+            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
+
+         // Last one is cloned and pointers won't match                 
+         if constexpr (Sparse) {
+            REQUIRE(*pack.template GetAt<E>(7) != *darray1[4]);
+            REQUIRE(DenseCast(pack.template GetAt<E>(7)) == DenseCast(*darray1[4]));
+         }
+         else REQUIRE(*pack.template GetAt<E>(7) == *darray1[4]);
+
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
+            REQUIRE(DenseCast(pack.template GetAt<E>(7)).GetReferences() == 1);
+         }
+
+         BenchmarkSetStd("Empty/Merge/Element", 30, 100,
+            T temp,              temp << immovable[0],
+            stdset temp_std,     temp_std.emplace_back(immovable[0])
+         );
+      }
+
+      /// MARK: >>=                                                           
+      WHEN("Merge by using >>= operator)") {
+         /*pack >>=           immovable[0]
+              >>= Refer    {immovable[1]}
+              >>= Copy     {immovable[2]}
+              >>= Disown   {immovable[3]}
+              >>= std::move( movable1[0])
+              >>= Move     { movable2[0]}
+              >>= Abandon  { movable3[0]}
+              >>= Clone    {immovable[4]};*/
+
+         pack >>=           immovable[0];
+         pack >>= Refer    {immovable[1]};
+         pack >>= Copy     {immovable[2]};
+         pack >>= Disown   {immovable[3]};
+         pack >>= std::move( movable1[0]);
+         pack >>= Move     { movable2[0]};
+         pack >>= Abandon  { movable3[0]};
+         pack >>= Clone    {immovable[4]};
+
+         Set_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (CT::Set<E>) {
+            Set_CheckState_Default<int>  (movable1[0]);
+            Set_CheckState_Default<int>  (movable2[0]);
+            Set_CheckState_Abandoned<int>(movable3[0]);
+         }
+
+         REQUIRE(pack.GetCount() == 8);
+         REQUIRE(pack.GetReserved() >= 8);
+
+         // first one is cloned and pointers won't match                
+         if constexpr (Sparse) {
+            REQUIRE(*pack.template GetAt<E>(0) != *darray1[4]);
+            REQUIRE(DenseCast(pack.template GetAt<E>(0)) == DenseCast(*darray1[4]));
+         }
+         else REQUIRE(*pack.template GetAt<E>(0) == *darray1[4]);
+
+         if constexpr (Reffed) {
+            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
+            REQUIRE(DenseCast(pack.template GetAt<E>(0)).GetReferences() == 1);
+         }
+
+         for (int i = 1; i < 4; ++i)
+            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
+
+         for (int i = 4; i < 8; ++i)
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[4 - (i - 3)%5]);
+
+         BenchmarkSetStd("Empty/Merge/Element", 30, 100,
+            T temp,              temp >> immovable[0],
+            stdset temp_std,     temp_std.emplace_front(immovable[0])
+         );
       }
    }
 

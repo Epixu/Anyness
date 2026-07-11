@@ -151,9 +151,10 @@ namespace Langulus::Anyness
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> TMap& {
          this->Clear();
-         this->DeduceType(key, val);
+         //this->DeduceType(key, val);
          TPair temp {LglsFwd(key), LglsFwd(val)};
-         this->MergeInner(Abandon {temp.GetHandle()});
+         //this->MergeInner(Abandon {temp.GetHandle()});
+         this->Merge(Abandon {temp.GetHandle()});
          return *this;
       }
 

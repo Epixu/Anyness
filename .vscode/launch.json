@@ -5,10 +5,26 @@
    "version": "0.2.0",
    "configurations": [
       {
-         "name": "Test",
+         "name": "LangulusAnynessTest-Any",
          "type": "lldb",
          "request": "launch",
-         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest.exe",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Any.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
+         "name": "LangulusAnynessTest-Set",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Set.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
+         "name": "LangulusAnynessTest-Map",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Map.exe",
          "args": [],
          "cwd": "${command:cmake.buildDirectory}"
       }

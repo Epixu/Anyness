@@ -4,7 +4,7 @@ fetch_external_module(
     GIT_TAG         1da23a3e8119ec5cce4f9388e91b065e20bf06f5 #v2.4.12
 )
 
-add_langulus_test(LangulusAnynessTest
+add_langulus_test(LangulusAnynessTest-Common
    SOURCES	   Main.cpp 
                TestAssume.cpp
                TestHashOf.cpp
@@ -34,42 +34,93 @@ add_langulus_test(LangulusAnynessTest
                CT/TestUnfold.cpp
                
                Utils/TestRoof.cpp
-               
+
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Memory
+   SOURCES	   Main.cpp
                $<IF:$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>,Allocator/TestManaged.cpp,Allocator/TestUnmanaged.cpp>
                
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Text
+   SOURCES	   Main.cpp
                Anyness/TestText.cpp
+
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Bytes
+   SOURCES	   Main.cpp
                Anyness/TestBytes.cpp
+
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-TRef-TOwn
+   SOURCES	   Main.cpp
                Anyness/TestTRef.cpp
                Anyness/TestTOwn.cpp
-               
+
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Any
+   SOURCES	   Main.cpp
                Anyness/any/TestAny-Empty.cpp
                Anyness/any/TestAny-Absorb.cpp
                Anyness/any/TestAny-Piecewise.cpp
                Anyness/any/TestAny-Convert.cpp
-               
+
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Many
+   SOURCES	   Main.cpp
                Anyness/many/TestMany-Empty.cpp
                Anyness/many/TestMany-Absorb.cpp
                Anyness/many/TestMany-Piecewise.cpp
                Anyness/many/TestMany-Convert.cpp
                Anyness/many/TestMany-CornerCases.cpp
-               
+
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Set
+   SOURCES	   Main.cpp
                Anyness/set/TestSet-Empty.cpp
                Anyness/set/TestSet-Absorb.cpp
                Anyness/set/TestSet-Piecewise.cpp
 
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Pair
+   SOURCES	   Main.cpp
                Anyness/pair/TestPair-Empty.cpp
                Anyness/pair/TestPair-Absorb.cpp
                Anyness/pair/TestPair-Piecewise.cpp
 
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+
+add_langulus_test(LangulusAnynessTest-Map
+   SOURCES	   Main.cpp
                Anyness/map/TestMap-Empty.cpp
                Anyness/map/TestMap-Absorb.cpp
                Anyness/map/TestMap-Piecewise.cpp
 
    LIBRARIES   doctest
                LangulusAnyness
-)
-
-target_compile_definitions(LangulusAnynessTest
-   PRIVATE     LANGULUS_OPTION_TESTING
-               DOCTEST_CONFIG_SUPER_FAST_ASSERTS
 )

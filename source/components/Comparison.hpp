@@ -6,12 +6,13 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Component.hpp"
+#include "../Container.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Unfold.hpp>
+#include <Langulus/IntentOf.hpp>
 
 #if 0 or LANGULUS_META_VERBOSITY_MASTER_SWITCH()
    #include <Langulus/Logger/EnableVerbose.hpp>
@@ -65,7 +66,7 @@ namespace Langulus::Anyness::Component
       using Ordering = Tif<CT::TypeErased<C>, Compared, ::std::partial_ordering>;
 
    public:
-      /// MARK: Public                                                        
+      /// MARK: CompareEqual                                                  
       /// Compare two containers for equality.                                
       /// This has much greater performance when hashed.                      
       ///   @attention compares all shared dimensions at once                 
@@ -284,6 +285,7 @@ namespace Langulus::Anyness::Component
          }
       }
       
+      /// MARK: Compare                                                       
       /// Three-way compare two containers                                    
       ///   @attention compares all shared dimensions at once                 
       ///   @attention this doesn't benefit from hashing and will three-way   
@@ -419,6 +421,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: CompareOneEqual                                               
       /// Equality-compare with the first contained element                   
       ///   @attention compares only the main dimension                       
       ///   @param rhs the value to compare against                           
@@ -443,6 +446,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: CompareOne                                                    
       /// Equality-compare with the first contained element                   
       ///   @attention compares only the main dimension                       
       ///   @attention this doesn't benefit from hashing                      
@@ -467,6 +471,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: CompareOneEqualEx                                             
       /// Equality-compare with the first contained element                   
       ///   @attention compares only the main dimension                       
       ///   @param rhs the value to compare against                           
@@ -496,6 +501,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: CompareOneEx                                                  
       /// Equality-compare with the first contained element                   
       ///   @attention compares only the main dimension                       
       ///   @attention this doesn't benefit from hashing                      
@@ -538,6 +544,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: CompareHashes                                                 
       /// Compare hashes of two containers.                                   
       /// Most useful when hashes are cached, as it will otherwise force      
       /// HashRecompute every time this comparison happens.                   
@@ -557,6 +564,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C1, CT::Container C2> requires CT::Character<TypeOf<C1>, TypeOf<C2>>
       auto MatchesLoose(this const C1&, const C2&) noexcept -> Count<C1>;
       
+      /// MARK: Find                                                          
       /// Get a handle to a matching item                                     
       ///   @attention compares only the chosen dimension                     
       ///   @param item the item to search for                                
@@ -571,8 +579,17 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::TypeErased<C>) {
             auto type = self.template GetType<SID>();
-            if (not type.IsSame(MetaDataOf<T>()) or not type.GetComparerEqual())
+            if (not type.GetComparerEqual())
                return {};
+
+            if constexpr (CT::Handle<T>) {
+               if (not type.IsSame(item.template GetType<SID>()))
+                  return {};
+            }
+            else {
+               if (not type.IsSame(MetaDataOf<T>()))
+                  return {};
+            }
          }
 
          if constexpr (not CT::Contiguous<C>) {
@@ -585,6 +602,7 @@ namespace Langulus::Anyness::Component
          return self.template FindInner<REVERSE, SID>(item, cookie);
       }
 
+      /// MARK: FindReverse                                                   
       /// Get a handle to a matching item in reverse                          
       ///   @attention compares only the chosen dimension                     
       ///   @param item the item to search for                                
@@ -596,6 +614,7 @@ namespace Langulus::Anyness::Component
          return self.template Find<true, SID, C, T>(item, cookie);
       }
       
+      /// MARK: FindEx                                                        
       /// Get a handle to a matching multidimensional pattern                 
       ///   @attention compares all shared dimensions                         
       ///   @param tuple the multidimensional item to search for              
@@ -641,6 +660,7 @@ namespace Langulus::Anyness::Component
          else return {};
       }
 
+      /// MARK: FindExReverse                                                 
       /// Get a handle to a matching multidimensional pattern in reverse      
       ///   @attention compares all shared dimensions                         
       ///   @param tuple the multidimensional item to search for              
@@ -750,6 +770,7 @@ namespace Langulus::Anyness::Component
          }
       }*/
 
+      /// MARK: Contains                                                      
       /// Check if the container contains an element                          
       ///   @attention compares only the main dimension                       
       ///   @param A1 the item to search for                                  
@@ -762,6 +783,7 @@ namespace Langulus::Anyness::Component
             return self.CompareOneEqual(a1);
       }
 
+      /// MARK: ContainsEx                                                    
       /// Check if the container contains an element in each shared dimension 
       ///   @attention compares all shared dimensions                         
       ///   @param tuple the items that need to exist together                
@@ -780,6 +802,7 @@ namespace Langulus::Anyness::Component
          return lhs.Compare(rhs);
       }*/
 
+      /// MARK: <=>                                                           
       ///   @attention compares all shared dimensions at once                 
       template<CT::Container LHS, CT::NoIntent RHS> requires CT::CompatibleDimensions<LHS, RHS>
       constexpr auto operator <=> (this LHS const& lhs, RHS const& rhs) assumptious {
@@ -804,6 +827,7 @@ namespace Langulus::Anyness::Component
          return lhs.CompareEqual(rhs);
       }*/
 
+      /// MARK: ==                                                            
       ///   @attention compares all shared dimensions at once                 
       template<CT::Container LHS, CT::NoIntent RHS> requires CT::CompatibleDimensions<LHS, RHS>
       constexpr bool operator == (this LHS const& lhs, RHS const& rhs) assumptious {

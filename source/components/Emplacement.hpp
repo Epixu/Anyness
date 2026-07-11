@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
    #define ThisCom self.Emplacement<ID, SHARED...>
 
    ///                                                                        
-   /// Implements emplacement for containers.                                 
+   /// Adds public emplacement methods.                                       
    /// Unlike insertion, emplacement reuses the same memory space and         
    /// guarantees that nothing moves around.                                  
    ///   @tparam ID the data provider we're emplacing into                    
@@ -53,7 +53,7 @@ namespace Langulus::Anyness::Component
    struct Emplacement {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = sizeof...(SHARED) > 0;

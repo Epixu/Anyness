@@ -185,9 +185,11 @@ namespace Langulus::Anyness::Inner
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> Map& {
          this->Reset();
-         this->DeduceType(key, val);
          TPair temp {LglsFwd(key), LglsFwd(val)};
-         this->MergeInner(Abandon {temp.GetHandle()});
+         this->Merge(Abandon {temp.GetHandle()});
+         /*this->DeduceType(key, val);
+         TPair temp {LglsFwd(key), LglsFwd(val)};
+         this->MergeInner(Abandon {temp.GetHandle()});*/
          return *this;
       }
 

@@ -131,7 +131,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
-   constexpr bool Managed = ScopedE::Managed;
+   constexpr bool Managed   = ScopedE::Managed;
+   //constexpr bool Sparse    = CT::Sparse<E>;
+   //constexpr bool Reffed    = CT::Referenced<Decay<E>>;
+   constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
    
    #if LANGULUS(BENCHMARK)
       using stdany = ::std::any;
@@ -226,12 +229,14 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       static_assert(not requires (T pack)         { pack.ForEachRev([](const int&) {}); });
    }
 
-   constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
+   static_assert(T::CountHeapProviders() == 1);
+   //static_assert(T::template CountHeapFooterRequests<0>() == 1);
    
    GIVEN("Default-constructed container") {
       const ScopedE element {555};
       T pack;
 
+      /// MARK: Gap test                                                      
       WHEN("Gap test") {
          Common_GapTest<T, ::std::any>();
          //static_assert(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
@@ -253,8 +258,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          );
       }
 
+      /// MARK: Assign/Refer                                                  
       WHEN("Assigned value by referral") {
-         pack.Assign(*element);
+         REQUIRE_NOTHROW(pack.Assign(*element));
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Refer(element));
@@ -275,7 +281,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
                return;
             }
 
-            pack.AssignAbsorb(*element);
+            REQUIRE_NOTHROW(pack.AssignAbsorb(*element));
 
             Any_Helper_TestSame(pack, *element);         
             REQUIRE(pack.GetUses() == element->GetUses());
@@ -290,6 +296,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          }
       }
 
+      /// MARK: Assign/Move                                                   
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign value by move") {
             auto movable = *element;
@@ -300,7 +307,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       
       WHEN("Assigned value by move") {
          auto movable = *element;
-         pack.Assign(::std::move(movable));
+         REQUIRE_NOTHROW(pack.Assign(::std::move(movable)));
          
          if constexpr (CT::Container<E>)
             Any_CheckState_Default<TypeOf<E>>(movable);
@@ -309,8 +316,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_ContainsOne(pack, Refer(element));
 
          BenchmarkAnyStd("Empty/Assign/Move", 30, 100,
-            auto movable = *element; T temp,                temp.Assign(::std::move(movable)),
-            auto movable = *element; stdany temp_std,       temp_std = ::std::move(movable)
+            auto movable = *element;
+            T temp,                       temp.Assign(::std::move(movable)),
+            auto movable = *element;
+            stdany temp_std,              temp_std = ::std::move(movable)
          );
       }
 
@@ -325,7 +334,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
                return;
             }
 
-            pack.AssignAbsorb(::std::move(movable));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(::std::move(movable)));
 
             //if constexpr (CT::Container<E>)
             Any_CheckState_Default<TypeOf<E>>(movable);
@@ -335,12 +344,15 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             BenchmarkAnyStd("Empty/AssignAbsorb/Move", 30, 100,
-               auto movable = *element;  T temp,            temp.AssignAbsorb(::std::move(movable)),
-               stdany movable = 555; stdany temp_std,       temp_std = ::std::move(movable)
+               auto movable = *element;
+               T temp,                       temp.AssignAbsorb(::std::move(movable)),
+               stdany movable = 555;
+               stdany temp_std,              temp_std = ::std::move(movable)
             );
          }
       }
 
+      /// MARK: Assign/Copy                                                   
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign copied value") {
             REQUIRE_THROWS(pack = Copy(*element));
@@ -348,7 +360,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       }
       
       WHEN("Assigned copied value") {
-         pack.Assign(Copy(*element));
+         REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Copy(element));
@@ -369,7 +381,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
                return;
             }
 
-            pack.AssignAbsorb(Copy(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Copy(*element)));
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -389,6 +401,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          }
       }
 
+      /// MARK: Assign/Clone                                                  
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign cloned value") {
             REQUIRE_THROWS(pack = Clone(*element));
@@ -396,7 +409,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       }
       
       WHEN("Assigned cloned value") {
-         pack.Assign(Clone(*element));
+         REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Clone(element));
@@ -438,6 +451,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          }
       }
 
+      /// MARK: Assign/Disown                                                 
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assign disowned value") {
             REQUIRE_THROWS(pack = Disown(*element));
@@ -445,7 +459,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       }
       
       WHEN("Assigned disowned value") {
-         pack.Assign(Disown(*element));
+         REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Disown(element));
@@ -466,20 +480,12 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
                return;
             }
 
-            pack.AssignAbsorb(Disown(*element));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Disown(*element)));
+
             Any_CheckState_OwnedFull<int>(*element);
             Any_CheckState_DisownedFull<int>(pack);
             Any_Helper_TestSame(pack, *element, false);
             REQUIRE(pack.IsConstant());
-
-            //REQUIRE(pack.GetRaw() == element->GetRaw());
-            //REQUIRE(pack.IsExact(element->GetType()));
-            //REQUIRE(pack == *element);
-            //REQUIRE(pack.IsDeep() == element->IsDeep());
-            //REQUIRE(pack.IsConstant() != element->IsConstant());
-            //REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
-            //REQUIRE(pack.GetUses() == 0);
-            //REQUIRE_FALSE(pack.GetAllocation());
 
             BenchmarkAnyStd("Empty/AssignAbsorb/Disown", 30, 100,
                T temp,                       temp.AssignAbsorb(Disown(*element)),
@@ -489,6 +495,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          }
       }
 
+      /// MARK: Assign/Abandon                                                
       if constexpr (Ambiguous) {
          WHEN("Ambiguous assigned abandoned value") {
             auto movable = *element;
@@ -498,7 +505,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       
       WHEN("Assigned abandoned value") {
          auto movable = *element;
-         pack.Assign(Abandon(movable));
+         REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
 
          if constexpr (CT::Container<E>)
             Any_CheckState_Abandoned<E>(movable);
@@ -506,8 +513,10 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_ContainsOne(pack, Refer(element));
 
          BenchmarkAnyStd("Empty/Assign/Abandon", 30, 100,
-            auto movable = *element; T temp,                temp.Assign(Abandon(movable)),
-            auto movable = *element; stdany temp_std,       temp_std = ::std::move(movable)
+            auto movable = *element;
+            T temp,                       temp.Assign(Abandon(movable)),
+            auto movable = *element;
+            stdany temp_std,              temp_std = ::std::move(movable)
          );
       }
 
@@ -522,21 +531,23 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
                return;
             }
 
-            pack.AssignAbsorb(Abandon(movable));
+            REQUIRE_NOTHROW(pack.AssignAbsorb(Abandon(movable)));
 
-            //if constexpr (CT::Container<E>)
             Any_CheckState_Abandoned<E>(movable);
             Any_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             BenchmarkAnyStd("Empty/AssignAbsorb/Abandon", 30, 100,
-               auto movable = *element;  T temp,         temp.AssignAbsorb(Abandon(movable)),
-               stdany movable = 555; stdany temp_std,    temp_std = ::std::move(movable)
+               auto movable = *element;
+               T temp,                          temp.AssignAbsorb(Abandon(movable)),
+               stdany movable = 555;
+               stdany temp_std,                 temp_std = ::std::move(movable)
             );
          }
       }
 
+      /// MARK: Assign empty                                                  
       WHEN("Ambigous assigned empty self") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
@@ -545,11 +556,12 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       }
       
       WHEN("Assigned empty self") {
-         pack.AssignAbsorb(pack);
+         REQUIRE_NOTHROW(pack.AssignAbsorb(pack));
 
          Any_CheckState_Default<E>(pack);
       }
 
+      /// MARK: Emplace                                                       
       WHEN("Emplace (insert)") {
          ScopedE i666 {666};
          const auto i666backup = *i666;
@@ -584,6 +596,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          }
       }
 
+      /// MARK: Describe                                                      
       WHEN("Emplace (insert, describe)") {
          ScopedE i666{666};
          const auto i666backup = *i666;
@@ -607,8 +620,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          }
       }
 
+      /// MARK: Clear                                                         
       WHEN("Cleared") {
-         pack.Clear();
+         REQUIRE_NOTHROW(pack.Clear());
 
          Any_CheckState_Default<E>(pack);
 
@@ -618,8 +632,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          );
       }
 
+      /// MARK: Reset                                                         
       WHEN("Reset") {
-         pack.Reset();
+         REQUIRE_NOTHROW(pack.Reset());
 
          Any_CheckState_Default<E>(pack);
 
@@ -695,6 +710,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          Any_CheckState_Default<E>(pack);
       }
 
+      /// MARK: Compare                                                       
       WHEN("Compared empty") {
          T another_pack1;
          T another_pack2;
@@ -714,6 +730,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          );
       }
 
+      /// MARK: Contains                                                      
       WHEN("Contains when empty") {
          REQUIRE_FALSE(pack.Contains(*element));
 
@@ -730,6 +747,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          }
       }
 
+      /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto h = pack.GetHandle();
 

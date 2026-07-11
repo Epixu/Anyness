@@ -980,21 +980,7 @@ namespace Langulus::Anyness
             return self;
 
          // Never modify containers if type-incompatible                
-         LHS::Dimensions::ForEach([&self, &from]<Cid D> {
-            using RHS_T = Deint<RHS>;
-            if constexpr (CT::TypeErased<RHS_T> or CT::TypeErased<LHS>) {
-               auto t1 = self.template GetType<D>();
-               auto t2 = from.template GetType<D>();
-               if (t1 and t2) {
-                  LglsAssert(t1.IsSame(t2), "Type mismatch", ": ",
-                     t1, " is not same as ", t2);
-               }
-            }
-            else {
-               (void) self; (void) from;
-               static_assert(Same<TypeOf<LHS, D>, TypeOf<RHS_T, D>>, "Type mismatch");
-            }
-         });
+         self.AssertTypesAreSame(from);
 
          // Free old data and absorb the new container                  
          self.Free();

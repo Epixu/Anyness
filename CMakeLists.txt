@@ -29,7 +29,7 @@ if(CMAKE_CXX_FLAGS)
     STRING(FIND ${CMAKE_CXX_FLAGS} "/Zc:trigraphs" TRIGRAPHS_ENABLED1)
     STRING(FIND ${CMAKE_CXX_FLAGS} "-trigraphs"    TRIGRAPHS_ENABLED2)
     if (${TRIGRAPHS_ENABLED1} GREATER -1 OR ${TRIGRAPHS_ENABLED2} GREATER -1)
-        message(FATAL_ERROR "Langulus can't be built with trigraphs enabled")
+        message(FATAL_ERROR "[LANGULUS] Langulus can't be built with trigraphs enabled - the symbol ?? is used in scripting instead")
     endif()
 endif()
 
@@ -106,10 +106,10 @@ option(LANGULUS_OPTION_MEMORY_STATISTICS
 if (LANGULUS_OPTION_SHARED_LIBRARIES)
     set(LANGULUS_LIBRARY_TYPE SHARED CACHE INTERNAL "" FORCE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "" FORCE)
-    message("Building Langulus as shared library")
+    message("[LANGULUS] Building as shared library")
 else()
     set(LANGULUS_LIBRARY_TYPE STATIC CACHE INTERNAL "" FORCE)
-    message("Building Langulus as static library")
+    message("[LANGULUS] Building as static library")
 endif()
 
 # Check if this project is built as standalone, or as a part of something else
@@ -157,48 +157,21 @@ target_link_libraries(LangulusAnyness PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}
 #target_compile_options(LangulusAnyness PUBLIC -Wl,--icf=all)
 
 set(LANGULUS_ALIGNMENT 16 CACHE STRING "Default langulus alignment (in bytes)")
-message(STATUS "[FEATURE] Alignment was set to ${LANGULUS_ALIGNMENT} bytes")
+message(STATUS "[LANGULUS] Alignment was set to ${LANGULUS_ALIGNMENT} bytes")
 target_compile_definitions(LangulusAnyness PUBLIC LANGULUS_ALIGNMENT=${LANGULUS_ALIGNMENT})
 
 set(LANGULUS_HASHSIZE 32 CACHE STRING "Default langulus hash size (in bits)")
-message(STATUS "[FEATURE] Hash size was set to ${LANGULUS_HASHSIZE}bit")
+message(STATUS "[LANGULUS] Hash size was set to ${LANGULUS_HASHSIZE}bit")
 target_compile_definitions(LangulusAnyness PUBLIC LANGULUS_HASHSIZE=${LANGULUS_HASHSIZE})
 
 set(LANGULUS_FPU 32 CACHE STRING "Default langulus real number size (in bits)")
-message(STATUS "[FEATURE] Real number size was set to ${LANGULUS_FPU}bit")
+message(STATUS "[LANGULUS] Real number size was set to ${LANGULUS_FPU}bit")
 target_compile_definitions(LangulusAnyness PUBLIC LANGULUS_FPU=${LANGULUS_FPU})
-
-# Include tests                                                               
-if (LANGULUS_OPTION_TESTING)
-    enable_testing()
-    add_subdirectory(test)
-endif()
-
-# Include profiler                                                            
-if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
-   fetch_external_module(
-       ctrack
-       GIT_REPOSITORY  https://github.com/Epixu/ctrack.git
-       GIT_TAG         persistence
-   )
-   target_link_libraries(LangulusAnyness PUBLIC ctrack)
-   set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK or LANGULUS_OPTION_PROFILING being enabled" FORCE)
-
-   # If there's a highscore provided with the source, use it as baseline      
-   # when testing for performance regression                                  
-   if(        EXISTS "ctrack_highscore.txt"
-      AND NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ctrack_highscore.txt")
-      file(
-         COPY        "ctrack_highscore.txt"
-         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
-      )
-   endif()
-endif()
 
 # Reflect all the options, so that code is aware of them                      
 macro(reflect_option OPTION MESSAGE)
     if (${OPTION})
-        message(STATUS "[FEATURE] ${MESSAGE} (${OPTION})")
+        message(STATUS "[LANGULUS] ${MESSAGE} (${OPTION})")
         target_compile_definitions(LangulusAnyness PUBLIC "$<$<BOOL:${OPTION}>:${OPTION}>")
     endif()
 endmacro()
@@ -232,3 +205,30 @@ reflect_option(LANGULUS_LOGGER_DISABLE_FLOWS       "Logger: flow messages disabl
 reflect_option(LANGULUS_LOGGER_DISABLE_INPUTS      "Logger: input event messages disabled")
 reflect_option(LANGULUS_LOGGER_DISABLE_NETWORKS    "Logger: network messages disabled")
 reflect_option(LANGULUS_LOGGER_DISABLE_OS          "Logger: operating system messages disabled")
+
+# Include tests                                                               
+if (LANGULUS_OPTION_TESTING)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
+# Include profiler                                                            
+if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
+   fetch_external_module(
+       ctrack
+       GIT_REPOSITORY  https://github.com/Epixu/ctrack.git
+       GIT_TAG         persistence
+   )
+   target_link_libraries(LangulusAnyness PUBLIC ctrack)
+   set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK or LANGULUS_OPTION_PROFILING being enabled" FORCE)
+
+   # If there's a highscore provided with the source, use it as baseline      
+   # when testing for performance regression                                  
+   if(        EXISTS "ctrack_highscore.txt"
+      AND NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ctrack_highscore.txt")
+      file(
+         COPY        "ctrack_highscore.txt"
+         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+      )
+   endif()
+endif()

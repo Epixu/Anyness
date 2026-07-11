@@ -9,6 +9,7 @@
 #include "../Container.hpp"
 #include "../states/Typed.hpp"
 #include "Langulus/IntentOf.hpp"
+#include "Langulus/Typenav.hpp"
 #include "source/Component.hpp"
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Akin.hpp>
@@ -136,6 +137,25 @@ namespace Langulus::Anyness::Component
             return ThisCom::GetType().Is(type);
       }
 
+      /// Check if type origin is the same as another container's type.       
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @param other the type to check for                                
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      constexpr void AssertTypesAreAkin(this auto const& self, C const& other) {
+         if constexpr (TypeErased or CT::TypeErased<C>) {
+            auto t1 = ThisCom::GetTypeInner();
+            auto t2 = other.template GetType<SID>();
+            if (t1 and t2) {
+               LglsAssert(t1.Is(t2), "Type mismatch", ": ",
+                  t1, " is not akin to ", t2, " (dimension #", SID, ")");
+            }
+         }
+         else {
+            (void) other;
+            static_assert(Akin<TYPE, TypeOf<C, SID>>, "Type mismatch");
+         }
+      }
+
       /// Check if type origin is the same as another container's type        
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param other the type to check for                                
@@ -143,9 +163,9 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool Is(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or CT::TypeErased<C>)
-            return ThisCom::GetTypeInner().Is(other.template GetType<ID>());
+            return ThisCom::GetTypeInner().Is(other.template GetType<SID>());
          else
-            return Akin<TYPE, TypeOf<C>>;
+            return Akin<TYPE, TypeOf<C, SID>>;
       }
 
       /// Check if unqualified type is the same as provided one               
@@ -175,13 +195,32 @@ namespace Langulus::Anyness::Component
       /// Check if unqualified type is the same as another container's type   
       ///   @attention ignores only cv-qualifiers                             
       ///   @param other the container to check for                           
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      constexpr void AssertTypesAreSame(this auto const& self, C const& other) {
+         if constexpr (TypeErased or CT::TypeErased<C>) {
+            auto t1 = ThisCom::GetTypeInner();
+            auto t2 = other.template GetType<SID>();
+            if (t1 and t2) {
+               LglsAssert(t1.IsSame(t2), "Type mismatch", ": ",
+                  t1, " is not similar to ", t2, " (dimension #", SID, ")");
+            }
+         }
+         else {
+            (void) other;
+            static_assert(Same<TYPE, TypeOf<C, SID>>, "Type mismatch");
+         }
+      }
+
+      /// Check if unqualified type is the same as another container's type   
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @param other the container to check for                           
       ///   @return true if this container has similar data                   
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool IsSame(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or CT::TypeErased<C>)
-            return ThisCom::GetTypeInner().IsSame(other.template GetType<ID>());
+            return ThisCom::GetTypeInner().IsSame(other.template GetType<SID>());
          else
-            return Same<TYPE, TypeOf<C>>;
+            return Same<TYPE, TypeOf<C, SID>>;
       }
 
       /// Check if this type is exactly T (references are ignored)            
@@ -210,11 +249,30 @@ namespace Langulus::Anyness::Component
       ///   @param other the block to match                                   
       ///   @return true if data type matches type exactly                    
       template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      constexpr void AssertTypesAreExact(this auto const& self, C const& other) {
+         if constexpr (TypeErased or CT::TypeErased<C>) {
+            auto t1 = ThisCom::GetTypeInner();
+            auto t2 = other.template GetType<SID>();
+            if (t1 and t2) {
+               LglsAssert(t1.IsExact(t2), "Type mismatch", ": ",
+                  t1, " is not exactly ", t2, " (dimension #", SID, ")");
+            }
+         }
+         else {
+            (void) other;
+            static_assert(Exact<TYPE, TypeOf<C, SID>>, "Type mismatch");
+         }
+      }
+      
+      /// Check if this type is exactly another container's type              
+      ///   @param other the block to match                                   
+      ///   @return true if data type matches type exactly                    
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr bool IsExact(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or CT::TypeErased<C>)
             return ThisCom::GetTypeInner().IsExact(other.template GetType<ID>());
          else
-            return Exact<TYPE, TypeOf<C>>;
+            return Exact<TYPE, TypeOf<C, SID>>;
       }
       
       /// Check if container contains pointers                                
@@ -474,7 +532,14 @@ namespace Langulus::Anyness::Component
       /// Get the contained type (inner)                                      
       template<Cid SID = ID> requires (SID == ID)
       constexpr auto& GetTypeInner(this auto&& self) noexcept {
-         return self.template AccessStack<TypedStack>();
+         auto& member = self.template AccessStack<TypedStack>();
+         if constexpr (not TypeErased) {
+            // Statically typed containers generally don't use the      
+            // stack member - it's there only for binary compatiblity.  
+            // Set the member only if really, REALLY need by reference. 
+            DecvqAllCast(member) = MetaDataOf<TYPE>();
+         }
+         return (member);
       }
 
       /// Set the contained type (inner)                                      
