@@ -419,6 +419,8 @@ namespace Langulus::Anyness::Component
       ///   @param newReserved the newly reserved number of elements          
       ///   @attention works on one dimension at a time!                      
       //TODO shouldn't this also move any dimensions != 0 as well, if in the same heap?????
+      //TODO this will nullify a new hash table, but it doesn't call SetHashTableInner to move the pointer if kept on the stack!! 
+      //TODO i've worked around this by using IndexedHashHeap instead of IndexedHashStack for sets and maps, for now
       template<Cid SID = Id::First, CT::Container C>
       requires (C::template CountHeapFooterRequests<SID>() > 0 and Relevant<SID>)
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
@@ -439,8 +441,11 @@ namespace Langulus::Anyness::Component
                if constexpr (IsRequestModifier<R>
                and COM::Id::template Contains<SID>) {
                   size_t shift = sizeof(TypeOf<R>);
-                  if constexpr (R::AllocatedPerIndirection)
+                  if constexpr (R::AllocatedPerIndirection) {
                      shift *= indirect;
+                     if (not shift)
+                        return;
+                  }
 
                   if constexpr (R::AllocatedPerElement) {
                      from[idx] = from[idx-1] + shift * reserved;
@@ -490,16 +495,24 @@ namespace Langulus::Anyness::Component
             // to be filled with zeroes.                                
             while (idx) {
                --idx;
-               const auto range = from[idx + 1] - from[idx];
-               memmove(to_footer + to[idx], from_footer + from[idx], range);
-               memset (to_footer + to[idx] + range, 0, to[idx + 1] - to[idx] - range);
+               const auto src_range = from[idx + 1] - from[idx];
+               LglsAssumeDev(src_range,
+                  "Empty ranges should've been omitted in the previous loop");
+                  
+               memmove(to_footer + to[idx], from_footer + from[idx], src_range);
+               const auto dst_range = to[idx + 1] - to[idx];
+               memset (to_footer + to[idx] + src_range, 0, dst_range - src_range);
             }
          }
          else {
             // When newReserved is smaller than reserved, stuff has to  
             // move right to left. No gaps will be formed.              
             for (size_t i = 0; i < idx; ++i) {
-               memmove(to_footer + to[i], from_footer + from[i], from[i + 1] - from[i]);
+               const auto src_range = from[i + 1] - from[i];
+               LglsAssumeDev(src_range,
+                  "Empty ranges should've been omitted in the previous loop");
+
+               memmove(to_footer + to[i], from_footer + from[i], src_range);
             }
          }
       }

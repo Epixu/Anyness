@@ -7,6 +7,8 @@
 ///                                                                           
 #pragma once
 #include "OwnershipDeep-Emergent.hpp"
+#include <Langulus/CT/Index.hpp>
+#include "source/Component.hpp"
 
 
 namespace Langulus::Anyness::Component

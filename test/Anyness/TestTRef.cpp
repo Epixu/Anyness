@@ -44,6 +44,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
    static_assert(not CT::TypeErased<T>);
    static_assert(not CT::Indexed<T>);
    static_assert(not CT::IndexedLinearly<T>);
+   static_assert(not CT::IndexedTable<T>);
 
    GIVEN("Nullptr-initialized") {
       T pointer {nullptr};

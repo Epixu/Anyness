@@ -85,6 +85,12 @@ namespace Langulus::Anyness::Component
       OnAssign = 2
    };
 
+   enum IndexingStyle {
+      NotIndexed = 0,
+      IndexedLinearly = 1,
+      IndexedTable = 2
+   };
+
    constexpr uint WeakOwnership   = OnAssign;
    constexpr uint StrongOwnership = OnCreateAndDestroy | OnAssign;
 
@@ -187,11 +193,17 @@ namespace Langulus::CT
    /// Check if listed types are containers, and are indexed                  
    template<class...T>
    concept Indexed = Container<T...>
-       and ((ShedDeref<T>::Indexed) and ...);
+       and ((ShedDeref<T>::Indexed != Anyness::Component::NotIndexed) and ...);
 
    /// Check if listed types are containers, and are linearly indexed         
    template<class...T>
-   concept IndexedLinearly = Indexed<T...> and Contiguous<T...>;
+   concept IndexedLinearly = Container<T...>
+      and ((ShedDeref<T>::Indexed == Anyness::Component::IndexedLinearly) and ...);
+
+   /// Check if listed types are containers, and are hash table indexed       
+   template<class...T>
+   concept IndexedTable = Container<T...>
+      and ((ShedDeref<T>::Indexed == Anyness::Component::IndexedTable) and ...);
 
    /// Check if listed types are containers, and are linearly indexed         
    template<class T>

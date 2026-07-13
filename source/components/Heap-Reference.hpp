@@ -470,7 +470,7 @@ namespace Langulus::Anyness::Component
             if (reserve <= C::InitialSize)
                reserve = C::InitialSize;
             else {
-               Count<C> growth = C::InitialSize;
+               size_t growth = C::InitialSize * C::GrowthFactor;
                while (reserve > C::InitialSize + growth)
                   growth *= C::GrowthFactor;
                reserve = C::InitialSize + growth;

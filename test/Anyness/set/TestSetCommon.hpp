@@ -13,7 +13,7 @@
 #include <set>
 
 #if LANGULUS(BENCHMARK)
-   /// Perform a persistent benchmark across build and verify performance     
+   /// Perform a persistent benchmark across builds and verify performance    
    #define BenchmarkSet(func, tolerance, my_init, my) { \
       const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() ") |" + NameOf<T>() + "|"; \
       volatile int i = 0; \
@@ -219,17 +219,53 @@ void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, 
    //TODO other kinds of iterations
 }
 
-template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
-void Set_CheckState_ContainsArray(const T& set, I&& e_scoped_array_with_intent) {
-   auto  e = e_scoped_array_with_intent.what;
-   //using E = typename Decay<Deint<I>>::CTTI_Typed;
-   constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;
+/// MARK: ContainsArray                                                       
+template<CT::Container T, CT::Array...A> requires CT::NoIntent<T, A...>
+void Set_CheckState_ContainsArray(const T& set, A const&...array) {
+   // Check count                                                       
+   constexpr size_t size = (ExtentOf<A> + ...);
+   REQUIRE(set.GetCount() == size);
 
-   REQUIRE(set.GetCount() == n);
-   REQUIRE(set.GetUses() == 1);
-   REQUIRE(set.GetReserved() >= n);
+   // Check reserve                                                     
+   if constexpr (size < T::InitialSize)
+      REQUIRE(set.GetReserved() == T::InitialSize);
+   else {
+      size_t growth = T::InitialSize * T::GrowthFactor;
+      while (size > T::InitialSize + growth)
+         growth *= T::GrowthFactor;
+      REQUIRE(set.GetReserved() == T::InitialSize + growth);
+   }
 
-   //TODO
+   // Check if all elements are present                                 
+   auto find = [](const auto& e, CT::Array auto const& a) -> size_t {
+      for (auto& a_e : a) {
+         if (a_e == e)
+            return 1;
+      }
+      return 0;
+   };
+
+   size_t iterated = 0;
+   size_t found = 0;
+   for (auto& it : set) {
+      found += (find(it, array) + ...);
+      ++iterated;
+   }
+   REQUIRE(iterated == size);
+   REQUIRE(found == size);
+
+   // Check table integrity                                             
+   auto start     = set.GetHashTable();
+   const auto end = set.GetHashTableEnd();
+   REQUIRE((end - start) == set.GetReserved());
+
+   found = 0;
+   while (start != end) {
+      if (*start)
+         ++found;
+      ++start;
+   }
+   REQUIRE(found == size);
 }
 
 template<CT::Container T, class E> requires CT::NoIntent<T>

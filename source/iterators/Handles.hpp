@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include <source/Container.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <ranges>
 
@@ -52,25 +53,8 @@ namespace Langulus::Anyness
 
       constexpr auto begin() const noexcept {
          if constexpr (CT::Contiguous<C>) {
-            if (range.IsEmpty()) {
+            if (range.IsEmpty())
                return IteratorContiguous{H {}, range};
-               /*if constexpr (CT::TypeErased<H>) {
-                  if constexpr (CT::DeeplyOwned<H>)
-                     return IteratorContiguous {H {range.Get(), nullptr, {}}, range};
-                  else if constexpr (CT::Owned<H>)
-                     return IteratorContiguous {H {range.Get(), nullptr, {}}, range};
-                  else
-                     return IteratorContiguous {H {range.Get(), {}}, range};
-               }
-               else {
-                  if constexpr (CT::DeeplyOwned<H>)
-                     return IteratorContiguous {H {range.Get(), nullptr}, range};
-                  else if constexpr (CT::Owned<H>)
-                     return IteratorContiguous {H {range.Get(), nullptr}, range};
-                  else
-                     return IteratorContiguous {H {range.Get()}, range};
-               }*/
-            }
 
             if constexpr (REVERSE)
                return IteratorContiguous {range.template AsAt<H>(range.GetCount() - 1), range};
@@ -78,22 +62,8 @@ namespace Langulus::Anyness
                return IteratorContiguous {range.template AsAt<H>(0), range};
          }
          else {
-            if (range.IsEmpty()) {
-               IteratorDiscontiguous{range.GetHashTable(), range.GetHashTableEnd(), H {}};
-
-               /*if constexpr (CT::TypeErased<H>) {
-                  if constexpr (CT::Owned<H> or CT::DeeplyOwned<H>)
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), nullptr, {}}};
-                  else
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), {}}};
-               }
-               else {
-                  if constexpr (CT::Owned<H> or CT::DeeplyOwned<H>)
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {&range.Get(), nullptr}};
-                  else
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {&range.Get()}};
-               }*/
-            }
+            if (range.IsEmpty())
+               return IteratorDiscontiguous{nullptr, nullptr, /*range.GetHashTable(), range.GetHashTableEnd(),*/ H {}};
 
             if constexpr (REVERSE)
                return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), range.template AsAt<H>(range.GetCount() - 1)};
@@ -104,21 +74,8 @@ namespace Langulus::Anyness
 
       constexpr auto end() const noexcept {
          if constexpr (CT::Contiguous<C>) {
-            if (range.IsEmpty()) {
+            if (range.IsEmpty())
                return IteratorContiguous{H {}, range};
-               /*if constexpr (CT::TypeErased<H>) {
-                  if constexpr (CT::DeeplyOwned<H> or CT::Owned<H>)
-                     return IteratorContiguous {H {range.Get(), nullptr, {}}, range};
-                  else
-                     return IteratorContiguous {H {range.Get(), {}}, range};
-               }
-               else {
-                  if constexpr (CT::DeeplyOwned<H> or CT::Owned<H>)
-                     return IteratorContiguous {H {range.Get(), nullptr}, range};
-                  else
-                     return IteratorContiguous {H {range.Get()}, range};
-               }*/
-            }
 
             if constexpr (REVERSE)
                return --IteratorContiguous {range.template AsAt<H>(0), range};
@@ -126,21 +83,8 @@ namespace Langulus::Anyness
                return ++IteratorContiguous {range.template AsAt<H>(range.GetCount() - 1), range};
          }
          else {
-            if (range.IsEmpty()) {
-               return IteratorDiscontiguous{range.GetHashTable(), range.GetHashTableEnd(), H {}};
-               /*if constexpr (CT::TypeErased<H>) {
-                  if constexpr (CT::DeeplyOwned<H> or CT::Owned<H>)
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), nullptr, {}}};
-                  else
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), {}}};
-               }
-               else {
-                  if constexpr (CT::DeeplyOwned<H> or CT::Owned<H>)
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get(), nullptr}};
-                  else
-                     return IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), H {range.Get()}};
-               }*/
-            }
+            if (range.IsEmpty())
+               return IteratorDiscontiguous{nullptr, nullptr, /*range.GetHashTable(), range.GetHashTableEnd(),*/ H {}};
 
             if constexpr (REVERSE)
                return --IteratorDiscontiguous {range.GetHashTable(), range.GetHashTableEnd(), range.template AsAt<H>(0)};

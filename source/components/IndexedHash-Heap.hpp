@@ -38,13 +38,17 @@ namespace Langulus::Anyness::Component
       /// Get the start of the hash table                                     
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
-         return ThisCom::GetHashTableInner();
+         if (self.template GetAllocationInner<SID>())
+            return ThisCom::GetHashTableInner();
+         return nullptr;
       }
 
       /// Get the end of the hash table                                       
       template<Cid SID = ID> requires Relevant<SID>
       constexpr auto GetHashTableEnd(this auto const& self) noexcept -> TableType const* {
-         return ThisCom::GetHashTableInner() + self.template GetReserved<SID>();
+         if (self.template GetAllocationInner<SID>())
+            return ThisCom::GetHashTableInner() + self.template GetReserved<SID>();
+         return nullptr;
       }
 
    protected:

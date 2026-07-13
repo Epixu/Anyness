@@ -25,6 +25,8 @@ namespace Langulus::Anyness::Component
       using TableType        = uint8_t;
       using IteratorCategory = ::std::random_access_iterator_tag;
       using Id               = typename IndexedCommon<ID, SHARED...>::Id;
+
+      static constexpr IndexingStyle Indexed = IndexingStyle::IndexedTable;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;

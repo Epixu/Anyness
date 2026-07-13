@@ -6,7 +6,12 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "Langulus/Assume.hpp"
+#include "Langulus/Typenav.hpp"
+#include "source/Component.hpp"
+#include <source/Container.hpp>
 #include <Langulus/IntentOf.hpp>
+#include <Langulus/CT/Index.hpp>
 #include <ranges>
 
 
@@ -42,12 +47,18 @@ namespace Langulus::Anyness
 
       C& range;
 
+      struct NoHashtable {};
+      struct AddHashtable {
+         using table_type = decltype(Fake<C>().GetHashTable());
+         mutable table_type mTable;
+      };
+
    public:
       explicit constexpr IterateDefault(C& a) noexcept
          : range {a} {}
 
-      /// The iterator                                                        
-      struct Iterator {
+      /// MARK: Iterator                                                      
+      struct Iterator : Tif<CT::IndexedLinearly<C>, NoHashtable, AddHashtable> {
          using CTTI_ReflectAs    = void;
          using CTTI_Iterator     = Yes<>;
          using difference_type   = std::ptrdiff_t;
@@ -61,20 +72,64 @@ namespace Langulus::Anyness
          constexpr Iterator() noexcept = default;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
+
          constexpr Iterator(Deptr<H> const& it, C* range) noexcept requires CT::Sparse<H>
             : mIt    {&it}
-            , mRange {range} {}
+            , mRange {range} {
+            if constexpr (not CT::IndexedLinearly<C>) {
+               AddHashtable::mTable = range->GetHashTable();
+
+               if (AddHashtable::mTable) {
+                  AddHashtable::mTable += DecvqAllCast(mIt) - DecvqAllCast(range->GetRaw());
+
+                  LglsAssumeDev(*AddHashtable::mTable,
+                     "Iterators to hash table initialized with an invalid element");
+               }
+            }
+         }
+
          constexpr Iterator(H const& it, C* range) noexcept
             : mIt    {it}
-            , mRange {range} {}
+            , mRange {range} {
+            if constexpr (not CT::IndexedLinearly<C>) {
+               AddHashtable::mTable = range->GetHashTable();
+
+               if (AddHashtable::mTable) {
+                  if constexpr (CT::Handle<H>)
+                     AddHashtable::mTable += mIt - range->GetHandle();
+                  else
+                     AddHashtable::mTable += DecvqAllCast(mIt) - DecvqAllCast(range->GetRaw());
+
+                  LglsAssumeDev(*AddHashtable::mTable,
+                     "Iterators to hash table initialized with an invalid element");
+               }
+            }
+         }
+
          constexpr Iterator(H&& it, C* range) noexcept
             : mIt    {LglsFwd(it)}
-            , mRange {range} {}
+            , mRange {range} {
+            if constexpr (not CT::IndexedLinearly<C>) {
+               AddHashtable::mTable = range->GetHashTable();
+
+               if (AddHashtable::mTable) {
+                  if constexpr (CT::Handle<H>)
+                     AddHashtable::mTable += mIt - range->GetHandle();
+                  else
+                     AddHashtable::mTable += DecvqAllCast(mIt) - DecvqAllCast(range->GetRaw());
+
+                  LglsAssumeDev(*AddHashtable::mTable,
+                     "Iterators to hash table initialized with an invalid element");
+               }
+            }
+         }
 
          constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
             LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
             mIt = rhs.mIt;
+            if constexpr (not CT::IndexedLinearly<C>)
+               AddHashtable::mTable = rhs.mTable;
             return *this;
          }
 
@@ -82,10 +137,44 @@ namespace Langulus::Anyness
             LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
             mIt = rhs.mIt;
+            if constexpr (not CT::IndexedLinearly<C>)
+               AddHashtable::mTable = rhs.mTable;
             return *this;
          }
 
          constexpr bool operator == (CT::Iterator auto const& rhs) const noexcept {
+            // We sneakily skip invalid table entries while comparing   
+            if constexpr (CT::IndexedTable<C>) {
+               if constexpr (REVERSE) {
+                  if constexpr (CT::Handle<H>) {
+                     while (rhs.mIt.GetRaw() < mIt.GetRaw() and not *AddHashtable::mTable) {
+                        --AddHashtable::mTable;
+                        --mIt;
+                     }
+                  }
+                  else {
+                     while (rhs.mIt < mIt and not *AddHashtable::mTable) {
+                        --AddHashtable::mTable;
+                        --mIt;
+                     }
+                  }
+               }
+               else {
+                  if constexpr (CT::Handle<H>) {
+                     while (rhs.mIt.GetRaw() > mIt.GetRaw() and not *AddHashtable::mTable) {
+                        ++AddHashtable::mTable;
+                        ++mIt;
+                     }
+                  }
+                  else {
+                     while (rhs.mIt > mIt and not *AddHashtable::mTable) {
+                        ++AddHashtable::mTable;
+                        ++mIt;
+                     }
+                  }
+               }
+            }
+
             if constexpr (CT::Handle<H>)
                return mIt.GetRaw() == rhs.mIt.GetRaw();
             else
@@ -93,6 +182,38 @@ namespace Langulus::Anyness
          }
 
          constexpr auto operator <=> (CT::Iterator auto const& rhs) const noexcept {
+            // We sneakily skip invalid table entries while comparing   
+            if constexpr (CT::IndexedTable<C>) {
+               if constexpr (REVERSE) {
+                  if constexpr (CT::Handle<H>) {
+                     while (rhs.mIt.GetRaw() < mIt.GetRaw() and not *AddHashtable::mTable) {
+                        --AddHashtable::mTable;
+                        --mIt;
+                     }
+                  }
+                  else {
+                     while (rhs.mIt < mIt and not *AddHashtable::mTable) {
+                        --AddHashtable::mTable;
+                        --mIt;
+                     }
+                  }
+               }
+               else {
+                  if constexpr (CT::Handle<H>) {
+                     while (rhs.mIt.GetRaw() > mIt.GetRaw() and not *AddHashtable::mTable) {
+                        ++AddHashtable::mTable;
+                        ++mIt;
+                     }
+                  }
+                  else {
+                     while (rhs.mIt > mIt and not *AddHashtable::mTable) {
+                        ++AddHashtable::mTable;
+                        ++mIt;
+                     }
+                  }
+               }
+            }
+
             if constexpr (CT::Handle<H>)
                return mIt.GetRaw() <=> rhs.mIt.GetRaw();
             else
@@ -126,71 +247,292 @@ namespace Langulus::Anyness
             else                         return mIt;
          }
 
-         friend auto operator + (difference_type lhs, Iterator const& rhs) noexcept -> Iterator {
-            static_assert(not REVERSE);
-            return {rhs.mIt + lhs, rhs.mRange};
+         auto operator + (difference_type c) const assumptious -> Iterator {
+            if (c == 0)
+               return *this;
+
+            if constexpr (CT::NotHandle<H>) {
+               LglsAssumeDevAndOptimize(mIt, "Can't offset invalid iterator");
+            };
+
+            if constexpr (REVERSE)
+               c *= -1;
+
+            if constexpr (CT::IndexedLinearly<C>)
+               return {mIt + c, mRange};
+            else {
+               auto next = AddHashtable::mTable;
+               LglsAssumeDevAndOptimize(next, "Can't offset invalid iterator");
+
+               if (c > 0) {
+                  while (c) {
+                     ++next;
+                     if (*next)
+                        --c;
+                  }
+
+                  return {mIt + (next - AddHashtable::mTable), mRange};
+               }
+               else {
+                  while (c) {
+                     --next;
+                     if (*next)
+                        ++c;
+                  }
+
+                  return {mIt - (AddHashtable::mTable - next), mRange};
+               }
+            }
          }
 
-         auto operator + (difference_type c) const noexcept -> Iterator {
-            if constexpr (REVERSE) return {mIt - c, mRange};
-            else                   return {mIt + c, mRange};
+         friend auto operator + (difference_type lhs, Iterator const& rhs) assumptious -> Iterator {
+            return rhs.operator + (lhs);
          }
 
-         auto operator - (difference_type c) const noexcept -> Iterator {
-            if constexpr (REVERSE) return {mIt + c, mRange};
-            else                   return {mIt - c, mRange};
+         auto operator - (difference_type c) const assumptious -> Iterator {
+            return operator + (-c);
          }
 
-         auto operator += (difference_type c) noexcept -> Iterator& {
-            if constexpr (REVERSE) mIt -= c;
-            else                   mIt += c;
+         auto operator += (difference_type c) assumptious -> Iterator& {
+            if (c == 0)
+               return *this;
+
+            LglsAssumeDevAndOptimize(mIt, "Can't offset invalid iterator");
+            if constexpr (REVERSE)
+               c *= -1;
+
+            if constexpr (CT::IndexedLinearly<C>)
+               mIt += c;
+            else {
+               LglsAssumeDevAndOptimize(AddHashtable::mTable,
+                  "Can't offset invalid iterator");
+               if (c > 0) {
+                  while (c) {
+                     ++AddHashtable::mTable;
+                     ++mIt;
+                     if (*AddHashtable::mTable)
+                        --c;
+                  }
+               }
+               else {
+                  while (c) {
+                     --AddHashtable::mTable;
+                     --mIt;
+                     if (*AddHashtable::mTable)
+                        ++c;
+                  }
+               }
+            }
             return *this;
          }
 
-         auto operator -= (difference_type c) noexcept -> Iterator& {
-            if constexpr (REVERSE) mIt += c;
-            else                   mIt -= c;
-            return *this;
+         auto operator -= (difference_type c) assumptious -> Iterator& {
+            return operator += (-c);
          }
 
-         decltype(auto) operator[] (const difference_type offset) const noexcept {
-            if constexpr (REVERSE) {
-               if constexpr (CT::Handle<H>) return   mIt - offset;
-               else                         return *(mIt - offset);
+         decltype(auto) operator[] (difference_type offset) const assumptious {
+            if constexpr (CT::NotHandle<H>) {
+               LglsAssumeDevAndOptimize(mIt, "Can't access invalid iterator");
+            }
+
+            if constexpr (REVERSE)
+               offset *= -1;
+
+            if constexpr (CT::IndexedLinearly<C>) {
+               if constexpr (CT::Handle<H>)  return   mIt + offset;
+               else                          return *(mIt + offset);
             }
             else {
-               if constexpr (CT::Handle<H>) return   mIt + offset;
-               else                         return *(mIt + offset);
+               auto next = AddHashtable::mTable;
+               LglsAssumeDevAndOptimize(next, "Can't access invalid iterator");
+
+               if (offset > 0) {
+                  while (offset) {
+                     ++next;
+                     if (*next)
+                        --offset;
+                  }
+
+                  if constexpr (CT::Handle<H>)
+                     return mIt + (next - AddHashtable::mTable);
+                  else
+                     return *(mIt + (next - AddHashtable::mTable));
+               }
+               else {
+                  while (offset) {
+                     --next;
+                     if (*next)
+                        ++offset;
+                  }
+
+                  if constexpr (CT::Handle<H>)
+                     return mIt + (AddHashtable::mTable - next);
+                  else
+                     return *(mIt + (AddHashtable::mTable - next));
+               }
             }
          }
 
          /// Prefix increment                                                 
-         auto operator ++ () noexcept -> Iterator& {
-            if constexpr (REVERSE) --mIt;
-            else                   ++mIt;
+         auto operator ++ () assumptious -> Iterator& {
+            if constexpr (CT::NotHandle<H>) {
+               LglsAssumeDevAndOptimize(mIt, "Can't increment invalid iterator");
+            }
+
+            if constexpr (CT::IndexedLinearly<C>) {
+               if constexpr (REVERSE) --mIt;
+               else                   ++mIt;
+            }
+            else {
+               LglsAssumeDevAndOptimize(AddHashtable::mTable,
+                  "Can't increment invalid iterator");
+
+               if constexpr (REVERSE) {
+                  /*IF_SAFE(const auto end = mRange->GetHashTable() - 1);
+                  do {*/
+                     --AddHashtable::mTable;
+                     --mIt;
+
+                     /*LglsAssumeDev(AddHashtable::mTable > end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *AddHashtable::mTable);*/
+               }
+               else {
+                  /*IF_SAFE(const auto end = mRange->GetHashTableEnd());
+                  do {*/
+                     ++AddHashtable::mTable;
+                     ++mIt;
+
+                     /*LglsAssumeDev(AddHashtable::mTable < end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *AddHashtable::mTable);*/
+               }
+            }
             return *this;
          }
 
          /// Suffix increment                                                 
-         auto operator ++ (int) noexcept -> Iterator {
-            if constexpr (REVERSE) return {mIt--, mRange};
-            else                   return {mIt++, mRange};
+         auto operator ++ (int) assumptious -> Iterator {
+            if constexpr (CT::NotHandle<H>) {
+               LglsAssumeDevAndOptimize(mIt, "Can't increment invalid iterator");
+            }
+
+            if constexpr (CT::IndexedLinearly<C>) {
+               if constexpr (REVERSE) return {mIt--, mRange};
+               else                   return {mIt++, mRange};
+            }
+            else {
+               LglsAssumeDevAndOptimize(AddHashtable::mTable,
+                  "Can't increment invalid iterator");
+
+               if constexpr (REVERSE) {
+                  IF_SAFE(const auto end = mRange->GetHashTable() - 1);
+                  auto next = AddHashtable::mTable;
+                  do {
+                     --next;
+                     LglsAssumeDev(next > end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *next);
+                  return {mIt - (AddHashtable::mTable - next), mRange};
+               }
+               else {
+                  IF_SAFE(const auto end = mRange->GetHashTableEnd());
+                  auto next = AddHashtable::mTable;
+                  do {
+                     ++next;
+                     LglsAssumeDev(next < end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *next);
+                  return {mIt + (next - AddHashtable::mTable), mRange};
+               }
+            }
          }
 
          /// Prefix decrement                                                 
-         auto operator -- () noexcept -> Iterator& {
-            if constexpr (REVERSE) ++mIt;
-            else                   --mIt;
+         auto operator -- () assumptious -> Iterator& {
+            if constexpr (CT::NotHandle<H>) {
+               LglsAssumeDevAndOptimize(mIt, "Can't decrement invalid iterator");
+            }
+
+            if constexpr (CT::IndexedLinearly<C>) {
+               if constexpr (REVERSE) ++mIt;
+               else                   --mIt;
+            }
+            else {
+               LglsAssumeDevAndOptimize(AddHashtable::mTable,
+                  "Can't decrement invalid iterator");
+
+               if constexpr (REVERSE) {
+                  /*IF_SAFE(const auto end = mRange->GetHashTableEnd());
+                  do {*/
+                     ++AddHashtable::mTable;
+                     ++mIt;
+
+                     /*LglsAssumeDev(AddHashtable::mTable < end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *AddHashtable::mTable);*/
+               }
+               else {
+                  /*IF_SAFE(const auto end = mRange->GetHashTable() - 1);
+                  do {*/
+                     --AddHashtable::mTable;
+                     --mIt;
+
+                     /*LglsAssumeDev(AddHashtable::mTable > end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *AddHashtable::mTable);*/
+               }
+            }
             return *this;
          }
 
          /// Suffix decrement                                                 
-         auto operator -- (int) noexcept -> Iterator {
-            if constexpr (REVERSE) return {mIt++, mRange};
-            else                   return {mIt--, mRange};
+         auto operator -- (int) assumptious -> Iterator {
+            if constexpr (CT::NotHandle<H>) {
+               LglsAssumeDevAndOptimize(mIt, "Can't decrement invalid iterator");
+            }
+
+            if constexpr (CT::IndexedLinearly<C>) {
+               if constexpr (REVERSE) return {mIt++, mRange};
+               else                   return {mIt--, mRange};
+            }
+            else {
+               LglsAssumeDevAndOptimize(AddHashtable::mTable,
+                  "Can't decrement invalid iterator");
+
+               if constexpr (REVERSE) {
+                  IF_SAFE(const auto end = mRange->GetHashTableEnd());
+                  auto next = AddHashtable::mTable;
+                  do {
+                     ++next;
+                     LglsAssumeDev(next < end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *next);
+                  return {mIt + (next - AddHashtable::mTable), mRange};
+               }
+               else {
+                  IF_SAFE(const auto end = mRange->GetHashTable() - 1);
+                  auto next = AddHashtable::mTable;
+                  do {
+                     --next;
+                     LglsAssumeDev(next > end,
+                        "Iterator went beyond limits");
+                  }
+                  while (not *next);
+                  return {mIt - (AddHashtable::mTable - next), mRange};
+               }
+            }
          }
 
          /// Get the integer element difference between two iterators         
+         ///   @attention the result might look odd if C is not linear        
          auto operator - (CT::Iterator auto const& rhs) const assumptious
          -> difference_type {
             LglsAssumeUser(mRange == rhs.mRange,
@@ -207,44 +549,68 @@ namespace Langulus::Anyness
          }
       };
 
+      /// MARK: begin()                                                       
       constexpr auto begin() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 
          if constexpr (REVERSE)
-            return {range.template AsAt<H>(range.GetCount() - 1), &range};
+            return {range.template AsAt<H>(Index::Last), &range};
          else
-            return {range.template AsAt<H>(0), &range};
+            return {range.template AsAt<H>(Index::First), &range};
       }
 
+      /// MARK: end()                                                         
       constexpr auto end() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 
-         if constexpr (REVERSE)
-            return --Iterator{range.template AsAt<H>(0), &range};
-         else
-            return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), &range};
+         if constexpr (REVERSE) {
+            Iterator temp {range.template AsAt<H>(Index::First), &range};
+            --temp.mIt;
+            if constexpr (CT::IndexedTable<C>)
+               --temp.mTable;
+            return temp;
+         }
+         else {
+            Iterator temp {range.template AsAt<H>(Index::Last), &range};
+            ++temp.mIt;
+            if constexpr (CT::IndexedTable<C>)
+               ++temp.mTable;
+            return temp;
+         }
       }
 
+      /// MARK: rbegin()                                                      
       constexpr auto rbegin() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 
          if constexpr (REVERSE)
-            return {range.template AsAt<H>(0), &range};
+            return {range.template AsAt<H>(Index::First), &range};
          else
-            return {range.template AsAt<H>(range.GetCount() - 1), &range};
+            return {range.template AsAt<H>(Index::Last), &range};
       }
 
+      /// MARK: rend()                                                        
       constexpr auto rend() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 
-         if constexpr (REVERSE)
-            return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), &range};
-         else
-            return --Iterator{range.template AsAt<H>(0), &range};
+         if constexpr (not REVERSE) {
+            Iterator temp {range.template AsAt<H>(Index::First), &range};
+            --temp.mIt;
+            if constexpr (CT::IndexedTable<C>)
+               --temp.mTable;
+            return temp;
+         }
+         else {
+            Iterator temp {range.template AsAt<H>(Index::Last), &range};
+            ++temp.mIt;
+            if constexpr (CT::IndexedTable<C>)
+               ++temp.mTable;
+            return temp;
+         }
       }
    };
 

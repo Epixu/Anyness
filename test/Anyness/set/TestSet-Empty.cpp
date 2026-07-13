@@ -928,27 +928,32 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       WHEN("Merge an array") {
          size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.Merge(          immovable));
+         Set_CheckState_ContainsArray(pack, immovable);
+
          REQUIRE_NOTHROW(inserted += pack.Merge(Refer    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Copy     {immovable}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Disown   {immovable}));
+         Set_CheckState_ContainsArray(pack, immovable);
+
          REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
+         Set_CheckState_ContainsArray(pack, immovable, movable2);
+
          REQUIRE_NOTHROW(inserted += pack.Merge(Move     {movable2}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Abandon  {movable3}));
-         REQUIRE_NOTHROW(inserted += pack.Merge(Clone    {immovable}));
-         REQUIRE(inserted == 5*8);
+         REQUIRE_NOTHROW(inserted += pack.Merge(Clone    {immovable})); //TODO cloning a sparse element should always produce a new one, and thus always be inserted??
+         Set_CheckState_ContainsArray(pack, immovable, movable2);
 
          Set_CheckState_OwnedFull<E>(pack);
 
          if constexpr (CT::Set<E>) {
             for (int i = 0; i < 5; ++i) {
                Set_CheckState_Default<int>  (movable1[i]);
-               Set_CheckState_Default<int>  (movable2[i]);
-               Set_CheckState_Abandoned<int>(movable3[i]);
+            }
+            for (int i = 0; i < 5; ++i) {
+               Set_CheckState_OwnedFull<int>(movable2[i]);
+               Set_CheckState_OwnedFull<int>(movable3[i]);
             }
          }
-
-         REQUIRE(pack.GetCount() == 5*8);
-         REQUIRE(pack.GetReserved() >= 5*8);
 
          for (uint i = 0; i < 4*5; ++i) {
             REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);

@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<8, 2, HeapEntry<0, T*>>,
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
-      Com::IndexedHashStack<>,         // Indexed by hash table         
+      Com::IndexedHashHeap<>,          // Indexed by hash table         
       Com::OwnershipStack<>,           // Allocation is referenced      
       EnableComponentIf<CT::Sparse<T>, Com::OwnershipDeepHeap<>>,
       Com::HashHeap<>,                 // Hash can be cached            

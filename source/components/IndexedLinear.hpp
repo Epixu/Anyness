@@ -24,6 +24,8 @@ namespace Langulus::Anyness::Component
       using CTTI_Contiguous  = Yes<>;
       using IteratorCategory = ::std::contiguous_iterator_tag;
 
+      static constexpr IndexingStyle Indexed = IndexingStyle::IndexedLinearly;
+
    protected:
       LglsComIndexedCommon(friend);
 

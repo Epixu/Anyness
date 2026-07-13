@@ -41,7 +41,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<8, 2>,          // Pointer to heap memory        
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
-      Com::IndexedHashStack<>,         // Indexed by hash table         
+      Com::IndexedHashHeap<>,          // Indexed by hash table         
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashHeap<>,                 // Hash can be cached            
