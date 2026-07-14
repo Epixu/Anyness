@@ -422,3 +422,30 @@ namespace Langulus::CTTI
       return result;
    }
 }
+
+namespace fmt
+{
+   /// MARK: {fmt}                                                            
+   ///                                                                        
+   /// Extend FMT to be capable of logging any Anyness container that is      
+   /// convertible to Anyness::Text.                                          
+   template<::Langulus::CT::Container T> requires ::Langulus::CT::Convertible<T, ::Langulus::Anyness::Text>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      auto format(T const& e, CONTEXT& ctx) const {
+         try {
+            const auto to_text = ::Langulus::Convert<::Langulus::Anyness::Text>(e);
+            return format_to(ctx.out(), "{}", static_cast<::Langulus::Token>(to_text));
+         }
+         catch(...) {
+            // Don't allow any exceptions to leak out of here           
+            return format_to(ctx.out(), "<error while serializing to text>");
+         }
+      }
+   };
+}

@@ -458,7 +458,7 @@ namespace Langulus::Logger
             #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
                return UnusedScope {};
             #else
-                return Scope {0};
+               return Scope {0};
             #endif
          }
       #endif

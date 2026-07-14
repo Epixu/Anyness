@@ -538,14 +538,17 @@ namespace Langulus::Anyness
             LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
 
-            if constexpr (CT::TypeErased<C>) {
-               const auto range = mIt.template GetRawAs<uint8_t>() - rhs.mIt.template GetRawAs<uint8_t>();
-               return static_cast<difference_type>(range / mRange->GetStride());
+            if constexpr (CT::Handle<H>) {
+               if constexpr (CT::TypeErased<C>) {
+                  const auto range = mIt.template GetRawAs<uint8_t>() - rhs.mIt.template GetRawAs<uint8_t>();
+                  return static_cast<difference_type>(range / mRange->GetStride());
+               }
+               else {
+                  const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
+                  return static_cast<difference_type>(range);
+               }
             }
-            else {
-               const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
-               return static_cast<difference_type>(range);
-            }
+            else return static_cast<difference_type>(mIt - rhs.mIt);
          }
       };
 

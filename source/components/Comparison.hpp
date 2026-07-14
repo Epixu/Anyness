@@ -975,7 +975,7 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(self.template IsTyped<SID>(),
                "Container is assumed typed");
 
-            if constexpr (CT::Text<RT>) {
+            /*if constexpr (CT::Text<RT>) {
                // Text types can be more loosely compared               
                if (self.template IsSame<Text, SID>()) {
                   // Implicitly make a text container                   
@@ -984,7 +984,7 @@ namespace Langulus::Anyness::Component
                   else
                      return *self.template GetAt<Text, SID>(0) == Text {Disown(rhs)};
                }
-            }
+            }*/
 
             if constexpr (CT::ComparableEqual<RT, RT>) {
                // Non-deep element compare                              
@@ -993,6 +993,16 @@ namespace Langulus::Anyness::Component
                      return *self.template Get<RT, SID>() == rhs;
                   else
                      return *self.template GetAt<RT, SID>(0) == rhs;
+               }
+            
+               if constexpr (CT::Text<RT>) {
+                  if (self.template IsSame<Text, SID>()) {
+                     // Implicitly make a text container                
+                     if constexpr (CT::Contiguous<C>)
+                        return *self.template Get<Text, SID>() == Text {Disown(rhs)};
+                     else
+                        return *self.template GetAt<Text, SID>(0) == Text {Disown(rhs)};
+                  }
                }
             }
          }
@@ -1041,7 +1051,7 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(self.template IsTyped<SID>(),
                "Container is assumed typed");
 
-            if constexpr (CT::Text<RT>) {
+            /*if constexpr (CT::Text<RT>) {
                // Text types can be more loosely compared               
                if (self.template IsSame<Text, SID>()) {
                   // Implicitly make a text container                   
@@ -1050,7 +1060,7 @@ namespace Langulus::Anyness::Component
                   else
                      return FromOrdering(*self.template GetAt<Text, SID>(0) <=> Text{Disown(rhs)});
                }
-            }
+            }*/
             
             if constexpr (CT::Comparable<RT, RT>) {
                // Non-deep element compare                              
@@ -1060,9 +1070,20 @@ namespace Langulus::Anyness::Component
                   else
                      return FromOrdering(*self.template GetAt<RT, SID>(0) <=> rhs);
                }
-               return Compared::Unordered;
+
+               if constexpr (CT::Text<RT>) {
+                  // Text types can be more loosely compared            
+                  if (self.template IsSame<Text, SID>()) {
+                     // Implicitly make a text container                
+                     if constexpr (CT::Contiguous<C>)
+                        return FromOrdering(*self.template Get<Text, SID>() <=> Text{Disown(rhs)});
+                     else
+                        return FromOrdering(*self.template GetAt<Text, SID>(0) <=> Text{Disown(rhs)});
+                  }
+               }
             }
-            else return Compared::Unordered;
+            
+            return Compared::Unordered;
          }
          else {
             //                                                          

@@ -266,7 +266,7 @@ namespace Langulus::Anyness::Component
          // Get the starting index based on the key hash                
          const auto tableBeg = self.template GetHashTableInner<SID>();
          auto table = tableBeg + start;
-         auto handle = self.GetHandle().ForceMutable() + start;
+         auto handle = self.GetHandle().ForceMutable();// + start;
 
          if (*table) {
             // Container is not empty and swapping will occur           
@@ -312,6 +312,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // No swapping will happen                                  
+            handle += start;
             Id::ForEach([&handle,&item]<Cid D>{
                handle.template EmplaceWithIntent<D>(LglsFwd(item));
             });

@@ -936,6 +936,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_ContainsArray(pack, immovable);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
+         DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable, movable2);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(Move     {movable2}));

@@ -272,3 +272,30 @@ template<CT::Container T, class E> requires CT::NoIntent<T>
 void Set_Helper_CompareOne(const T& set, const E& e) {
    Many_Helper_CompareOne(set, e);
 }
+
+/// MARK: DumpSet                                                             
+template<CT::Container T> requires CT::NoIntent<T>
+void DumpSet(const T& set) {
+   auto table = set.GetHashTable();
+   const auto tableEnd = set.GetHashTableEnd();
+   auto handle = set.GetHandle();
+   auto _ = Logger::SpecialSection("Set dump:");
+
+   size_t counter = 0;
+   while(table != tableEnd) {
+      if (*table) {
+         if (*table == 1)
+            Logger::Line("");
+         else
+            Logger::Line("^-");
+         for(int i = 2; i < *table; ++i)
+            Logger::Append("--");
+         Logger::Append("[", counter, "] ", handle);
+      }
+      else Logger::Line("[", counter, "] -");
+
+      ++table;
+      ++handle;
+      ++counter;
+   }
+}
