@@ -138,7 +138,7 @@ namespace Langulus::Anyness
          using PV = Decvq<Deref<TypeOf<Deint<P>, 1>>>;
          static_assert(Same<PK, K>, "Key type mismatch");
          static_assert(Same<PV, V>, "Val type mismatch");
-         return TPair<PK, PV> {Copy {LglsFwd(pair)}};
+         return TPair<PK, PV> {Copy {LglsFwd(pair)}}; //TODO Anyness::Piecewise, ?
       }
 
       /// Clear the map and assign a single pair                              

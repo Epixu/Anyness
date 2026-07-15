@@ -467,15 +467,11 @@ namespace Langulus::Anyness::Component
          else if constexpr (C::InitialSize and C::GrowthFactor) {
             // We override allocation size with predefined parameters,  
             // if such are defined                                      
-            if (reserve <= C::InitialSize)
-               reserve = C::InitialSize;
-            else {
-               size_t growth = C::InitialSize * C::GrowthFactor;
-               while (reserve > C::InitialSize + growth)
-                  growth *= C::GrowthFactor;
-               reserve = C::InitialSize + growth;
-               //TODO when pagefile size is reached, start growing linearly by pagefile-sized intervals. this way we minimize cache misses in huge hash tables
-            }
+            size_t growth = C::InitialSize;
+            while (reserve > growth)
+               growth += growth * C::GrowthFactor;
+            reserve = growth;
+            //TODO when pagefile size is reached, start growing linearly by pagefile-sized intervals. this way we minimize cache misses in huge hash tables
          }
 
          Request result;

@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../many/TestManyCommon.hpp"
+#include "source/Component.hpp"
 #include <Langulus/Anyness/Set.hpp>
 #include <Langulus/Anyness/TSet.hpp>
 #include <unordered_set>
@@ -72,7 +73,7 @@
 
 namespace doctest
 {
-   template<Anyness::StateValue SORT>
+   /*template<Anyness::StateValue SORT>
    struct StringMaker<Anyness::Inner::Set<SORT>> {
       static String convert(Anyness::Inner::Set<SORT> const& value) {
          return toString(static_cast<::std::string>(
@@ -88,7 +89,7 @@ namespace doctest
             NameOf<TSet<T, SORT>>() + "(" + Convert<Text>(value) + ")"
          ));
       }
-   };
+   };*/
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
@@ -204,19 +205,28 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    }
 }
 
-template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, int uses = 1) {
-   auto& e = e_scoped_with_intent.what;
-   //using E = typename Decay<Deint<I>>::CTTI_Typed;
-
+template<CT::Container T> requires CT::NoIntent<T>
+void Set_CheckState_ContainsN(const T& set, size_t n) {
    REQUIRE(set.GetCount() == n);
-   REQUIRE(set.GetUses() == uses);
-   REQUIRE(set.GetReserved() >= n);
 
-   for (auto& it : set)
-      REQUIRE(it == e);
+   // Check reserve                                                     
+   size_t growth = T::InitialSize;
+   while (n > growth)
+      growth += growth * T::GrowthFactor;
+   REQUIRE(set.GetReserved() == growth);
 
-   //TODO other kinds of iterations
+   // Check table integrity                                             
+   auto start     = set.GetHashTable();
+   const auto end = set.GetHashTableEnd();
+   REQUIRE((end - start) == set.GetReserved());
+
+   size_t found = 0;
+   while (start != end) {
+      if (*start)
+         ++found;
+      ++start;
+   }
+   REQUIRE(found == n);
 }
 
 /// MARK: ContainsArray                                                       
@@ -227,22 +237,29 @@ void Set_CheckState_ContainsArray(const T& set, A const&...array) {
    REQUIRE(set.GetCount() == size);
 
    // Check reserve                                                     
-   if constexpr (size < T::InitialSize)
-      REQUIRE(set.GetReserved() == T::InitialSize);
-   else {
-      size_t growth = T::InitialSize * T::GrowthFactor;
-      while (size > T::InitialSize + growth)
-         growth *= T::GrowthFactor;
-      REQUIRE(set.GetReserved() == T::InitialSize + growth);
-   }
+   size_t growth = T::InitialSize;
+   while (size > growth)
+      growth += growth * T::GrowthFactor;
+   REQUIRE(set.GetReserved() == growth);
 
    // Check if all elements are present                                 
-   auto find = [](const auto& e, CT::Array auto const& a) -> size_t {
+   auto find = []<class H>(H const& e, CT::Array auto const& a) -> size_t {
+      size_t found = 0;
       for (auto& a_e : a) {
-         if (a_e == e)
-            return 1;
+         if constexpr (CT::Handle<H>) {
+            if (e.CompareOneEqual(a_e))
+               ++found;
+         }
+         else if constexpr (CT::Container<H>) {
+            if (e.CompareEqual(a_e))
+               ++found;
+         }
+         else {
+            if (e == a_e)
+               ++found;
+         }
       }
-      return 0;
+      return found;
    };
 
    size_t iterated = 0;

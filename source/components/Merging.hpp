@@ -285,7 +285,7 @@ namespace Langulus::Anyness::Component
             for(auto& i : DeintCast(a)) {
                if (self.Contains(i) or contained_in_array_itself(i)) {
                   ++counter;
-                  return;
+                  continue;
                }
    
                self.DeduceType(i);
@@ -480,18 +480,10 @@ namespace Langulus::Anyness::Component
             for (size_t i = 0; i < ExtentOf<T>; ++i) {
                if (*it == counter) {
                   decltype(auto) element = DeintCast(a)[i];
-                  size_t bucket;
-
-                  if constexpr (not Shared)
-                     bucket = self.GetOffset(element);
-                  else
-                     bucket = self.GetOffset(element.GetKeyHandle()); //TODO this presumes the key dimension is the one the hash table is associated with
-
                   if constexpr (CT::Copied<I>)
-                     self.TableEmplace(bucket, Refer(element));
+                     self.TableEmplace(Refer(element));
                   else
-                     self.TableEmplace(bucket, I::Nest(element));
-
+                     self.TableEmplace(I::Nest(element));
                   ++it;
                }
                
@@ -500,19 +492,11 @@ namespace Langulus::Anyness::Component
          }
          else {
             if (*it == counter) {
-               decltype(auto) element = DeintCast(a);
-               size_t bucket;
-
-               if constexpr (not Shared)
-                  bucket = self.GetOffset(element);
-               else
-                  bucket = self.GetOffset(element.GetKeyHandle()); //TODO this presumes the key dimension is the one the hash table is associated with
-
+               //decltype(auto) element = DeintCast(a);
                if constexpr (CT::Copied<I>)
-                  self.TableEmplace(bucket, Refer(LglsFwd(a)));
+                  self.TableEmplace(Refer(LglsFwd(a)));
                else
-                  self.TableEmplace(bucket, FWDIntent(a));
-
+                  self.TableEmplace(FWDIntent(a));
                ++it;
             }
             

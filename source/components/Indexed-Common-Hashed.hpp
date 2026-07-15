@@ -43,15 +43,25 @@ namespace Langulus::Anyness::Component
       LglsComMerging(friend);
 
       /// Browse table, converting contiguous index into table index.         
+      ///                                                                     
       /// Table is indexed the following way:                                 
       /// 0-8:  [ ][ ][ ][ ][ ][ ][ ][ ]                                      
       /// 9-24: [ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]              
       /// 25-56:[ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]...  
-      /// It's a so called cascading table structure, designed this way       
+      ///                                                                     
+      ///   It's a so called cascading table structure, designed this way     
       /// to minimize movement and avoid rehashing when table is resized.     
-      /// When an element is sought in this cascading table structure, it is  
+      ///   When an element is sought in this cascading table structure, it is
       /// sought first in the biggest (last) table, and if not found, the     
       /// previous (smaller) tables are searched using the truncated hash.    
+      ///   When inserted, elements are inserted to the cascade level that is 
+      /// guaranteed to not be fully occupied yet, and then other attempts    
+      /// are made to the rest of the cascades. The map strives to fill the   
+      /// lower cascades first. Some fragmentation might emerge when items    
+      /// are removed, but this shouldn't cause any harm. Worst case is, the  
+      /// map would perform as bad as a conventional one. :)                  
+      ///   Some ideas were extracted from here:                              
+      ///      https://arxiv.org/pdf/2501.02305                               
       template<CT::Container C>
       constexpr auto BrowseTable(this C const& self, Count<C> index)
       assumptious -> Count<C> {
@@ -139,16 +149,16 @@ namespace Langulus::Anyness::Component
       /// You have to disable the most significant bit for each other table.  
       ///   @param value - the value to hash                                  
       ///   @return the bucket index                                          
-      template<CT::Container C, CT::NoIntent T>
+      /*template<CT::Container C, CT::NoIntent T>
       auto GetOffset(this C const& self, T const& value) noexcept {
          const auto mask = ::std::bit_floor(self.GetReserved()) - 1u;
          return HashOf(value).value & mask;
-      }
+      }*/
 
       /// Rehashes and reinserts each element, optimizing the table           
       ///   @param oldReserve - the old table size                            
       ///   @attention assumes reserve > oldReserve                           
-      template<CT::Container C>
+      /*template<CT::Container C>
       void Rehash(this C& self, const Count<C> oldReserve) {
          LglsAssumeDev(self.GetReserved() > oldReserve,
             "New reserve is not larger than oldReserve");
@@ -199,7 +209,7 @@ namespace Langulus::Anyness::Component
          // Second run: shift elements left whereever possible to fill  
          // any gaps produced by the first run.                         
          self.ShiftEntries();
-      }
+      }*/
    
       /// Shift elements left whereever possible                              
       ///   @attention works in all dimensions simultaneously!                
@@ -252,7 +262,51 @@ namespace Langulus::Anyness::Component
          } while (moves_performed);
       }
 
-      /// Table insertion function                                            
+      /// Table insertion function - picks a strategy of insertion and goes   
+      /// through all cascading tables until a free spot is found.            
+      ///   @param item item to insert                                        
+      ///   @attention assumes item doesn't yet exist in the table            
+      ///   @attention assumes there's at least one free spot, in any one of  
+      ///      the cascades                                                   
+      ///   @attention works in all dimensions simultaneously                 
+      ///   @attention assumes that reserved count is the same across all     
+      ///      relevant dimensions                                            
+      ///   @attention assumes that the same hash table is used across all    
+      ///      relevant dimensions                                            
+      ///   @return the absolute offset at which item was inserted            
+      template<Cid SID = ID, class C, CT::Intent H> requires Relevant<SID>
+      size_t TableEmplace(this C& self, H&& item) {
+         static_assert(not CT::Array<H>);
+
+         // Get the item's hash.                                        
+         // This hash will be truncated and used for bucketing in each  
+         // cascading table.                                            
+         Hash hash;
+         if constexpr (not Shared)
+            hash = HashOf(DeintCast(item));
+         else
+            hash = HashOf(DeintCast(item).GetKeyHandle()); //TODO this presumes the key dimension is the one the hash table is associated with
+
+         // Pick insertion strategy                                     
+         size_t occupied = self.GetCount();
+         size_t reserved = C::InitialSize;
+         TableType* tableBeg = self.template GetHashTableInner<SID>();
+
+         // One or multiple cascades are filled to the brim, so         
+         // start with a cascade that is guaranteed to not be full      
+         // yet, and then search in both smaller and larger ones.       
+         while (occupied > reserved) {
+            tableBeg += reserved;
+            reserved += reserved * C::GrowthFactor;
+         }
+
+         size_t mask = ::std::bit_floor(reserved) - 1u;
+         while(reserved == self.TableEmplaceInner(hash.value & mask, tableBeg, reserved, LglsFwd(item))) {
+            TODO();
+         }
+      }
+
+      /// Table insertion function for e specific cascade level               
       ///   @param start the starting index                                   
       ///   @param item item to insert                                        
       ///   @attention works in all dimensions simultaneously!                
@@ -262,11 +316,11 @@ namespace Langulus::Anyness::Component
       ///      relevant dimensions                                            
       ///   @return the offset at which pair was inserted                     
       template<Cid SID = ID, CT::Intent H> requires Relevant<SID>
-      size_t TableEmplace(this auto& self, size_t const start, H&& item) {
+      size_t TableEmplaceInner(this auto& self, size_t start, H&& item) {
          // Get the starting index based on the key hash                
          const auto tableBeg = self.template GetHashTableInner<SID>();
          auto table = tableBeg + start;
-         auto handle = self.GetHandle().ForceMutable();// + start;
+         auto handle = self.GetHandle().ForceMutable();
 
          if (*table) {
             // Container is not empty and swapping will occur           

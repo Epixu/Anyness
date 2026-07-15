@@ -71,7 +71,7 @@
 
 namespace doctest
 {
-   template<>
+   /*template<>
    struct StringMaker<Many> {
       static String convert(Many const& value) {
          return toString(static_cast<::std::string>(
@@ -87,7 +87,7 @@ namespace doctest
             NameOf<TMany<T>>() + "(" + Convert<Text>(value) + ")"
          ));
       }
-   };
+   };*/
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>

@@ -72,7 +72,7 @@
 
 namespace doctest
 {
-   template<Anyness::StateValue SORT>
+   /*template<Anyness::StateValue SORT>
    struct StringMaker<Anyness::Inner::Map<SORT>> {
       static String convert(Anyness::Inner::Map<SORT> const& value) {
          return toString(static_cast<::std::string>(
@@ -88,7 +88,7 @@ namespace doctest
             NameOf<TMap<K, V, SORT>>() + "(" + Convert<Text>(value) + ")"
          ));
       }
-   };
+   };*/
 }
 
 

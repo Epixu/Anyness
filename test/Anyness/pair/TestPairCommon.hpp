@@ -73,7 +73,7 @@
 namespace doctest
 {
    /// MARK: {doctest}                                                        
-   template<>
+   /*template<>
    struct StringMaker<Anyness::Pair> {
       static String convert(Anyness::Pair const& value) {
          return toString(static_cast<::std::string>(
@@ -89,7 +89,7 @@ namespace doctest
             NameOf<Anyness::TPair<K, V>>() + "(" + Convert<Text>(value) + ")"
          ));
       }
-   };
+   };*/
 }
 
 /// MARK: TestType                                                            

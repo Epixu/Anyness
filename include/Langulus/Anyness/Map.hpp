@@ -172,7 +172,7 @@ namespace Langulus::Anyness::Inner
          using V = Decvq<Deref<TypeOf<Deint<P>, 1>>>;
          LglsAssumeDev(this->template IsSame<K, 0>(), "Type mismatch");
          LglsAssumeDev(this->template IsSame<V, 1>(), "Type mismatch");
-         return TPair<K, V> {Copy {LglsFwd(pair)}};
+         return TPair<K, V> {Copy {LglsFwd(pair)}}; //TODO Anyness::Piecewise, ?
       }
 
       /// Clear the map and assign a single pair                              

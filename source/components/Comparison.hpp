@@ -592,12 +592,12 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         if constexpr (not CT::Contiguous<C>) {
+         /*if constexpr (not CT::Contiguous<C>) {
             // When iterating hash tables, we use the cookie to move    
             // to the appropriate table entry                           
             LglsAssumeUserWarn(not cookie, "Cookie argument will be overwritten");
             cookie = self.GetOffset(item);
-         }
+         }*/
          
          return self.template FindInner<REVERSE, SID>(item, cookie);
       }
@@ -636,12 +636,12 @@ namespace Langulus::Anyness::Component
             })) return {};
          }
 
-         if constexpr (not CT::Contiguous<C>) {
+         /*if constexpr (not CT::Contiguous<C>) {
             // When iterating hash tables, we use the cookie to move    
             // to the appropriate table entry                           
             LglsAssumeUserWarn(not cookie, "Cookie argument will be overwritten");
             cookie = self.GetOffset(item);
-         }
+         }*/
 
          // Find the first relevant dimension                           
          auto first_rhs = item.GetHandle();

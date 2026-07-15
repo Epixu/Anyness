@@ -10,6 +10,7 @@
 #include "../../TestTypes/ScopedElement.hpp"
 #include "../../TestTypes/ReferencedType.hpp"
 #include "../../TestTypes/CommonTypes.hpp"
+#include "Langulus/CT/Convertible.hpp"
 #include "Langulus/Logger.hpp"
 #include "Langulus/LoggerStateless.hpp"
 #include "source/Component.hpp"
@@ -211,8 +212,17 @@ void Common_GapTest() {
 namespace doctest
 {
    /// MARK: {doctest}                                                        
-   /// doctest stringifiers for Any and TAny                                  
-   template<>
+   /// doctest stringifiers for any container serializable to text            
+   template<Langulus::CT::Container T> requires Langulus::CT::Convertible<T, Langulus::Anyness::Text>
+   struct StringMaker<T> {
+      static String convert(T const& value) {
+         return toString(static_cast<::std::string>(
+            NameOf<T>() + "(" + ::Langulus::Convert<Langulus::Anyness::Text>(value) + ")"
+         ));
+      }
+   };
+
+   /*template<>
    struct StringMaker<Any> {
       static String convert(Any const& value) {
          return toString(static_cast<::std::string>(
@@ -228,7 +238,7 @@ namespace doctest
             NameOf<TAny<T>>() + "(" + Convert<Text>(value) + ")"
          ));
       }
-   };
+   };*/
 }
 
 /// MARK: TestType                                                            

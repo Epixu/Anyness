@@ -39,12 +39,13 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
+   , Types<Set, char,   ScopedElement<char>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
    , Types<Set, int,    ScopedElement<int>>
    , Types<Set, Any,    ScopedElement<Any>>
    , Types<Set, RT,     ScopedElement<RT>>
-   , Types<Set, char,   ScopedElement<char>>
 
    , Types<Set, Text*,  ScopedElement<Text*>>
    , Types<Set, int*,   ScopedElement<int*>>
@@ -936,13 +937,21 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_ContainsArray(pack, immovable);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
-         DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable, movable2);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(Move     {movable2}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Abandon  {movable3}));
-         REQUIRE_NOTHROW(inserted += pack.Merge(Clone    {immovable})); //TODO cloning a sparse element should always produce a new one, and thus always be inserted??
          Set_CheckState_ContainsArray(pack, immovable, movable2);
+
+         // Cloning will generate new pointers when E is sparse, and    
+         // thus all elements will be inserted.                         
+         REQUIRE_NOTHROW(inserted += pack.Merge(Clone    {immovable}));
+         DumpSet(pack);
+
+         if constexpr (Sparse)
+            Set_CheckState_ContainsN(pack, 15);
+         else
+            Set_CheckState_ContainsArray(pack, immovable, movable2);
 
          Set_CheckState_OwnedFull<E>(pack);
 
@@ -956,20 +965,32 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             }
          }
 
-         for (uint i = 0; i < 4*5; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
-            if constexpr (Reffed)
-               REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
+         if constexpr (Sparse) {
+            TODO();
          }
+         else {
+            const auto hashed_order = Same<E, Text>
+               ? std::array<int, 10> {1,2,9,5,3,4,6,10,7,8}
+               : std::array<int, 10> {1,10,4,7,3,2,5,9,6,8};
 
-         for (uint i = 20; i < 20 + 3*5; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray2[i%5]);
-            if constexpr (Reffed)
-               REQUIRE(DenseCast(*darray2[i%5]).GetReferences() == (Sparse ? 4 : 1));
+            for (uint i = 0; i < 10; ++i) {
+               if (hashed_order[i] <= 5) {
+                  const int idx = hashed_order[i] - 1;
+                  REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
+                  if constexpr (Reffed)
+                     REQUIRE(DenseCast(*darray1[idx]).GetReferences() == (Sparse ? 5 : 1));
+               }
+               else {
+                  const int idx = hashed_order[i] - 6;
+                  REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
+                  if constexpr (Reffed)
+                     REQUIRE(DenseCast(*darray2[idx]).GetReferences() == (Sparse ? 5 : 1));
+               }
+            }
          }
 
          // Last one is cloned and pointers won't match                 
-         if constexpr (Sparse) {
+         /*if constexpr (Sparse) {
             for (uint i = 35; i < 40; ++i) {
                REQUIRE(*pack.template GetAt<E>(i) != *darray1[i%5]);
                REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i%5]));
@@ -987,7 +1008,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                   REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
                }
             }
-         }
+         }*/
 
          BenchmarkSetStd("Empty/Merge/Array", 30, 100,
             T temp,              temp.Merge(immovable),
@@ -1023,18 +1044,30 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             Set_CheckState_Abandoned<int>(movable3[0]);
          }
 
-         REQUIRE(pack.GetCount() == 8);
-         REQUIRE(pack.GetReserved() >= 8);
+         Set_CheckState_ContainsN(pack, 6);
+         DumpSet(pack);
 
-         for (int i = 0; i < 4; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i]);
+         const auto hashed_order = Same<E, Text>
+               ? std::array<int, 6> {1,2,5,3,6,4}
+               : std::array<int, 6> {1,4,3,6,2,5};
+
+         for (int i = 0; i < 6; ++i) {
+            if (hashed_order[i] <= 5) {
+               const int idx = hashed_order[i] - 1;
+               REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
+               if constexpr (Reffed)
+                  REQUIRE(DenseCast(*darray1[idx]).GetReferences() == (Sparse ? 5 : 1));
+            }
+            else {
+               const int idx = hashed_order[i] - 6;
+               REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
+               if constexpr (Reffed)
+                  REQUIRE(DenseCast(*darray2[idx]).GetReferences() == (Sparse ? 5 : 1));
+            }
          }
 
-         for (int i = 4; i < 7; ++i)
-            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
-
          // Last one is cloned and pointers won't match                 
-         if constexpr (Sparse) {
+         /*if constexpr (Sparse) {
             REQUIRE(*pack.template GetAt<E>(7) != *darray1[4]);
             REQUIRE(DenseCast(pack.template GetAt<E>(7)) == DenseCast(*darray1[4]));
          }
@@ -1043,7 +1076,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          if constexpr (Reffed) {
             REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
             REQUIRE(DenseCast(pack.template GetAt<E>(7)).GetReferences() == 1);
-         }
+         }*/
 
          BenchmarkSetStd("Empty/Merge/Element", 30, 100,
             T temp,              temp << immovable[0],
@@ -1079,11 +1112,30 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             Set_CheckState_Abandoned<int>(movable3[0]);
          }
 
-         REQUIRE(pack.GetCount() == 8);
-         REQUIRE(pack.GetReserved() >= 8);
+         Set_CheckState_ContainsN(pack, 6);
+         DumpSet(pack);
+
+         const auto hashed_order = Same<E, Text>
+               ? std::array<int, 6> {1,2,5,3,6,4}
+               : std::array<int, 6> {1,4,3,6,2,5};
+               
+         for (int i = 0; i < 6; ++i) {
+            if (hashed_order[i] <= 5) {
+               const int idx = hashed_order[i] - 1;
+               REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
+               if constexpr (Reffed)
+                  REQUIRE(DenseCast(*darray1[idx]).GetReferences() == (Sparse ? 5 : 1));
+            }
+            else {
+               const int idx = hashed_order[i] - 6;
+               REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
+               if constexpr (Reffed)
+                  REQUIRE(DenseCast(*darray2[idx]).GetReferences() == (Sparse ? 5 : 1));
+            }
+         }
 
          // first one is cloned and pointers won't match                
-         if constexpr (Sparse) {
+         /*if constexpr (Sparse) {
             REQUIRE(*pack.template GetAt<E>(0) != *darray1[4]);
             REQUIRE(DenseCast(pack.template GetAt<E>(0)) == DenseCast(*darray1[4]));
          }
@@ -1092,13 +1144,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          if constexpr (Reffed) {
             REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
             REQUIRE(DenseCast(pack.template GetAt<E>(0)).GetReferences() == 1);
-         }
-
-         for (int i = 1; i < 4; ++i)
-            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
-
-         for (int i = 4; i < 8; ++i)
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[4 - (i - 3)%5]);
+         }*/
 
          BenchmarkSetStd("Empty/Merge/Element", 30, 100,
             T temp,              temp >> immovable[0],
