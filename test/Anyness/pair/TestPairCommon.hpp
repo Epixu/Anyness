@@ -70,27 +70,6 @@
    #define BenchmarkPairStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
 #endif
 
-namespace doctest
-{
-   /// MARK: {doctest}                                                        
-   /*template<>
-   struct StringMaker<Anyness::Pair> {
-      static String convert(Anyness::Pair const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<Anyness::Pair>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };
-
-   template<CT::NotVoid K, CT::NotVoid V>
-   struct StringMaker<Anyness::TPair<K, V>> {
-      static String convert(Anyness::TPair<K, V> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<Anyness::TPair<K, V>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };*/
-}
 
 /// MARK: TestType                                                            
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>

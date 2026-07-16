@@ -71,26 +71,6 @@
    #define BenchmarkSetStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
 #endif
 
-namespace doctest
-{
-   /*template<Anyness::StateValue SORT>
-   struct StringMaker<Anyness::Inner::Set<SORT>> {
-      static String convert(Anyness::Inner::Set<SORT> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<Anyness::Inner::Set<SORT>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };
-
-   template<CT::NotVoid T, Anyness::StateValue SORT>
-   struct StringMaker<TSet<T, SORT>> {
-      static String convert(TSet<T, SORT> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<TSet<T, SORT>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };*/
-}
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Set_Helper_TestType(const C& set) {
@@ -305,8 +285,10 @@ void DumpSet(const T& set) {
             Logger::Line("");
          else
             Logger::Line("^-");
+
          for(int i = 2; i < *table; ++i)
             Logger::Append("--");
+
          Logger::Append("[", counter, "] ", handle);
       }
       else Logger::Line("[", counter, "] -");

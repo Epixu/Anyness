@@ -36,8 +36,8 @@ namespace Langulus::CT
       template<class T>
       consteval auto GetMorphismsTo() {
          static_assert(not Convoluted<T>, "Strip qualifiers first");
-         static_assert(not Reference<T>, "Strip references first");
-         static_assert(not Sheddable<T>, "Strip sheddables first");
+         static_assert(not Reference<T>,  "Strip references first");
+         static_assert(not Sheddable<T>,  "Strip sheddables first");
 
          if constexpr (CT::Complete<CTTI::MapsTo<T>>) {
             // Checked externally, T doesn't have to be complete        
@@ -62,8 +62,8 @@ namespace Langulus::CT
       template<class T>
       consteval auto GetMorphismsFrom() {
          static_assert(not Convoluted<T>, "Strip qualifiers first");
-         static_assert(not Reference<T>, "Strip references first");
-         static_assert(not Sheddable<T>, "Strip sheddables first");
+         static_assert(not Reference<T>,  "Strip references first");
+         static_assert(not Sheddable<T>,  "Strip sheddables first");
 
          if constexpr (CT::Complete<CTTI::MapsFrom<T>>) {
             // Checked externally, T doesn't have to be complete        
@@ -141,7 +141,7 @@ namespace Langulus
    ///      lower level conversion routine. It's the other way around:        
    ///      serialization uses this one as a fallback.                        
    template<class TO, class FROM>
-   constexpr auto Convert(FROM& from) -> TO {
+   constexpr auto Convert(FROM const& from) -> TO {
       static_assert(CT::NotReference<TO, FROM>, "Strip references first");
       static_assert(CT::NotSheddable<TO, FROM>, "Strip sheddables first");
       using DFROM = DecvqAll<FROM>;

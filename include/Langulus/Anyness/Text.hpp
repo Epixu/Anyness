@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Handle.hpp"
+#include "Langulus/Typenav.hpp"
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/IndexedLinear.hpp>
@@ -625,19 +626,21 @@ namespace Langulus::CT
 
 namespace Langulus::CTTI
 {
-   /// A rule for serializing any deep container.                             
+   /// A rule for serializing any deep container, regardless of sparsity.     
    /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
    /// as well as any templated equivalents. It basically places scopes,      
    /// separators and state decorators, depending on the kind of container.   
    template<CT::Deep C>
    struct SerializationRule<Anyness::Text, C> {
-      static_assert(CT::Decayed<C>, "Strip all decorations first");
+      static_assert(Exact<DecvqAll<C>, C>,
+         "Strip all decorations on all indirections first");
+
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
       using Count = Anyness::Text::CountType;
       
-      static void Serialize(C const&, Anyness::Text&, Context*) requires CT::ContainsMany<C>;
-      static void Serialize(C const&, Anyness::Text&, Context*) requires CT::ContainsOne<C>;
+      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*) requires CT::ContainsMany<Decay<C>>;
+      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*) requires CT::ContainsOne<Decay<C>>;
    };
 
    /// Rule for serializing Code to Text. Wraps it in {} symbols.             
@@ -708,6 +711,22 @@ namespace Langulus::CTTI
       static constexpr auto Convert(T const& from) -> Anyness::Text {
          return Anyness::Text::FromNumber(from);
       }
+   };
+
+   /// Convert shared or standard pointer -> Text                             
+   template<CT::Sparse T>
+   struct Converter<T, Anyness::Text> {
+      static_assert(Exact<DecvqAll<T>, T>,
+         "Strip all decorations on all indirections first");
+
+      static constexpr auto Convert(ConstAll<T&> from) -> Anyness::Text {
+         return NameOf<T>() + "(" + Anyness::Text::Hex(from) + ")";
+      }
+   };
+
+   template<CT::Sparse T>
+   struct MapsFrom<T> {
+      using To = Anyness::Text;
    };
 
    /// Convert DMeta -> Text                                                  

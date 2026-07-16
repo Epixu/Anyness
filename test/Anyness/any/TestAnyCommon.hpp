@@ -209,10 +209,12 @@ void Common_GapTest() {
    }
 }
 
+
 namespace doctest
 {
    /// MARK: {doctest}                                                        
-   /// doctest stringifiers for any container serializable to text            
+   /// doctest stringifiers for _any_ container serializable to text.         
+   /// This is used for all containers, inclusing sets, maps, pairs, handles..
    template<Langulus::CT::Container T> requires Langulus::CT::Convertible<T, Langulus::Anyness::Text>
    struct StringMaker<T> {
       static String convert(T const& value) {
@@ -221,25 +223,8 @@ namespace doctest
          ));
       }
    };
-
-   /*template<>
-   struct StringMaker<Any> {
-      static String convert(Any const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<Any>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };
-
-   template<class T>
-   struct StringMaker<TAny<T>> {
-      static String convert(TAny<T> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<TAny<T>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };*/
 }
+
 
 /// MARK: TestType                                                            
 /// Tests if a container is of a particular type                              

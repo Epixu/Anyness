@@ -39,6 +39,8 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
+   , Types<TSet<Text>,   Text,   ScopedElement<Text>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
    , Types<Set, int,    ScopedElement<int>>
@@ -58,7 +60,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
    , Types<Set, RT**,   ScopedElement<RT**>>
    , Types<Set, char**, ScopedElement<char**>>
 
-   , Types<TSet<Text>,   Text,   ScopedElement<Text>>
    , Types<TSet<int>,    int,    ScopedElement<int>>
    , Types<TSet<Many>,   Many,   ScopedElement<Many>>
    , Types<TSet<RT>,     RT,     ScopedElement<RT>>
@@ -1033,6 +1034,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          ScopedE e1 {1};
          
          auto contains_full = [&](auto& a) {
+            DumpSet(a);
             REQUIRE      (a.Contains(*originalElement));
             REQUIRE_FALSE(a.Contains(*e1));
          };

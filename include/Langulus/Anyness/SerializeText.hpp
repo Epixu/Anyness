@@ -29,9 +29,11 @@ namespace Langulus::CTTI
    /// separators and state decorators, depending on the kind of container.   
    template<CT::Deep C>
    void SerializationRule<Anyness::Text, C>::Serialize(
-      C const& self, Anyness::Text& out, Context* context
-   ) requires CT::ContainsMany<C> {
-      static_assert(CT::NotHandle<C>);
+      ConstAll<C&> may_be_sparse, Anyness::Text& out, Context* context
+   ) requires CT::ContainsMany<Decay<C>> {
+      using DC = Decay<C>;
+      static_assert(CT::NotHandle<DC>);
+      DC const& self = DenseCast(may_be_sparse);
       S::BeginScope(self, out, context);
 
       size_t counter = 0;
@@ -60,15 +62,18 @@ namespace Langulus::CTTI
    /// two dimensions.                                                        
    template<CT::Deep C>
    void SerializationRule<Anyness::Text, C>::Serialize(
-      C const& self, Anyness::Text& out, Context* context
-   ) requires CT::ContainsOne<C> {
+      ConstAll<C&> may_be_sparse, Anyness::Text& out, Context* context
+   ) requires CT::ContainsOne<Decay<C>> {
+      using DC = Decay<C>;
+      DC const& self = DenseCast(may_be_sparse);
+
       // Iterate all dimensions                                         
       bool first = true;
-      C::Dimensions::ForEach([&]<uint ID> {
+      DC::Dimensions::ForEach([&]<uint ID> {
          if (first) first = false;
          else out += ": ";                // Dimension separator        
 
-         if constexpr (CT::TypeErased<C>) {
+         if constexpr (CT::TypeErased<DC>) {
             //                                                          
             // Serialize a type-erased container                        
             const auto T = self.template GetType<ID>();
@@ -100,7 +105,7 @@ namespace Langulus::CTTI
          else {
             //                                                          
             // Serialize a statically-typed container                   
-            using T = Decay<TypeOf<C, ID>>;
+            using T = Decay<TypeOf<DC, ID>>;
             auto* item = self.template Get<T, ID>();
             try {
                Langulus::Serialize(*item, out, context);
@@ -426,7 +431,6 @@ namespace Langulus::CTTI
 namespace fmt
 {
    /// MARK: {fmt}                                                            
-   ///                                                                        
    /// Extend FMT to be capable of logging any Anyness container that is      
    /// convertible to Anyness::Text.                                          
    template<::Langulus::CT::Container T> requires ::Langulus::CT::Convertible<T, ::Langulus::Anyness::Text>

@@ -15,6 +15,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.IndexedCommonHashed<ID, HASH, SHARED...>
+
    ///                                                                        
    /// Provides a common hashed-table based access & insertion interface.     
    ///   @tparam ID the provider we're indexing                               
@@ -42,22 +46,24 @@ namespace Langulus::Anyness::Component
       LglsComIndexedCommon(friend);
       LglsComMerging(friend);
 
+      /// MARK: BrowseTable                                                   
       /// Browse table, converting contiguous index into table index.         
       ///                                                                     
       /// Table is indexed the following way:                                 
       /// 0-8:  [ ][ ][ ][ ][ ][ ][ ][ ]                                      
       /// 9-24: [ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]              
       /// 25-56:[ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]...  
+      /// etc..:[ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]...  
       ///                                                                     
       ///   It's a so called cascading table structure, designed this way     
       /// to minimize movement and avoid rehashing when table is resized.     
       ///   When an element is sought in this cascading table structure, it is
-      /// sought first in the biggest (last) table, and if not found, the     
-      /// previous (smaller) tables are searched using the truncated hash.    
+      /// sought first in the smallest (first) table, and if not found, the   
+      /// next (bigger) tables are searched using the appropriate hash part.  
       ///   When inserted, elements are inserted to the cascade level that is 
       /// guaranteed to not be fully occupied yet, and then other attempts    
       /// are made to the rest of the cascades. The map strives to fill the   
-      /// lower cascades first. Some fragmentation might emerge when items    
+      /// lower tables first. Some fragmentation might occur when items       
       /// are removed, but this shouldn't cause any harm. Worst case is, the  
       /// map would perform as bad as a conventional one. :)                  
       ///   Some ideas were extracted from here:                              
@@ -87,6 +93,7 @@ namespace Langulus::Anyness::Component
          return 0;
       }
 
+      /// MARK: SimplifyIndex                                                 
       /// Convert an index to an offset.                                      
       /// Special indices will be contextualized.                             
       ///   @param index the index to simplify                                
@@ -107,11 +114,11 @@ namespace Langulus::Anyness::Component
          else if constexpr (::std::same_as<INDEX, Index::Inner::Mode>)
             static_assert(false, "Index::Mode can't be used here");
          else if constexpr (::std::same_as<INDEX, Index::Inner::Front>)
-            return self.BrowseTable(0);
+            return ThisCom::BrowseTable(0);
          else if constexpr (::std::same_as<INDEX, Index::Inner::Middle>)
-            return self.BrowseTable(self.GetCount() / 2);
+            return ThisCom::BrowseTable(self.GetCount() / 2);
          else if constexpr (::std::same_as<INDEX, Index::Inner::Back>)
-            return self.BrowseTable(self.GetCount());
+            return ThisCom::BrowseTable(self.GetCount());
          else if constexpr (::std::same_as<INDEX, Index::Inner::Biggest>)
             return self.GetIndexLargest();
          else if constexpr (::std::same_as<INDEX, Index::Inner::Smallest>)
@@ -119,15 +126,15 @@ namespace Langulus::Anyness::Component
          else if constexpr (::std::same_as<INDEX, Index::Inner::Random>)
             return self.GetIndexRandom();
          else if constexpr (::std::same_as<INDEX, Index::Inner::First>)
-            return self.BrowseTable(0);
+            return ThisCom::BrowseTable(0);
          else if constexpr (::std::same_as<INDEX, Index::Inner::Last>)
-            return self.BrowseTable(self.GetCount() - 1);
+            return ThisCom::BrowseTable(self.GetCount() - 1);
          else if constexpr (requires { index.index; }) {
             const auto c = self.GetCount();
             // If index is negative, wrap it around (if in range)       
             if (index.index < 0)
-               return self.BrowseTable(c + index.index >= 0 ? c + index.index : CountMax<C>);
-            return self.BrowseTable(index.index >= c ? CountMax<C> : index.index);
+               return ThisCom::BrowseTable(c + index.index >= 0 ? c + index.index : CountMax<C>);
+            return ThisCom::BrowseTable(index.index >= c ? CountMax<C> : index.index);
 
          }
          else if constexpr (CT::Integer<INDEX>) {
@@ -139,7 +146,7 @@ namespace Langulus::Anyness::Component
                   "use Index::At for reverse indices instead"
                );
             }
-            return self.BrowseTable(index);
+            return ThisCom::BrowseTable(index);
          }
          else static_assert(false, "Unsupported index type");
       }
@@ -211,6 +218,7 @@ namespace Langulus::Anyness::Component
          self.ShiftEntries();
       }*/
    
+      /// MARK: ShiftEntries                                                  
       /// Shift elements left whereever possible                              
       ///   @attention works in all dimensions simultaneously!                
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
@@ -262,6 +270,7 @@ namespace Langulus::Anyness::Component
          } while (moves_performed);
       }
 
+      /// MARK: TableEmplace                                                  
       /// Table insertion function - picks a strategy of insertion and goes   
       /// through all cascading tables until a free spot is found.            
       ///   @param item item to insert                                        
@@ -292,81 +301,74 @@ namespace Langulus::Anyness::Component
          size_t reserved = C::InitialSize;
          TableType* tableBeg = self.template GetHashTableInner<SID>();
 
-         // One or multiple cascades are filled to the brim, so         
-         // start with a cascade that is guaranteed to not be full      
+         // One or multiple tables are filled to the brim, so           
+         // start with a table that is guaranteed to not be full        
          // yet, and then search in both smaller and larger ones.       
          while (occupied > reserved) {
             tableBeg += reserved;
             reserved += reserved * C::GrowthFactor;
          }
 
+         // We try lazily inserting first, avoiding moving any elements 
+         const size_t max_reserved = self.GetReserved();
          size_t mask = ::std::bit_floor(reserved) - 1u;
-         while(reserved == self.TableEmplaceInner(hash.value & mask, tableBeg, reserved, LglsFwd(item))) {
-            TODO();
+         auto inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask, tableBeg, reserved, LglsFwd(item));
+         if (inserted_at != reserved)
+            return (tableBeg + inserted_at) - self.template GetHashTableInner<SID>();
+      
+         // First attempt failed, try other tables                      
+         auto reserved_loop = reserved;
+         auto tableBeg_loop = tableBeg;
+         auto mask_loop = mask;
+         while (reserved_loop < max_reserved) {
+            // We can go right first (most likely to be empty)          
+            tableBeg_loop += reserved_loop;
+            reserved_loop += reserved_loop * C::GrowthFactor;
+            mask_loop <<= 1u; mask_loop += 1u;
+            inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask_loop, tableBeg_loop, reserved_loop, LglsFwd(item));
+            if (inserted_at != reserved_loop)
+               return (tableBeg_loop + inserted_at) - self.template GetHashTableInner<SID>();
          }
+
+         reserved_loop = reserved;
+         tableBeg_loop = tableBeg;
+         mask_loop = mask;
+         while (reserved_loop > C::InitialSize) {
+            // We can go left                                           
+            reserved_loop /= C::GrowthFactor + 1u;
+            tableBeg_loop -= reserved_loop;
+            mask_loop >>= 1u;
+            inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask_loop, tableBeg_loop, reserved_loop, LglsFwd(item));
+            if (inserted_at != reserved_loop)
+               return (tableBeg_loop + inserted_at) - self.template GetHashTableInner<SID>();
+         }
+
+         // If this is reached, we need to be more insistent            
+         TODO();
+         return inserted_at;
       }
 
-      /// Table insertion function for e specific cascade level               
-      ///   @param start the starting index                                   
-      ///   @param item item to insert                                        
+      /// MARK: TableEmplaceLazy                                              
+      /// Table insertion function for e specific cascade level.              
+      /// Doesn't move anything around, as it only seeks an empty spot that   
+      /// can be easily filled.                                               
       ///   @attention works in all dimensions simultaneously!                
-      ///   @attention assumes that reserved count is the same across all     
-      ///      relevant dimensions                                            
-      ///   @attention assumes that the same hash table is used across all    
-      ///      relevant dimensions                                            
-      ///   @return the offset at which pair was inserted                     
+      ///   @return the offset at which item was inserted, relative to the    
+      ///      current tableBeg. Returns 'reserved' if unable to insert here  
       template<Cid SID = ID, CT::Intent H> requires Relevant<SID>
-      size_t TableEmplaceInner(this auto& self, size_t start, H&& item) {
+      size_t TableEmplaceLazy(
+         this auto& self,
+         size_t const start,
+         TableType* const tableBeg,
+         const size_t reserved,
+         H&& item
+      ) {
          // Get the starting index based on the key hash                
-         const auto tableBeg = self.template GetHashTableInner<SID>();
          auto table = tableBeg + start;
-         auto handle = self.GetHandle().ForceMutable();
-
-         if (*table) {
-            // Container is not empty and swapping will occur           
-            const auto reserved = self.template GetReserved<SID>();
-            const auto tableEnd = tableBeg + reserved;
-            auto swapper = self.CreateSwapper(LglsFwd(item));
-            auto swapper_handle = swapper.GetHandle();
-            TableType attempts = 1;
-            auto insertedAt = reserved;
-            while (*table) {
-               const auto index = table - tableBeg;
-               if (attempts > *table) {
-                  // We're inserting closer to bucket, so swap          
-                  auto h = handle + index;
-                  Id::ForEach([&h,&swapper_handle]<Cid D>{
-                     h.template SwapInner<D>(swapper_handle);
-                  });
-
-                  ::std::swap(attempts, *table);
-                  if (insertedAt == reserved)
-                     insertedAt = index;
-               }
-
-               ++attempts;
-
-               // Wrap around and start from the beginning if we have to
-               if (table < tableEnd - 1) ++table;
-               else table = tableBeg;
-            }
-
-            // If reached, then empty slot found, so put the value there
-            const auto index = table - tableBeg;
-            handle += index;
-            Id::ForEach([&handle,&swapper_handle]<Cid D>{
-               handle.template EmplaceWithIntent<D>(Abandon(swapper_handle));
-            });
-
-            if (insertedAt == reserved)
-               insertedAt = index;
-
-            *table = attempts;
-            return insertedAt;
-         }
-         else {
-            // No swapping will happen                                  
-            handle += start;
+         if (not *table) {
+            // Optimal path - the first bucket spot is already empty    
+            auto absolute_idx = table - self.template GetHashTableInner<SID>();
+            auto handle = self.GetHandle().ForceMutable() + absolute_idx;
             Id::ForEach([&handle,&item]<Cid D>{
                handle.template EmplaceWithIntent<D>(LglsFwd(item));
             });
@@ -374,6 +376,232 @@ namespace Langulus::Anyness::Component
             *table = 1;
             return start;
          }
+      
+         // Container is not empty and we need to browse for empty spot 
+         const auto tableEnd = tableBeg + reserved - 1;
+         TableType attempts = 1;
+         while (*table) {
+            if (attempts > *table) {
+               // Another chain detected, just abort. This is the       
+               // lazy table emplacement, and there will be other       
+               // attempts after it.                                    
+               return reserved;
+            }
+
+            ++attempts;
+
+            // Wrap around and start from the beginning if we have to   
+            if (table < tableEnd) ++table;
+            else table = tableBeg;
+         }
+
+         // If reached, then empty slot found, so put the value there   
+         auto absolute_idx = table - self.template GetHashTableInner<SID>();
+         auto handle = self.GetHandle().ForceMutable() + absolute_idx;
+         Id::ForEach([&handle,&item]<Cid D>{
+            handle.template EmplaceWithIntent<D>(LglsFwd(item));
+         });
+         *table = attempts;
+         return table - tableBeg;
+      }
+
+      /// MARK: TableEmplaceForce                                             
+      /// Table insertion function for e specific cascade level. It will      
+      /// insert at all cost, moving elements around if it has to.            
+      ///   @attention works in all dimensions simultaneously!                
+      ///   @return the offset at which pair was inserted                     
+      template<Cid SID = ID, CT::Intent H> requires Relevant<SID>
+      size_t TableEmplaceForce(this auto& self, size_t start, TableType* tableBeg, size_t reserved, H&& item) {
+         // Get the starting index based on the key hash                
+         auto table = tableBeg + start;
+         if (not *table) {
+            // No swapping will happen                                  
+            auto absolute_idx = table - self.template GetHashTableInner<SID>();
+            auto handle = self.GetHandle().ForceMutable() + absolute_idx;
+            Id::ForEach([&handle,&item]<Cid D>{
+               handle.template EmplaceWithIntent<D>(LglsFwd(item));
+            });
+            
+            *table = 1;
+            return start;
+         }
+
+         // Container is not empty and swapping will occur              
+         const auto tableEnd = tableBeg + reserved;
+         auto handle = self.GetHandle().ForceMutable()
+                     + (tableBeg - self.template GetHashTableInner<SID>());
+         auto swapper = self.CreateSwapper(LglsFwd(item));
+         auto swapper_handle = swapper.GetHandle();
+         TableType attempts = 1;
+         auto insertedAt = reserved;
+         while (*table) {
+            if (attempts > *table) {
+               // We're inserting closer to bucket, so swap             
+               const auto index = table - tableBeg;
+               auto h = handle + index;
+               Id::ForEach([&h,&swapper_handle]<Cid D>{
+                  h.template SwapInner<D>(swapper_handle);
+               });
+
+               ::std::swap(attempts, *table);
+               if (insertedAt == reserved)
+                  insertedAt = index;
+            }
+
+            ++attempts;
+
+            // Wrap around and start from the beginning if we have to   
+            if (table < tableEnd - 1) ++table;
+            else table = tableBeg;
+         }
+
+         // If reached, then empty slot found, so put the value there   
+         const auto index = table - tableBeg;
+         handle += index;
+         Id::ForEach([&handle,&swapper_handle]<Cid D>{
+            handle.template EmplaceWithIntent<D>(Abandon(swapper_handle));
+         });
+
+         if (insertedAt == reserved)
+            insertedAt = index;
+
+         *table = attempts;
+         return insertedAt;
+      }
+
+      /// MARK: TableSearch                                                   
+      /// Locate element handle inside the cascading hash table               
+      ///   @attention assumes container is not empty                         
+      ///   @attention assumes that container is of the same comparable type  
+      ///   @attention operates on a single dimension at a time               
+      ///   @param item the item to search for                                
+      ///   @return handle of the found item                                  
+      template<Cid SID = ID, class C, CT::NoIntent H> requires Relevant<SID>
+      auto TableSearch(this C const& self, H const& item) assumptious -> DecideHandle<C> {
+         static_assert(not CT::Array<H>);
+
+         // Get the item's hash.                                        
+         // This hash will be truncated and used for bucketing in each  
+         // cascading table.                                            
+         Hash hash;
+         if constexpr (not Shared)
+            hash = HashOf(item);
+         else
+            hash = HashOf(item.GetKeyHandle()); //TODO this presumes the key dimension is the one the hash table is associated with
+
+         // We start at the smallest table                              
+         const size_t max_reserved = self.GetReserved();
+         size_t reserved = C::InitialSize;
+         auto   tableBeg = self.template GetHashTableInner<SID>();
+         size_t mask = ::std::bit_floor(reserved) - 1u;
+
+         // Decide the comparison function for type-erased tables       
+         RTTI::DefinitionData::FCompareEqual comparer = nullptr;
+         if constexpr (CT::Handle<H>) {
+            if constexpr (CT::TypeErased<C> or CT::TypeErased<H>) {
+               const auto type = self.template GetType<SID>();
+               LglsAssumeDev(type.IsSame(item.template GetType<SID>()),
+                  "Type mismatch");
+               comparer = type.GetComparerEqual();
+               LglsAssumeDev(comparer, "Type-erased data not comparable");
+            }
+            else {
+               static_assert(CT::Comparable<TypeOf<C, SID>, TypeOf<H, SID>>,
+                  "Type not comparable");
+            }
+         }
+         else {
+            if constexpr (CT::TypeErased<C>) {
+               const auto type = self.template GetType<SID>();
+               LglsAssumeDev(type.IsSame(MetaDataOf<H>()),
+                  "Type mismatch");
+               comparer = type.GetComparerEqual();
+               LglsAssumeDev(comparer, "Type-erased data not comparable");
+            }
+            else {
+               static_assert(CT::Comparable<TypeOf<C, SID>, H>,
+                  "Type not comparable");
+            }
+         }
+
+         // First attempt                                               
+         auto found = ThisCom::TableSearchInner(hash.value & mask, tableBeg, reserved, item, comparer);
+         if (found)
+            return found;
+      
+         // First attempt failed, try other tables                      
+         while (reserved < max_reserved) {
+            tableBeg += reserved;
+            reserved += reserved * C::GrowthFactor;
+            mask <<= 1u; mask += 1u;
+            found = ThisCom::TableSearchInner(hash.value & mask, tableBeg, reserved, item, comparer);
+            if (found)
+               return found;
+         }
+
+         // Nothing found if reached                                    
+         return {};
+      }
+      
+      /// MARK: TableSearchInner                                              
+      /// Table insertion function for e specific cascade level.              
+      /// Doesn't move anything around, as it only seeks an empty spot that   
+      /// can be easily filled.                                               
+      ///   @attention works in all dimensions simultaneously!                
+      ///   @return the offset at which item was inserted                     
+      template<Cid SID = ID, class C, CT::NoIntent H> requires Relevant<SID>
+      auto TableSearchInner(
+         this C const& self,
+         size_t const start,
+         TableType const* const tableBeg,
+         const size_t reserved,
+         H const& item,
+         [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer
+      ) -> DecideHandle<C> {
+         auto table = tableBeg + start;
+         const auto tableEnd = tableBeg + reserved - 1;
+         TableType attempts = 1;
+         while (*table) {
+            if (attempts > *table) {
+               // Another bucket chain detected, no point in doing      
+               // any more comparisons                                  
+               return {};
+            }
+
+            // Test value                                               
+            auto test = self.GetHandle() + (table - self.template GetHashTableInner<SID>());
+            if constexpr (CT::Handle<H>) {
+               if constexpr (CT::TypeErased<C> or CT::TypeErased<H>) {
+                  if (comparer(test.template GetRaw<SID>(), item.template GetRaw<SID>()))
+                     return test;
+               }
+               else {
+                  if (*test.template GetRaw<SID>() != *item.template GetRaw<SID>())
+                     return test;
+               }
+            }
+            else {
+               if constexpr (CT::TypeErased<C>) {
+                  if (comparer(test.template GetRaw<SID>(), &item))
+                     return test;
+               }
+               else {
+                  if (*test.template GetRaw<SID>() != item)
+                     return test;
+               }
+            }
+            
+            ++attempts;
+
+            // Wrap around and start from the beginning if we have to   
+            if (table < tableEnd) ++table;
+            else table = tableBeg;
+         }
+
+         // If reached, then item wasn't found                          
+         return {};
       }
    };
+
+   #undef ThisCom
 }

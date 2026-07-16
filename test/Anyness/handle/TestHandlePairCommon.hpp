@@ -9,29 +9,6 @@
 #include "TestHandleCommon.hpp"
 
 
-/*namespace doctest
-{
-   /// MARK: {doctest}                                                        
-   /// doctest stringifiers for handles                                       
-   template<>
-   struct StringMaker<Handle> {
-      static String convert(Handle const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<Handle>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };
-
-   template<class T>
-   struct StringMaker<THandle<T>> {
-      static String convert(THandle<T> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<THandle<T>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };
-}*/
-
 /// MARK: TestType                                                            
 /// Tests if a container is of a particular type                              
 template<class E1, class E2, CT::Container C> requires CT::NoIntent<C>

@@ -133,6 +133,88 @@ namespace Langulus::RTTI
          return HashOf<true>(*lhsT);
       };
    }
+   
+   /// Set reflected morphisms                                                
+   /// @attention morphisms assume that source is initialized,                
+   ///    but destination is only allocated and not yet constructed           
+   /// @attention serialization assumes both sides are valid and constructed  
+   ///    pointers. Context is optional.                                      
+   template<class T>
+   void DefinitionData::FillMorphisms() {
+      using MAPTO = MorphismsFrom<T>;
+      if constexpr (not CT::Void<MAPTO>) {
+         MAPTO::ForEach([this]<class TO_RAW>{
+            using TO = CT::ReflectedAs<TO_RAW>;
+
+            auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
+            auto converter_function = [](void* from, void* to) {
+               auto fromT = static_cast<ConstAll<T*>>(from);
+               auto toT   = static_cast<TO*>(to);
+               new (toT) TO {Langulus::Convert<TO>(*fromT)};
+            };
+            
+            if constexpr (CT::Serializer<TO>) {
+               // Destination type can act as a serializer, too         
+               using S = SerializerOf<TO>;
+
+               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
+                  auto fromT = static_cast<ConstAll<T*>>(from);
+                  auto toT   = static_cast<TO*>(to);
+                  auto conT  = static_cast<typename S::Context*>(context);
+                  return Langulus::Serialize(*fromT, *toT, conT);
+               };
+            
+               mCurrentBoundary.mMorphismsTo.emplace(
+                  destination_type,
+                  Morphism {converter_function, serializer_function}
+               );
+            }
+            else {
+               mCurrentBoundary.mMorphismsTo.emplace(
+                  destination_type,
+                  Morphism {converter_function, nullptr}
+               );
+            }
+         });
+      }
+   
+      using MAPFROM = MorphismsTo<T>;
+      if constexpr (not CT::Void<MAPFROM>) {
+         MAPFROM::ForEach([this]<class FROM_RAW>{
+            using FROM = CT::ReflectedAs<FROM_RAW>;
+
+            auto source_type = const_cast<DefinitionData*>(Reflect<FROM>());
+            auto converter_function = [](void* from, void* to) {
+               auto fromT = static_cast<ConstAll<FROM*>>(from);
+               auto toT   = static_cast<T*>(to);
+               new (toT) T {Langulus::Convert<T>(*fromT)};
+            };
+            
+            if constexpr (CT::Serializer<T>) {
+               // Destination type can act as a serializer, too         
+               using S = SerializerOf<T>;
+
+               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
+                  auto fromT = static_cast<ConstAll<FROM*>>(from);
+                  auto toT   = static_cast<T*>(to);
+                  auto conT  = static_cast<typename S::Context*>(context);
+                  return Langulus::Serialize(*fromT, *toT, conT);
+               };
+            
+               mCurrentBoundary.mMorphismsFrom.emplace(
+                  source_type,
+                  Morphism {converter_function, serializer_function}
+               );
+            }
+            else {
+               mCurrentBoundary.mMorphismsFrom.emplace(
+                  source_type,
+                  Morphism {converter_function, nullptr}
+               );
+            }
+         });
+      }
+   }
 
    /// Reflect or return an already reflected data                            
    ///   @attention when making a shared library and reflecting your types    
@@ -515,89 +597,7 @@ namespace Langulus::RTTI
          });
       }
    
-      using MAPTO = MorphismsFrom<T>;
-      if constexpr (not CT::Void<MAPTO>) {
-         // Set reflected morphisms                                     
-         // @attention morphisms assume that source is initialized,     
-         //    but destination is only allocated and not yet constructed
-         MAPTO::ForEach([&definition]<class TO_RAW>{
-            using TO = CT::ReflectedAs<TO_RAW>;
-
-            auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
-            auto converter_function = [](void* from, void* to) {
-               auto fromT = static_cast<T*>(from);
-               auto toT   = static_cast<TO*>(to);
-               new (toT) TO {Langulus::Convert<TO>(*fromT)};
-            };
-            
-            if constexpr (CT::Serializer<TO>) {
-               // Destination type can act as a serializer, too         
-               // @attention serialization assumes both sides are valid 
-               //    and constructed pointers. Context is optional.     
-               using S = SerializerOf<TO>;
-
-               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<T const*>(from);
-                  auto toT   = static_cast<TO*>(to);
-                  auto conT  = static_cast<typename S::Context*>(context);
-                  return Langulus::Serialize(*fromT, *toT, conT);
-               };
-            
-               definition.mCurrentBoundary.mMorphismsTo.emplace(
-                  destination_type,
-                  Morphism {converter_function, serializer_function}
-               );
-            }
-            else {
-               definition.mCurrentBoundary.mMorphismsTo.emplace(
-                  destination_type,
-                  Morphism {converter_function, nullptr}
-               );
-            }
-         });
-      }
-   
-      using MAPFROM = MorphismsTo<T>;
-      if constexpr (not CT::Void<MAPFROM>) {
-         // Set reflected morphisms                                     
-         // @attention morphisms assume that source is initialized,     
-         //    but destination is only allocated and not yet constructed
-         MAPFROM::ForEach([&definition]<class FROM_RAW>{
-            using FROM = CT::ReflectedAs<FROM_RAW>;
-
-            auto source_type = const_cast<DefinitionData*>(Reflect<FROM>());
-            auto converter_function = [](void* from, void* to) {
-               auto fromT = static_cast<FROM*>(from);
-               auto toT   = static_cast<T*>(to);
-               new (toT) T {Langulus::Convert<T>(*fromT)};
-            };
-            
-            if constexpr (CT::Serializer<T>) {
-               // Destination type can act as a serializer, too         
-               // @attention serialization assumes both sides are valid 
-               //    and constructed pointers. Context is optional.     
-               using S = SerializerOf<T>;
-
-               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<FROM const*>(from);
-                  auto toT   = static_cast<T*>(to);
-                  auto conT  = static_cast<typename S::Context*>(context);
-                  return Langulus::Serialize(*fromT, *toT, conT);
-               };
-            
-               definition.mCurrentBoundary.mMorphismsFrom.emplace(
-                  source_type,
-                  Morphism {converter_function, serializer_function}
-               );
-            }
-            else {
-               definition.mCurrentBoundary.mMorphismsFrom.emplace(
-                  source_type,
-                  Morphism {converter_function, nullptr}
-               );
-            }
-         });
-      }
+      definition.FillMorphisms<T>();
 
       using CONSTANTS = NamedValuesOf<T>;
       if constexpr (not CT::Void<CONSTANTS>) {
@@ -1171,12 +1171,14 @@ namespace Langulus::RTTI
             = definition.mOrigin->mCurrentBoundary.mBases;
          definition.mCurrentBoundary.mVerbs
             = definition.mOrigin->mCurrentBoundary.mVerbs;
-         definition.mCurrentBoundary.mMorphismsTo
-            = definition.mOrigin->mCurrentBoundary.mMorphismsTo;
+         //definition.mCurrentBoundary.mMorphismsTo
+         //   = definition.mOrigin->mCurrentBoundary.mMorphismsTo;
          definition.mCurrentBoundary.mMembers
             = definition.mOrigin->mCurrentBoundary.mMembers;
       }
       
+      definition.FillMorphisms<T>();
+
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          LglsVerbose(
             Logger::Cyan, "Data ", definition.mNameOf,

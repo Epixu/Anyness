@@ -133,6 +133,9 @@ namespace Langulus::RTTI
       using FTypeRetriever = DefinitionData const* (*)();
       
    protected:
+      template<class T>
+      void FillMorphisms();
+
       /// Type-erased member variable reflection                              
       struct Member {
          using CTTI_ReflectAs = void;

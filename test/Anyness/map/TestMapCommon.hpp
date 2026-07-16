@@ -70,29 +70,6 @@
    #define BenchmarkMapStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
 #endif
 
-namespace doctest
-{
-   /*template<Anyness::StateValue SORT>
-   struct StringMaker<Anyness::Inner::Map<SORT>> {
-      static String convert(Anyness::Inner::Map<SORT> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<Anyness::Inner::Map<SORT>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };
-
-   template<CT::NotVoid K, CT::NotVoid V, Anyness::StateValue SORT>
-   struct StringMaker<TMap<K, V, SORT>> {
-      static String convert(TMap<K, V, SORT> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<TMap<K, V, SORT>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };*/
-}
-
-
-
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_Helper_TestType(C const& pack) {

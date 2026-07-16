@@ -69,26 +69,6 @@
    #define BenchmarkManyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
 #endif
 
-namespace doctest
-{
-   /*template<>
-   struct StringMaker<Many> {
-      static String convert(Many const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<Many>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };
-
-   template<class T>
-   struct StringMaker<TMany<T>> {
-      static String convert(TMany<T> const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<TMany<T>>() + "(" + Convert<Text>(value) + ")"
-         ));
-      }
-   };*/
-}
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Many_Helper_TestType(const C& many) {

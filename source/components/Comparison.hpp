@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "source/Component.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/Index.hpp>
@@ -599,7 +600,11 @@ namespace Langulus::Anyness::Component
             cookie = self.GetOffset(item);
          }*/
          
-         return self.template FindInner<REVERSE, SID>(item, cookie);
+         if constexpr (CT::IndexedTable<C>) {
+            (void) cookie;
+            return self.template TableSearch<SID>(item);
+         }
+         else return self.template FindInner<REVERSE, SID>(item, cookie);
       }
 
       /// MARK: FindReverse                                                   
@@ -851,12 +856,13 @@ namespace Langulus::Anyness::Component
       /// Find a single element's index inside container (inner)              
       ///   @tparam REVERSE true to perform search in reverse                 
       ///   @attention assumes container is not empty                         
-      ///   @attention that container is of the same comparable type          
+      ///   @attention assumes that container is of the same comparable type  
       ///   @attention operates on a single dimension at a time               
+      ///   @attention works in linearly indexed containers only              
       ///   @param item the item to search for                                
       ///   @param cookie resume search from a given index                    
       ///   @return handle of the found item                                  
-      template<bool REVERSE = false, Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
+      template<bool REVERSE = false, Cid SID = ID, CT::IndexedLinearly C, CT::NoIntent T>
       auto FindInner(this C&& self, T const& item, size_t cookie) assumptious
       -> DecideHandle<C> requires Relevant<SID> {
          LglsAssumeDev(not self.template IsEmpty<SID>(),
@@ -894,7 +900,7 @@ namespace Langulus::Anyness::Component
          DecideHandle<C> result;
          self.template Apply<false>([&](auto&& test) -> bool {
             if constexpr (CT::Supported<decltype(test)>) {
-               if constexpr (not CT::Contiguous<C>) {
+               /*if constexpr (not CT::Contiguous<C>) {
                   const auto idx = test - self.GetHandle();
                   const auto tab = self.GetHashTable();
                   if (tab[idx] <= idx - cookie) {
@@ -910,7 +916,7 @@ namespace Langulus::Anyness::Component
                      // has already taken those spots.                  
                      return true;
                   }
-               }
+               }*/
                
                if constexpr (CT::Handle<T>) {
                   if constexpr (CT::TypeErased<C> or CT::TypeErased<T>) {
