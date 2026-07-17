@@ -316,7 +316,7 @@ public:
    using CTTI_Info      = Yes<"Info about MyType">;
    using CTTI_Files     = Yes<"txt, pdf">;
    using CTTI_Versioned = Version<2, 1>;
-   using CTTI_Deep      = Yes<>;
+   //using CTTI_Deep      = Yes<>;
    using CTTI_Nullable  = Yes<>;
    using CTTI_Pooled    = PooledBySize;
    using CTTI_Concrete  = ImplicitlyReflectedData;

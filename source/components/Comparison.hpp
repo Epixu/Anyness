@@ -650,7 +650,14 @@ namespace Langulus::Anyness::Component
 
          // Find the first relevant dimension                           
          auto first_rhs = item.GetHandle();
-         auto first_lhs = self.template FindInner<REVERSE, RELEVANT::First>(first_rhs, cookie);
+
+         DecideHandle<C> first_lhs;
+         if constexpr (CT::IndexedTable<C>) {
+            (void) cookie;
+            first_lhs = self.template TableSearch<RELEVANT::First>(first_rhs);
+         }
+         else first_lhs = self.template FindInner<REVERSE, RELEVANT::First>(first_rhs, cookie);
+
          if constexpr (RELEVANT::Count == 1)
             return first_lhs;
          else if (first_lhs) {

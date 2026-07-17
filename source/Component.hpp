@@ -259,9 +259,9 @@ namespace Langulus::Anyness
 
       /// Header requests can't be per-element or per-indirection             
       template<class T>
-      concept IsHeaderRequest = IsRequestModifier<T>
+      concept IsHeaderRequest = not IsRequestModifier<T> or (IsRequestModifier<T>
           and not T::AllocatedPerElement
-          and not T::AllocatedPerIndirection;
+          and not T::AllocatedPerIndirection);
 
       /// Checks for either IsLocalFooterRequest or IsGlobalFooterRequest     
       template<class T>
@@ -272,14 +272,14 @@ namespace Langulus::Anyness
       /// transferrable by a single pointer when absorbing containers.        
       template<class T>
       concept IsLocalFooterRequest = IsFooterRequest<T>
-          and R::AllocatedPerDimension;
+          and T::AllocatedPerDimension;
 
       /// Global footers can't be per-dimension and are placed at the literal 
       /// end of the allocated memory, after tha last dimension's data and    
       /// local footer.                                                       
       template<class T>
       concept IsGlobalFooterRequest = IsFooterRequest<T>
-          and not R::AllocatedPerDimension;
+          and not T::AllocatedPerDimension;
 
       /// Helper for propagating modifiers. Undefined after no longer used.   
       #define propagate_modifier(a) \

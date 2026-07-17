@@ -77,8 +77,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const&) = delete;
-      THandlePair& operator = (THandlePair&&) = delete;
+      THandlePair& operator = (THandlePair const&) = default;
+      THandlePair& operator = (THandlePair&&) = default;
 
       Handle GetKey()       const noexcept { return {*this}; }
       Handle GetKeyHandle() const noexcept { return {*this}; }
@@ -165,8 +165,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const&) = delete;
-      THandlePair& operator = (THandlePair&&) = delete;
+      THandlePair& operator = (THandlePair const&) = default;
+      THandlePair& operator = (THandlePair&&) = default;
 
       HandleMut GetKey()       const noexcept { return {*this}; }
       HandleMut GetKeyHandle() const noexcept { return {*this}; }
@@ -250,8 +250,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const&) = delete;
-      THandlePair& operator = (THandlePair&&) = delete;
+      THandlePair& operator = (THandlePair const&) = default;
+      THandlePair& operator = (THandlePair&&) = default;
 
       Handle    GetKey()       const noexcept { return {*this}; }
       Handle    GetKeyHandle() const noexcept { return {*this}; }
@@ -334,8 +334,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const&) = delete;
-      THandlePair& operator = (THandlePair&&) = delete;
+      THandlePair& operator = (THandlePair const&) = default;
+      THandlePair& operator = (THandlePair&&) = default;
 
       decltype(auto) GetKey() const noexcept {
          if constexpr (CT::Constant<K>)
@@ -441,8 +441,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const&) = delete;
-      THandlePair& operator = (THandlePair&&) = delete;
+      THandlePair& operator = (THandlePair const&) = default;
+      THandlePair& operator = (THandlePair&&) = default;
 
       decltype(auto) GetKey() const noexcept {
          if constexpr (CT::Constant<K>)
@@ -550,8 +550,8 @@ namespace Langulus::Anyness
       }
 
       /// Assignment is disabled                                              
-      THandlePair& operator = (THandlePair const&) = delete;
-      THandlePair& operator = (THandlePair&&) = delete;
+      THandlePair& operator = (THandlePair const&) = default;
+      THandlePair& operator = (THandlePair&&) = default;
 
       auto GetKey()       const noexcept -> KeyHandle { return {*this}; }
       auto GetKeyHandle() const noexcept -> KeyHandle { return {*this}; }

@@ -64,7 +64,7 @@ namespace Langulus
 
    /// Serialize                                                              
    template<class FROM, CT::Serializer TO> requires CT::NoIntent<FROM, TO>
-   auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
+   auto Serialize(FROM& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
       const typename DTO::CountType initial = to.GetCount();
@@ -76,8 +76,7 @@ namespace Langulus
          // because the CT::Deep check requires deeply complete types.  
          // That's why we handle pointers separately here using the     
          // appropriate converter.                                      
-         static_assert(CT::Sparse<DFROM>,
-            "If not complete, `FROM` needs to be sparse");
+         static_assert(CT::Sparse<DFROM>, "If not complete, `FROM` needs to be sparse");
          (void) context;
          to += Convert<DTO>(from);
       }

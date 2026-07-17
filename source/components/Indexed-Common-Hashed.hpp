@@ -513,7 +513,14 @@ namespace Langulus::Anyness::Component
                //              original 2nd attempt for the 'swapper'   
                //                                                       
                // Since the 4th attempt for the 'swapper' is empty [0]  
-               // the swapping ceases and we're done moving things.     
+               // the swapping ceases after emplacing the contents of   
+               // the swapper, and we're done moving things around.     
+               //                                                       
+               // The final state looks like:                           
+               // ...[1][2][3][4][3][4]...                              
+               //              ^---->^                                  
+               //              |     |                                  
+               //  new goes here     old after being displaced by new   
                const auto index = table - tableBeg;
                auto h = handle + index;
                Id::ForEach([&h,&swapper_handle]<Cid D>{
@@ -561,10 +568,6 @@ namespace Langulus::Anyness::Component
          // This hash will be truncated and used for bucketing in each  
          // cascading table.                                            
          Hash hash;
-         if constexpr (not Shared)
-            hash = HashOf(item);
-         else
-            hash = HashOf(item.GetKeyHandle()); //TODO this presumes the key dimension is the one the hash table is associated with
 
          // We start at the smallest table                              
          size_t reserved_table = C::InitialSize;
@@ -574,6 +577,11 @@ namespace Langulus::Anyness::Component
          // Decide the comparison function for type-erased tables       
          RTTI::DefinitionData::FCompareEqual comparer = nullptr;
          if constexpr (CT::Handle<H>) {
+            if constexpr (H::Dimensions::Count == 1)
+               hash = HashOf(item);
+            else
+               hash = HashOf(item.GetKeyHandle()); //TODO this presumes the key dimension is the one the hash table is associated with
+
             if constexpr (CT::TypeErased<C> or CT::TypeErased<H>) {
                const auto type = self.template GetType<SID>();
                LglsAssumeDev(type.IsSame(item.template GetType<SID>()),
@@ -587,6 +595,8 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
+            hash = HashOf(item);
+
             if constexpr (CT::TypeErased<C>) {
                const auto type = self.template GetType<SID>();
                LglsAssumeDev(type.IsSame(MetaDataOf<H>()),
