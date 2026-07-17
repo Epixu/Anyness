@@ -273,14 +273,14 @@ namespace Langulus::Anyness
             if (approximate) {
                // We've truncated the number, so prepend a '~' symbol   
                // to signify it's an approximate representation         
-               result.AllocateFresh(c + 1 /*result.RequestHeap(c + 1)*/);
+               result.AllocateFresh(c + 1);
                auto heap = result.GetRawAs<char>();
                *heap = '~';
                memcpy(heap + 1, temp, c);
                result.SetCountInner(c + 1);
             }
             else {
-               result.AllocateFresh(c /*result.RequestHeap(c)*/);
+               result.AllocateFresh(c);
                memcpy(result.GetHeapInner(), temp, c);
                result.SetCountInner(c);
             }
@@ -308,7 +308,7 @@ namespace Langulus::Anyness
       ///   @return the resulting text                                        
       static Text Hex(const auto& from) {
          Text result;
-         result.AllocateFresh(sizeof(from) * 2 /*result.RequestHeap(sizeof(from) * 2)*/);
+         result.AllocateFresh(sizeof(from) * 2);
          auto from_bytes = reinterpret_cast<const std::byte*>(&from);
          auto to_bytes = result.GetRaw();
          for (size_t i = 0; i < sizeof(from); ++i)
@@ -355,8 +355,10 @@ namespace Langulus::Anyness
       }
       
       /// Custom concatenation operator that includes characters              
-      template<CT::Character T>
+      template<CT::Character T> requires CT::NoIntent<T>
       Text& operator += (T&& rhs) {
+         static_assert(Same<T, char>, "Type mismatch");
+
          // Notice we're not checking if empty, but rather if allocated.
          // This is in case we've called Text::Reserve() earlier.       
          if (not this->GetRaw()) {
@@ -364,13 +366,10 @@ namespace Langulus::Anyness
             return *this;
          }
 
-         using CHAR = Decvq<Deref<Deint<T>>>;
-         static_assert(::std::same_as<CHAR, char>, "Type mismatch");
-         decltype(auto) source = DeintCast(LglsFwd(rhs));
-         const auto newCount = this->GetCount() + 1;
-         this->AllocateMore(newCount);
-         *this->GetRawAs<char>() = source;
-         this->SetCountInner(newCount);
+         const auto count = this->GetCount();
+         this->BranchOut(count + 1);
+         this->GetRawAs<char>()[count] = rhs;
+         this->SetCountInner(count + 1);
          this->ResetHash();
          return *this;
       }
@@ -397,7 +396,8 @@ namespace Langulus::Anyness
             const auto count = strnlen(source, ExtentOf<DT>);
             if (not count)
                return *this;
-            this->AllocateMore(currentCount + count);
+
+            this->BranchOut(currentCount + count);
             memcpy(this->GetRawAs<uint8_t>() + currentCount, source, count);
             this->SetCountInner(currentCount + count);
          }
@@ -410,7 +410,8 @@ namespace Langulus::Anyness
             const auto count = strlen(source);
             if (not count)
                return *this;
-            this->AllocateMore(currentCount + count);
+
+            this->BranchOut(currentCount + count);
             memcpy(this->GetRawAs<uint8_t>() + currentCount, source, count);
             this->SetCountInner(currentCount + count);
          }
@@ -421,7 +422,8 @@ namespace Langulus::Anyness
             using CHAR = Deref<Deptr<decltype(source.data())>>;
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
             const auto count = source.size();
-            this->AllocateMore(currentCount + count);
+
+            this->BranchOut(currentCount + count);
             memcpy(this->GetRawAs<uint8_t>() + currentCount, source.data(), count);
             this->SetCountInner(currentCount + count);
          }

@@ -190,10 +190,13 @@ void Set_CheckState_ContainsN(const T& set, size_t n) {
    REQUIRE(set.GetCount() == n);
 
    // Check reserve                                                     
+   size_t total  = T::InitialSize;
    size_t growth = T::InitialSize;
-   while (n > growth)
-      growth += growth * T::GrowthFactor;
-   REQUIRE(set.GetReserved() == growth);
+   while (n > total) {
+      growth *= T::GrowthFactor;
+      total += growth;
+   }
+   REQUIRE(set.GetReserved() == total);
 
    // Check table integrity                                             
    auto start     = set.GetHashTable();
@@ -217,10 +220,13 @@ void Set_CheckState_ContainsArray(const T& set, A const&...array) {
    REQUIRE(set.GetCount() == size);
 
    // Check reserve                                                     
+   size_t total = T::InitialSize;
    size_t growth = T::InitialSize;
-   while (size > growth)
-      growth += growth * T::GrowthFactor;
-   REQUIRE(set.GetReserved() == growth);
+   while (size > total) {
+      growth *= T::GrowthFactor;
+      total += growth;
+   }
+   REQUIRE(set.GetReserved() == total);
 
    // Check if all elements are present                                 
    auto find = []<class H>(H const& e, CT::Array auto const& a) -> size_t {

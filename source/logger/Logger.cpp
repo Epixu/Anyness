@@ -87,7 +87,9 @@ void State::Write(const ::std::string_view& stdString) const noexcept {
    }
 
    try { fmt::print("{}", stdString); }
-   catch (...) { Logger::Append("<logger error>"); }
+   catch (...) {
+      Logger::Append("<logger error>");
+   }
 
    // Always flush                                                      
    fflush(stdout);

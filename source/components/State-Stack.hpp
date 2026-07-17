@@ -141,7 +141,7 @@ namespace Langulus::Anyness::Component
       template<class C>
       constexpr bool IsDisowned(this C const& self) noexcept { //TODO dimensions?
          if constexpr (CT::Handle<C>) {
-            // Handles can't be disown, they have exclusive rights      
+            // Handles can't be disowned, they have exclusive rights    
             return false;
          }
          else if constexpr (CanBeDisowned) {

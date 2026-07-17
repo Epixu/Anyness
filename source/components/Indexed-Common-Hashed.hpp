@@ -298,54 +298,98 @@ namespace Langulus::Anyness::Component
 
          // Pick insertion strategy                                     
          size_t occupied = self.GetCount();
-         size_t reserved = C::InitialSize;
-         TableType* tableBeg = self.template GetHashTableInner<SID>();
+         size_t reserved_table = C::InitialSize;
+         size_t reserved_total = C::InitialSize;
+         const size_t absoluteReserved = self.GetReserved();
+         TableType* const absoluteTableBeg = self.template GetHashTableInner<SID>();
+         TableType* tableBeg = absoluteTableBeg;
 
-         // One or multiple tables are filled to the brim, so           
-         // start with a table that is guaranteed to not be full        
-         // yet, and then search in both smaller and larger ones.       
-         while (occupied > reserved) {
-            tableBeg += reserved;
-            reserved += reserved * C::GrowthFactor;
+         // While one or multiple tables are filled to the brim         
+         // start with a table that is more likely to not be full       
+         // yet, and then search in both directions from there.         
+         while (occupied > reserved_total) {
+            tableBeg += reserved_table;
+            reserved_table *= C::GrowthFactor;
+            reserved_total += reserved_table;
          }
 
+
+         //                                                             
          // We try lazily inserting first, avoiding moving any elements 
-         const size_t max_reserved = self.GetReserved();
-         size_t mask = ::std::bit_floor(reserved) - 1u;
-         auto inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask, tableBeg, reserved, LglsFwd(item));
-         if (inserted_at != reserved)
-            return (tableBeg + inserted_at) - self.template GetHashTableInner<SID>();
+         size_t mask = ::std::bit_floor(reserved_table) - 1u;
+         auto inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask, tableBeg, reserved_table, LglsFwd(item));
+         if (inserted_at != reserved_table)
+            return (tableBeg + inserted_at) - absoluteTableBeg;
       
          // First attempt failed, try other tables                      
-         auto reserved_loop = reserved;
+         auto reserved_table_loop = reserved_table;
+         auto reserved_total_loop = reserved_total;
          auto tableBeg_loop = tableBeg;
          auto mask_loop = mask;
-         while (reserved_loop < max_reserved) {
+         while (reserved_total_loop < absoluteReserved) {
             // We can go right first (most likely to be empty)          
-            tableBeg_loop += reserved_loop;
-            reserved_loop += reserved_loop * C::GrowthFactor;
+            tableBeg_loop += reserved_table_loop;
+            reserved_table_loop *= C::GrowthFactor;
+            reserved_total_loop += reserved_table_loop;
             mask_loop <<= 1u; mask_loop += 1u;
-            inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask_loop, tableBeg_loop, reserved_loop, LglsFwd(item));
-            if (inserted_at != reserved_loop)
-               return (tableBeg_loop + inserted_at) - self.template GetHashTableInner<SID>();
+
+            inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask_loop, tableBeg_loop, reserved_table_loop, LglsFwd(item));
+            if (inserted_at != reserved_table_loop)
+               return (tableBeg_loop + inserted_at) - absoluteTableBeg;
          }
 
-         reserved_loop = reserved;
+         reserved_table_loop = reserved_table;
+         reserved_total_loop = reserved_total;
          tableBeg_loop = tableBeg;
          mask_loop = mask;
-         while (reserved_loop > C::InitialSize) {
+         while (reserved_total_loop > C::InitialSize) {
             // We can go left                                           
-            reserved_loop /= C::GrowthFactor + 1u;
-            tableBeg_loop -= reserved_loop;
+            reserved_total_loop -= reserved_table_loop;
+            reserved_table_loop /= C::GrowthFactor;
+            tableBeg_loop -= reserved_table_loop;
             mask_loop >>= 1u;
-            inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask_loop, tableBeg_loop, reserved_loop, LglsFwd(item));
-            if (inserted_at != reserved_loop)
-               return (tableBeg_loop + inserted_at) - self.template GetHashTableInner<SID>();
+
+            inserted_at = ThisCom::TableEmplaceLazy(hash.value & mask_loop, tableBeg_loop, reserved_table_loop, LglsFwd(item));
+            if (inserted_at != reserved_table_loop)
+               return (tableBeg_loop + inserted_at) - absoluteTableBeg;
          }
 
+
+         //                                                             
          // If this is reached, we need to be more insistent            
-         TODO();
-         return inserted_at;
+         reserved_table_loop = reserved_table;
+         reserved_total_loop = reserved_total;
+         tableBeg_loop = tableBeg;
+         mask_loop = mask;
+
+         // Start with the biggest table, because it will be less       
+         // likely an element will have to be moved.                    
+         while (reserved_total_loop < absoluteReserved) {
+            tableBeg_loop += reserved_table_loop;
+            reserved_table_loop *= C::GrowthFactor;
+            reserved_total_loop += reserved_table_loop;
+            mask_loop <<= 1u; mask_loop += 1u;
+         }
+
+         // Then go left.                                               
+         while (reserved_total_loop >= C::InitialSize) {
+            for (auto i = tableBeg_loop; i < tableBeg_loop + reserved_table_loop; ++i) {
+               if (not *i) {
+                  // Must guarantee at least one free spot              
+                  inserted_at = ThisCom::TableEmplaceForce(hash.value & mask_loop, tableBeg_loop, reserved_table_loop, LglsFwd(item));
+                  LglsAssumeDev(inserted_at != reserved_table_loop, "Shouldn't happen");
+                  return (tableBeg_loop + inserted_at) - absoluteTableBeg;
+               }
+            }
+
+            reserved_total_loop -= reserved_table_loop;
+            reserved_table_loop /= C::GrowthFactor;
+            tableBeg_loop -= reserved_table_loop;
+            mask_loop >>= 1u;
+         }
+
+         LglsAssumeDev(false, "Shouldn't happen");
+         return absoluteReserved;
       }
 
       /// MARK: TableEmplaceLazy                                              
@@ -355,12 +399,13 @@ namespace Langulus::Anyness::Component
       ///   @attention works in all dimensions simultaneously!                
       ///   @return the offset at which item was inserted, relative to the    
       ///      current tableBeg. Returns 'reserved' if unable to insert here  
+      //TODO maybe also collect data about where would be best to do the TableEmplaceForce on the way
       template<Cid SID = ID, CT::Intent H> requires Relevant<SID>
       size_t TableEmplaceLazy(
          this auto& self,
          size_t const start,
          TableType* const tableBeg,
-         const size_t reserved,
+         size_t const reserved,
          H&& item
       ) {
          // Get the starting index based on the key hash                
@@ -378,9 +423,11 @@ namespace Langulus::Anyness::Component
          }
       
          // Container is not empty and we need to browse for empty spot 
+         /// @attention empty spot is _NOT_ guaranteed!                 
          const auto tableEnd = tableBeg + reserved - 1;
-         TableType attempts = 1;
-         while (*table) {
+         ++table;
+         TableType attempts = 2;
+         while (table <= tableEnd and *table) {
             if (attempts > *table) {
                // Another chain detected, just abort. This is the       
                // lazy table emplacement, and there will be other       
@@ -389,11 +436,11 @@ namespace Langulus::Anyness::Component
             }
 
             ++attempts;
-
-            // Wrap around and start from the beginning if we have to   
-            if (table < tableEnd) ++table;
-            else table = tableBeg;
+            ++table;
          }
+
+         if (table > tableEnd)
+            return reserved;         // No empty slot was found         
 
          // If reached, then empty slot found, so put the value there   
          auto absolute_idx = table - self.template GetHashTableInner<SID>();
@@ -408,10 +455,18 @@ namespace Langulus::Anyness::Component
       /// MARK: TableEmplaceForce                                             
       /// Table insertion function for e specific cascade level. It will      
       /// insert at all cost, moving elements around if it has to.            
+      ///   @attention assumes there's at least one free spot guaranteed!     
       ///   @attention works in all dimensions simultaneously!                
-      ///   @return the offset at which pair was inserted                     
+      ///   @return the offset at which item was inserted, relative to the    
+      ///      current tableBeg. Returns 'reserved' if unable to insert here  
       template<Cid SID = ID, CT::Intent H> requires Relevant<SID>
-      size_t TableEmplaceForce(this auto& self, size_t start, TableType* tableBeg, size_t reserved, H&& item) {
+      size_t TableEmplaceForce(
+         this auto& self,
+         size_t const start,
+         TableType* const tableBeg,
+         size_t const reserved,
+         H&& item
+      ) {
          // Get the starting index based on the key hash                
          auto table = tableBeg + start;
          if (not *table) {
@@ -436,7 +491,29 @@ namespace Langulus::Anyness::Component
          auto insertedAt = reserved;
          while (*table) {
             if (attempts > *table) {
-               // We're inserting closer to bucket, so swap             
+               // We're inserting closer to bucket, so swap.            
+               // Suppose this initial state is given:                  
+               // ...[1][2][3][2][3][0]...                              
+               //     ^        ^                                        
+               //     |->2->3->4th attempt                              
+               //     |        |                                        
+               //     item wants to go here, but can't                  
+               //              |                                        
+               //          so it arrives at [2] on its 4th attempt.     
+               //          4 > 2, so swap the element at the 4th attempt
+               //          with our new 'item'. from that point on,     
+               //          'swapper' contains the old item, and we have 
+               //          to insert it in the next spot.               
+               //                                                       
+               // The new state looks like:                             
+               // ...[1][2][3][4][3][0]...                              
+               //              ^     ^                                  
+               //              |->3->4th attempt for 'swapper'          
+               //              |                                        
+               //              original 2nd attempt for the 'swapper'   
+               //                                                       
+               // Since the 4th attempt for the 'swapper' is empty [0]  
+               // the swapping ceases and we're done moving things.     
                const auto index = table - tableBeg;
                auto h = handle + index;
                Id::ForEach([&h,&swapper_handle]<Cid D>{
@@ -490,10 +567,9 @@ namespace Langulus::Anyness::Component
             hash = HashOf(item.GetKeyHandle()); //TODO this presumes the key dimension is the one the hash table is associated with
 
          // We start at the smallest table                              
-         const size_t max_reserved = self.GetReserved();
-         size_t reserved = C::InitialSize;
+         size_t reserved_table = C::InitialSize;
          auto   tableBeg = self.template GetHashTableInner<SID>();
-         size_t mask = ::std::bit_floor(reserved) - 1u;
+         size_t mask = ::std::bit_floor(reserved_table) - 1u;
 
          // Decide the comparison function for type-erased tables       
          RTTI::DefinitionData::FCompareEqual comparer = nullptr;
@@ -525,16 +601,20 @@ namespace Langulus::Anyness::Component
          }
 
          // First attempt                                               
-         auto found = ThisCom::TableSearchInner(hash.value & mask, tableBeg, reserved, item, comparer);
+         auto found = ThisCom::TableSearchInner(hash.value & mask, tableBeg, reserved_table, item, comparer);
          if (found)
             return found;
       
          // First attempt failed, try other tables                      
-         while (reserved < max_reserved) {
-            tableBeg += reserved;
-            reserved += reserved * C::GrowthFactor;
+         size_t reserved_total = C::InitialSize;
+         const size_t max_reserved = self.GetReserved();
+         while (reserved_total < max_reserved) {
+            tableBeg += reserved_table;
+            reserved_table *= C::GrowthFactor;
+            reserved_total += reserved_table;
             mask <<= 1u; mask += 1u;
-            found = ThisCom::TableSearchInner(hash.value & mask, tableBeg, reserved, item, comparer);
+
+            found = ThisCom::TableSearchInner(hash.value & mask, tableBeg, reserved_table, item, comparer);
             if (found)
                return found;
          }
@@ -576,7 +656,7 @@ namespace Langulus::Anyness::Component
                      return test;
                }
                else {
-                  if (*test.template GetRaw<SID>() != *item.template GetRaw<SID>())
+                  if (*test.template GetRaw<SID>() == *item.template GetRaw<SID>())
                      return test;
                }
             }
@@ -586,7 +666,7 @@ namespace Langulus::Anyness::Component
                      return test;
                }
                else {
-                  if (*test.template GetRaw<SID>() != item)
+                  if (*test.template GetRaw<SID>() == item)
                      return test;
                }
             }

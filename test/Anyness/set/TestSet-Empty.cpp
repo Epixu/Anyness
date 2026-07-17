@@ -39,15 +39,15 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
-   , Types<Set, char,   ScopedElement<char>>
+   , Types<Set, Text*,  ScopedElement<Text*>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
    , Types<Set, int,    ScopedElement<int>>
    , Types<Set, Any,    ScopedElement<Any>>
    , Types<Set, RT,     ScopedElement<RT>>
+   , Types<Set, char,   ScopedElement<char>>
 
-   , Types<Set, Text*,  ScopedElement<Text*>>
    , Types<Set, int*,   ScopedElement<int*>>
    , Types<Set, Any*,   ScopedElement<Any*>>
    , Types<Set, RT*,    ScopedElement<RT*>>
@@ -907,8 +907,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    }
 
    GIVEN("Default-constructed container and a couple of arrays") {
-      const ScopedE darray1[5] {1, 2, 3, 4,  5};
-      const ScopedE darray2[5] {6, 7, 8, 9, 10};
+      const ScopedE darray1[5] {49, 50, 51, 52, 53};
+      const ScopedE darray2[5] {54, 55, 56, 57, 58};
 
       const E immovable[5] {
          *darray1[0], *darray1[1], *darray1[2], *darray1[3], *darray1[4]
@@ -929,6 +929,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       WHEN("Merge an array") {
          size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.Merge(          immovable));
+         DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(Refer    {immovable}));
@@ -937,6 +938,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_ContainsArray(pack, immovable);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
+         DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable, movable2);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(Move     {movable2}));
@@ -969,9 +971,14 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             TODO();
          }
          else {
-            const auto hashed_order = Same<E, Text>
-               ? std::array<int, 10> {1,2,9,5,3,4,6,10,7,8}
-               : std::array<int, 10> {1,10,4,7,3,2,5,9,6,8};
+            const auto hashed_order = [] -> std::array<int, 10> {
+               if constexpr (Same<E, Text>)
+                  return {5,7,4,6,1,2,3,9,10,8};
+               else if constexpr (Same<E, char>)
+                  return {1,2,9,5,3,6,4,7,10,8};
+               else
+                  return {2,1,5,3,6,4,9,8,7,10};
+            }();
 
             for (uint i = 0; i < 10; ++i) {
                if (hashed_order[i] <= 5) {
@@ -1047,9 +1054,14 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_ContainsN(pack, 6);
          DumpSet(pack);
 
-         const auto hashed_order = Same<E, Text>
-               ? std::array<int, 6> {1,2,5,3,6,4}
-               : std::array<int, 6> {1,4,3,6,2,5};
+         const auto hashed_order = [] -> std::array<int, 6> {
+            if constexpr (Same<E, Text>)
+               return {5,4,6,1,2,3};
+            else if constexpr (Same<E, char>)
+               return {1,2,5,3,6,4};
+            else
+               return {2,1,5,3,6,4};
+         }();
 
          for (int i = 0; i < 6; ++i) {
             if (hashed_order[i] <= 5) {
@@ -1115,9 +1127,14 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_ContainsN(pack, 6);
          DumpSet(pack);
 
-         const auto hashed_order = Same<E, Text>
-               ? std::array<int, 6> {1,2,5,3,6,4}
-               : std::array<int, 6> {1,4,3,6,2,5};
+         const auto hashed_order = [] -> std::array<int, 6> {
+            if constexpr (Same<E, Text>)
+               return {5,4,6,1,2,3};
+            else if constexpr (Same<E, char>)
+               return {1,2,5,3,6,4};
+            else
+               return {2,1,5,3,6,4};
+         }();
                
          for (int i = 0; i < 6; ++i) {
             if (hashed_order[i] <= 5) {

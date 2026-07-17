@@ -215,6 +215,9 @@ namespace Langulus::CT
 
 namespace Langulus::Anyness
 {
+   /// Each state can be either dynamically set at runtime, be statically     
+   /// enabled, or statically disabled. Only the 'Variable' value reserves    
+   /// a single bit inside the state component representation.                
    enum class StateValue {
       Variable = 0,
       Enabled  = 1,
@@ -234,8 +237,9 @@ namespace Langulus::Anyness
 
    namespace Component
    {
+      /// Unique IDs for state components                                     
       enum class StateUid {
-         Invalid,
+         Invalid = 0,
          Compressed,
          Encrypted,
          Future,
@@ -247,14 +251,37 @@ namespace Langulus::Anyness
          Disowned
       };
 
+      /// Check if a type definition depicts a modifier                       
       template<class T>
       concept IsRequestModifier = requires { T::AllocatedPerDimension;
                                              T::AllocatedPerElement;
                                              T::AllocatedPerIndirection; };
+
+      /// Header requests can't be per-element or per-indirection             
+      template<class T>
+      concept IsHeaderRequest = IsRequestModifier<T>
+          and not T::AllocatedPerElement
+          and not T::AllocatedPerIndirection;
+
+      /// Checks for either IsLocalFooterRequest or IsGlobalFooterRequest     
       template<class T>
       concept IsFooterRequest = IsRequestModifier<T>
           and (T::AllocatedPerElement or T::AllocatedPerIndirection);
 
+      /// Local footers are placed immediately after data, so they are easily 
+      /// transferrable by a single pointer when absorbing containers.        
+      template<class T>
+      concept IsLocalFooterRequest = IsFooterRequest<T>
+          and R::AllocatedPerDimension;
+
+      /// Global footers can't be per-dimension and are placed at the literal 
+      /// end of the allocated memory, after tha last dimension's data and    
+      /// local footer.                                                       
+      template<class T>
+      concept IsGlobalFooterRequest = IsFooterRequest<T>
+          and not R::AllocatedPerDimension;
+
+      /// Helper for propagating modifiers. Undefined after no longer used.   
       #define propagate_modifier(a) \
          static constexpr bool a = [] { \
             if constexpr (IsRequestModifier<T>) return T::a; \

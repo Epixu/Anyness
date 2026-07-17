@@ -400,7 +400,7 @@ namespace Langulus::Anyness
                if constexpr (C::Id::template Contains<SID>) {
                   using R = typename C::HeapRequest;
                   if constexpr (IsRequestModifier<R>) {
-                     if constexpr (R::AllocatedPerDimension and not IsFooterRequest<R>) {
+                     if constexpr (R::AllocatedPerDimension and IsHeaderRequest<R>) {
                         // Multiply only by the number of dimensions    
                         // that are shared with the relevant provider.  
                         using INTERSECT = typename C::Id::template Intersect<typename PROVIDER::Id>;
@@ -448,7 +448,7 @@ namespace Langulus::Anyness
                if constexpr (C::Id::template Contains<SID>) {
                   using R = typename C::HeapRequest;
                   if constexpr (IsRequestModifier<R>) {
-                     if constexpr (R::AllocatedPerDimension and not IsFooterRequest<R>) {
+                     if constexpr (R::AllocatedPerDimension and IsHeaderRequest<R>) {
                         // Multiply only by the number of dimensions    
                         // that are shared with the relevant provider.  
                         using PROVIDER = typename decltype(FindProvider<SID>())::First;
@@ -472,11 +472,9 @@ namespace Langulus::Anyness
             "The PICK must share the provided ID");
 
          using PICK_R = typename PICK::HeapRequest;
-         if constexpr (IsRequestModifier<PICK_R>) {
-            static_assert(not IsFooterRequest<PICK_R>,
-               "Not a header request, use GetHeapFooterOffset instead"
-            );
-         }
+         static_assert(IsHeaderRequest<PICK_R>, "Not a header request, "
+            "use GetHeapFooterOffset/GetHeapFooterOffsetGlobal instead"
+         );
          
          size_t offset = 0;
          GetHeapHeaderOffsetInner<PICK, SID, ComponentList>(offset);
@@ -501,12 +499,12 @@ namespace Langulus::Anyness
                bytesize += DefineHeapFooter<SID, typename C::Subcomponents>(count, indirects);
             else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
-               if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
-                  if constexpr (R::AllocatedPerDimension) {
+               if constexpr (IsLocalFooterRequest<R> and C::Id::template Contains<SID>) {
+                  //if constexpr (R::AllocatedPerDimension) {
                      bytesize += sizeof(TypeOf<R>)
                         * (R::AllocatedPerElement     ? count      : 1)
                         * (R::AllocatedPerIndirection ? indirects  : 1);
-                  }
+                  //}
                }
             }
          });
@@ -533,12 +531,12 @@ namespace Langulus::Anyness
                return true;
             else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
-               if constexpr (IsFooterRequest<R> and C::Id::template Contains<SID>) {
-                  if constexpr (R::AllocatedPerDimension) {
+               if constexpr (IsLocalFooterRequest<R> and C::Id::template Contains<SID>) {
+                  //if constexpr (R::AllocatedPerDimension) {
                      offset += sizeof(TypeOf<R>)
                         * (R::AllocatedPerElement     ? count     : 1)
                         * (R::AllocatedPerIndirection ? indirects : 1);
-                  }
+                  //}
                }
                return No {};
             }
@@ -557,10 +555,12 @@ namespace Langulus::Anyness
             "The PICK must share the provided ID");
 
          using PICK_R = typename PICK::HeapRequest;
-         static_assert(IsFooterRequest<PICK_R>,
-            "Not a footer request, use GetHeapHeaderOffset instead");
-         static_assert(PICK_R::AllocatedPerDimension,
-            "Not a PerDimension request, use GetHeapFooterOffsetGlobal instead");
+         static_assert(IsLocalFooterRequest<PICK_R>,
+            "Not a local footer request, "
+            "use GetHeapHeaderOffset/GetHeapFooterOffsetGlobal instead"
+         );
+         //static_assert(PICK_R::AllocatedPerDimension,
+         //   "Not a PerDimension request, use GetHeapFooterOffsetGlobal instead");
 
          size_t offset = 0;
          GetHeapFooterOffsetInner<PICK, SID, ComponentList>(count, indirects, offset);
@@ -585,8 +585,8 @@ namespace Langulus::Anyness
                bytesize += DefineHeapFooterGlobal<SID, typename C::Subcomponents>(count);
             else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
-               if constexpr (IsFooterRequest<R>) {
-                  if constexpr (not R::AllocatedPerDimension) {
+               if constexpr (IsGlobalFooterRequest<R> /*IsFooterRequest<R>*/) {
+                  //if constexpr (not R::AllocatedPerDimension) {
                      static_assert(not R::AllocatedPerIndirection,
                         "Can't have a PerIndirection modifier without PerDimension modifier, "
                         "because indirections are individual to each dimension"
@@ -595,7 +595,7 @@ namespace Langulus::Anyness
                      using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
                      if constexpr (not INTERSECT::Empty)
                         bytesize += sizeof(TypeOf<R>) * (R::AllocatedPerElement ? count : 1);
-                  }
+                  //}
                }
             }
          });
@@ -620,17 +620,17 @@ namespace Langulus::Anyness
                return true;
             else if constexpr (requires { typename C::HeapRequest; }) {
                using R = typename C::HeapRequest;
-               if constexpr (IsFooterRequest<R>) {
-                  if constexpr (not R::AllocatedPerDimension) {
-                     static_assert(not R::AllocatedPerIndirection,
+               if constexpr (IsGlobalFooterRequest<R> /*IsFooterRequest<R>*/) {
+                  //if constexpr (not R::AllocatedPerDimension) {
+                     /*static_assert(not R::AllocatedPerIndirection,
                         "Can't have a PerIndirection modifier without PerDimension modifier, "
                         "because indirections are individual to each dimension"
-                     );
+                     );*/
                      using PROVIDER  = typename decltype(FindProvider<SID>())::First;
                      using INTERSECT = C::Id::template Intersect<typename PROVIDER::Id>;
                      if constexpr (not INTERSECT::Empty)
                         offset += sizeof(TypeOf<R>) * (R::AllocatedPerElement ? count : 1);
-                  }
+                  //}
                }
                return No {};
             }
@@ -646,14 +646,16 @@ namespace Langulus::Anyness
             "Component data is not on the heap");
 
          using PICK_R = typename PICK::HeapRequest;
-         static_assert(IsFooterRequest<PICK_R>,
-            "Not a footer request, use GetHeapHeaderOffset instead");
-         static_assert(not PICK_R::AllocatedPerDimension,
+         static_assert(IsGlobalFooterRequest<PICK_R> /*IsFooterRequest<PICK_R>*/,
+            "Not a global footer request, "
+            "use GetHeapHeaderOffset/GetHeapFooterOffset instead"
+         );
+         /*static_assert(not PICK_R::AllocatedPerDimension,
             "PerDimension request, use GetHeapFooterOffset instead");
          static_assert(not PICK_R::AllocatedPerIndirection,
             "Can't have a PerIndirection modifier without PerDimension modifier, "
             "because indirections are individual to each dimension"
-         );
+         );*/
 
          size_t offset = 0;
          GetHeapFooterOffsetGlobalInner<PICK, SID, ComponentList>(count, offset);
@@ -699,7 +701,7 @@ namespace Langulus::Anyness
          if constexpr (IsFooterRequest<R>) {
             // Access footer heap                                       
             if constexpr (R::AllocatedPerDimension) {
-               // Positioned after each dimension data                  
+               // Local footer, positioned after each dimension data    
                const size_t reserved = self.template GetReserved<SID>();
                const size_t indirects = self.template GetIndirections<SID>();
                const size_t stride = self.template GetStride<SID>();

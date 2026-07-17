@@ -69,7 +69,19 @@ namespace Langulus
       using DTO   = DecvqAll<TO>;
       const typename DTO::CountType initial = to.GetCount();
       
-      if constexpr (CT::Complete<CTTI::SerializationRule<DTO, DFROM>>) {
+      if constexpr (not CT::Complete<Decay<DFROM>>) {
+         // Some custom rules require the decayed type to be complete   
+         // in order to check whether they are CT::Deep. This won't     
+         // pick the correct rule, if Decayed<DFROM> is incomplete,     
+         // because the CT::Deep check requires deeply complete types.  
+         // That's why we handle pointers separately here using the     
+         // appropriate converter.                                      
+         static_assert(CT::Sparse<DFROM>,
+            "If not complete, `FROM` needs to be sparse");
+         (void) context;
+         to += Convert<DTO>(from);
+      }
+      else if constexpr (CT::Complete<CTTI::SerializationRule<DTO, DFROM>>) {
          // Custom rule exists                                          
          CTTI::SerializationRule<DTO, DFROM>::Serialize(from, to, context);
       }

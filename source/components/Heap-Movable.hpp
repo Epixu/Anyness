@@ -222,7 +222,7 @@ namespace Langulus::Anyness::Component
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
-      void AllocateFresh(this C&self, size_t elements /*const Request& request*/) {
+      void AllocateFresh(this C& self, size_t elements /*const Request& request*/) {
          const auto request = ThisCom::RequestHeap(elements);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -246,6 +246,7 @@ namespace Langulus::Anyness::Component
       ///   @param elements number of elements to allocate                    
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void AllocateMore(this C& self, Count<C> elements) {
+         static_assert(not CT::Handle<C>, "Handles aren't allowed to reallocate");
          LglsAssumeDev(elements > self.template GetCount<SID>(), "Bad element count");
          const auto al = DecvqAllCast(self.template GetAllocation<SID>());
 
@@ -269,9 +270,9 @@ namespace Langulus::Anyness::Component
             if (request.mTotalBytes <= al->GetSize()) {
                // In some cases, no reallocation happens, but reserved  
                // count may still change, due to the allocation being   
-               // rounded to the closes power-of-two. Move heap footers 
+               // rounded to the closest power-of-two. Move heap footers
                // accordingly in such cases.                            
-               if_available(self.template RemapHeapRequests<SID>(request.mReserved));
+               if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
                if_available(self.template SetReservedInner<SID>(request.mReserved));
                return;
             }
@@ -291,12 +292,12 @@ namespace Langulus::Anyness::Component
             self.template SetAllocationInner<SID>(reallocated);
 
             if (reallocated != al) {
+               // Memory moved, and we should move all elements with    
+               // it. We're moving to new memory, so no reverse is      
+               // required.                                             
                ThisCom::SetHeapInner(static_cast<void*>(reallocated->GetBlockStart() + request.mHeaderBytes));
 
                if (previous.GetCount()) {
-                  // Memory moved, and we should move all elements with 
-                  // it. We're moving to new memory, so no reverse is   
-                  // required.                                          
                   auto to = self.GetHandle().ForceMutable();
                   try {
                      previous.template Apply<false>([&to,&self,&previous](auto&& from) {
@@ -322,9 +323,16 @@ namespace Langulus::Anyness::Component
                   }
                }
             }
-            else previous.template SetAllocationInner<SID>(nullptr);
+            else {
+               // Memory didn't move, make sure we don't free anything  
+               LglsAssumeDev(self.template GetAllocationInner<SID>() == reallocated,
+                  "Allocation pointer should still be the same");
 
-            if_available(self.template RemapHeapRequests<SID>(request.mReserved));
+               if_available(previous.EnableDisowned())
+               else previous.template SetCountInner<SID>(0);
+            }
+
+            if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
             if_available(self.template SetReservedInner<SID>(request.mReserved));
          }
       }
@@ -336,6 +344,8 @@ namespace Langulus::Anyness::Component
       ///   @param desiredReserve number of elements to reserve               
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
+         static_assert(not CT::Handle<C>,
+            "Handles aren't allowed to reallocate");
          static_assert(CT::ContainsMany<C>,
             "This makes sense to be called only by containers that support many elements");
 
@@ -392,7 +402,7 @@ namespace Langulus::Anyness::Component
             // count may still change, due to the allocation being      
             // rounded to the closest power-of-two. Move heap footers   
             // accordingly in such cases.                               
-            if_available(self.template RemapHeapRequests<SID>(request.mReserved));
+            if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
             if_available(self.template SetReservedInner<SID>(request.mReserved));
             return;
          }
@@ -400,7 +410,7 @@ namespace Langulus::Anyness::Component
          // Memory doesn't move, but reserved count changed so all      
          // HeapRequests which are PerElement need to be moved around   
          // _before_ we restrict the memory!                            
-         if_available(self.template RemapHeapRequests<SID>(request.mReserved));
+         if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             self.template SetAllocationInner<SID>(
@@ -423,7 +433,7 @@ namespace Langulus::Anyness::Component
       //TODO i've worked around this by using IndexedHashHeap instead of IndexedHashStack for sets and maps, for now
       template<Cid SID = Id::First, CT::Container C>
       requires (C::template CountHeapFooterRequests<SID>() > 0 and Relevant<SID>)
-      void RemapHeapRequests(this C& self, const Count<C> newReserved) {
+      void RemapLocalHeapRequests(this C& self, const Count<C> newReserved) {
          const auto reserved = self.template GetReserved<SID>();
          LglsAssumeDev(newReserved != reserved,
             "Should be called only when different");
