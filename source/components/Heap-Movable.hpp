@@ -275,7 +275,7 @@ namespace Langulus::Anyness::Component
                // count may still change, due to the allocation being   
                // rounded to the closest power-of-two. Move heap footers
                // accordingly in such cases.                            
-               if_available(self.RemapAllHeapRequests(request.mReserved));
+               self.RemapAllHeapRequests(request.mReserved);
                /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
                if_available(self.template SetReservedInner<SID>(request.mReserved));*/
                return;
@@ -336,7 +336,7 @@ namespace Langulus::Anyness::Component
                else previous.template SetCountInner<SID>(0);
             }
 
-            if_available(self.RemapAllHeapRequests(request.mReserved));
+            self.RemapAllHeapRequests(request.mReserved);
             /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
             if_available(self.template SetReservedInner<SID>(request.mReserved));*/
          }
@@ -408,7 +408,7 @@ namespace Langulus::Anyness::Component
             // count may still change, due to the allocation being      
             // rounded to the closest power-of-two. Move heap footers   
             // accordingly in such cases.                               
-            if_available(self.RemapAllHeapRequests(request.mReserved));
+            self.RemapAllHeapRequests(request.mReserved);
             /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
             if_available(self.template SetReservedInner<SID>(request.mReserved));*/
             return;
@@ -417,7 +417,7 @@ namespace Langulus::Anyness::Component
          // Memory doesn't move, but reserved count changed so all      
          // HeapRequests which are PerElement need to be moved around   
          // _before_ we restrict the memory!                            
-         if_available(self.RemapAllHeapRequests(request.mReserved));
+         self.RemapAllHeapRequests(request.mReserved);
 
          //if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
 
@@ -638,31 +638,33 @@ namespace Langulus::Anyness::Component
       /// Move all bits and pieces of footer requests that need to move when  
       /// reserved count increases or decreases.                              
       ///   @attention works on all dimensions at once                        
+      ///   @attention changes the reserved count (if changeable)             
       template<CT::Container C>
-      requires (C::template CountHeapFooterRequests<Id::First>() > 0)
       void RemapAllHeapRequests(this C& self, const size_t newReserved) {
-         const auto oldReserved = self.template GetReserved<Id::First>();
-         LglsAssumeDev(newReserved != oldReserved,
-            "Should be called only when different");
+         if constexpr (C::template CountHeapFooterRequests<Id::First>() > 0) {
+            const auto oldReserved = self.template GetReserved<Id::First>();
+            LglsAssumeDev(newReserved != oldReserved,
+               "Should be called only when different");
 
-         if (newReserved > oldReserved) {
-            // When newReserved is larger than reserved, stuff has to   
-            // move left to right, so it must be done in reverse so that
-            // we don't destroy any data. The newly formed gaps need    
-            // to be filled with zeroes.                                
-            self.template RemapGlobalHeapRequests<false>(oldReserved, newReserved);
-            Id::ForEach([&]<Cid D> {
-               self.template RemapLocalHeapRequests<D, false>(oldReserved, newReserved);
-            });
-         }
-         else {
-            Id::ForEach([&]<Cid D> {
-               self.template RemapLocalHeapRequests<D, true>(oldReserved, newReserved);
-            });
-            self.template RemapGlobalHeapRequests<true>(oldReserved, newReserved);
+            if (newReserved > oldReserved) {
+               // When newReserved is larger than reserved, stuff has to
+               // move left to right, so it must be done in reverse so  
+               // that we don't destroy any data. The newly formed gaps 
+               // need to be filled with zeroes.                        
+               self.template RemapGlobalHeapRequests<false>(oldReserved, newReserved);
+               Id::ForEach([&]<Cid D> {
+                  self.template RemapLocalHeapRequests<D, false>(oldReserved, newReserved);
+               });
+            }
+            else {
+               Id::ForEach([&]<Cid D> {
+                  self.template RemapLocalHeapRequests<D, true>(oldReserved, newReserved);
+               });
+               self.template RemapGlobalHeapRequests<true>(oldReserved, newReserved);
+            }
          }
 
-         self.template SetReservedInner<Id::First>(newReserved);
+         if_available(self.template SetReservedInner<Id::First>(newReserved));
       }
 
       /// Invoked to remedy the situation when element constructors throw     

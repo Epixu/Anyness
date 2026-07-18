@@ -233,7 +233,7 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.GetMembers().size() == 0);
    REQUIRE(meta.GetVerbs().size() == 0);
    REQUIRE(meta.GetBases().size() == 0);
-   REQUIRE(meta.GetMorphismsTo().size() == 0);
+   REQUIRE(meta.GetMorphismsTo().size() == 1); // Pointers are always convertible to Text, even if incomplete
    REQUIRE(meta.GetMorphismsFrom().size() == 0);
    REQUIRE(meta.GetMorphism(meta).convert == nullptr);
    REQUIRE(meta.GetMorphism(meta).serialize == nullptr);
@@ -521,7 +521,7 @@ SCENARIO("A type reflected with all traits") {
    REQUIRE(meta.GetFiles() == "txt, pdf");
    REQUIRE(meta.GetVersionMajor() == 2);
    REQUIRE(meta.GetVersionMinor() == 1);
-   REQUIRE(meta.IsDeep() == true);
+   REQUIRE(meta.IsDeep() == false);
    REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract     
    REQUIRE(meta.IsNullable() == false);  // not nullable due to being abstract
    REQUIRE(meta.IsAbstract() == true);

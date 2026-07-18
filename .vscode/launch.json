@@ -5,10 +5,58 @@
    "version": "0.2.0",
    "configurations": [
       {
+         "name": "LangulusAnynessTest-Common",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Common.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
+         "name": "LangulusAnynessTest-Memory",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Memory.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
+         "name": "LangulusAnynessTest-Text",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Text.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
+         "name": "LangulusAnynessTest-Bytes",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Bytes.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
+         "name": "LangulusAnynessTest-TRef-TOwn",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-TRef-TOwn.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
          "name": "LangulusAnynessTest-Any",
          "type": "lldb",
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Any.exe",
+         "args": [],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
+      {
+         "name": "LangulusAnynessTest-Many",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Many.exe",
          "args": [],
          "cwd": "${command:cmake.buildDirectory}"
       },
