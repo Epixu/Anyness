@@ -39,8 +39,6 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
-   , Types<TSet<RT*>,    RT*,    ScopedElement<RT*>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
    , Types<Set, int,    ScopedElement<int>>
@@ -69,6 +67,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    , Types<TSet<Text*>,  Text*,  ScopedElement<Text*>>
    , Types<TSet<int*>,   int*,   ScopedElement<int*>>
    , Types<TSet<Any*>,   Any*,   ScopedElement<Any*>>
+   , Types<TSet<RT*>,    RT*,    ScopedElement<RT*>>
    , Types<TSet<char*>,  char*,  ScopedElement<char*>>
 
    , Types<TSet<Text**>, Text**, ScopedElement<Text**>>
@@ -1030,7 +1029,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                      }
                      else if (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr)) {
                         // Cloned                                       
-                        REQUIRE(DenseCast(*arr).GetReferences() == 1);
+                        REQUIRE(DenseCast(*arr).GetReferences() == 2);
+                        REQUIRE(DenseCast(pack.template GetAt<E>(i)).GetReferences() == 1);
                      }
                   }
                }
@@ -1086,27 +1086,6 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             }
          }
 
-         // Last one is cloned and pointers won't match                 
-         /*if constexpr (Sparse) {
-            for (uint i = 35; i < 40; ++i) {
-               REQUIRE(*pack.template GetAt<E>(i) != *darray1[i%5]);
-               REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i%5]));
-               if constexpr (Reffed) {
-                  REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == 5);
-                  REQUIRE(DenseCast(pack.template GetAt<E>(i)).GetReferences() == 1);
-               }
-            }
-         }
-         else {
-            for (uint i = 35; i < 40; ++i) {
-               REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
-               if constexpr (Reffed) {
-                  REQUIRE(darray1[i%5]->GetReferences() == 1);
-                  REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
-               }
-            }
-         }*/
-
          BenchmarkSetStd("Empty/Merge/Array", 30, 100,
             T temp,              temp.Merge(immovable),
             stdset temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
@@ -1115,15 +1094,6 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
       /// MARK: <<=                                                           
       WHEN("Merge by using <<= operator)") {
-         /*pack <<=           immovable[0]
-              <<= Refer    {immovable[1]}
-              <<= Copy     {immovable[2]}
-              <<= Disown   {immovable[3]}
-              <<= std::move( movable1[0])
-              <<= Move     { movable2[0]}
-              <<= Abandon  { movable3[0]}
-              <<= Clone    {immovable[4]};*/
-
          pack <<=           immovable[0];
          pack <<= Refer    {immovable[1]};
          pack <<= Copy     {immovable[2]};
@@ -1213,15 +1183,6 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
       /// MARK: >>=                                                           
       WHEN("Merge by using >>= operator)") {
-         /*pack >>=           immovable[0]
-              >>= Refer    {immovable[1]}
-              >>= Copy     {immovable[2]}
-              >>= Disown   {immovable[3]}
-              >>= std::move( movable1[0])
-              >>= Move     { movable2[0]}
-              >>= Abandon  { movable3[0]}
-              >>= Clone    {immovable[4]};*/
-
          pack >>=           immovable[0];
          pack >>= Refer    {immovable[1]};
          pack >>= Copy     {immovable[2]};
