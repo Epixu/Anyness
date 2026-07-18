@@ -173,6 +173,7 @@ namespace Langulus::Anyness::Inner
          LglsAssumeDev(this->template IsSame<K, 0>(), "Type mismatch");
          LglsAssumeDev(this->template IsSame<V, 1>(), "Type mismatch");
          return TPair<K, V> {Copy {LglsFwd(pair)}}; //TODO Anyness::Piecewise, ?
+         //return TPair<K, V> {LglsFwd(pair)}; //TODO Anyness::Piecewise, ?
       }
 
       /// Clear the map and assign a single pair                              

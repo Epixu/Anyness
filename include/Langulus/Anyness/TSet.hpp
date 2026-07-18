@@ -147,7 +147,8 @@ namespace Langulus::Anyness
       template<class A>
       constexpr auto CreateSwapper(A&& argument) assumptious {
          static_assert(Same<T, Deint<A>>, "Type mismatch");
-         return TAny {Anyness::Piecewise, Copy {LglsFwd(argument)}};
+         //return TAny {Anyness::Piecewise, Copy {LglsFwd(argument)}};
+         return TAny {Anyness::Piecewise, LglsFwd(argument)};
       }
       
       using Com::Comparison<>::operator <=>;

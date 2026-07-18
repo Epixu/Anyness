@@ -139,6 +139,7 @@ namespace Langulus::Anyness
          static_assert(Same<PK, K>, "Key type mismatch");
          static_assert(Same<PV, V>, "Val type mismatch");
          return TPair<PK, PV> {Copy {LglsFwd(pair)}}; //TODO Anyness::Piecewise, ?
+         //return TPair<PK, PV> {LglsFwd(pair)}; //TODO Anyness::Piecewise, ?
       }
 
       /// Clear the map and assign a single pair                              
