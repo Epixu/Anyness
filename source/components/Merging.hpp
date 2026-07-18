@@ -70,8 +70,8 @@ namespace Langulus::Anyness::Component
             // No conversion required.                                  
             // Check all types, and gather the number of insertions.    
             ::std::vector<size_t> reduced;
-            ThisCom::PrepareForMerging(LglsFwd(a1), reduced);
-           (ThisCom::PrepareForMerging(LglsFwd(an), reduced), ...);
+            ThisCom::PrepareForMerging(FWDIntent(a1), reduced);
+           (ThisCom::PrepareForMerging(FWDIntent(an), reduced), ...);
             if (reduced.empty())
                return 0;
             
@@ -202,8 +202,8 @@ namespace Langulus::Anyness::Component
             // changes raises a conflict, this function will throw.     
             ::std::vector<size_t> reduced;
             size_t counter = 0;
-            ThisCom::PrepareForMerging(LglsFwd(a1), counter, reduced);
-           (ThisCom::PrepareForMerging(LglsFwd(an), counter, reduced), ...);
+            ThisCom::PrepareForMerging(FWDIntent(a1), counter, reduced);
+           (ThisCom::PrepareForMerging(FWDIntent(an), counter, reduced), ...);
             if (reduced.empty())
                return 0;
             
@@ -253,18 +253,53 @@ namespace Langulus::Anyness::Component
       auto MergeRange(this C&, CT::Container auto&&) -> Count<C>;
       
    protected:
-      /// MARK: Protected                                                     
+      /// MARK: PrepareForMerging                                             
       /// Helper function that gathers the number of elements and types.      
       /// 'a' is checked if already exists either in 'self' or in 'a' itself  
       /// if array. Only non-duplicates will be merged.                       
       ///   @attention operates in all relevant dimensions simultaneously     
-      template<class C, class A>
+      ///   @attention if `a` is a pointer that is being cloned, we can avoid 
+      ///      searching for it altogether, because it is guaranteed          
+      ///      that a new unique pointer will be generated, unless `nullptr`. 
+      template<class C, CT::Intent A>
       void PrepareForMerging(this C& self, A&& a, size_t& counter, ::std::vector<size_t>& out_count) {
          if constexpr (CT::Handle<A>) {
             // Inserting handles                                        
-            if (self.Contains(DeintCast(a))) {
-               ++counter;
-               return;
+            if constexpr (CT::Cloned<A>) {
+               if constexpr (CT::TypeErased<A>) {
+                  if (a->IsSparse()) {
+                     auto ptr = a->template As<void*>();
+                     if (ptr == nullptr and self.Contains(ptr)) {
+                        ++counter;
+                        return;
+                     }
+                  }
+                  else if (self.Contains(a.what)) {
+                     ++counter;
+                     return;
+                  }
+               }
+               else {
+                  if constexpr (CT::Sparse<TypeOf<Deint<A>>>) {
+                     auto ptr = a->template As<void*>();
+                     if (ptr == nullptr and self.Contains(ptr)) {
+                        ++counter;
+                        return;
+                     }
+                  }
+                  else {
+                     if (self.Contains(a.what)) {
+                        ++counter;
+                        return;
+                     }
+                  }
+               }
+            }
+            else {
+               if (self.Contains(a.what)) {
+                  ++counter;
+                  return;
+               }
             }
 
             self.AbsorbType(Copy(a));
@@ -274,18 +309,26 @@ namespace Langulus::Anyness::Component
          else if constexpr (CT::Array<A>) {
             // Inserting array                                          
             auto contained_in_array_itself = [&](auto& i) -> bool {
-               const ptrdiff_t idx = &i - DeintCast(a);
+               const ptrdiff_t idx = &i - a.what;
                for (ptrdiff_t it = 0; it < idx; ++it) {
-                  if (DeintCast(a)[it] == i)
+                  if (a.what[it] == i)
                      return true;
                }
                return false;
             };
 
-            for(auto& i : DeintCast(a)) {
-               if (self.Contains(i) or contained_in_array_itself(i)) {
-                  ++counter;
-                  continue;
+            for (auto& i : a.what) {
+               if constexpr (CT::Cloned<A> and CT::Sparse<decltype(i)>) {
+                  if (i == nullptr and (self.Contains(i) or contained_in_array_itself(i))) {
+                     ++counter;
+                     continue;
+                  }
+               }
+               else {
+                  if (self.Contains(i) or contained_in_array_itself(i)) {
+                     ++counter;
+                     continue;
+                  }
                }
    
                self.DeduceType(i);
@@ -295,9 +338,17 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Inserting element                                        
-            if (self.Contains(DeintCast(a))) {
-               ++counter;
-               return;
+            if constexpr (CT::Cloned<A> and CT::Sparse<A>) {
+               if (a.what == nullptr and self.Contains(a.what)) {
+                  ++counter;
+                  return;
+               }
+            }
+            else {
+               if (self.Contains(a.what)) {
+                  ++counter;
+                  return;
+               }
             }
 
             self.DeduceType(LglsFwd(a));
@@ -306,101 +357,8 @@ namespace Langulus::Anyness::Component
          }
       }
       
-      /// Helper struct for returning insertion status                        
-      /*struct MergeResult {
-         size_t itemsInserted = 0;
-         size_t lastInsertedIndex = 0;
-      };*/
-
-      /// Merge item at the performance-optimal position.                     
-      /// This usually means at the back of a contiguous container.           
-      ///   @attention all types need to be set prior to calling this function
-      ///   @attention when inserting in a hash table, the item is used as a  
-      ///      swapper, and has to be strongly owned from outside this call   
-      ///   @param a pair of elements (and its intent) to merge               
-      ///   @return 1 if element was inserted, and the position where it was  
-      ///      inserted (or found at, if it was already existing)             
-      /*template<class T, CT::ContainsMany C>
-      auto MergeInner(this C& self, T&& item) -> MergeResult {
-         static_assert(not CT::Array<T>,
-            "This inner routine doesn't account for arrays");
-         static_assert(CT::Handle<T> or not Shared,
-            "Multidimensional merge should be done using a handle");
-
-         // If this is reached, then types are the same                 
-         // Reallocate/branch out                                       
-         const size_t lhs_count = self.GetCount();
-         const size_t all_count = lhs_count + 1;
-         self.BranchOut(all_count);
-
-         // Insert the new elements if they're not contained yet        
-         MergeResult result;
-         try {
-            if constexpr (CT::Contiguous<C>) {
-               // Contiguous merge                                      
-               if (not self.IsEmpty()) {
-                  if (const auto found = self.FindInner(DeintCast(item), 0)) {
-                     result.lastInsertedIndex = found - self.GetHandle();
-                     return result;
-                  }
-               }
-
-               auto to = self.GetHandle() + lhs_count;
-               Id::ForEach([&]<Cid D>{
-                  if constexpr (CT::Copied<IntentOf(item)>)
-                     to.template EmplaceWithIntent<D>(Refer(LglsFwd(item)));
-                  else
-                     to.template EmplaceWithIntent<D>(FWDIntent(item));
-               });
-
-               result.lastInsertedIndex = lhs_count;
-               ++result.itemsInserted;
-            }
-            else {
-               // Table merge                                           
-               size_t bucket;
-               if constexpr (not Shared) {
-                  // Single dimension                                   
-                  bucket = self.GetOffset(DeintCast(item));
-                  if (not self.IsEmpty()) {
-                     if (const auto found = self.FindInner(DeintCast(item), bucket)) {
-                        result.lastInsertedIndex = found - self.GetHandle();
-                        return result;
-                     }
-                  }
-               }
-               else {
-                  // Multidimensional                                   
-                  const auto key = DeintCast(item).GetKeyHandle(); //TODO this presumes the key dimension is the one the hash table is associated with
-                  bucket = self.GetOffset(key);
-                  if (not self.IsEmpty()) {
-                     if (const auto found = self.FindInner(key, bucket)) {
-                        result.lastInsertedIndex = found - self.GetHandle();
-                        return result;
-                     }
-                  }
-               }
-            
-               if constexpr (CT::Copied<IntentOf(item)>)
-                  result.lastInsertedIndex = self.TableEmplace(bucket, Refer(LglsFwd(item)));
-               else
-                  result.lastInsertedIndex = self.TableEmplace(bucket, FWDIntent(item));
-
-               ++result.itemsInserted;
-            }
-         }
-         catch (...) {
-            // Account for throws inside constructors                   
-            self.SetCountInner(lhs_count + result.itemsInserted);
-            throw;
-         }
-
-         self.SetCountInner(lhs_count + result.itemsInserted);
-         return result;
-      }*/
-      
       /// MARK: ConvertMergeInner                                             
-      template</**/ class C, class T>
+      template<class C, class T>
       void ConvertMergeInner(this C& self, size_t& at, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<I>>;
