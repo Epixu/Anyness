@@ -283,16 +283,28 @@ void DumpSet(const T& set) {
    const auto tableEnd = set.GetHashTableEnd();
    auto handle = set.GetHandle();
    auto _ = Logger::SpecialSection("Set dump:");
+   Logger::Line("-------------- table #0 --------------");
 
+   size_t growth = T::InitialSize;
+   size_t cascade = T::InitialSize;
+   size_t table_idx = 0;
    size_t counter = 0;
    while(table != tableEnd) {
+      if (counter == cascade) {
+         growth *= T::GrowthFactor;
+         cascade += growth;
+         ++table_idx;
+         Logger::Line("--------------------------------------");
+         Logger::Line("-------------- table #", table_idx, " --------------");
+      }
+
       if (*table) {
          if (*table == 1)
             Logger::Line("");
          else
             Logger::Line("^-");
 
-         for(int i = 2; i < *table; ++i)
+         for (int i = 2; i < *table; ++i)
             Logger::Append("--");
 
          Logger::Append("[", counter, "] ", handle);

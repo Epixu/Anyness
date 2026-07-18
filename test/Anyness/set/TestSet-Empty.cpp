@@ -929,17 +929,42 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       WHEN("Merge an array") {
          size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.Merge(          immovable));
+         REQUIRE(inserted == 5);
          DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable);
+
+         if constexpr (Sparse and Reffed) {
+            for (uint i = 0; i < 5; ++i) {
+               for (auto& arr : darray1) {
+                  if (*pack.template GetAt<E>(i) == *arr) {
+                     // Shallowly referenced in the set              
+                     REQUIRE(DenseCast(*arr).GetReferences() == 2);
+                  }
+               }
+            }
+         }
 
          REQUIRE_NOTHROW(inserted += pack.Merge(Refer    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Copy     {immovable}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Disown   {immovable}));
+         REQUIRE(inserted == 5);
          Set_CheckState_ContainsArray(pack, immovable);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
+         REQUIRE(inserted == 10);
          DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable, movable2);
+
+         if constexpr (Sparse and Reffed) {
+            for (uint i = 0; i < 10; ++i) {
+               for (auto& arr : darray1) {
+                  if (*pack.template GetAt<E>(i) == *arr) {
+                     // Shallowly referenced in the set              
+                     REQUIRE(DenseCast(*arr).GetReferences() == 2);
+                  }
+               }
+            }
+         }
 
          REQUIRE_NOTHROW(inserted += pack.Merge(Move     {movable2}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Abandon  {movable3}));
@@ -950,12 +975,27 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          REQUIRE_NOTHROW(inserted += pack.Merge(Clone    {immovable}));
          DumpSet(pack);
 
-         if constexpr (Sparse)
+         if constexpr (Sparse) {
             Set_CheckState_ContainsN(pack, 15);
-         else
+            REQUIRE(inserted == 15);
+         }
+         else {
             Set_CheckState_ContainsArray(pack, immovable, movable2);
+            REQUIRE(inserted == 10);
+         }
 
          Set_CheckState_OwnedFull<E>(pack);
+
+         if constexpr (Sparse and Reffed) {
+            for (uint i = 0; i < 15; ++i) {
+               for (auto& arr : darray1) {
+                  if (*pack.template GetAt<E>(i) == *arr) {
+                     // Shallowly referenced in the set              
+                     REQUIRE(DenseCast(*arr).GetReferences() == 2);
+                  }
+               }
+            }
+         }
 
          if constexpr (CT::Set<E>) {
             for (int i = 0; i < 5; ++i) {
@@ -968,7 +1008,57 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
 
          if constexpr (Sparse) {
-            TODO();
+            // Hashing order is different each time, so we can't check  
+            // it.                                                      
+            int deep_matches1_total = 0;
+            int deep_matches2_total = 0;
+
+            for (uint i = 0; i < 15; ++i) {
+               int shallow_matches1 = 0;
+               int shallow_matches2 = 0;
+               int deep_matches1 = 0;
+               int deep_matches2 = 0;
+
+               for (auto& arr : darray1) {
+                  deep_matches1 += (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr));
+                  shallow_matches1 += (*pack.template GetAt<E>(i) == *arr);
+
+                  if constexpr (Reffed) {
+                     if (*pack.template GetAt<E>(i) == *arr) {
+                        // Shallowly referenced in the set              
+                        REQUIRE(DenseCast(*arr).GetReferences() == 2);
+                     }
+                     else if (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr)) {
+                        // Cloned                                       
+                        REQUIRE(DenseCast(*arr).GetReferences() == 1);
+                     }
+                  }
+               }
+
+               for (auto& arr : darray2) {
+                  deep_matches2 += (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr));
+                  shallow_matches2 += (*pack.template GetAt<E>(i) == *arr);
+
+                  if constexpr (Reffed) {
+                     if (*pack.template GetAt<E>(i) == *arr) {
+                        // Shallowly referenced in the set              
+                        REQUIRE(DenseCast(*arr).GetReferences() == 2);
+                     }
+                  }
+               }
+               
+               bool cond1 = shallow_matches1 == 1 xor shallow_matches2 == 1 xor (not shallow_matches1 and not shallow_matches2);
+               REQUIRE(cond1);
+
+               bool cond2 = deep_matches1 == 1 xor deep_matches2 == 1;
+               REQUIRE(cond2);
+
+               deep_matches1_total += deep_matches1;
+               deep_matches2_total += deep_matches2;
+            }
+
+            REQUIRE(deep_matches1_total == 5*2);
+            REQUIRE(deep_matches2_total == 5);
          }
          else {
             const auto hashed_order = [] -> std::array<int, 10> {
@@ -985,13 +1075,13 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                   const int idx = hashed_order[i] - 1;
                   REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
                   if constexpr (Reffed)
-                     REQUIRE(DenseCast(*darray1[idx]).GetReferences() == (Sparse ? 5 : 1));
+                     REQUIRE(DenseCast(*darray1[idx]).GetReferences() == 1);
                }
                else {
                   const int idx = hashed_order[i] - 6;
                   REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
                   if constexpr (Reffed)
-                     REQUIRE(DenseCast(*darray2[idx]).GetReferences() == (Sparse ? 5 : 1));
+                     REQUIRE(DenseCast(*darray2[idx]).GetReferences() == 1);
                }
             }
          }
@@ -1053,42 +1143,67 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          Set_CheckState_ContainsN(pack, 6);
          DumpSet(pack);
+         
+         if constexpr (Sparse) {
+            // Hashing order is different each time, so we can't check  
+            // it.                                                      
+            int deep_matches1_total = 0;
+            int deep_matches2_total = 0;
 
-         const auto hashed_order = [] -> std::array<int, 6> {
-            if constexpr (Same<E, Text>)
-               return {5,4,6,1,2,3};
-            else if constexpr (Same<E, char>)
-               return {1,2,5,3,6,4};
-            else
-               return {2,1,5,3,6,4};
-         }();
+            for (uint i = 0; i < 6; ++i) {
+               int shallow_matches1 = 0;
+               int shallow_matches2 = 0;
+               int deep_matches1 = 0;
+               int deep_matches2 = 0;
 
-         for (int i = 0; i < 6; ++i) {
-            if (hashed_order[i] <= 5) {
-               const int idx = hashed_order[i] - 1;
-               REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
-               if constexpr (Reffed)
-                  REQUIRE(DenseCast(*darray1[idx]).GetReferences() == (Sparse ? 5 : 1));
+               for (auto& arr : darray1) {
+                  deep_matches1 += (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr));
+                  shallow_matches1 += (*pack.template GetAt<E>(i) == *arr);
+               }
+
+               for (auto& arr : darray2) {
+                  deep_matches2 += (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr));
+                  shallow_matches2 += (*pack.template GetAt<E>(i) == *arr);
+               }
+               
+               bool cond1 = shallow_matches1 == 1 xor shallow_matches2 == 1 xor (not shallow_matches1 and not shallow_matches2);
+               REQUIRE(cond1);
+
+               bool cond2 = deep_matches1 == 1 xor deep_matches2 == 1;
+               REQUIRE(cond2);
+
+               deep_matches1_total += deep_matches1;
+               deep_matches2_total += deep_matches2;
             }
-            else {
-               const int idx = hashed_order[i] - 6;
-               REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
-               if constexpr (Reffed)
-                  REQUIRE(DenseCast(*darray2[idx]).GetReferences() == (Sparse ? 5 : 1));
+
+            REQUIRE(deep_matches1_total == 5);
+            REQUIRE(deep_matches2_total == 1);
+         }
+         else {
+            const auto hashed_order = [] -> std::array<int, 6> {
+               if constexpr (Same<E, Text>)
+                  return {5,4,6,1,2,3};
+               else if constexpr (Same<E, char>)
+                  return {1,2,5,3,6,4};
+               else
+                  return {2,1,5,3,6,4};
+            }();
+
+            for (int i = 0; i < 6; ++i) {
+               if (hashed_order[i] <= 5) {
+                  const int idx = hashed_order[i] - 1;
+                  REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
+                  if constexpr (Reffed)
+                     REQUIRE(DenseCast(*darray1[idx]).GetReferences() == 1);
+               }
+               else {
+                  const int idx = hashed_order[i] - 6;
+                  REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
+                  if constexpr (Reffed)
+                     REQUIRE(DenseCast(*darray2[idx]).GetReferences() == 1);
+               }
             }
          }
-
-         // Last one is cloned and pointers won't match                 
-         /*if constexpr (Sparse) {
-            REQUIRE(*pack.template GetAt<E>(7) != *darray1[4]);
-            REQUIRE(DenseCast(pack.template GetAt<E>(7)) == DenseCast(*darray1[4]));
-         }
-         else REQUIRE(*pack.template GetAt<E>(7) == *darray1[4]);
-
-         if constexpr (Reffed) {
-            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
-            REQUIRE(DenseCast(pack.template GetAt<E>(7)).GetReferences() == 1);
-         }*/
 
          BenchmarkSetStd("Empty/Merge/Element", 30, 100,
             T temp,              temp << immovable[0],
@@ -1126,42 +1241,67 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          Set_CheckState_ContainsN(pack, 6);
          DumpSet(pack);
+         
+         if constexpr (Sparse) {
+            // Hashing order is different each time, so we can't check  
+            // it.                                                      
+            int deep_matches1_total = 0;
+            int deep_matches2_total = 0;
 
-         const auto hashed_order = [] -> std::array<int, 6> {
-            if constexpr (Same<E, Text>)
-               return {5,4,6,1,2,3};
-            else if constexpr (Same<E, char>)
-               return {1,2,5,3,6,4};
-            else
-               return {2,1,5,3,6,4};
-         }();
+            for (uint i = 0; i < 6; ++i) {
+               int shallow_matches1 = 0;
+               int shallow_matches2 = 0;
+               int deep_matches1 = 0;
+               int deep_matches2 = 0;
+
+               for (auto& arr : darray1) {
+                  deep_matches1 += (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr));
+                  shallow_matches1 += (*pack.template GetAt<E>(i) == *arr);
+               }
+
+               for (auto& arr : darray2) {
+                  deep_matches2 += (DenseCast(pack.template GetAt<E>(i)) == DenseCast(*arr));
+                  shallow_matches2 += (*pack.template GetAt<E>(i) == *arr);
+               }
                
-         for (int i = 0; i < 6; ++i) {
-            if (hashed_order[i] <= 5) {
-               const int idx = hashed_order[i] - 1;
-               REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
-               if constexpr (Reffed)
-                  REQUIRE(DenseCast(*darray1[idx]).GetReferences() == (Sparse ? 5 : 1));
+               bool cond1 = shallow_matches1 == 1 xor shallow_matches2 == 1 xor (not shallow_matches1 and not shallow_matches2);
+               REQUIRE(cond1);
+
+               bool cond2 = deep_matches1 == 1 xor deep_matches2 == 1;
+               REQUIRE(cond2);
+
+               deep_matches1_total += deep_matches1;
+               deep_matches2_total += deep_matches2;
             }
-            else {
-               const int idx = hashed_order[i] - 6;
-               REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
-               if constexpr (Reffed)
-                  REQUIRE(DenseCast(*darray2[idx]).GetReferences() == (Sparse ? 5 : 1));
+
+            REQUIRE(deep_matches1_total == 5);
+            REQUIRE(deep_matches2_total == 1);
+         }
+         else {
+            const auto hashed_order = [] -> std::array<int, 6> {
+               if constexpr (Same<E, Text>)
+                  return {5,4,6,1,2,3};
+               else if constexpr (Same<E, char>)
+                  return {1,2,5,3,6,4};
+               else
+                  return {2,1,5,3,6,4};
+            }();
+                  
+            for (int i = 0; i < 6; ++i) {
+               if (hashed_order[i] <= 5) {
+                  const int idx = hashed_order[i] - 1;
+                  REQUIRE(*pack.template GetAt<E>(i) == *darray1[idx]);
+                  if constexpr (Reffed)
+                     REQUIRE(DenseCast(*darray1[idx]).GetReferences() == 1);
+               }
+               else {
+                  const int idx = hashed_order[i] - 6;
+                  REQUIRE(*pack.template GetAt<E>(i) == *darray2[idx]);
+                  if constexpr (Reffed)
+                     REQUIRE(DenseCast(*darray2[idx]).GetReferences() == 1);
+               }
             }
          }
-
-         // first one is cloned and pointers won't match                
-         /*if constexpr (Sparse) {
-            REQUIRE(*pack.template GetAt<E>(0) != *darray1[4]);
-            REQUIRE(DenseCast(pack.template GetAt<E>(0)) == DenseCast(*darray1[4]));
-         }
-         else REQUIRE(*pack.template GetAt<E>(0) == *darray1[4]);
-
-         if constexpr (Reffed) {
-            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
-            REQUIRE(DenseCast(pack.template GetAt<E>(0)).GetReferences() == 1);
-         }*/
 
          BenchmarkSetStd("Empty/Merge/Element", 30, 100,
             T temp,              temp >> immovable[0],

@@ -306,13 +306,18 @@ namespace Langulus::Anyness
       /// Generate hexadecimal string from a given value                      
       ///   @param from - the argument                                        
       ///   @return the resulting text                                        
+      template<bool REVERSE = false>
       static Text Hex(const auto& from) {
          Text result;
          result.AllocateFresh(sizeof(from) * 2);
          auto from_bytes = reinterpret_cast<const std::byte*>(&from);
          auto to_bytes = result.GetRaw();
-         for (size_t i = 0; i < sizeof(from); ++i)
-            ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[i]);
+         for (size_t i = 0; i < sizeof(from); ++i) {
+            if constexpr (REVERSE)
+               ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[sizeof(from) - (i + 1)]);
+            else
+               ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[i]);
+         }
          result.SetCountInner(sizeof(from) * 2);
          return result;
       }
@@ -722,7 +727,7 @@ namespace Langulus::CTTI
          "Strip all decorations on all indirections first");
 
       static constexpr auto Convert(ConstAll<T&> from) -> Anyness::Text {
-         return NameOf<T>() + "(" + Anyness::Text::Hex(from) + ")";
+         return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
       }
    };
 
