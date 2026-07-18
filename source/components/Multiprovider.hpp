@@ -232,9 +232,9 @@ namespace Langulus::Anyness::Component
       ///   @param elements the newly reserved number of elements             
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = 0>
-      void RemapLocalHeapRequests(this auto& self, size_t elements) {
+      void RemapAllHeapRequests(this auto& self, size_t elements) {
          using C = typename Subcomponents::template At<SID>;
-         self.C::RemapLocalHeapRequests(elements);
+         self.C::RemapAllHeapRequests(elements);
       }
 
       /// Invoked to remedy the situation when element constructors throw     

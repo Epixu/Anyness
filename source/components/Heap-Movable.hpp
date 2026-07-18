@@ -8,6 +8,7 @@
 #pragma once
 #include "Heap-Reference.hpp"
 #include "Langulus/Assume.hpp"
+#include "Langulus/Typenav.hpp"
 #include "source/Component.hpp"
 
 
@@ -219,6 +220,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Allocate a fresh allocation                                         
+      ///   @attention works on all relevant dimensions at once               
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
@@ -243,6 +245,7 @@ namespace Langulus::Anyness::Component
 
       /// Allocate a number of elements, relying on the type of the container 
       ///   @attention assumes container is typed                             
+      ///   @attention works on all relevant dimensions at once               
       ///   @param elements number of elements to allocate                    
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void AllocateMore(this C& self, Count<C> elements) {
@@ -272,8 +275,9 @@ namespace Langulus::Anyness::Component
                // count may still change, due to the allocation being   
                // rounded to the closest power-of-two. Move heap footers
                // accordingly in such cases.                            
-               if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
-               if_available(self.template SetReservedInner<SID>(request.mReserved));
+               if_available(self.RemapAllHeapRequests(request.mReserved));
+               /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
+               if_available(self.template SetReservedInner<SID>(request.mReserved));*/
                return;
             }
 
@@ -332,8 +336,9 @@ namespace Langulus::Anyness::Component
                else previous.template SetCountInner<SID>(0);
             }
 
-            if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
-            if_available(self.template SetReservedInner<SID>(request.mReserved));
+            if_available(self.RemapAllHeapRequests(request.mReserved));
+            /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
+            if_available(self.template SetReservedInner<SID>(request.mReserved));*/
          }
       }
 
@@ -341,6 +346,7 @@ namespace Langulus::Anyness::Component
       /// Initialized elements on the back will be destroyed.                 
       /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
       /// allocations never move when shrinking.                              
+      ///   @attention works on all relevant dimensions at once               
       ///   @param desiredReserve number of elements to reserve               
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
@@ -402,15 +408,18 @@ namespace Langulus::Anyness::Component
             // count may still change, due to the allocation being      
             // rounded to the closest power-of-two. Move heap footers   
             // accordingly in such cases.                               
-            if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
-            if_available(self.template SetReservedInner<SID>(request.mReserved));
+            if_available(self.RemapAllHeapRequests(request.mReserved));
+            /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
+            if_available(self.template SetReservedInner<SID>(request.mReserved));*/
             return;
          }
 
          // Memory doesn't move, but reserved count changed so all      
          // HeapRequests which are PerElement need to be moved around   
          // _before_ we restrict the memory!                            
-         if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
+         if_available(self.RemapAllHeapRequests(request.mReserved));
+
+         //if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             self.template SetAllocationInner<SID>(
@@ -422,43 +431,89 @@ namespace Langulus::Anyness::Component
             );
          #endif
 
-         if_available(self.template SetReservedInner<SID>(request.mReserved));
+         //if_available(self.template SetReservedInner<SID>(request.mReserved));
       }
 
-      /// Remap footer requests onto the new reserve                          
-      ///   @param newReserved the newly reserved number of elements          
-      ///   @attention works on one dimension at a time!                      
-      //TODO shouldn't this also move any dimensions != 0 as well, if in the same heap?????
-      //TODO this will nullify a new hash table, but it doesn't call SetHashTableInner to move the pointer if kept on the stack!! 
-      //TODO i've worked around this by using IndexedHashHeap instead of IndexedHashStack for sets and maps, for now
-      template<Cid SID = Id::First, CT::Container C>
-      requires (C::template CountHeapFooterRequests<SID>() > 0 and Relevant<SID>)
-      void RemapLocalHeapRequests(this C& self, const Count<C> newReserved) {
-         const auto reserved = self.template GetReserved<SID>();
-         LglsAssumeDev(newReserved != reserved,
-            "Should be called only when different");
-         [[maybe_unused]]
-         const auto indirect = self.template GetIndirections<SID>();
+      /// Helper function that navigates to the start of the local heap       
+      /// footer of a given dimension and custom reserve count                
+      template<Cid SID, CT::Container C>
+      uint8_t* GetLocalHeap(this C& self, const size_t reserved) assumptious {
+         auto to_footer = self.template GetRawAs<uint8_t, Id::First>();
+         Id::ForEachConstOr([&]<Cid i>{
+            size_t indirections;
+            if constexpr (CT::TypeErased<C>) {
+               const auto T = self.template GetType<i>();
+               LglsAssumeDev((bool) T, "Requesting allocation size for an untyped container");
+               to_footer = Align(to_footer, T.GetAlignment());
+               to_footer += reserved * T.GetSize();
+               indirections = T.GetIndirections();
+            }
+            else {
+               using T = TypeOf<C, i>;
+               to_footer = Align(to_footer, alignof(T));
+               to_footer += reserved * sizeof(T);
+               indirections = IndirectsOf<T>;
+            }
 
-         size_t from[C::template CountHeapFooterRequests<SID>() + 1];
-         size_t to  [C::template CountHeapFooterRequests<SID>() + 1];
+            if constexpr (i == SID)
+               return true;
+            else {
+               to_footer += C::template DefineHeapFooter<i>(reserved, indirections);
+               return No {};
+            }
+         });
+         return to_footer;
+      }
+
+      /// Helper function that navigates to the start of the global heap      
+      /// footer for a custom reserve count                                   
+      template<CT::Container C>
+      uint8_t* GetGlobalHeap(this C& self, const size_t reserved) assumptious {
+         auto to_footer = self.template GetLocalHeap<Id::Last>(reserved);
+         auto indirections = self.template GetIndirections<Id::Last>();
+         to_footer += C::template DefineHeapFooter<Id::Last>(reserved, indirections);
+
+         /*auto to_footer = self.template GetRawAs<uint8_t, Id::First>();
+         Id::ForEach([&self,&to_footer,&reserved]<Cid i>{
+            if constexpr (CT::TypeErased<C>) {
+               const auto T = self.template GetType<i>();
+               LglsAssumeDev((bool) T, "Requesting allocation size for an untyped container");
+               to_footer = Align(to_footer, T.GetAlignment());
+               to_footer += reserved * T.GetSize();
+            }
+            else {
+               using T = TypeOf<C, i>;
+               to_footer = Align(to_footer, alignof(T));
+               to_footer += reserved * sizeof(T);
+            }
+
+            to_footer += self.template DefineHeapFooter<i>(reserved);
+         });*/
+         return to_footer;
+      }
+
+      /// Remap global footer requests onto the new reserve                   
+      ///   @attention since global heap footer is at the end of memory       
+      ///      it should be moved before any other footer when enlarging, and 
+      ///      vice versa when shrinking, so that we dont lose any data.      
+      ///   @param oldReserved the currently reserved number of elements      
+      ///   @param newReserved the newly reserved number of elements          
+      ///   @attention works on all relevant dimensions at once!              
+      template<bool SHRINKING, CT::Container C>
+      void RemapGlobalHeapRequests(this C& self, const size_t oldReserved, const size_t newReserved) {
+         size_t from[C::template CountHeapFooterRequests<Id::First>() + 1];
+         size_t to  [C::template CountHeapFooterRequests<Id::First>() + 1];
          size_t idx = 1;
          from[0] = to[0] = 0;
          
          C::ComponentList::ForEach([&]<class COM> {
             if constexpr (requires { typename COM::HeapRequest; }) {
                using R = typename COM::HeapRequest;
-               if constexpr (IsRequestModifier<R>
-               and COM::Id::template Contains<SID>) {
+               if constexpr (IsGlobalFooterRequest<R>) { //TODO maybe check for intersection?
                   size_t shift = sizeof(TypeOf<R>);
-                  if constexpr (R::AllocatedPerIndirection) {
-                     shift *= indirect;
-                     if (not shift)
-                        return;
-                  }
 
                   if constexpr (R::AllocatedPerElement) {
-                     from[idx] = from[idx-1] + shift * reserved;
+                     from[idx] = from[idx-1] + shift * oldReserved;
                      to  [idx] = to  [idx-1] + shift * newReserved;
                   }
                   else {
@@ -472,33 +527,11 @@ namespace Langulus::Anyness::Component
          });
 
          // Calculate the new destination                               
-         auto to_footer = self.template GetRawAs<uint8_t, Id::First>();
-         Id::ForEachConstOr([&]<Cid i>{
-            if constexpr (CT::TypeErased<C>) {
-               const auto T = self.template GetType<i>();
-               LglsAssumeDev((bool) T, "Requesting allocation size for an untyped container");
-               to_footer = Align(to_footer, T.GetAlignment());
-               to_footer += newReserved * T.GetSize();
-            }
-            else {
-               using T = TypeOf<C, i>;
-               to_footer = Align(to_footer, alignof(T));
-               to_footer += newReserved * sizeof(T);
-            }
-
-            if constexpr (i == SID)
-               return true;
-            else {
-               to_footer += self.template DefineHeapFooter<i>(newReserved);
-               return No {};
-            }
-         });
-
-         const auto size = self.template GetStride<SID>();
-         const auto from_footer = self.template GetRawAs<uint8_t, SID>() + reserved * size;
+         const auto to_footer = self.GetGlobalHeap(newReserved);
+         const auto from_footer = self.GetGlobalHeap(oldReserved);
 
          --idx;
-         if (newReserved > reserved) {
+         if constexpr (not SHRINKING) {
             // When newReserved is larger than reserved, stuff has to   
             // move left to right, so it must be done in reverse so that
             // we don't destroy any data. The newly formed gaps need    
@@ -525,6 +558,111 @@ namespace Langulus::Anyness::Component
                memmove(to_footer + to[i], from_footer + from[i], src_range);
             }
          }
+      }
+
+      /// Remap footer requests onto the new reserve                          
+      ///   @param newReserved the newly reserved number of elements          
+      ///   @attention works on one dimension at a time!                      
+      //TODO shouldn't this also move any dimensions != 0 as well, if in the same heap?????
+      //TODO this will nullify a new hash table, but it doesn't call SetHashTableInner to move the pointer if kept on the stack!! 
+      //TODO i've worked around this by using IndexedHashHeap instead of IndexedHashStack for sets and maps, for now
+      template<Cid SID, bool SHRINKING, CT::Container C>
+      void RemapLocalHeapRequests(this C& self, const size_t oldReserved, const size_t newReserved) {
+         [[maybe_unused]]
+         const auto indirect = self.template GetIndirections<SID>();
+
+         size_t from[C::template CountHeapFooterRequests<SID>() + 1];
+         size_t to  [C::template CountHeapFooterRequests<SID>() + 1];
+         size_t idx = 1;
+         from[0] = to[0] = 0;
+         
+         C::ComponentList::ForEach([&]<class COM> {
+            if constexpr (requires { typename COM::HeapRequest; }) {
+               using R = typename COM::HeapRequest;
+               if constexpr (IsLocalFooterRequest<R> and COM::Id::template Contains<SID>) {
+                  size_t shift = sizeof(TypeOf<R>);
+                  if constexpr (R::AllocatedPerIndirection) {
+                     shift *= indirect;
+                     if (not shift)
+                        return;
+                  }
+
+                  if constexpr (R::AllocatedPerElement) {
+                     from[idx] = from[idx-1] + shift * oldReserved;
+                     to  [idx] = to  [idx-1] + shift * newReserved;
+                  }
+                  else {
+                     from[idx] = from[idx-1] + shift;
+                     to  [idx] = to  [idx-1] + shift;
+                  }
+
+                  ++idx;
+               }
+            }            
+         });
+
+         // Calculate the new destination                               
+         const auto to_footer = self.template GetLocalHeap<SID>(newReserved);
+         const auto from_footer = self.template GetLocalHeap<SID>(oldReserved);
+
+         --idx;
+         if constexpr (not SHRINKING) {
+            // When newReserved is larger than reserved, stuff has to   
+            // move left to right, so it must be done in reverse so that
+            // we don't destroy any data. The newly formed gaps need    
+            // to be filled with zeroes.                                
+            while (idx) {
+               --idx;
+               const auto src_range = from[idx + 1] - from[idx];
+               LglsAssumeDev(src_range,
+                  "Empty ranges should've been omitted in the previous loop");
+                  
+               memmove(to_footer + to[idx], from_footer + from[idx], src_range);
+               const auto dst_range = to[idx + 1] - to[idx];
+               memset (to_footer + to[idx] + src_range, 0, dst_range - src_range);
+            }
+         }
+         else {
+            // When newReserved is smaller than reserved, stuff has to  
+            // move right to left. No gaps will be formed.              
+            for (size_t i = 0; i < idx; ++i) {
+               const auto src_range = from[i + 1] - from[i];
+               LglsAssumeDev(src_range,
+                  "Empty ranges should've been omitted in the previous loop");
+
+               memmove(to_footer + to[i], from_footer + from[i], src_range);
+            }
+         }
+      }
+
+      /// Move all bits and pieces of footer requests that need to move when  
+      /// reserved count increases or decreases.                              
+      ///   @attention works on all dimensions at once                        
+      template<CT::Container C>
+      requires (C::template CountHeapFooterRequests<Id::First>() > 0)
+      void RemapAllHeapRequests(this C& self, const size_t newReserved) {
+         const auto oldReserved = self.template GetReserved<Id::First>();
+         LglsAssumeDev(newReserved != oldReserved,
+            "Should be called only when different");
+
+         if (newReserved > oldReserved) {
+            // When newReserved is larger than reserved, stuff has to   
+            // move left to right, so it must be done in reverse so that
+            // we don't destroy any data. The newly formed gaps need    
+            // to be filled with zeroes.                                
+            self.template RemapGlobalHeapRequests<false>(oldReserved, newReserved);
+            Id::ForEach([&]<Cid D> {
+               self.template RemapLocalHeapRequests<D, false>(oldReserved, newReserved);
+            });
+         }
+         else {
+            Id::ForEach([&]<Cid D> {
+               self.template RemapLocalHeapRequests<D, true>(oldReserved, newReserved);
+            });
+            self.template RemapGlobalHeapRequests<true>(oldReserved, newReserved);
+         }
+
+         self.template SetReservedInner<Id::First>(newReserved);
       }
 
       /// Invoked to remedy the situation when element constructors throw     
