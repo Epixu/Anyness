@@ -8,6 +8,7 @@
 #pragma once
 #include "../Component.hpp"
 #include "Langulus/CT/Index.hpp"
+#include "Langulus/CT/Serializer.hpp"
 #include "Langulus/IntentOf.hpp"
 #include "Langulus/Typenav.hpp"
 #include <cstddef>

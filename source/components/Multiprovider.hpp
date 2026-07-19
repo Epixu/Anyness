@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Component.hpp"
+#include <Langulus/IntentOf.hpp>
 LglsDisableWarningPush
 LglsDisableWarning_UnusedLocalTypedef
 
@@ -181,7 +182,7 @@ namespace Langulus::Anyness::Component
 
       /// Default-initialize the heap pointer                                 
       template<class SELF>
-      constexpr void ConstructDefault(this SELF& self) noexcept {
+      constexpr void ConstructDefault([[maybe_unused]] this SELF& self) noexcept {
          Subcomponents::ForEach([&]<class C> noexcept {
             if_available_gcc(C::template ConstructDefault<SELF>)();
          });
@@ -193,7 +194,7 @@ namespace Langulus::Anyness::Component
       ///      account only when we're cloning or copying, as only then       
       ///      a new allocation occurs.                                       
       template<class SELF, CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this SELF& self, I&& intent, size_t reserve = 0) {
+      void ConstructFrom([[maybe_unused]] this SELF& self, I&& intent, size_t reserve = 0) {
          Subcomponents::ForEach([&]<class C> {
             if_available_gcc(C::template ConstructFrom<SELF, I>)(LglsFwd(intent), reserve);
          });

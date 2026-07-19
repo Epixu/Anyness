@@ -259,7 +259,7 @@ TEST_CASE_TEMPLATE("Testing pool functions", TestType,
    }
    
    GIVEN("A custom huge pool") {
-      Pool* pool = Allocator::AllocatePool(meta, pot_t(default_size * 512));
+      Pool* pool = Allocator::AllocatePool(meta, pot_t(default_size * 256));
       REQUIRE(pool);
 
       auto entry = pool->Allocate(1_pot);
