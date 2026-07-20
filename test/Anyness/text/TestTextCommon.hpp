@@ -1,0 +1,130 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
+#pragma once
+#include "../many/TestManyCommon.hpp"
+#include <Langulus/Anyness/Text.hpp>
+#include <string>
+
+#if LANGULUS(BENCHMARK)
+   /// Perform a persistent benchmark across build and verify performance     
+   #define BenchmarkText(func, tolerance, my_init, my) { \
+      const auto token = ::std::string("Test/") + func + "(char) |Text|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance); \
+   }
+
+   /// Perform two persistent benchmarks across builds - one for Any and      
+   /// one for std::any. Make sure they don't deviate a lot.                  
+   #define BenchmarkTextStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
+      const auto token = ::std::string("Test/") + func + "(char) |Text|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      i = 0; \
+      const auto token_std = ::std::string("Test/") + func + "(char) |std::string|"; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         theirs_init; \
+         theirs; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         theirs_init; \
+         { \
+            CTRACK_NAME(token_std.c_str()); \
+            theirs; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance_highscore); \
+      REQUIRE(results.check_same(token.c_str(), token_std.c_str(), tolerance)); \
+   }
+#else
+   #define BenchmarkText(func, tolerance, my_init, my)
+   #define BenchmarkTextStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
+#endif
+
+
+template<CT::Container C> requires CT::NoIntent<C>
+void Text_Helper_TestType(const C& text) {
+   Many_Helper_TestType<char>(text);
+}
+
+template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
+void Text_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness = true) {
+   Many_Helper_TestSame(lhs, rhs, match_constness);
+}
+
+template<CT::Container C> requires CT::NoIntent<C>
+void Text_CheckState_Default(const C& text, bool typed = false) {
+   Many_CheckState_Default<char>(text, typed);
+}
+
+template<CT::Container C> requires CT::NoIntent<C>
+void Text_CheckState_OwnedEmpty(const C& text) {
+   Many_CheckState_OwnedEmpty<char>(text);
+}
+
+template<CT::Container C> requires CT::NoIntent<C>
+void Text_CheckState_OwnedFull(const C& text) {
+   Many_CheckState_OwnedFull<char>(text);
+}
+
+template<CT::Container C> requires CT::NoIntent<C>
+void Text_CheckState_DisownedFull(const C& text) {
+   Many_CheckState_DisownedFull<char>(text);
+}
+
+template<CT::Container C> requires CT::NoIntent<C>
+void Text_CheckState_Abandoned(const C& text) {
+   Many_CheckState_Abandoned<char>(text);
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Text_VerifyAccessorInterface(T const& text, I&& arg) {
+   Many_VerifyAccessorInterface(text, LglsFwd(arg));
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Text_CheckState_ContainsOne(T const& text, I&& e_with_intent, int uses = 1) {
+   Many_CheckState_ContainsOne(text, LglsFwd(e_with_intent), uses);
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Text_CheckState_ContainsN(size_t n, const T& many, I&& e_scoped_with_intent, int uses = 1) {
+   Many_CheckState_ContainsN(n, many, LglsFwd(e_scoped_with_intent), uses);
+}
+
+template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
+void Text_CheckState_ContainsArray(const T& many, I&& e_scoped_array_with_intent) {
+   Many_CheckState_ContainsArray(many, LglsFwd(e_scoped_array_with_intent));
+}
+
+template<CT::Container T, class E> requires CT::NoIntent<T>
+void Text_Helper_CompareOne(const T& many, const E& e) {
+   Many_Helper_CompareOne(many, e);
+}

@@ -435,8 +435,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             }
 
             REQUIRE_NOTHROW(pack.AssignAbsorb(Clone(*element)));
-            Any_CheckState_OwnedFull<int>(*element);
-            Any_CheckState_OwnedFull<int>(pack);
+            Many_CheckState_OwnedFull<int>(*element);
+            Many_CheckState_OwnedFull<int>(pack);
 
             REQUIRE(pack.GetRaw() != element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -755,14 +755,29 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          static_assert(     T{} == T{} );
          static_assert(not (T{} != T{}));
 
-         // Unfortunately, ::std::any aren't comparable when empty      
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkMany("Empty/operator==", 30,
-            (void) 0, dont_optimize |= (another_pack1 == another_pack2)
-         );
-         BenchmarkMany("Empty/operator!=", 30,
-            (void) 0, dont_optimize |= (another_pack1 != another_pack2)
-         );
+         if constexpr (CT::TypeErased<T>) {
+            // No type-erased equivalent for ::std::vector              
+            BenchmarkMany("Empty/operator==", 30,
+               (void) 0, dont_optimize |= (another_pack1 == another_pack2)
+            );
+            BenchmarkMany("Empty/operator!=", 30,
+               (void) 0, dont_optimize |= (another_pack1 != another_pack2)
+            );
+         }
+         else {
+            BenchmarkManyStd("Empty/operator==", 30, 100,
+               (void) 0,     dont_optimize |= (another_pack1 == another_pack2),
+               stdvec std1;
+               stdvec std2,  dont_optimize |= (std1 == std2)
+            );
+
+            BenchmarkManyStd("Empty/operator!=", 30, 100,
+               (void) 0,     dont_optimize |= (another_pack1 != another_pack2),
+               stdvec std1;
+               stdvec std2,  dont_optimize |= (std1 != std2)
+            );
+         }
       }
 
       /// MARK: Contains                                                      

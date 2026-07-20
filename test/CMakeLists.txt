@@ -50,6 +50,7 @@ add_langulus_test(LangulusAnynessTest-Memory
 add_langulus_test(LangulusAnynessTest-Text
    SOURCES	   Main.cpp
                Anyness/TestText.cpp
+               Anyness/text/TestText-Empty.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

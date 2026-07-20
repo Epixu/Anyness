@@ -9,6 +9,7 @@
 #include "Character.hpp"
 #include "../TypeOf.hpp"
 #include <ranges>
+#include <type_traits>
 
 
 namespace Langulus::CT
@@ -27,10 +28,13 @@ namespace Langulus::CT
    
    /// Concept for any possible standard library representation of a string.  
    /// This includes not only std::string, but also any contiguous range      
-   /// that's filled with dense characters.                                   
+   /// that's filled with dense characters, like std::array<char> and         
+   /// std::string_view.                                                      
    template<class...T>
    concept TextRange = PartialValidate<T...> and ((
-         ::std::ranges::contiguous_range<T> and CT::Character<TypeOf<T>>
+         (::std::ranges::contiguous_range<T> and CT::Character<TypeOf<T>>)
+         or ::std::same_as<::std::remove_cvref_t<T>, ::std::string_view>
+         or ::std::same_as<::std::remove_cvref_t<T>, ::std::wstring_view>
       ) and ...);
 }
 

@@ -11,9 +11,12 @@
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/IndexedLinear.hpp>
+#include <source/components/Emplacement.hpp>
 #include <source/components/Insertion.hpp>
 #include <source/components/InsertionOperators.hpp>
 #include <source/components/InsertionOperatorsConcat.hpp>
+#include <source/components/Merging.hpp>
+#include <source/components/MergingOperators.hpp>
 #include <source/components/Removal.hpp>
 #include <source/components/Assignment.hpp>
 #include <source/components/Typed-Static.hpp>
@@ -45,9 +48,12 @@ namespace Langulus::Anyness
          Com::IndexedLinear<>,            // Indexed directly           
          Com::OwnershipStack<>,           // Allocation is referenced   
          Com::HashStack<>,                // Variable hash (cached)     
+         Com::Emplacement<>,              // Emplacement                
          Com::Insertion<Text>,            // Serialize + insert         
          Com::InsertionOperators<>,       // << and >> insertion        
          Com::InsertionOperatorsConcat<>, // + and += concat            
+         Com::Merging<Text>,              // Serialize + merge          
+         Com::MergingOperators<>,         // <<= and >>= merging        
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
          Com::Comparison<>,               // Allows for comparison      
@@ -346,6 +352,10 @@ namespace Langulus::Anyness
       }
 
       /// Comparison                                                          
+      constexpr auto operator <=> (CT::TextRange auto const& other) const noexcept -> ::std::partial_ordering {
+         return this->Compare(other);
+      }
+
       constexpr auto operator <=> (Text const& other) const noexcept -> ::std::partial_ordering {
          return this->Compare(other);
       }
