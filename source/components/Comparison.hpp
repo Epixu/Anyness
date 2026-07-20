@@ -448,7 +448,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// MARK: CompareOne                                                    
-      /// Equality-compare with the first contained element                   
+      /// Three-way compare with the first contained element                  
       ///   @attention compares only the main dimension                       
       ///   @attention this doesn't benefit from hashing                      
       ///   @param rhs the value to compare against                           
@@ -503,7 +503,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// MARK: CompareOneEx                                                  
-      /// Equality-compare with the first contained element                   
+      /// Three-way compare with the first contained element                  
       ///   @attention compares only the main dimension                       
       ///   @attention this doesn't benefit from hashing                      
       ///   @param rhs the value to compare against                           
@@ -592,13 +592,6 @@ namespace Langulus::Anyness::Component
                   return {};
             }
          }
-
-         /*if constexpr (not CT::Contiguous<C>) {
-            // When iterating hash tables, we use the cookie to move    
-            // to the appropriate table entry                           
-            LglsAssumeUserWarn(not cookie, "Cookie argument will be overwritten");
-            cookie = self.GetOffset(item);
-         }*/
          
          if constexpr (CT::IndexedTable<C>) {
             (void) cookie;
@@ -641,13 +634,6 @@ namespace Langulus::Anyness::Component
             })) return {};
          }
 
-         /*if constexpr (not CT::Contiguous<C>) {
-            // When iterating hash tables, we use the cookie to move    
-            // to the appropriate table entry                           
-            LglsAssumeUserWarn(not cookie, "Cookie argument will be overwritten");
-            cookie = self.GetOffset(item);
-         }*/
-
          // Find the first relevant dimension                           
          auto first_rhs = item.GetHandle();
 
@@ -686,101 +672,94 @@ namespace Langulus::Anyness::Component
       }
 
       /// Find a matching sequence of one or more matching elements           
-      ///   @attention compares all shared dimensions at once                 
+      ///   @attention compares only the chosen dimension                     
       ///   @tparam REVERSE true to perform search in reverse                 
       ///   @param range sequence of items to search for                      
       ///   @param cookie resume search from a given index                    
-      ///   @return the index of the found item, or 'npos' if not found       
-      /*template<bool REVERSE = false, CT::ContainsMany C1, CT::Container C2>
-      requires CT::Contiguous<C1, C2>
-      auto FindRange(this C1 const& self, C2 const& range, Count<C1> cookie = 0) noexcept {
-         using strategy = IterateNoDeref<REVERSE, const C1>;
-         if (cookie >= self.GetCount() or range.GetCount() > self.GetCount() - cookie)
-            return strategy(self).end();
+      ///   @return handle of the found item                                  
+      template<bool REVERSE = false, Cid SID = ID, CT::ContainsMany C, CT::ContainsMany T>
+      requires (CT::NoIntent<T> and CT::IndexedLinearly<C, T>)
+      auto FindRange(this C const& self, T const& range, size_t cookie = 0) assumptious 
+      -> DecideHandle<C> {
+         const size_t pool_size = self.GetCount() - cookie;
+         const size_t range_size = range.GetCount();
+         if (not range_size or range_size > pool_size)
+            return {};
 
-         if constexpr (not C1::TypeErased or not C2::TypeErased) {
-            // One of the participating blocks is statically typed.     
-            // Let's check type compatibility first.                    
-            if constexpr (not C1::TypeErased and not C2::TypeErased) {
-               // Leverage the fact, that both participants are typed   
-               if constexpr (not CT::Comparable<TypeOf<C1>, TypeOf<C2>>)
-                  return Index::None;
+         using T1 = TypeOf<C, SID>;
+         using T2 = TypeOf<T, SID>;
+         if constexpr (not CT::TypeErased<C, T> and not CT::ComparableEqual<T1, T2>)
+            // Early exit if statically incompatible                    
+            return {};
+         else {
+            [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer;
+            [[maybe_unused]] const size_t bytesize = range.template GetBytesize<SID>();
+
+            if constexpr (CT::TypeErased<C> or CT::TypeErased<T>) {
+               // Runtime type check                                    
+               auto type = self.template GetType<SID>();
+               comparer = type.GetComparerEqual();
+               if (not comparer or not type.IsSame(range.template GetType<SID>()))
+                  return {};
             }
-            else {
-               // One or none of the participants is typed              
-               if (not IsSame(range))
-                  return Index::None;
-            }
+            
+            const auto head = range.GetHandle();
+            const auto last = self.GetHandle() + pool_size;
+            auto h = self.template FindInner<REVERSE, SID>(head, cookie);
 
-            // If this is reached, then types are comparable            
-            auto rhs = range.GetRaw();
-            auto lhs = REVERSE ? self.GetRawEnd() - cookie - range.GetCount()
-                               : self.GetRaw() + cookie;
+            while(h and h.GetRaw() < last.GetRaw()) {
+               cookie = h - self.GetHandle();
 
-            const auto rhsEnd = range.GetRawEnd();
-            const auto lhsEnd = REVERSE ? self.GetRaw() - 1
-                                        : self.GetRawEnd() - range.GetCount() + 1;
-
-            // This byte size is used ONLY IF both types are binary     
-            // compatible. It is simply precomputed here, so that it    
-            // isn't recomputed in the loop.                            
-            [[maybe_unused]] const auto bytesize = self.GetBytesize();
-
-            while (lhs != lhsEnd) {
-               if (*lhs == *rhs) {
-                  cookie = REVERSE ? self.GetRawEnd() - lhs - 1
-                                   : lhs - self.GetRaw();
-
-                  ++lhs;
-                  ++rhs;
-
-                  if constexpr (CT::BinaryCompatible<TypeOf<C1>, TypeOf<C2>>
-                  and CT::POD<TypeOf<C1>, TypeOf<C2>>) {
+               if constexpr (not CT::TypeErased<C> and not CT::TypeErased<T>) {
+                  if constexpr (CT::BinaryCompatible<T1, T2> and CT::POD<T1, T2>) {
                      // We can use batch-compare                        
-                     if (0 == memcmp(rhs, lhs, bytesize))
-                        return cookie;
+                     if (0 == memcmp(h.GetRaw(), range.GetRaw(), bytesize))
+                        return h;               // Found                
                   }
                   else {
                      // Types are not batch-comparable, so compare them 
                      // one by one                                      
-                     while (rhs != rhsEnd and *lhs == *rhs) {
+                     auto lhs = h;
+                     auto rhs = head;
+                     const auto rhsEnd = head + range_size;
+                     while (rhs.GetRaw() != rhsEnd.GetRaw() and *lhs == *rhs) {
                         ++lhs;
                         ++rhs;
                      }
 
                      if (rhs == rhsEnd)
-                        return cookie;
+                        return h;               // Found                
                   }
+               }
+               else {
+                  if (self.template IsPOD<SID>()) {
+                     // We can use batch-compare                        
+                     if (0 == memcmp(h.GetRaw(), range.GetRaw(), bytesize))
+                        return h;               // Found                
+                  }
+                  else {
+                     // Types are not batch-comparable, so compare them 
+                     // one by one                                      
+                     auto lhs = h;
+                     auto rhs = head;
+                     const auto rhsEnd = head + range_size;
+                     while (rhs.GetRaw() != rhsEnd.GetRaw() and comparer(rhs.GetRaw(), rhsEnd.GetRaw())) {
+                        ++lhs;
+                        ++rhs;
+                     }
 
-                  lhs = REVERSE ? self.GetRawEnd() - cookie - 1
-                                : self.GetRaw() + cookie;
-                  rhs = range.GetRaw();
+                     if (rhs == rhsEnd)
+                        return h;               // Found                
+                  }
                }
 
-               if constexpr (REVERSE) --lhs;
-               else                   ++lhs;
+               h = self.template FindInner<REVERSE, SID>(head, cookie);
             }
 
-            return Index::None;
+            // If reached, then range wasn't found                      
+            return {};
          }
-         else {
-            Count<C1> i = REVERSE ? self.GetCount() - 1 - cookie
-                                  : cookie;
-            const auto iend = REVERSE ? static_cast<Count<C1>>(-1)
-                                      : self.GetCount() - range.GetCount() + 1;
-
-            while (i != iend) {
-               if (self.CropInner(i, range.GetCount()) == range)
-                  return i;
-
-               if constexpr (REVERSE) --i;
-               else                   ++i;
-            }
-
-            // If this is reached, then no match was found              
-            return Index::None;
-         }
-      }*/
+      }
 
       /// MARK: Contains                                                      
       /// Check if the container contains an element                          
@@ -795,6 +774,16 @@ namespace Langulus::Anyness::Component
             return self.CompareOneEqual(a1);
       }
 
+      /// MARK: ContainsRange                                                 
+      /// Check if the container contains a sequence of elements              
+      ///   @attention compares only the main dimension                       
+      ///   @param A1 the sequence of items to search for                     
+      ///   @return true if item was found in the main dimension              
+      template<CT::ContainsMany C, CT::ContainsMany A1> requires CT::NoIntent<A1>
+      bool ContainsRange(this C const& self, A1 const& a1) {
+         return static_cast<bool>(self.FindRange(a1));
+      }
+
       /// MARK: ContainsEx                                                    
       /// Check if the container contains an element in each shared dimension 
       ///   @attention compares all shared dimensions                         
@@ -807,12 +796,6 @@ namespace Langulus::Anyness::Component
          else
             return self.CompareOneEqualEx(tuple);
       }
-
-      /// Three-way comparison                                                
-      /*template<CT::Container LHS, CT::Container RHS>
-      constexpr auto operator <=> (this LHS const& lhs, RHS const& rhs) noexcept {
-         return lhs.Compare(rhs);
-      }*/
 
       /// MARK: <=>                                                           
       ///   @attention compares all shared dimensions at once                 
@@ -832,12 +815,6 @@ namespace Langulus::Anyness::Component
          }
          else return lhs.CompareOne(rhs);
       }
-
-      /// Equality comparison                                                 
-      /*template<CT::Container LHS, CT::Container RHS>
-      constexpr bool operator == (this LHS const& lhs, RHS const& rhs) noexcept {
-         return lhs.CompareEqual(rhs);
-      }*/
 
       /// MARK: ==                                                            
       ///   @attention compares all shared dimensions at once                 
@@ -907,24 +884,6 @@ namespace Langulus::Anyness::Component
          DecideHandle<C> result;
          self.template Apply<false>([&](auto&& test) -> bool {
             if constexpr (CT::Supported<decltype(test)>) {
-               /*if constexpr (not CT::Contiguous<C>) {
-                  const auto idx = test - self.GetHandle();
-                  const auto tab = self.GetHashTable();
-                  if (tab[idx] <= idx - cookie) {
-                     // Iterate hash table cells until we hit a spot w/ 
-                     // value smaller or equal to the expected spot -   
-                     // this signifies that another bucket had started. 
-                     // (or that an empty spot is hit)                  
-                     return false;
-                  }
-                  else if (tab[idx] > idx - cookie + 1) {
-                     // Skip spots that are larger than what's expected,
-                     // because this signifies that a bucket on the left
-                     // has already taken those spots.                  
-                     return true;
-                  }
-               }*/
-               
                if constexpr (CT::Handle<T>) {
                   if constexpr (CT::TypeErased<C> or CT::TypeErased<T>) {
                      if (not comparer(test.template GetRaw<SID>(), item.template GetRaw<SID>()))
@@ -987,17 +946,6 @@ namespace Langulus::Anyness::Component
             // THIS is type-erased, do runtime type checks              
             LglsAssumeDev(self.template IsTyped<SID>(),
                "Container is assumed typed");
-
-            /*if constexpr (CT::Text<RT>) {
-               // Text types can be more loosely compared               
-               if (self.template IsSame<Text, SID>()) {
-                  // Implicitly make a text container                   
-                  if constexpr (CT::Contiguous<C>)
-                     return *self.template Get<Text, SID>() == Text {Disown(rhs)};
-                  else
-                     return *self.template GetAt<Text, SID>(0) == Text {Disown(rhs)};
-               }
-            }*/
 
             if constexpr (CT::ComparableEqual<RT, RT>) {
                // Non-deep element compare                              
@@ -1063,17 +1011,6 @@ namespace Langulus::Anyness::Component
             // THIS is type-erased, do runtime type checks              
             LglsAssumeDev(self.template IsTyped<SID>(),
                "Container is assumed typed");
-
-            /*if constexpr (CT::Text<RT>) {
-               // Text types can be more loosely compared               
-               if (self.template IsSame<Text, SID>()) {
-                  // Implicitly make a text container                   
-                  if constexpr (CT::Contiguous<C>)
-                     return FromOrdering(*self.template Get<Text, SID>() <=> Text{Disown(rhs)});
-                  else
-                     return FromOrdering(*self.template GetAt<Text, SID>(0) <=> Text{Disown(rhs)});
-               }
-            }*/
             
             if constexpr (CT::Comparable<RT, RT>) {
                // Non-deep element compare                              

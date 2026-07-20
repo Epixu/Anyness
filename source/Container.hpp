@@ -64,7 +64,6 @@ namespace Langulus::Anyness
 
    namespace Inner
    {
-      /// MARK: Details                                                       
       template<StateValue SORT = StateValue::Variable> struct Map;
       template<StateValue SORT = StateValue::Variable> struct Set;
 
@@ -91,6 +90,7 @@ namespace Langulus::Anyness
       template<Cid>
       struct Slice : DisambiguatorTag {};
 
+      /// MARK: DecideHandleType                                              
       /// Inner function that picks the best possible handle type, depending  
       /// on a container's constness and type-erasedness, as well as member   
       /// types HandleType and HandleMutType. Guarantees to always result in  
@@ -126,6 +126,7 @@ namespace Langulus::Anyness
          }
       }
 
+      /// MARK: DecidePickType                                                
       /// Inner function that picks the best possible handle or reference     
       /// type, depending on a container's constness and type-erasedness, as  
       /// well as member types HandleType and HandleMutType. Unlike           
@@ -151,7 +152,7 @@ namespace Langulus::Anyness
             if constexpr (CT::Owned<C> and CT::Sparse<T> and CT::Mutable<C>)
                return DecideHandleType<C>();
             else
-               return Types<ConstAll<T&>> {};
+               return Types<Tmut<C, T&, ConstAll<T&>>> {};
          }
       }
    }
@@ -278,7 +279,7 @@ namespace Langulus::Anyness
       /// the destructor relies on properly deducing 'this'.                  
       constexpr ~Container() noexcept = default;
       
-      /// MARK: Providers                                                     
+      /// MARK: CountHeapRequests                                             
       /// Get the total number of heap requests (all dimensions)              
       template<CT::Typelist L = ComponentList>
       static consteval size_t CountHeapRequests() {
@@ -294,6 +295,7 @@ namespace Langulus::Anyness
          return count;
       }
 
+      /// MARK: CountHeapFooterRequests                                       
       /// Get the number of heap requests in the footer for chosen heap ID    
       template<Cid SID, CT::Typelist L = ComponentList>
       static consteval size_t CountHeapFooterRequests() {
@@ -310,6 +312,7 @@ namespace Langulus::Anyness
          return count;
       }
 
+      /// MARK: GetStackOffset                                                
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the index in the stack tuple.   
       template<class PICK, CT::Typelist L>
@@ -338,6 +341,7 @@ namespace Langulus::Anyness
          return offset;
       }
       
+      /// MARK: FindProvider                                                  
       /// Get the type of heap/stack provider for a given ID                  
       ///   @tparam ID provider ID                                            
       ///   @return return type of the provider                               
@@ -382,6 +386,7 @@ namespace Langulus::Anyness
          }
       }
 
+      /// MARK: DefineHeapHeader                                              
       /// Go through all relevant components for the dimension 'SID' and      
       /// accumulate their header heap requests into a byte amount.           
       ///   @return The size of the heap header for the dimension, in bytes.  
@@ -481,6 +486,7 @@ namespace Langulus::Anyness
          return offset;
       }
 
+      /// MARK: DefineHeapFooter                                              
       /// Go through all components relevant to the provided dimension SID    
       /// that have PerDimension modifier, and accumulate their heap          
       /// requests into a byte amount.                                        
@@ -567,6 +573,7 @@ namespace Langulus::Anyness
          return offset;
       }
 
+      /// MARK: DefineHeapFooterGlobal                                        
       /// Go through all components relevant to the provider associated with  
       /// dimension SID that have no PerDimension modifier, and accumulate    
       /// their heap requests into a byte amount.                             
@@ -662,6 +669,7 @@ namespace Langulus::Anyness
          return offset;
       }
 
+      /// MARK: AccessStack                                                   
       /// Access a variable on the stack associated with a component          
       ///   @attention always returns a reference to valid memory             
       template<class PICK, class SELF>
@@ -672,6 +680,7 @@ namespace Langulus::Anyness
          return const_cast<RC>(result);
       }
 
+      /// MARK: AccessHeap                                                    
       /// Access a variable on the heap of a specified dimension, associated  
       /// with a component.                                                   
       ///   @attention always returns a pointer which may be null if container
@@ -759,6 +768,7 @@ namespace Langulus::Anyness
          });
       }
 
+      /// MARK: Absorb                                                        
       /// Call ConstructFrom in all components that implement it.             
       /// Fallback to ConstructDefault otherwise.                             
       template<CT::Container SELF, CT::Container FROM>
@@ -801,6 +811,7 @@ namespace Langulus::Anyness
          }
       }
 
+      /// MARK: SliceFrom                                                     
       /// Call SliceFrom in all components that implement it.                 
       /// Fallback to ConstructDefault otherwise.                             
       template<Cid ID, CT::Container SELF, CT::Container FROM>
@@ -814,11 +825,13 @@ namespace Langulus::Anyness
          });
       }
 
+      /// MARK: Swap                                                          
       /// Swaps the immediate contents of two compatible containers           
       constexpr void Swap(Container& other) noexcept {
          mStack.swap(other.mStack);
       }
 
+      /// MARK: Destroy                                                       
       /// Call Destroy in all components that implement it.                   
       /// You have to call it manually in your container's destructor, so     
       /// that 'deducing this' works appropriately.                           
@@ -836,6 +849,7 @@ namespace Langulus::Anyness
          }
       }
 
+      /// MARK: Free                                                          
       /// Call Free in all components that implement it.                      
       /// Always do it in reverse order!                                      
       ///   @attention disowned containers are never dereferenced             
@@ -852,6 +866,7 @@ namespace Langulus::Anyness
          }
       }
 
+      /// MARK: Keep                                                          
       /// Call Keep in all components that implement it.                      
       ///   @attention disowned containers are never referenced               
       template<class SELF>
@@ -867,6 +882,7 @@ namespace Langulus::Anyness
       }
 
    public: // public because it is used from serialization routines
+      /// MARK: GetHandle                                                     
       /// Get a handle to the first element(s). Very useful for internal use. 
       /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   
@@ -967,6 +983,7 @@ namespace Langulus::Anyness
          }
       }
 
+      /// MARK: AssignAbsorb                                                  
       /// Call AssignFrom in all components that implement it.                
       /// Fallback to AssignDefault otherwise.                                
       template<CT::Container LHS, CT::Container RHS>

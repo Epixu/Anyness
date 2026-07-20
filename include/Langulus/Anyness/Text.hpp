@@ -11,7 +11,6 @@
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/IndexedLinear.hpp>
-#include <source/components/Emplacement.hpp>
 #include <source/components/Insertion.hpp>
 #include <source/components/InsertionOperators.hpp>
 #include <source/components/InsertionOperatorsConcat.hpp>
@@ -27,6 +26,9 @@
 #include <source/components/Iteration-Range.hpp>
 #include <source/components/Comparison.hpp>
 #include <source/components/Conversion.hpp>
+#include <source/states/Disowned.hpp>
+#include <source/states/Compressed.hpp>
+#include <source/states/Encrypted.hpp>
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Number.hpp>
 #include <Langulus/CT/Serializer.hpp>
@@ -41,6 +43,7 @@ namespace Langulus::Anyness
    namespace Inner
    {
       using TextBase = Com::Container<
+         Com::State::Disowned<>,          // Allows disownment          
          Com::TypedStatic<DMeta, char>,   // Type-constrained           
          Com::HeapMovable<0, 0, HeapEntry<0, char*>>,
          Com::CountStack<>,               // Variable count             
@@ -48,7 +51,6 @@ namespace Langulus::Anyness
          Com::IndexedLinear<>,            // Indexed directly           
          Com::OwnershipStack<>,           // Allocation is referenced   
          Com::HashStack<>,                // Variable hash (cached)     
-         Com::Emplacement<>,              // Emplacement                
          Com::Insertion<Text>,            // Serialize + insert         
          Com::InsertionOperators<>,       // << and >> insertion        
          Com::InsertionOperatorsConcat<>, // + and += concat            
@@ -59,7 +61,9 @@ namespace Langulus::Anyness
          Com::Comparison<>,               // Allows for comparison      
          Com::Conversion<>,               // Allows conversion          
          Com::IterationForEach<>,         // ForEach iteration          
-         Com::IterationRange<>            // Range iteration            
+         Com::IterationRange<>,           // Range iteration            
+         Com::State::Compressed<>,        // Toggle compression         
+         Com::State::Encrypted<>          // Toggle encryption          
       >;
    }
 
@@ -177,12 +181,74 @@ namespace Langulus::Anyness
          this->ResetHash();
       }
       
-      /// Assignment                                                          
+      /// MARK: =                                                             
       constexpr Text& operator = (Text const& other) {
          return this->AssignAbsorb(Refer {other});
       }
       constexpr Text& operator = (Text&& other) noexcept {
          return this->AssignAbsorb(Move {other});
+      }
+
+      
+      /// MARK: Assign                                                        
+      /// Extends the Assignment component to be able to handle character     
+      /// arrays, null-terminated string pointers, standard containers, etc.  
+      ///   @param argument the argument to assign                            
+      ///   @return reference to self                                         
+      template<CT::Text T> requires CT::NotContainer<T>
+      Text& Assign(T&& argument) {
+         using DT = Deint<T>;
+         decltype(auto) source = DeintCast(LglsFwd(argument));
+
+         if constexpr (CT::TextLiteral<DT>) {
+            // Create from a text literal/bounded array                 
+            using CHAR = TypeOf<DT>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = strnlen(source, ExtentOf<DT>);
+            if (not count) {
+               this->Clear();
+               return *this;
+            }
+
+            this->BranchOut(count);
+            memcpy(this->GetRawAs<uint8_t>(), source, count);
+            this->SetCountInner(count);
+         }
+         else if constexpr (CT::TextPointer<DT>) {
+            // Create from a null-terminated char pointer               
+            if (not source)
+               return *this;
+            using CHAR = Deref<Deptr<DT>>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = strlen(source);
+            if (not count) {
+               this->Clear();
+               return *this;
+            }
+
+            this->BranchOut(count);
+            memcpy(this->GetRawAs<uint8_t>(), source, count);
+            this->SetCountInner(count);
+         }
+         else {
+            // Create from an std container                             
+            static_assert(::std::ranges::contiguous_range<DT>);
+            if (source.empty()) {
+               this->Clear();
+               return *this;
+            }
+
+            using CHAR = Deref<Deptr<decltype(source.data())>>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = source.size();
+
+            this->BranchOut(count);
+            memcpy(this->GetRawAs<uint8_t>(), source.data(), count);
+            this->SetCountInner(count);
+         }
+
+         this->ResetHash();
+         return *this;
       }
 
       /// Construction from all kinds of text, trim length to desired count   

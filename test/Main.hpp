@@ -53,3 +53,5 @@ namespace doctest
    constexpr int BenchmarkWarmupCycles  =  100;
    constexpr int BenchmarkMeasureCycles = 1000;
 #endif
+
+#define prevent_optimization(a) volatile auto a##_optimization_prevention = &a; (void) a##_optimization_prevention;

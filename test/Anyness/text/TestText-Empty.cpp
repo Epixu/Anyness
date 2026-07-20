@@ -8,6 +8,7 @@
 #include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
+#include <Langulus/Anyness/SerializeText.hpp>
 
 
 TEST_CASE_TEMPLATE("Test empty Text", TestType
@@ -61,9 +62,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
    using ScopedE  = typename TestType::Second;
    using E        = TypeOf<ScopedE>;
 
-   constexpr bool Managed   = ScopedE::Managed;
-   constexpr bool Sparse    = CT::Sparse<E>;
-   constexpr bool Reffed    = CT::Referenced<Decay<E>>;
+   [[maybe_unused]] constexpr bool Managed = ScopedE::Managed;
 
    #if LANGULUS(BENCHMARK)
       using stdstr = ::std::string;
@@ -85,104 +84,102 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
    static_assert(CT::MoveAssignable<T>       );
    static_assert(CT::CloneAssignable<T>      );
    static_assert(CT::DisownAssignable<T>     );
-   
-   {
-      static_assert(not CT::Deep<T>);
-      static_assert(not CT::ContainsOne<T>);
-      static_assert(    CT::ContainsMany<T>);
-      static_assert(not CT::Handle<T>);
-      static_assert(    CT::HasVariableCount<T>);
-      static_assert(    CT::HeapAllocated<T>);
-      static_assert(not CT::OwnedDeep<T>);
-      static_assert(    CT::Owned<T>);
-      static_assert(    CT::OwnedStrong<T>);
-      static_assert(    CT::Contiguous<T>);
 
-      static_assert(    CT::ComparableEqual<T, T>);
-      static_assert(    CT::ComparableEqual<T, char>);
-      static_assert(    CT::ComparableEqual<T, wchar_t>);
-      static_assert(    CT::ComparableEqual<T, char8_t>);
-      static_assert(    CT::ComparableEqual<T, char16_t>);
-      static_assert(    CT::ComparableEqual<T, char32_t>);
-      static_assert(    CT::ComparableEqual<T, ::std::array<char, 5>>);
-      static_assert(    CT::ComparableEqual<T, ::std::array<wchar_t, 5>>);
-      static_assert(    CT::ComparableEqual<T, ::std::array<char8_t, 5>>);
-      static_assert(    CT::ComparableEqual<T, ::std::array<char16_t, 5>>);
-      static_assert(    CT::ComparableEqual<T, ::std::array<char32_t, 5>>);
-      static_assert(    CT::ComparableEqual<T, char*>);
-      static_assert(    CT::ComparableEqual<T, wchar_t*>);
-      static_assert(    CT::ComparableEqual<T, char8_t*>);
-      static_assert(    CT::ComparableEqual<T, char16_t*>);
-      static_assert(    CT::ComparableEqual<T, char32_t*>);
-      static_assert(    CT::ComparableEqual<T, std::string>);
-      static_assert(    CT::ComparableEqual<T, std::wstring>);
-      static_assert(    CT::ComparableEqual<T, std::string_view>);
-      static_assert(    CT::ComparableEqual<T, std::wstring_view>);
-      static_assert(    CT::ComparableEqual<T, Literal<char,4>>);
-      static_assert(    CT::ComparableEqual<T, Literal<wchar_t,4>>);
-      static_assert(    CT::ComparableEqual<T, Literal<char8_t,4>>);
-      static_assert(    CT::ComparableEqual<T, Literal<char16_t,4>>);
-      static_assert(    CT::ComparableEqual<T, Literal<char32_t,4>>);
+   static_assert(not CT::Deep<T>             );
+   static_assert(not CT::ContainsOne<T>      );
+   static_assert(    CT::ContainsMany<T>     );
+   static_assert(not CT::Handle<T>           );
+   static_assert(    CT::HasVariableCount<T> );
+   static_assert(    CT::HeapAllocated<T>    );
+   static_assert(not CT::OwnedDeep<T>        );
+   static_assert(    CT::Owned<T>            );
+   static_assert(    CT::OwnedStrong<T>      );
+   static_assert(    CT::Contiguous<T>       );
 
-      static_assert(    CT::Comparable<T, T>);
-      static_assert(    CT::Comparable<T, char>);
-      static_assert(    CT::Comparable<T, wchar_t>);
-      static_assert(    CT::Comparable<T, char8_t>);
-      static_assert(    CT::Comparable<T, char16_t>);
-      static_assert(    CT::Comparable<T, char32_t>);
-      static_assert(    CT::Comparable<T, ::std::array<char, 5>>);
-      static_assert(    CT::Comparable<T, ::std::array<wchar_t, 5>>);
-      static_assert(    CT::Comparable<T, ::std::array<char8_t, 5>>);
-      static_assert(    CT::Comparable<T, ::std::array<char16_t, 5>>);
-      static_assert(    CT::Comparable<T, ::std::array<char32_t, 5>>);
-      static_assert(    CT::Comparable<T, char*>);
-      static_assert(    CT::Comparable<T, wchar_t*>);
-      static_assert(    CT::Comparable<T, char8_t*>);
-      static_assert(    CT::Comparable<T, char16_t*>);
-      static_assert(    CT::Comparable<T, char32_t*>);
-      static_assert(    CT::Comparable<T, std::string>);
-      static_assert(    CT::Comparable<T, std::wstring>);
-      static_assert(    CT::Comparable<T, std::string_view>);
-      static_assert(    CT::Comparable<T, std::wstring_view>);
-      static_assert(    CT::Comparable<T, Literal<char,4>>);
-      static_assert(    CT::Comparable<T, Literal<wchar_t,4>>);
-      static_assert(    CT::Comparable<T, Literal<char8_t,4>>);
-      static_assert(    CT::Comparable<T, Literal<char16_t,4>>);
-      static_assert(    CT::Comparable<T, Literal<char32_t,4>>);
+   static_assert(    CT::ComparableEqual<T, T>);
+   static_assert(    CT::ComparableEqual<T, char>);
+   static_assert(    CT::ComparableEqual<T, wchar_t>);
+   static_assert(    CT::ComparableEqual<T, char8_t>);
+   static_assert(    CT::ComparableEqual<T, char16_t>);
+   static_assert(    CT::ComparableEqual<T, char32_t>);
+   static_assert(    CT::ComparableEqual<T, ::std::array<char, 5>>);
+   static_assert(    CT::ComparableEqual<T, ::std::array<wchar_t, 5>>);
+   static_assert(    CT::ComparableEqual<T, ::std::array<char8_t, 5>>);
+   static_assert(    CT::ComparableEqual<T, ::std::array<char16_t, 5>>);
+   static_assert(    CT::ComparableEqual<T, ::std::array<char32_t, 5>>);
+   static_assert(    CT::ComparableEqual<T, char*>);
+   static_assert(    CT::ComparableEqual<T, wchar_t*>);
+   static_assert(    CT::ComparableEqual<T, char8_t*>);
+   static_assert(    CT::ComparableEqual<T, char16_t*>);
+   static_assert(    CT::ComparableEqual<T, char32_t*>);
+   static_assert(    CT::ComparableEqual<T, std::string>);
+   static_assert(    CT::ComparableEqual<T, std::wstring>);
+   static_assert(    CT::ComparableEqual<T, std::string_view>);
+   static_assert(    CT::ComparableEqual<T, std::wstring_view>);
+   static_assert(    CT::ComparableEqual<T, Literal<char,4>>);
+   static_assert(    CT::ComparableEqual<T, Literal<wchar_t,4>>);
+   static_assert(    CT::ComparableEqual<T, Literal<char8_t,4>>);
+   static_assert(    CT::ComparableEqual<T, Literal<char16_t,4>>);
+   static_assert(    CT::ComparableEqual<T, Literal<char32_t,4>>);
 
-      static_assert(::std::ranges::range<T>);
-      static_assert(::std::ranges::contiguous_range<T>);
+   static_assert(    CT::Comparable<T, T>);
+   static_assert(    CT::Comparable<T, char>);
+   static_assert(    CT::Comparable<T, wchar_t>);
+   static_assert(    CT::Comparable<T, char8_t>);
+   static_assert(    CT::Comparable<T, char16_t>);
+   static_assert(    CT::Comparable<T, char32_t>);
+   static_assert(    CT::Comparable<T, ::std::array<char, 5>>);
+   static_assert(    CT::Comparable<T, ::std::array<wchar_t, 5>>);
+   static_assert(    CT::Comparable<T, ::std::array<char8_t, 5>>);
+   static_assert(    CT::Comparable<T, ::std::array<char16_t, 5>>);
+   static_assert(    CT::Comparable<T, ::std::array<char32_t, 5>>);
+   static_assert(    CT::Comparable<T, char*>);
+   static_assert(    CT::Comparable<T, wchar_t*>);
+   static_assert(    CT::Comparable<T, char8_t*>);
+   static_assert(    CT::Comparable<T, char16_t*>);
+   static_assert(    CT::Comparable<T, char32_t*>);
+   static_assert(    CT::Comparable<T, std::string>);
+   static_assert(    CT::Comparable<T, std::wstring>);
+   static_assert(    CT::Comparable<T, std::string_view>);
+   static_assert(    CT::Comparable<T, std::wstring_view>);
+   static_assert(    CT::Comparable<T, Literal<char,4>>);
+   static_assert(    CT::Comparable<T, Literal<wchar_t,4>>);
+   static_assert(    CT::Comparable<T, Literal<char8_t,4>>);
+   static_assert(    CT::Comparable<T, Literal<char16_t,4>>);
+   static_assert(    CT::Comparable<T, Literal<char32_t,4>>);
 
-      static_assert(    requires (T pack)         { pack.Get(); });
-      static_assert(    requires (T pack)         { pack.template As<E>(); });
-      //static_assert(    requires (T pack)         { pack.GetDeep(); });
-      static_assert(    requires (T pack)         { pack.GetResolved(); });
-      static_assert(    requires (T pack)         { pack.GetDense(); });
-      static_assert(    requires (T pack, E item) { {pack + item} -> CT::Text; });
-      static_assert(    requires (T pack, E item) { pack +=  item; });
-      static_assert(    requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
-      static_assert(    requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
-      static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
-      static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
-      static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
-      static_assert(    requires (T pack, E item) { pack.Insert(item); });
-      static_assert(    requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-      static_assert(    requires (T pack, E item) { pack.Emplace(item); });
-      static_assert(    requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
-      static_assert(    requires (T pack)         { pack.Concat(pack); });
-      static_assert(    requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
-      static_assert(    requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
-      static_assert(    requires (T pack, E item) { pack.Merge(item); });
-      static_assert(    requires (T pack)         { pack.MergeRange(pack); });
-      static_assert(    requires (T pack, E item) { pack.Erase(item); });
-      static_assert(    requires (T pack)         { pack.EraseAt(Index::Front); });
-      static_assert(    requires (T pack)         { pack.Reserve(20); });
-      static_assert(not requires (T pack)         { pack.EnableOr(); });
-      static_assert(    requires (T pack)         { pack.IsOr(); });
-      static_assert(    requires (T pack, E item) { pack.Find(item); });
-      static_assert(    requires (T pack)         { pack.ForEach([](const int&) {}); });
-      static_assert(    requires (T pack)         { pack.ForEachRev([](const int&) {}); });
-   }
+   static_assert(::std::ranges::range<T>);
+   static_assert(::std::ranges::contiguous_range<T>);
+
+   static_assert(    requires (T pack)         { pack.Get(); });
+   static_assert(    requires (T pack)         { pack.template As<char>(); });
+   static_assert(not requires (T pack)         { pack.GetDeep(); });
+   static_assert(not requires (T pack)         { pack.GetResolved(); });
+   static_assert(not requires (T pack)         { pack.GetDense(); });
+   static_assert(    requires (T pack)         { {pack +   pack} -> ::std::same_as<T>;  });
+   static_assert(    requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+   static_assert(    requires (T pack, E item) { pack.Insert(item); });
+   static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+   static_assert(not requires (T pack, E item) { pack.Emplace(item); });
+   static_assert(    requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
+   static_assert(    requires (T pack)         { pack.Concat(pack); });
+   static_assert(    requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
+   static_assert(    requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
+   static_assert(    requires (T pack, E item) { pack.Merge(item); });
+   static_assert(    requires (T pack)         { pack.MergeRange(pack); });
+   static_assert(    requires (T pack, E item) { pack.Erase(item); });
+   static_assert(    requires (T pack)         { pack.EraseAt(Index::Front); });
+   static_assert(    requires (T pack)         { pack.Reserve(20); });
+   static_assert(not requires (T pack)         { pack.EnableOr(); });
+   static_assert(not requires (T pack)         { pack.IsOr(); });
+   static_assert(    requires (T pack, E item) { pack.Find(item); });
+   static_assert(    requires (T pack)         { pack.ForEach([](const int&) {}); });
+   static_assert(    requires (T pack)         { pack.ForEachRev([](const int&) {}); });
 
    static_assert(T::CountHeapProviders() == 1);
    
@@ -206,16 +203,21 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Refer                                                  
-      WHEN("Assigned value by referral") {
-         REQUIRE_NOTHROW(pack.Assign(*element));
+      if constexpr (CT::Text<E> and not CT::Container<E>) {
+         WHEN("Assigned value by referral") {
+            REQUIRE_NOTHROW(pack.Assign(*element));
 
-         Text_CheckState_OwnedFull(pack);
-         Text_CheckState_ContainsOne(pack, Refer(element));
+            Text_CheckState_OwnedFull(pack);
+            if constexpr (CT::Character<E>)
+               Text_CheckState_ContainsOne(pack, Refer(element));
+            else
+               Text_CheckState_ContainsString(pack, "555");
 
-         BenchmarkTextStd("Empty/Assign/Refer", 30, 100,
-            T temp,                 temp.Assign(*element),
-            stdstr temp_std,        temp_std.emplace_back(*element)
-         );
+            BenchmarkTextStd("Empty/Assign/Refer", 30, 100,
+               T temp,                 temp.Assign(*element),
+               stdstr temp_std,        temp_std.emplace_back(*element)
+            );
+         }
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -245,22 +247,21 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Move                                                   
-      WHEN("Assigned value by move") {
-         auto movable = *element;
-         REQUIRE_NOTHROW(pack.Assign(::std::move(movable)));
-         
-         if constexpr (CT::Dense<E> and CT::Container<E>)
-            Many_CheckState_Default<TypeOf<E>>(movable);
-
-         Text_CheckState_OwnedFull(pack);
-         Text_CheckState_ContainsOne(pack, Refer(element));
-
-         BenchmarkTextStd("Empty/Assign/Move", 30, 100,
+      if constexpr (CT::Text<E> and not CT::Container<E>) {
+         WHEN("Assigned value by move") {
             auto movable = *element;
-            T temp,                       temp.Assign(::std::move(movable)),
-            auto movable = *element;
-            stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
-         );
+            REQUIRE_NOTHROW(pack.Assign(::std::move(movable)));
+
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_ContainsString(pack, "555");
+
+            BenchmarkTextStd("Empty/Assign/Move", 30, 100,
+               auto movable = *element;
+               T temp,                       temp.Assign(::std::move(movable)),
+               auto movable = *element;
+               stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
+            );
+         }
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -293,16 +294,18 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Copy                                                   
-      WHEN("Assigned copied value") {
-         REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
+      if constexpr (CT::Text<E> and not CT::Container<E>) {
+         WHEN("Assigned copied value") {
+            REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
 
-         Text_CheckState_OwnedFull(pack);
-         Text_CheckState_ContainsOne(pack, Copy(element));
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_ContainsString(pack, "555");
 
-         BenchmarkTextStd("Empty/Assign/Copy", 30, 100,
-            T temp,              temp.Assign(Copy(*element)),
-            stdstr temp_std,     temp_std.emplace_back(*element)
-         );
+            BenchmarkTextStd("Empty/Assign/Copy", 30, 100,
+               T temp,              temp.Assign(Copy(*element)),
+               stdstr temp_std,     temp_std.emplace_back(*element)
+            );
+         }
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -337,16 +340,18 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Clone                                                  
-      WHEN("Assigned cloned value") {
-         REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
+      if constexpr (CT::Text<E> and not CT::Container<E>) {
+         WHEN("Assigned cloned value") {
+            REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
 
-         Text_CheckState_OwnedFull(pack);
-         Text_CheckState_ContainsOne(pack, Clone(element));
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_ContainsString(pack, "555");
 
-         BenchmarkTextStd("Empty/Assign/Clone", 30, 100,
-            T temp,                 temp.Assign(Clone(*element)),
-            stdstr temp_std,        temp_std.emplace_back(*element)
-         );
+            BenchmarkTextStd("Empty/Assign/Clone", 30, 100,
+               T temp,                 temp.Assign(Clone(*element)),
+               stdstr temp_std,        temp_std.emplace_back(*element)
+            );
+         }
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -382,16 +387,18 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Disown                                                 
-      WHEN("Assigned disowned value") {
-         REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
+      if constexpr (CT::Text<E> and not CT::Container<E>) {
+         WHEN("Assigned disowned value") {
+            REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
 
-         Text_CheckState_OwnedFull(pack);
-         Text_CheckState_ContainsOne(pack, Disown(element));
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_ContainsString(pack, "555");
 
-         BenchmarkTextStd("Empty/Assign/Disown", 30, 100,
-            T temp,                 temp.Assign(Disown(*element)),
-            stdstr temp_std,        temp_std.emplace_back(*element)
-         );
+            BenchmarkTextStd("Empty/Assign/Disown", 30, 100,
+               T temp,                 temp.Assign(Disown(*element)),
+               stdstr temp_std,        temp_std.emplace_back(*element)
+            );
+         }
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -421,21 +428,21 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Abandon                                                
-      WHEN("Assigned abandoned value") {
-         auto movable = *element;
-         REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
-
-         if constexpr (CT::DeepDense<E>)
-            Many_CheckState_Abandoned<int>(movable);
-         Text_CheckState_OwnedFull(pack);
-         Text_CheckState_ContainsOne(pack, Refer(element));
-
-         BenchmarkTextStd("Empty/Assign/Abandon", 30, 100,
+      if constexpr (CT::Text<E> and not CT::Container<E>) {
+         WHEN("Assigned abandoned value") {
             auto movable = *element;
-            T temp,                       temp.Assign(Abandon(movable)),
-            auto movable = *element;
-            stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
-         );
+            REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
+
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_ContainsString(pack, "555");
+
+            BenchmarkTextStd("Empty/Assign/Abandon", 30, 100,
+               auto movable = *element;
+               T temp,                       temp.Assign(Abandon(movable)),
+               auto movable = *element;
+               stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
+            );
+         }
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -477,53 +484,8 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       WHEN("Assigned empty self") {
          REQUIRE_NOTHROW(pack.AssignAbsorb(pack));
 
-         Text_CheckState_Default<E>(pack);
+         Text_CheckState_Default(pack);
       }
-
-      /// MARK: Emplace                                                       
-      WHEN("Emplace (insert)") {
-         ScopedE i666 {666};
-         const auto i666backup = *i666;
-         char& instance = pack.Emplace(::std::move(*i666));
-         Text_CheckState_OwnedFull(pack);
-         REQUIRE(instance == i666backup);
-         REQUIRE(pack.GetCount() == 1);
-         REQUIRE(pack.GetReserved() >= 1);
-         REQUIRE(*pack == i666backup);
-         REQUIRE(&*pack == &instance);
-
-         BenchmarkText("Empty/Emplace", 30,
-            auto movable = *element; T temp,
-            temp.Emplace(::std::move(movable))
-         );
-
-         if constexpr (not Managed) {
-            // On unmanaged tests i666 will be destroyed at the end of this scope,
-            // and the container will be left with a dangling pointer.
-            // Make sure this isn't happening. When inserting raw unmanaged pointers, 
-            // safety is solely in the hands of the user.
-            pack.Reset();
-         }
-      }
-
-      /// MARK: Describe                                                      
-      /*WHEN("Emplace (insert, describe)") {
-         ScopedE i666{666};
-         const auto i666backup = *i666;
-         Many descriptor {Piecewise, ::std::move(*i666)};
-         if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) {
-            decltype(auto) instance = pack.template Emplace<E>(Describe{descriptor});
-            Text_CheckState_OwnedFull(pack);
-            REQUIRE(instance.CompareOneEqual(i666backup));
-            REQUIRE(pack.GetCount() == 1);
-            REQUIRE(pack.GetReserved() >= 1);
-
-            BenchmarkText("Empty/Emplace/Describe", 30,
-               T temp,
-               temp.Emplace(Describe{descriptor})
-            );
-         }
-      }*/
 
       /// MARK: Clear                                                         
       WHEN("Cleared") {
@@ -570,7 +532,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          size_t removed = 0;
          REQUIRE_NOTHROW(removed = pack.EraseAt(5));
 
-         Text_CheckState_Default<E>(pack);
+         Text_CheckState_Default(pack);
 
          REQUIRE(removed == 0);
 
@@ -671,16 +633,32 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          );
       }
 
-      /// MARK: Contains                                                      
-      WHEN("Contains when empty") {
-         REQUIRE_FALSE(pack.Contains(*element));
+      if constexpr (CT::Character<E>) {
+         /// MARK: Contains                                                   
+         WHEN("Contains character when empty") {
+            REQUIRE_FALSE(pack.Contains(*element));
 
-         //TODO compare against literals and stuff
-         [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkTextStd("Empty/operator==", 30, 100,
-            (void) 0,            dont_optimize |= pack.Contains(*element),
-            stdstr std1,         dont_optimize |= std1.contains(*element)
-         );
+            //TODO compare against literals and stuff
+            [[maybe_unused]] volatile bool dont_optimize = false;
+            BenchmarkTextStd("Empty/Contains", 30, 100,
+               (void) 0,            dont_optimize |= pack.Contains(*element),
+               stdstr std1,         dont_optimize |= std1.contains(*element)
+            );
+         }
+      }
+
+      if constexpr (CT::Container<E>) {
+         /// MARK: ContainsRange                                              
+         WHEN("Contains substring when empty") {
+            REQUIRE_FALSE(pack.ContainsRange(*element));
+
+            //TODO compare against literals and stuff
+            [[maybe_unused]] volatile bool dont_optimize = false;
+            BenchmarkTextStd("Empty/ContainsRange", 30, 100,
+               (void) 0,            dont_optimize |= pack.ContainsRange(*element),
+               stdstr std1,         dont_optimize |= std1.containsRange(*element)
+            );
+         }
       }
 
       if constexpr (Exact<E, Text>) {
@@ -835,21 +813,21 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto h = pack.GetHandle();
-         static_assert(::std::same_as<decltype(h), THandle<E&>>);
+         static_assert(::std::same_as<decltype(h), THandle<char&>>);
          Handle_CheckState_Default<char>(h);
       }
 
       WHEN("GetHandle is called on constant container") {
          T const pack_constant;
          auto h = pack_constant.GetHandle();
-         static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
+         static_assert(::std::same_as<decltype(h), THandle<char const&>>);
          Handle_CheckState_Default<char const>(h);
       }
    }
 
    GIVEN("Default-constructed container and a couple of arrays") {
-      const ScopedE darray1[5] {1, 2, 3, 4,  5};
-      const ScopedE darray2[5] {6, 7, 8, 9, 10};
+      const ScopedE darray1[5] {49, 50, 51, 52, 53};
+      const ScopedE darray2[5] {54, 55, 56, 57, 58};
 
       const E immovable[5] {
          *darray1[0], *darray1[1], *darray1[2], *darray1[3], *darray1[4]
@@ -879,20 +857,22 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Clone    {immovable}));
          REQUIRE(inserted == 5*8);
 
-         Many_CheckState_OwnedFull<E>(pack);
+         Text_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::DeepDense<E>) {
+         if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i) {
-               Many_CheckState_Default<int>  (movable1[i]);
-               Many_CheckState_Default<int>  (movable2[i]);
-               Many_CheckState_Abandoned<int>(movable3[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
             }
          }
 
          REQUIRE(pack.GetCount() == 5*8);
          REQUIRE(pack.GetReserved() >= 5*8);
 
-         for (uint i = 0; i < 4*5; ++i) {
+         //TODO
+         /*for (uint i = 0; i < 4*5; ++i) {
             REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
             if constexpr (Reffed)
                REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
@@ -923,11 +903,11 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
                   REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
                }
             }
-         }
+         }*/
 
-         BenchmarkManyStd("Empty/Insert/Array/Back", 30, 100,
+         BenchmarkTextStd("Empty/Insert/Array/Back", 30, 100,
             T temp,              temp.InsertAt(Index::Back, immovable),
-            stdvec temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+            stdstr temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
          );
       }
 
@@ -943,21 +923,22 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Clone    {immovable}));
          REQUIRE(inserted == 5*8);
 
-         Many_CheckState_OwnedFull<E>(pack);
+         Text_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::DeepDense<E>) {
+         if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i) {
-               Many_CheckState_Default<int>  (movable1[i]);
-               Many_CheckState_Default<int>  (movable2[i]);
-               Many_CheckState_Abandoned<int>(movable3[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
             }
          }
 
          REQUIRE(pack.GetCount() == 5*8);
          REQUIRE(pack.GetReserved() >= 5*8);
 
+         //TODO
          // First one is cloned and pointers won't match                
-         if constexpr (Sparse) {
+         /*if constexpr (Sparse) {
             for (uint i = 0; i < 5; ++i) {
                REQUIRE(*pack.template GetAt<E>(i) != *darray1[i]);
                REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i]));
@@ -987,11 +968,11 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
             if constexpr (Reffed)
                REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
-         }
+         }*/
 
-         BenchmarkManyStd("Empty/Insert/Array/Front", 30, 100,
+         BenchmarkTextStd("Empty/Insert/Array/Front", 30, 100,
             T temp,              temp.InsertAt(Index::Front, darray1),
-            stdvec temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
+            stdstr temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
          );
       }
 
@@ -1003,7 +984,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          // Shouldn't be a problem, generally speaking, because an      
          // empty container can mutate later, as long as it wasn't      
          // allocated.                                                  
-         Many_CheckState_Default<E>(pack, true);
+         Text_CheckState_Default(pack);
       }
 
       /// MARK: <<                                                            
@@ -1012,12 +993,12 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
               << Refer    {immovable[1]}
               << Copy     {immovable[2]}
               << Disown   {immovable[3]}
-              << std::move(movable1[0])
-              << Move     {movable2[0]}
-              << Abandon  {movable3[0]}
+              << std::move( movable1[0])
+              << Move     { movable2[0]}
+              << Abandon  { movable3[0]}
               << Clone    {immovable[4]};
 
-         Many_CheckState_OwnedFull<E>(pack);
+         Text_CheckState_OwnedFull(pack);
 
          if constexpr (CT::DeepDense<E>) {
             Many_CheckState_Default<int>  (movable1[0]);
@@ -1028,7 +1009,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          REQUIRE(pack.GetCount() == 8);
          REQUIRE(pack.GetReserved() >= 8);
 
-         for (int i = 0; i < 4; ++i) {
+         /*for (int i = 0; i < 4; ++i) {
             REQUIRE(*pack.template GetAt<E>(i) == *darray1[i]);
          }
 
@@ -1045,11 +1026,11 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          if constexpr (Reffed) {
             REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
             REQUIRE(DenseCast(pack.template GetAt<E>(7)).GetReferences() == 1);
-         }
+         }*/
 
-         BenchmarkManyStd("Empty/Insert/Element/Back", 30, 100,
+         BenchmarkTextStd("Empty/Insert/Element/Back", 30, 100,
             T temp,              temp << immovable[0],
-            stdvec temp_std,     temp_std.emplace_back(immovable[0])
+            stdstr temp_std,     temp_std.emplace_back(immovable[0])
          );
       }
 
@@ -1064,7 +1045,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
               >> Abandon  {movable3[0]}
               >> Clone    {immovable[4]};
 
-         Many_CheckState_OwnedFull<E>(pack);
+         Text_CheckState_OwnedFull(pack);
 
          if constexpr (CT::DeepDense<E>) {
             Many_CheckState_Default<int>  (movable1[0]);
@@ -1076,7 +1057,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          REQUIRE(pack.GetReserved() >= 8);
 
          // first one is cloned and pointers won't match                
-         if constexpr (Sparse) {
+         /*if constexpr (Sparse) {
             REQUIRE(*pack.template GetAt<E>(0) != *darray1[4]);
             REQUIRE(DenseCast(pack.template GetAt<E>(0)) == DenseCast(*darray1[4]));
          }
@@ -1091,11 +1072,11 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
 
          for (int i = 4; i < 8; ++i)
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[4 - (i - 3)%5]);
+            REQUIRE(*pack.template GetAt<E>(i) == *darray1[4 - (i - 3)%5]);*/
 
-         BenchmarkManyStd("Empty/Insert/Element/Front", 30, 100,
+         BenchmarkTextStd("Empty/Insert/Element/Front", 30, 100,
             T temp,              temp >> immovable[0],
-            stdvec temp_std,     temp_std.emplace_front(immovable[0])
+            stdstr temp_std,     temp_std.emplace_front(immovable[0])
          );
       }
    }

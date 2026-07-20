@@ -64,7 +64,7 @@ namespace Langulus
 
    /// Serialize                                                              
    template<class FROM, CT::Serializer TO> requires CT::NoIntent<FROM, TO>
-   auto Serialize(FROM& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
+   auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
       const typename DTO::CountType initial = to.GetCount();

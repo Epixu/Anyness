@@ -89,7 +89,7 @@ namespace Langulus::Anyness::Component
    struct Assignment {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int ComponentPrecedence = 3000;
       template<Cid SID>
@@ -98,15 +98,13 @@ namespace Langulus::Anyness::Component
       //template<CT::Container C, class A>
       //void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
 
-      /// MARK: Public                                                        
+      /// MARK: Assign                                                        
       /// Assign a value to the first element, if that element is initialized.
       /// If the element isn't initialized yet it will be constructed.        
       ///   @param argument the argument to assign                            
       ///   @return reference to self                                         
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument) {
-         //using I = IntentOf(argument);
-
          if constexpr (not CT::Contiguous<C>) {
             // Assignment for maps/sets falls back to merge             
             self.Clear();
@@ -118,17 +116,6 @@ namespace Langulus::Anyness::Component
             auto& data = self.template AccessProvider<ID>();
             data = LglsFwd(argument);
          }
-         /*else if constexpr (CT::Handle<C>) {
-            // Handles can't reallocate                                 
-            if constexpr (CT::Handle<A>)
-               self.AbsorbType(Copy(argument));
-            else
-               self.DeduceType(LglsFwd(argument));
-
-            Id::ForEach([&]<Cid D>{
-               self.template AssignWithIntent<D>(FWDIntent(argument));
-            });
-         }*/
          else {
             // This container is heap-allocated                         
             if constexpr (CT::Handle<A>)
@@ -141,12 +128,8 @@ namespace Langulus::Anyness::Component
                   // Container is empty, we might have to fresh-allocate
                   ThisCom::PrepareForReconstruction();
 
-                  //auto first = self.GetHandle();
                   Id::ForEach([&]<Cid D>{
-                     //if constexpr (CT::Cloned<I>)
-                        self.template EmplaceWithIntent<D>(FWDIntent(argument));
-                     //else
-                     //   first.template EmplaceWithIntent<D>(Refer(LglsFwd(argument)));
+                     self.template EmplaceWithIntent<D>(FWDIntent(argument));
                   });
 
                   if_available(self.SetCountInner(1));
@@ -176,6 +159,7 @@ namespace Langulus::Anyness::Component
          return self;
       }
 
+      /// MARK: SwapContents                                                  
       /// Swap the value of the first element, if that element is initialized.
       /// If the element isn't initialized yet it will be move-constructed,   
       /// with the argument ending up as default.                             
@@ -214,6 +198,7 @@ namespace Langulus::Anyness::Component
       LglsComIndexedCommonHashed(friend);
       LglsComConversion(friend);
 
+      /// MARK: PrepareForReconstruction                                      
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         
       ///   @attention for non-handles only, may cause reallocation.          
@@ -234,8 +219,7 @@ namespace Langulus::Anyness::Component
                //WORKAROUND pacifies both...                            
                //self.P::AllocateFresh(self.P::RequestHeap(1));
                auto alloc = &P::template AllocateFresh<P::Id::First, C>;
-               //auto reqhp = &P::template RequestHeap<P::Id::First, C>;
-               alloc(self, 1 /*reqhp(self, 1)*/);
+               alloc(self, 1);
             });
             return;
          }
@@ -275,8 +259,7 @@ namespace Langulus::Anyness::Component
             //WORKAROUND pacifies both...                               
             //self.P::AllocateFresh(self.P::RequestHeap(1));
             auto alloc = &P::template AllocateFresh<P::Id::First, C>;
-            //auto reqhp = &P::template RequestHeap<P::Id::First, C>;
-            alloc(self, 1 /*reqhp(self, 1)*/);
+            alloc(self, 1);
          });
       }
 
@@ -292,6 +275,7 @@ namespace Langulus::Anyness::Component
          self.template Free<false>();
       }
 
+      /// MARK: PrepareForReassignment                                        
       /// A helper for clearing and allocating memory before assignment.      
       /// Calls destructors on all elements, except the first one.            
       ///   @attention operates in all relevant dimensions simultaneously     
@@ -357,6 +341,7 @@ namespace Langulus::Anyness::Component
          return false;
       }*/
       
+      /// MARK: AssignWithIntent                                              
       /// Overwrite first element using an intent                             
       ///   @attention Assumes destination memory has been constructed,       
       ///      including all levels of indirection                            
@@ -373,12 +358,7 @@ namespace Langulus::Anyness::Component
          //   "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
             "Can be used only for contiguous containers");
-         /*static_assert(not CT::Cloned<I> and not CT::Copied<I> and CT::HeapAllocated<C>,
-            "Since this function assumes container has been preallocated, "
-            "it makes no sense to clone or copy here "
-            "- it should be handled outside this call."
-         );*/ // WRONG! we're doing assignment, not construction, so it is completely normal to use these intents on assignment in particular
-
+            
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.template GetRaw<SID>(),  "Invalid heap");
          LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");

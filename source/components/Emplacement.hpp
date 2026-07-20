@@ -658,7 +658,7 @@ namespace Langulus::Anyness::Component
 
                // Allocate if we have to                                
                if constexpr (STRAT == AllocationStrategy::FreshAllocate)
-                  self.template AllocateFresh<SID>(1 /*self.template RequestHeap<SID>(1)*/);
+                  self.template AllocateFresh<SID>(1);
                else if constexpr (STRAT == AllocationStrategy::Reallocate)
                   self.template AllocateMore<SID>(1);
 
@@ -680,7 +680,7 @@ namespace Langulus::Anyness::Component
                // Allocate if we have to. Do it only after we're sure   
                // that construction is possible                         
                if constexpr (STRAT == AllocationStrategy::FreshAllocate)
-                  self.template AllocateFresh<SID>(1 /*self.template RequestHeap<SID>(1)*/);
+                  self.template AllocateFresh<SID>(1);
                else if constexpr (STRAT == AllocationStrategy::Reallocate)
                   self.template AllocateMore<SID>(1);
 
@@ -698,7 +698,7 @@ namespace Langulus::Anyness::Component
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
             if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
-               self.template AllocateFresh<SID>(1 /*self.template RequestHeap<SID>(1)*/);
+               self.template AllocateFresh<SID>(1);
             }
             else if constexpr (STRAT == AllocationStrategy::Reallocate) {
                self.template AllocateMore<SID>(1);
@@ -775,7 +775,7 @@ namespace Langulus::Anyness::Component
 
                      // Allocate if we have to                          
                      if constexpr (STRAT == AllocationStrategy::FreshAllocate)
-                        self.template AllocateFresh<SID>(1 /*self.template RequestHeap<SID>(1)*/);
+                        self.template AllocateFresh<SID>(1);
                      else if constexpr (STRAT == AllocationStrategy::Reallocate)
                         self.template AllocateMore<SID>(1);
 
@@ -795,7 +795,7 @@ namespace Langulus::Anyness::Component
                      // Allocate if we have to. Do it only after we're  
                      // sure that construction is possible              
                      if constexpr (STRAT == AllocationStrategy::FreshAllocate)
-                        self.template AllocateFresh<SID>(1 /*self.template RequestHeap<SID>(1)*/);
+                        self.template AllocateFresh<SID>(1);
                      else if constexpr (STRAT == AllocationStrategy::Reallocate)
                         self.template AllocateMore<SID>(1);
 
@@ -813,7 +813,7 @@ namespace Langulus::Anyness::Component
 
                   // Allocate if we have to                             
                   if constexpr (STRAT == AllocationStrategy::FreshAllocate)
-                     self.template AllocateFresh<SID>(1 /*self.template RequestHeap<SID>(1)*/);
+                     self.template AllocateFresh<SID>(1);
                   else if constexpr (STRAT == AllocationStrategy::Reallocate)
                      self.template AllocateMore<SID>(1);
 
@@ -844,15 +844,8 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
-            /*if constexpr (STRAT != AllocationStrategy::DontAllocate) {
-               if constexpr (CT::Handle<A...>)
-                  self.AbsorbType(Copy(arguments)...);
-               else
-                  self.DeduceType(arguments...);
-            }*/
-
             if constexpr (STRAT == AllocationStrategy::FreshAllocate) {
-               if_available(self.template AllocateFresh<SID>(1 /*self.template RequestHeap<SID>(1)*/));
+               if_available(self.template AllocateFresh<SID>(1));
             }
             else if constexpr (STRAT == AllocationStrategy::Reallocate) {
                if_available(self.template AllocateMore<SID>(1));

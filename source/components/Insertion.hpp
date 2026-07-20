@@ -188,7 +188,8 @@ namespace Langulus::Anyness::Component
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         if constexpr (CT::NotVoid<AS> and not Same<TypeOf<AS>, Deint<A1>, Deint<AN>...>) {
+         if constexpr (CT::NotVoid<AS>
+         and not Same<TypeOf<AS>, DeextAll<Deint<A1>>, DeextAll<Deint<AN>>...>) {
             // Conversion to AS required.                               
             static_assert(Exact<C, AS>, "Serializing insertion type mismatch");
             const size_t initial_count = self.GetCountInner();
@@ -721,16 +722,27 @@ namespace Langulus::Anyness::Component
          static_assert(CT::NotVoid<AS> and not Same<TypeOf<AS>, IT>,
             "Use InsertInner instead");
       
-         AS converted;
-         if constexpr (CT::Array<T>) {
-            for (size_t i = 0; i < ExtentOf<T>; ++i)
-               Langulus::Serialize(DeintCast(a)[i], converted);
-         }
-         else Langulus::Serialize(DeintCast(a), converted);
+         //if constexpr (not Same<C, IT>) {
+            // Convert all arguments and then concatenate the results   
+            AS converted;
+            if constexpr (CT::Array<T>) {
+               for (size_t i = 0; i < ExtentOf<T>; ++i)
+                  Langulus::Serialize(DeintCast(a)[i], converted);
+            }
+            else Langulus::Serialize(DeintCast(a), converted);
 
-         const size_t offset = converted.GetCount();
-         ThisCom::ConcatAt(at, Abandon {converted});
-         at += offset;
+            const size_t offset = converted.GetCount();
+            ThisCom::ConcatAt(at, Abandon {converted});
+            at += offset;
+         /*}
+         else {
+            // No conversion required, just concatenate the results     
+            if constexpr (CT::Array<T>) {
+               for (size_t i = 0; i < ExtentOf<T>; ++i)
+                  at += ThisCom::ConcatAt(at, I::Nest(DeintCast(a)[i]));
+            }
+            else at += ThisCom::ConcatAt(at, I::Nest(a));
+         }*/
       }
 
       /// MARK: InsertInner                                                   

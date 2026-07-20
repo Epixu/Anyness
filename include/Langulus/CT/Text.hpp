@@ -24,7 +24,7 @@ namespace Langulus::CT
    /// This accounts for all character pointers that <do not have extents>.   
    template<class...T>
    concept TextPointer = PartialValidate<T...>
-       and ((Sparse<T> and Character<Deptr<Deref<T>>>) and ...);
+       and ((Sparse<T> and Character<Deptr<T>>) and ...);
    
    /// Concept for any possible standard library representation of a string.  
    /// This includes not only std::string, but also any contiguous range      

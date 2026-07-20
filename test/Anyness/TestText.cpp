@@ -271,6 +271,7 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
 
    GIVEN("Uninitialized text container") {
       T* text = nullptr;
+      prevent_optimization(text);
 
       WHEN("Constructed with a null-terminated c-string") {
          text = new T {"test1"};

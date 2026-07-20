@@ -109,7 +109,7 @@ void Text_VerifyAccessorInterface(T const& text, I&& arg) {
    Many_VerifyAccessorInterface(text, LglsFwd(arg));
 }
 
-template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+/*template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Text_CheckState_ContainsOne(T const& text, I&& e_with_intent, int uses = 1) {
    Many_CheckState_ContainsOne(text, LglsFwd(e_with_intent), uses);
 }
@@ -117,11 +117,34 @@ void Text_CheckState_ContainsOne(T const& text, I&& e_with_intent, int uses = 1)
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Text_CheckState_ContainsN(size_t n, const T& many, I&& e_scoped_with_intent, int uses = 1) {
    Many_CheckState_ContainsN(n, many, LglsFwd(e_scoped_with_intent), uses);
-}
+}*/
 
-template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
-void Text_CheckState_ContainsArray(const T& many, I&& e_scoped_array_with_intent) {
-   Many_CheckState_ContainsArray(many, LglsFwd(e_scoped_array_with_intent));
+template<CT::Container T, CT::Array I> requires CT::NoIntent<I>
+void Text_CheckState_ContainsString(const T& many, I&& e) {
+   constexpr size_t n = ExtentOf<I> - 1;
+
+   REQUIRE(many.GetCount() == n);
+   REQUIRE(many.GetUses() == 1);
+   REQUIRE(many.GetReserved() >= n);
+
+   int index = 0;
+   for (auto& it : many)
+      REQUIRE(it == e[index++]);
+   REQUIRE(index == n);
+
+   REQUIRE(*many.Get() == e[0]);
+   REQUIRE(many.template As<char>() == e[0]);
+
+   for (size_t i = 0; i < n; ++i) {
+      REQUIRE(many.GetRaw()[i] == e[i]);
+      REQUIRE(many.template AsAt<char>(i) == e[i]);
+      REQUIRE(many.template GetRawAs<char>()[i] == e[i]);
+
+      if constexpr (T::TypeErased) {
+         REQUIRE_THROWS(many.template As<float>(i) == 0.0f);
+         REQUIRE_THROWS(many.template As<float*>(i) == nullptr);
+      }
+   }
 }
 
 template<CT::Container T, class E> requires CT::NoIntent<T>
