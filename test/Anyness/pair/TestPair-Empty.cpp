@@ -41,96 +41,97 @@ namespace Langulus::Anyness
 
 TEST_CASE_TEMPLATE("Test empty Pair/TPair", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Pair, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
-   , Types<Pair, int,    ScopedElement<int>,     int,    ScopedElement<int>>
-   , Types<Pair, Any,    ScopedElement<Any>,     Any,    ScopedElement<Any>>
-   , Types<Pair, RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
-   , Types<Pair, char,   ScopedElement<char>,    char,   ScopedElement<char>>
+   , Types<Pair, ScopedElement<Text>,    ScopedElement<Text>>
+   , Types<Pair, ScopedElement<int>,     ScopedElement<int>>
+   , Types<Pair, ScopedElement<Any>,     ScopedElement<Any>>
+   , Types<Pair, ScopedElement<RT>,      ScopedElement<RT>>
+   , Types<Pair, ScopedElement<char>,    ScopedElement<char>>
 
-   , Types<Pair, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
-   , Types<Pair, int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
-   , Types<Pair, Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
-   , Types<Pair, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
-   , Types<Pair, char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
+   , Types<Pair, ScopedElement<Text*>,   ScopedElement<Text*>>
+   , Types<Pair, ScopedElement<int*>,    ScopedElement<int*>>
+   , Types<Pair, ScopedElement<Any*>,    ScopedElement<Any*>>
+   , Types<Pair, ScopedElement<RT*>,     ScopedElement<RT*>>
+   , Types<Pair, ScopedElement<char*>,   ScopedElement<char*>>
 
-   , Types<Pair, Text**, ScopedElement<Text**>,  Text**, ScopedElement<Text**>>
-   , Types<Pair, int**,  ScopedElement<int**>,   int**,  ScopedElement<int**>>
-   , Types<Pair, Any**,  ScopedElement<Any**>,   Any**,  ScopedElement<Any**>>
-   , Types<Pair, RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
-   , Types<Pair, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
+   , Types<Pair, ScopedElement<Text**>,  ScopedElement<Text**>>
+   , Types<Pair, ScopedElement<int**>,   ScopedElement<int**>>
+   , Types<Pair, ScopedElement<Any**>,   ScopedElement<Any**>>
+   , Types<Pair, ScopedElement<RT**>,    ScopedElement<RT**>>
+   , Types<Pair, ScopedElement<char**>,  ScopedElement<char**>>
 
-   , Types<TPair<Text,   Text>,   Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
-   , Types<TPair<int,    int>,    int,    ScopedElement<int>,     int,    ScopedElement<int>>
-   , Types<TPair<Any,    Any>,    Any,    ScopedElement<Any>,     Any,    ScopedElement<Any>>
-   , Types<TPair<RT,     RT>,     RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
-   , Types<TPair<char,   char>,   char,   ScopedElement<char>,    char,   ScopedElement<char>>
+   , Types<TPair<Text,   Text>,   ScopedElement<Text>,    ScopedElement<Text>>
+   , Types<TPair<int,    int>,    ScopedElement<int>,     ScopedElement<int>>
+   , Types<TPair<Any,    Any>,    ScopedElement<Any>,     ScopedElement<Any>>
+   , Types<TPair<RT,     RT>,     ScopedElement<RT>,      ScopedElement<RT>>
+   , Types<TPair<char,   char>,   ScopedElement<char>,    ScopedElement<char>>
 
-   , Types<TPair<Text*,  Text*>,  Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
-   , Types<TPair<int*,   int*>,   int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
-   , Types<TPair<Any*,   Any*>,   Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
-   , Types<TPair<RT*,    RT*>,    RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
-   , Types<TPair<char*,  char*>,  char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
+   , Types<TPair<Text*,  Text*>,  ScopedElement<Text*>,   ScopedElement<Text*>>
+   , Types<TPair<int*,   int*>,   ScopedElement<int*>,    ScopedElement<int*>>
+   , Types<TPair<Any*,   Any*>,   ScopedElement<Any*>,    ScopedElement<Any*>>
+   , Types<TPair<RT*,    RT*>,    ScopedElement<RT*>,     ScopedElement<RT*>>
+   , Types<TPair<char*,  char*>,  ScopedElement<char*>,   ScopedElement<char*>>
 
-   , Types<TPair<Text**, Text**>, Text**, ScopedElement<Text**>,  Text**, ScopedElement<Text**>>
-   , Types<TPair<int**,  int**>,  int**,  ScopedElement<int**>,   int**,  ScopedElement<int**>>
-   , Types<TPair<Any**,  Any**>,  Any**,  ScopedElement<Any**>,   Any**,  ScopedElement<Any**>>
-   , Types<TPair<RT**,   RT**>,   RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
-   , Types<TPair<char**, char**>, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
+   , Types<TPair<Text**, Text**>, ScopedElement<Text**>,  ScopedElement<Text**>>
+   , Types<TPair<int**,  int**>,  ScopedElement<int**>,   ScopedElement<int**>>
+   , Types<TPair<Any**,  Any**>,  ScopedElement<Any**>,   ScopedElement<Any**>>
+   , Types<TPair<RT**,   RT**>,   ScopedElement<RT**>,    ScopedElement<RT**>>
+   , Types<TPair<char**, char**>, ScopedElement<char**>,  ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Pair, Text,   ScopedElement<Text, true>,    Text,   ScopedElement<Text, true>>
-   , Types<Pair, int,    ScopedElement<int,  true>,    int,    ScopedElement<int,  true>>
-   , Types<Pair, Any,    ScopedElement<Any,  true>,    Any,    ScopedElement<Any,  true>>
-   , Types<Pair, RT,     ScopedElement<RT,   true>,    RT,     ScopedElement<RT,   true>>
-   , Types<Pair, char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
+   , Types<Pair, ScopedElement<Text, true>,    ScopedElement<Text, true>>
+   , Types<Pair, ScopedElement<int,  true>,    ScopedElement<int,  true>>
+   , Types<Pair, ScopedElement<Any,  true>,    ScopedElement<Any,  true>>
+   , Types<Pair, ScopedElement<RT,   true>,    ScopedElement<RT,   true>>
+   , Types<Pair, ScopedElement<char, true>,    ScopedElement<char, true>>
 
-   , Types<Pair, Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
-   , Types<Pair, int*,   ScopedElement<int*,  true>,   int*,   ScopedElement<int*,  true>>
-   , Types<Pair, Any*,   ScopedElement<Any*,  true>,   Any*,   ScopedElement<Any*,  true>>
-   , Types<Pair, RT*,    ScopedElement<RT*,   true>,   RT*,    ScopedElement<RT*,   true>>
-   , Types<Pair, char*,  ScopedElement<char*, true>,   char*,  ScopedElement<char*, true>>
+   , Types<Pair, ScopedElement<Text*, true>,   ScopedElement<Text*, true>>
+   , Types<Pair, ScopedElement<int*,  true>,   ScopedElement<int*,  true>>
+   , Types<Pair, ScopedElement<Any*,  true>,   ScopedElement<Any*,  true>>
+   , Types<Pair, ScopedElement<RT*,   true>,   ScopedElement<RT*,   true>>
+   , Types<Pair, ScopedElement<char*, true>,   ScopedElement<char*, true>>
 
-   , Types<Pair, Text**, ScopedElement<Text**, true>,  Text**, ScopedElement<Text**, true>>
-   , Types<Pair, int**,  ScopedElement<int**,  true>,  int**,  ScopedElement<int**,  true>>
-   , Types<Pair, Any**,  ScopedElement<Any**,  true>,  Any**,  ScopedElement<Any**,  true>>
-   , Types<Pair, RT**,   ScopedElement<RT**,   true>,  RT**,   ScopedElement<RT**,   true>>
-   , Types<Pair, char**, ScopedElement<char**, true>,  char**, ScopedElement<char**, true>>
+   , Types<Pair, ScopedElement<Text**, true>,  ScopedElement<Text**, true>>
+   , Types<Pair, ScopedElement<int**,  true>,  ScopedElement<int**,  true>>
+   , Types<Pair, ScopedElement<Any**,  true>,  ScopedElement<Any**,  true>>
+   , Types<Pair, ScopedElement<RT**,   true>,  ScopedElement<RT**,   true>>
+   , Types<Pair, ScopedElement<char**, true>,  ScopedElement<char**, true>>
 
-   , Types<TPair<Text,   Text>,   Text,   ScopedElement<Text, true>,    Text,   ScopedElement<Text, true>>
-   , Types<TPair<int,    int>,    int,    ScopedElement<int,  true>,    int,    ScopedElement<int,  true>>
-   , Types<TPair<Any,    Any>,    Any,    ScopedElement<Any,  true>,    Any,    ScopedElement<Any,  true>>
-   , Types<TPair<RT,     RT>,     RT,     ScopedElement<RT,   true>,    RT,     ScopedElement<RT,   true>>
-   , Types<TPair<char,   char>,   char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
+   , Types<TPair<Text,   Text>,   ScopedElement<Text, true>,    ScopedElement<Text, true>>
+   , Types<TPair<int,    int>,    ScopedElement<int,  true>,    ScopedElement<int,  true>>
+   , Types<TPair<Any,    Any>,    ScopedElement<Any,  true>,    ScopedElement<Any,  true>>
+   , Types<TPair<RT,     RT>,     ScopedElement<RT,   true>,    ScopedElement<RT,   true>>
+   , Types<TPair<char,   char>,   ScopedElement<char, true>,    ScopedElement<char, true>>
 
-   , Types<TPair<Text*,  Text*>,  Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
-   , Types<TPair<int*,   int*>,   int*,   ScopedElement<int*,  true>,   int*,   ScopedElement<int*,  true>>
-   , Types<TPair<Any*,   Any*>,   Any*,   ScopedElement<Any*,  true>,   Any*,   ScopedElement<Any*,  true>>
-   , Types<TPair<RT*,    RT*>,    RT*,    ScopedElement<RT*,   true>,   RT*,    ScopedElement<RT*,   true>>
-   , Types<TPair<char*,  char*>,  char*,  ScopedElement<char*, true>,   char*,  ScopedElement<char*, true>>
+   , Types<TPair<Text*,  Text*>,  ScopedElement<Text*, true>,   ScopedElement<Text*, true>>
+   , Types<TPair<int*,   int*>,   ScopedElement<int*,  true>,   ScopedElement<int*,  true>>
+   , Types<TPair<Any*,   Any*>,   ScopedElement<Any*,  true>,   ScopedElement<Any*,  true>>
+   , Types<TPair<RT*,    RT*>,    ScopedElement<RT*,   true>,   ScopedElement<RT*,   true>>
+   , Types<TPair<char*,  char*>,  ScopedElement<char*, true>,   ScopedElement<char*, true>>
 
-   , Types<TPair<Text**, Text**>, Text**, ScopedElement<Text**, true>,  Text**, ScopedElement<Text**, true>>
-   , Types<TPair<int**,  int**>,  int**,  ScopedElement<int**,  true>,  int**,  ScopedElement<int**,  true>>
-   , Types<TPair<Any**,  Any**>,  Any**,  ScopedElement<Any**,  true>,  Any**,  ScopedElement<Any**,  true>>
-   , Types<TPair<RT**,   RT**>,   RT**,   ScopedElement<RT**,   true>,  RT**,   ScopedElement<RT**,   true>>
-   , Types<TPair<char**, char**>, char**, ScopedElement<char**, true>,  char**, ScopedElement<char**, true>>
+   , Types<TPair<Text**, Text**>, ScopedElement<Text**, true>,  ScopedElement<Text**, true>>
+   , Types<TPair<int**,  int**>,  ScopedElement<int**,  true>,  ScopedElement<int**,  true>>
+   , Types<TPair<Any**,  Any**>,  ScopedElement<Any**,  true>,  ScopedElement<Any**,  true>>
+   , Types<TPair<RT**,   RT**>,   ScopedElement<RT**,   true>,  ScopedElement<RT**,   true>>
+   , Types<TPair<char**, char**>, ScopedElement<char**, true>,  ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Pair, pptr8,  ScopedElementPacked<pptr8>,   pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Pair, pptr16, ScopedElementPacked<pptr16>,  pptr16, ScopedElementPacked<pptr16>>
-   , Types<Pair, pptr32, ScopedElementPacked<pptr32>,  pptr32, ScopedElementPacked<pptr32>>
+   , Types<Pair, ScopedElementPacked<pptr8>,   ScopedElementPacked<pptr8>>
+   , Types<Pair, ScopedElementPacked<pptr16>,  ScopedElementPacked<pptr16>>
+   , Types<Pair, ScopedElementPacked<pptr32>,  ScopedElementPacked<pptr32>>
 
-   , Types<TPair<pptr8,  pptr8>,  pptr8,  ScopedElementPacked<pptr8>,   pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TPair<pptr16, pptr16>, pptr16, ScopedElementPacked<pptr16>,  pptr16, ScopedElementPacked<pptr16>>
-   , Types<TPair<pptr32, pptr32>, pptr32, ScopedElementPacked<pptr32>,  pptr32, ScopedElementPacked<pptr32>>
+   , Types<TPair<pptr8,  pptr8>,  ScopedElementPacked<pptr8>,   ScopedElementPacked<pptr8>>
+   , Types<TPair<pptr16, pptr16>, ScopedElementPacked<pptr16>,  ScopedElementPacked<pptr16>>
+   , Types<TPair<pptr32, pptr32>, ScopedElementPacked<pptr32>,  ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
    using T  = typename TestType::First;
-   using E1 = typename TestType::Second;
-   using E2 = typename TestType::template At<3>;
-   using ScopedE1 = typename TestType::template At<2>;
-   using ScopedE2 = typename TestType::template At<4>;
+   using ScopedE1 = typename TestType::template At<1>;
+   using ScopedE2 = typename TestType::template At<2>;
+   using E1 = TypeOf<ScopedE1>;
+   using E2 = TypeOf<ScopedE2>;
+
    [[maybe_unused]] constexpr bool Managed = ScopedE1::Managed;
    static_assert(ScopedE1::Managed == ScopedE2::Managed);
 

@@ -39,94 +39,95 @@ namespace Langulus::Anyness
 
 TEST_CASE_TEMPLATE("Test empty but preallocated Many/TMany", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Many, Text,   ScopedElement<Text>>
-   , Types<Many, int,    ScopedElement<int>>
-   , Types<Many, Many,   ScopedElement<Many>>
-   , Types<Many, RT,     ScopedElement<RT>>
-   , Types<Many, char,   ScopedElement<char>>
+   , Types<Many, ScopedElement<Text>>
+   , Types<Many, ScopedElement<int>>
+   , Types<Many, ScopedElement<Many>>
+   , Types<Many, ScopedElement<RT>>
+   , Types<Many, ScopedElement<char>>
 
-   , Types<Many, Text*,  ScopedElement<Text*>>
-   , Types<Many, int*,   ScopedElement<int*>>
-   , Types<Many, Many*,  ScopedElement<Many*>>
-   , Types<Many, RT*,    ScopedElement<RT*>>
-   , Types<Many, char*,  ScopedElement<char*>>
+   , Types<Many, ScopedElement<Text*>>
+   , Types<Many, ScopedElement<int*>>
+   , Types<Many, ScopedElement<Many*>>
+   , Types<Many, ScopedElement<RT*>>
+   , Types<Many, ScopedElement<char*>>
 
-   , Types<Many, Text**, ScopedElement<Text**>>
-   , Types<Many, int**,  ScopedElement<int**>>
-   , Types<Many, Many**, ScopedElement<Many**>>
-   , Types<Many, RT**,   ScopedElement<RT**>>
-   , Types<Many, char**, ScopedElement<char**>>
+   , Types<Many, ScopedElement<Text**>>
+   , Types<Many, ScopedElement<int**>>
+   , Types<Many, ScopedElement<Many**>>
+   , Types<Many, ScopedElement<RT**>>
+   , Types<Many, ScopedElement<char**>>
 
-   , Types<TMany<Text>,   Text,   ScopedElement<Text>>
-   , Types<TMany<int>,    int,    ScopedElement<int>>
-   , Types<TMany<Many>,   Many,   ScopedElement<Many>>
-   , Types<TMany<RT>,     RT,     ScopedElement<RT>>
-   , Types<TMany<char>,   char,   ScopedElement<char>>
+   , Types<TMany<Text>,   ScopedElement<Text>>
+   , Types<TMany<int>,    ScopedElement<int>>
+   , Types<TMany<Many>,   ScopedElement<Many>>
+   , Types<TMany<RT>,     ScopedElement<RT>>
+   , Types<TMany<char>,   ScopedElement<char>>
 
-   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*>>
-   , Types<TMany<int*>,   int*,   ScopedElement<int*>>
-   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*>>
-   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*>>
-   , Types<TMany<char*>,  char*,  ScopedElement<char*>>
+   , Types<TMany<Text*>,  ScopedElement<Text*>>
+   , Types<TMany<int*>,   ScopedElement<int*>>
+   , Types<TMany<Many*>,  ScopedElement<Many*>>
+   , Types<TMany<RT*>,    ScopedElement<RT*>>
+   , Types<TMany<char*>,  ScopedElement<char*>>
 
-   , Types<TMany<Text**>, Text**, ScopedElement<Text**>>
-   , Types<TMany<int**>,  int**,  ScopedElement<int**>>
-   , Types<TMany<Many**>, Many**, ScopedElement<Many**>>
-   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**>>
-   , Types<TMany<char**>, char**, ScopedElement<char**>>
+   , Types<TMany<Text**>, ScopedElement<Text**>>
+   , Types<TMany<int**>,  ScopedElement<int**>>
+   , Types<TMany<Many**>, ScopedElement<Many**>>
+   , Types<TMany<RT**>,   ScopedElement<RT**>>
+   , Types<TMany<char**>, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Many, Text,   ScopedElement<Text, true>>
-   , Types<Many, int,    ScopedElement<int, true>>
-   , Types<Many, Many,   ScopedElement<Many, true>>
-   , Types<Many, RT,     ScopedElement<RT, true>>
-   , Types<Many, char,   ScopedElement<char, true>>
+   , Types<Many, ScopedElement<Text, true>>
+   , Types<Many, ScopedElement<int, true>>
+   , Types<Many, ScopedElement<Many, true>>
+   , Types<Many, ScopedElement<RT, true>>
+   , Types<Many, ScopedElement<char, true>>
 
-   , Types<Many, Text*,  ScopedElement<Text*, true>>
-   , Types<Many, int*,   ScopedElement<int*, true>>
-   , Types<Many, Many*,  ScopedElement<Many*, true>>
-   , Types<Many, RT*,    ScopedElement<RT*, true>>
-   , Types<Many, char*,  ScopedElement<char*, true>>
+   , Types<Many, ScopedElement<Text*, true>>
+   , Types<Many, ScopedElement<int*, true>>
+   , Types<Many, ScopedElement<Many*, true>>
+   , Types<Many, ScopedElement<RT*, true>>
+   , Types<Many, ScopedElement<char*, true>>
 
-   , Types<Many, Text**, ScopedElement<Text**, true>>
-   , Types<Many, int**,  ScopedElement<int**, true>>
-   , Types<Many, Many**, ScopedElement<Many**, true>>
-   , Types<Many, RT**,   ScopedElement<RT**, true>>
-   , Types<Many, char**, ScopedElement<char**, true>>
+   , Types<Many, ScopedElement<Text**, true>>
+   , Types<Many, ScopedElement<int**, true>>
+   , Types<Many, ScopedElement<Many**, true>>
+   , Types<Many, ScopedElement<RT**, true>>
+   , Types<Many, ScopedElement<char**, true>>
 
-   , Types<TMany<Text>,   Text,   ScopedElement<Text, true>>
-   , Types<TMany<int>,    int,    ScopedElement<int, true>>
-   , Types<TMany<Many>,   Many,   ScopedElement<Many, true>>
-   , Types<TMany<RT>,     RT,     ScopedElement<RT, true>>
-   , Types<TMany<char>,   char,   ScopedElement<char, true>>
+   , Types<TMany<Text>,   ScopedElement<Text, true>>
+   , Types<TMany<int>,    ScopedElement<int, true>>
+   , Types<TMany<Many>,   ScopedElement<Many, true>>
+   , Types<TMany<RT>,     ScopedElement<RT, true>>
+   , Types<TMany<char>,   ScopedElement<char, true>>
 
-   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*, true>>
-   , Types<TMany<int*>,   int*,   ScopedElement<int*, true>>
-   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*, true>>
-   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*, true>>
-   , Types<TMany<char*>,  char*,  ScopedElement<char*, true>>
+   , Types<TMany<Text*>,  ScopedElement<Text*, true>>
+   , Types<TMany<int*>,   ScopedElement<int*, true>>
+   , Types<TMany<Many*>,  ScopedElement<Many*, true>>
+   , Types<TMany<RT*>,    ScopedElement<RT*, true>>
+   , Types<TMany<char*>,  ScopedElement<char*, true>>
 
-   , Types<TMany<Text**>, Text**, ScopedElement<Text**, true>>
-   , Types<TMany<int**>,  int**,  ScopedElement<int**, true>>
-   , Types<TMany<Many**>, Many**, ScopedElement<Many**, true>>
-   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**, true>>
-   , Types<TMany<char**>, char**, ScopedElement<char**, true>>
+   , Types<TMany<Text**>, ScopedElement<Text**, true>>
+   , Types<TMany<int**>,  ScopedElement<int**, true>>
+   , Types<TMany<Many**>, ScopedElement<Many**, true>>
+   , Types<TMany<RT**>,   ScopedElement<RT**, true>>
+   , Types<TMany<char**>, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Many, pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Many, pptr16, ScopedElementPacked<pptr16>>
-   , Types<Many, pptr32, ScopedElementPacked<pptr32>>
+   , Types<Many, ScopedElementPacked<pptr8>>
+   , Types<Many, ScopedElementPacked<pptr16>>
+   , Types<Many, ScopedElementPacked<pptr32>>
 
-   , Types<TMany<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TMany<pptr16>, pptr16, ScopedElementPacked<pptr16>>
-   , Types<TMany<pptr32>, pptr32, ScopedElementPacked<pptr32>>
+   , Types<TMany<pptr8>,  ScopedElementPacked<pptr8>>
+   , Types<TMany<pptr16>, ScopedElementPacked<pptr16>>
+   , Types<TMany<pptr32>, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
    using T = typename TestType::First;
-   using E = typename TestType::Second;
-   using ScopedE = typename TestType::template At<2>;
+   using ScopedE = typename TestType::Second;
+   using E = TypeOf<ScopedE>;
+
    constexpr bool Managed = ScopedE::Managed;
 
    //TODO base off TestMany_Empty.cpp

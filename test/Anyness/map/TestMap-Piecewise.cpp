@@ -39,96 +39,97 @@ namespace Langulus::Anyness
 
 TEST_CASE_TEMPLATE("Test piecewise-constructed Map/TMap", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Map, Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
-   , Types<Map, int,    ScopedElement<int>,     int,    ScopedElement<int>>
-   , Types<Map, Any,    ScopedElement<Any>,     Any,    ScopedElement<Any>>
-   , Types<Map, RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
-   , Types<Map, char,   ScopedElement<char>,    char,   ScopedElement<char>>
+   , Types<Map, ScopedElement<Text>,    ScopedElement<Text>>
+   , Types<Map, ScopedElement<int>,     ScopedElement<int>>
+   , Types<Map, ScopedElement<Any>,     ScopedElement<Any>>
+   , Types<Map, ScopedElement<RT>,      ScopedElement<RT>>
+   , Types<Map, ScopedElement<char>,    ScopedElement<char>>
 
-   , Types<Map, Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
-   , Types<Map, int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
-   , Types<Map, Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
-   , Types<Map, RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
-   , Types<Map, char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
+   , Types<Map, ScopedElement<Text*>,   ScopedElement<Text*>>
+   , Types<Map, ScopedElement<int*>,    ScopedElement<int*>>
+   , Types<Map, ScopedElement<Any*>,    ScopedElement<Any*>>
+   , Types<Map, ScopedElement<RT*>,     ScopedElement<RT*>>
+   , Types<Map, ScopedElement<char*>,   ScopedElement<char*>>
 
-   , Types<Map, Text**, ScopedElement<Text**>,  Text**, ScopedElement<Text**>>
-   , Types<Map, int**,  ScopedElement<int**>,   int**,  ScopedElement<int**>>
-   , Types<Map, Any**,  ScopedElement<Any**>,   Any**,  ScopedElement<Any**>>
-   , Types<Map, RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
-   , Types<Map, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
+   , Types<Map, ScopedElement<Text**>,  ScopedElement<Text**>>
+   , Types<Map, ScopedElement<int**>,   ScopedElement<int**>>
+   , Types<Map, ScopedElement<Any**>,   ScopedElement<Any**>>
+   , Types<Map, ScopedElement<RT**>,    ScopedElement<RT**>>
+   , Types<Map, ScopedElement<char**>,  ScopedElement<char**>>
 
-   , Types<TMap<Text,   Text>,   Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
-   , Types<TMap<int,    int>,    int,    ScopedElement<int>,     int,    ScopedElement<int>>
-   , Types<TMap<Any,    Any>,    Any,    ScopedElement<Any>,     Any,    ScopedElement<Any>>
-   , Types<TMap<RT,     RT>,     RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
-   , Types<TMap<char,   char>,   char,   ScopedElement<char>,    char,   ScopedElement<char>>
+   , Types<TMap<Text,   Text>,   ScopedElement<Text>,    ScopedElement<Text>>
+   , Types<TMap<int,    int>,    ScopedElement<int>,     ScopedElement<int>>
+   , Types<TMap<Any,    Any>,    ScopedElement<Any>,     ScopedElement<Any>>
+   , Types<TMap<RT,     RT>,     ScopedElement<RT>,      ScopedElement<RT>>
+   , Types<TMap<char,   char>,   ScopedElement<char>,    ScopedElement<char>>
 
-   , Types<TMap<Text*,  Text*>,  Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
-   , Types<TMap<int*,   int*>,   int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
-   , Types<TMap<Any*,   Any*>,   Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
-   , Types<TMap<RT*,    RT*>,    RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
-   , Types<TMap<char*,  char*>,  char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
+   , Types<TMap<Text*,  Text*>,  ScopedElement<Text*>,   ScopedElement<Text*>>
+   , Types<TMap<int*,   int*>,   ScopedElement<int*>,    ScopedElement<int*>>
+   , Types<TMap<Any*,   Any*>,   ScopedElement<Any*>,    ScopedElement<Any*>>
+   , Types<TMap<RT*,    RT*>,    ScopedElement<RT*>,     ScopedElement<RT*>>
+   , Types<TMap<char*,  char*>,  ScopedElement<char*>,   ScopedElement<char*>>
 
-   , Types<TMap<Text**, Text**>, Text**, ScopedElement<Text**>,  Text**, ScopedElement<Text**>>
-   , Types<TMap<int**,  int**>,  int**,  ScopedElement<int**>,   int**,  ScopedElement<int**>>
-   , Types<TMap<Any**,  Any**>,  Any**,  ScopedElement<Any**>,   Any**,  ScopedElement<Any**>>
-   , Types<TMap<RT**,   RT**>,   RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
-   , Types<TMap<char**, char**>, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
+   , Types<TMap<Text**, Text**>, ScopedElement<Text**>,  ScopedElement<Text**>>
+   , Types<TMap<int**,  int**>,  ScopedElement<int**>,   ScopedElement<int**>>
+   , Types<TMap<Any**,  Any**>,  ScopedElement<Any**>,   ScopedElement<Any**>>
+   , Types<TMap<RT**,   RT**>,   ScopedElement<RT**>,    ScopedElement<RT**>>
+   , Types<TMap<char**, char**>, ScopedElement<char**>,  ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Map, Text,   ScopedElement<Text, true>,    Text,   ScopedElement<Text, true>>
-   , Types<Map, int,    ScopedElement<int,  true>,    int,    ScopedElement<int,  true>>
-   , Types<Map, Any,    ScopedElement<Any,  true>,    Any,    ScopedElement<Any,  true>>
-   , Types<Map, RT,     ScopedElement<RT,   true>,    RT,     ScopedElement<RT,   true>>
-   , Types<Map, char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
+   , Types<Map, ScopedElement<Text, true>,    ScopedElement<Text, true>>
+   , Types<Map, ScopedElement<int,  true>,    ScopedElement<int,  true>>
+   , Types<Map, ScopedElement<Any,  true>,    ScopedElement<Any,  true>>
+   , Types<Map, ScopedElement<RT,   true>,    ScopedElement<RT,   true>>
+   , Types<Map, ScopedElement<char, true>,    ScopedElement<char, true>>
 
-   , Types<Map, Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
-   , Types<Map, int*,   ScopedElement<int*,  true>,   int*,   ScopedElement<int*,  true>>
-   , Types<Map, Any*,   ScopedElement<Any*,  true>,   Any*,   ScopedElement<Any*,  true>>
-   , Types<Map, RT*,    ScopedElement<RT*,   true>,   RT*,    ScopedElement<RT*,   true>>
-   , Types<Map, char*,  ScopedElement<char*, true>,   char*,  ScopedElement<char*, true>>
+   , Types<Map, ScopedElement<Text*, true>,   ScopedElement<Text*, true>>
+   , Types<Map, ScopedElement<int*,  true>,   ScopedElement<int*,  true>>
+   , Types<Map, ScopedElement<Any*,  true>,   ScopedElement<Any*,  true>>
+   , Types<Map, ScopedElement<RT*,   true>,   ScopedElement<RT*,   true>>
+   , Types<Map, ScopedElement<char*, true>,   ScopedElement<char*, true>>
 
-   , Types<Map, Text**, ScopedElement<Text**, true>,  Text**, ScopedElement<Text**, true>>
-   , Types<Map, int**,  ScopedElement<int**,  true>,  int**,  ScopedElement<int**,  true>>
-   , Types<Map, Any**,  ScopedElement<Any**,  true>,  Any**,  ScopedElement<Any**,  true>>
-   , Types<Map, RT**,   ScopedElement<RT**,   true>,  RT**,   ScopedElement<RT**,   true>>
-   , Types<Map, char**, ScopedElement<char**, true>,  char**, ScopedElement<char**, true>>
+   , Types<Map, ScopedElement<Text**, true>,  ScopedElement<Text**, true>>
+   , Types<Map, ScopedElement<int**,  true>,  ScopedElement<int**,  true>>
+   , Types<Map, ScopedElement<Any**,  true>,  ScopedElement<Any**,  true>>
+   , Types<Map, ScopedElement<RT**,   true>,  ScopedElement<RT**,   true>>
+   , Types<Map, ScopedElement<char**, true>,  ScopedElement<char**, true>>
 
-   , Types<TMap<Text,   Text>,   Text,   ScopedElement<Text, true>,    Text,   ScopedElement<Text, true>>
-   , Types<TMap<int,    int>,    int,    ScopedElement<int,  true>,    int,    ScopedElement<int,  true>>
-   , Types<TMap<Any,    Any>,    Any,    ScopedElement<Any,  true>,    Any,    ScopedElement<Any,  true>>
-   , Types<TMap<RT,     RT>,     RT,     ScopedElement<RT,   true>,    RT,     ScopedElement<RT,   true>>
-   , Types<TMap<char,   char>,   char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
+   , Types<TMap<Text,   Text>,   ScopedElement<Text, true>,    ScopedElement<Text, true>>
+   , Types<TMap<int,    int>,    ScopedElement<int,  true>,    ScopedElement<int,  true>>
+   , Types<TMap<Any,    Any>,    ScopedElement<Any,  true>,    ScopedElement<Any,  true>>
+   , Types<TMap<RT,     RT>,     ScopedElement<RT,   true>,    ScopedElement<RT,   true>>
+   , Types<TMap<char,   char>,   ScopedElement<char, true>,    ScopedElement<char, true>>
 
-   , Types<TMap<Text*,  Text*>,  Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
-   , Types<TMap<int*,   int*>,   int*,   ScopedElement<int*,  true>,   int*,   ScopedElement<int*,  true>>
-   , Types<TMap<Any*,   Any*>,   Any*,   ScopedElement<Any*,  true>,   Any*,   ScopedElement<Any*,  true>>
-   , Types<TMap<RT*,    RT*>,    RT*,    ScopedElement<RT*,   true>,   RT*,    ScopedElement<RT*,   true>>
-   , Types<TMap<char*,  char*>,  char*,  ScopedElement<char*, true>,   char*,  ScopedElement<char*, true>>
+   , Types<TMap<Text*,  Text*>,  ScopedElement<Text*, true>,   ScopedElement<Text*, true>>
+   , Types<TMap<int*,   int*>,   ScopedElement<int*,  true>,   ScopedElement<int*,  true>>
+   , Types<TMap<Any*,   Any*>,   ScopedElement<Any*,  true>,   ScopedElement<Any*,  true>>
+   , Types<TMap<RT*,    RT*>,    ScopedElement<RT*,   true>,   ScopedElement<RT*,   true>>
+   , Types<TMap<char*,  char*>,  ScopedElement<char*, true>,   ScopedElement<char*, true>>
 
-   , Types<TMap<Text**, Text**>, Text**, ScopedElement<Text**, true>,  Text**, ScopedElement<Text**, true>>
-   , Types<TMap<int**,  int**>,  int**,  ScopedElement<int**,  true>,  int**,  ScopedElement<int**,  true>>
-   , Types<TMap<Any**,  Any**>,  Any**,  ScopedElement<Any**,  true>,  Any**,  ScopedElement<Any**,  true>>
-   , Types<TMap<RT**,   RT**>,   RT**,   ScopedElement<RT**,   true>,  RT**,   ScopedElement<RT**,   true>>
-   , Types<TMap<char**, char**>, char**, ScopedElement<char**, true>,  char**, ScopedElement<char**, true>>
+   , Types<TMap<Text**, Text**>, ScopedElement<Text**, true>,  ScopedElement<Text**, true>>
+   , Types<TMap<int**,  int**>,  ScopedElement<int**,  true>,  ScopedElement<int**,  true>>
+   , Types<TMap<Any**,  Any**>,  ScopedElement<Any**,  true>,  ScopedElement<Any**,  true>>
+   , Types<TMap<RT**,   RT**>,   ScopedElement<RT**,   true>,  ScopedElement<RT**,   true>>
+   , Types<TMap<char**, char**>, ScopedElement<char**, true>,  ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Map, pptr8,  ScopedElementPacked<pptr8>,   pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Map, pptr16, ScopedElementPacked<pptr16>,  pptr16, ScopedElementPacked<pptr16>>
-   , Types<Map, pptr32, ScopedElementPacked<pptr32>,  pptr32, ScopedElementPacked<pptr32>>
+   , Types<Map, ScopedElementPacked<pptr8>,   ScopedElementPacked<pptr8>>
+   , Types<Map, ScopedElementPacked<pptr16>,  ScopedElementPacked<pptr16>>
+   , Types<Map, ScopedElementPacked<pptr32>,  ScopedElementPacked<pptr32>>
 
-   , Types<TMap<pptr8,  pptr8>,  pptr8,  ScopedElementPacked<pptr8>,   pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TMap<pptr16, pptr16>, pptr16, ScopedElementPacked<pptr16>,  pptr16, ScopedElementPacked<pptr16>>
-   , Types<TMap<pptr32, pptr32>, pptr32, ScopedElementPacked<pptr32>,  pptr32, ScopedElementPacked<pptr32>>
+   , Types<TMap<pptr8,  pptr8>,  ScopedElementPacked<pptr8>,   ScopedElementPacked<pptr8>>
+   , Types<TMap<pptr16, pptr16>, ScopedElementPacked<pptr16>,  ScopedElementPacked<pptr16>>
+   , Types<TMap<pptr32, pptr32>, ScopedElementPacked<pptr32>,  ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
    using T = typename TestType::First;
-   using E1 = typename TestType::Second;
-   using E2 = typename TestType::template At<3>;
-   using ScopedE1 = typename TestType::template At<2>;
-   using ScopedE2 = typename TestType::template At<4>;
+   using ScopedE1 = typename TestType::template At<1>;
+   using ScopedE2 = typename TestType::template At<2>;
+   using E1 = TypeOf<ScopedE1>;
+   using E2 = TypeOf<ScopedE2>;
+
    constexpr bool Managed = ScopedE1::Managed;
    static_assert(ScopedE1::Managed == ScopedE2::Managed);
 

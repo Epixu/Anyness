@@ -39,96 +39,96 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
-   , Types<TSet<Text>,   Text,   ScopedElement<Text>>
-
    // Elements are not allocated by the memory manager                  
-   , Types<Set, Text,   ScopedElement<Text>>
-   , Types<Set, int,    ScopedElement<int>>
-   , Types<Set, Many,   ScopedElement<Many>>
-   , Types<Set, RT,     ScopedElement<RT>>
-   , Types<Set, char,   ScopedElement<char>>
+   , Types<Set, ScopedElement<Text>>
+   , Types<Set, ScopedElement<int>>
+   , Types<Set, ScopedElement<Many>>
+   , Types<Set, ScopedElement<RT>>
+   , Types<Set, ScopedElement<char>>
 
-   , Types<Set, Text*,  ScopedElement<Text*>>
-   , Types<Set, int*,   ScopedElement<int*>>
-   , Types<Set, Many*,  ScopedElement<Many*>>
-   , Types<Set, RT*,    ScopedElement<RT*>>
-   , Types<Set, char*,  ScopedElement<char*>>
+   , Types<Set, ScopedElement<Text*>>
+   , Types<Set, ScopedElement<int*>>
+   , Types<Set, ScopedElement<Many*>>
+   , Types<Set, ScopedElement<RT*>>
+   , Types<Set, ScopedElement<char*>>
 
-   , Types<Set, Text**, ScopedElement<Text**>>
-   , Types<Set, int**,  ScopedElement<int**>>
-   , Types<Set, Many**, ScopedElement<Many**>>
-   , Types<Set, RT**,   ScopedElement<RT**>>
-   , Types<Set, char**, ScopedElement<char**>>
+   , Types<Set, ScopedElement<Text**>>
+   , Types<Set, ScopedElement<int**>>
+   , Types<Set, ScopedElement<Many**>>
+   , Types<Set, ScopedElement<RT**>>
+   , Types<Set, ScopedElement<char**>>
 
-   , Types<TSet<int>,    int,    ScopedElement<int>>
-   , Types<TSet<Many>,   Many,   ScopedElement<Many>>
-   , Types<TSet<RT>,     RT,     ScopedElement<RT>>
-   , Types<TSet<char>,   char,   ScopedElement<char>>
+   , Types<TSet<Text>,   ScopedElement<Text>>
+   , Types<TSet<int>,    ScopedElement<int>>
+   , Types<TSet<Many>,   ScopedElement<Many>>
+   , Types<TSet<RT>,     ScopedElement<RT>>
+   , Types<TSet<char>,   ScopedElement<char>>
 
-   , Types<TSet<Text*>,  Text*,  ScopedElement<Text*>>
-   , Types<TSet<int*>,   int*,   ScopedElement<int*>>
-   , Types<TSet<Many*>,  Many*,  ScopedElement<Many*>>
-   , Types<TSet<RT*>,    RT*,    ScopedElement<RT*>>
-   , Types<TSet<char*>,  char*,  ScopedElement<char*>>
+   , Types<TSet<Text*>,  ScopedElement<Text*>>
+   , Types<TSet<int*>,   ScopedElement<int*>>
+   , Types<TSet<Many*>,  ScopedElement<Many*>>
+   , Types<TSet<RT*>,    ScopedElement<RT*>>
+   , Types<TSet<char*>,  ScopedElement<char*>>
 
-   , Types<TSet<Text**>, Text**, ScopedElement<Text**>>
-   , Types<TSet<int**>,  int**,  ScopedElement<int**>>
-   , Types<TSet<Many**>, Many**, ScopedElement<Many**>>
-   , Types<TSet<RT**>,   RT**,   ScopedElement<RT**>>
-   , Types<TSet<char**>, char**, ScopedElement<char**>>
+   , Types<TSet<Text**>, ScopedElement<Text**>>
+   , Types<TSet<int**>,  ScopedElement<int**>>
+   , Types<TSet<Many**>, ScopedElement<Many**>>
+   , Types<TSet<RT**>,   ScopedElement<RT**>>
+   , Types<TSet<char**>, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Set, Text,   ScopedElement<Text, true>>
-   , Types<Set, int,    ScopedElement<int, true>>
-   , Types<Set, Many,   ScopedElement<Many, true>>
-   , Types<Set, RT,     ScopedElement<RT, true>>
-   , Types<Set, char,   ScopedElement<char, true>>
+   , Types<Set, ScopedElement<Text, true>>
+   , Types<Set, ScopedElement<int, true>>
+   , Types<Set, ScopedElement<Many, true>>
+   , Types<Set, ScopedElement<RT, true>>
+   , Types<Set, ScopedElement<char, true>>
 
-   , Types<Set, Text*,  ScopedElement<Text*, true>>
-   , Types<Set, int*,   ScopedElement<int*, true>>
-   , Types<Set, Many*,  ScopedElement<Many*, true>>
-   , Types<Set, RT*,    ScopedElement<RT*, true>>
-   , Types<Set, char*,  ScopedElement<char*, true>>
+   , Types<Set, ScopedElement<Text*, true>>
+   , Types<Set, ScopedElement<int*, true>>
+   , Types<Set, ScopedElement<Many*, true>>
+   , Types<Set, ScopedElement<RT*, true>>
+   , Types<Set, ScopedElement<char*, true>>
 
-   , Types<Set, Text**, ScopedElement<Text**, true>>
-   , Types<Set, int**,  ScopedElement<int**, true>>
-   , Types<Set, Many**, ScopedElement<Many**, true>>
-   , Types<Set, RT**,   ScopedElement<RT**, true>>
-   , Types<Set, char**, ScopedElement<char**, true>>
+   , Types<Set, ScopedElement<Text**, true>>
+   , Types<Set, ScopedElement<int**, true>>
+   , Types<Set, ScopedElement<Many**, true>>
+   , Types<Set, ScopedElement<RT**, true>>
+   , Types<Set, ScopedElement<char**, true>>
 
-   , Types<TSet<Text>,   Text,   ScopedElement<Text, true>>
-   , Types<TSet<int>,    int,    ScopedElement<int, true>>
-   , Types<TSet<Many>,   Many,   ScopedElement<Many, true>>
-   , Types<TSet<RT>,     RT,     ScopedElement<RT, true>>
-   , Types<TSet<char>,   char,   ScopedElement<char, true>>
+   , Types<TSet<Text>,   ScopedElement<Text, true>>
+   , Types<TSet<int>,    ScopedElement<int, true>>
+   , Types<TSet<Many>,   ScopedElement<Many, true>>
+   , Types<TSet<RT>,     ScopedElement<RT, true>>
+   , Types<TSet<char>,   ScopedElement<char, true>>
 
-   , Types<TSet<Text*>,  Text*,  ScopedElement<Text*, true>>
-   , Types<TSet<int*>,   int*,   ScopedElement<int*, true>>
-   , Types<TSet<Many*>,  Many*,  ScopedElement<Many*, true>>
-   , Types<TSet<RT*>,    RT*,    ScopedElement<RT*, true>>
-   , Types<TSet<char*>,  char*,  ScopedElement<char*, true>>
+   , Types<TSet<Text*>,  ScopedElement<Text*, true>>
+   , Types<TSet<int*>,   ScopedElement<int*, true>>
+   , Types<TSet<Many*>,  ScopedElement<Many*, true>>
+   , Types<TSet<RT*>,    ScopedElement<RT*, true>>
+   , Types<TSet<char*>,  ScopedElement<char*, true>>
 
-   , Types<TSet<Text**>, Text**, ScopedElement<Text**, true>>
-   , Types<TSet<int**>,  int**,  ScopedElement<int**, true>>
-   , Types<TSet<Many**>, Many**, ScopedElement<Many**, true>>
-   , Types<TSet<RT**>,   RT**,   ScopedElement<RT**, true>>
-   , Types<TSet<char**>, char**, ScopedElement<char**, true>>
+   , Types<TSet<Text**>, ScopedElement<Text**, true>>
+   , Types<TSet<int**>,  ScopedElement<int**, true>>
+   , Types<TSet<Many**>, ScopedElement<Many**, true>>
+   , Types<TSet<RT**>,   ScopedElement<RT**, true>>
+   , Types<TSet<char**>, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Set, pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Set, pptr16, ScopedElementPacked<pptr16>>
-   , Types<Set, pptr32, ScopedElementPacked<pptr32>>
+   , Types<Set, ScopedElementPacked<pptr8>>
+   , Types<Set, ScopedElementPacked<pptr16>>
+   , Types<Set, ScopedElementPacked<pptr32>>
 
-   , Types<TSet<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TSet<pptr16>, pptr16, ScopedElementPacked<pptr16>>
-   , Types<TSet<pptr32>, pptr32, ScopedElementPacked<pptr32>>
+   , Types<TSet<pptr8>,  ScopedElementPacked<pptr8>>
+   , Types<TSet<pptr16>, ScopedElementPacked<pptr16>>
+   , Types<TSet<pptr32>, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
    using T = typename TestType::First;
-   using E = typename TestType::Second;
-   using ScopedE = typename TestType::template At<2>;
+   using ScopedE = typename TestType::Second;
+   using E = TypeOf<ScopedE>;
+
    constexpr bool Managed = ScopedE::Managed;
    constexpr bool Sparse  = CT::Sparse<E>;
    constexpr bool Reffed  = CT::Referenced<Decay<E>>;

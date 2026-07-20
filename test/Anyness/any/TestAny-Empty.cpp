@@ -40,88 +40,88 @@ namespace Langulus::Anyness
 
 TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Any, Text,   ScopedElement<Text>>
-   , Types<Any, int,    ScopedElement<int>>
-   , Types<Any, Any,    ScopedElement<Any>>
-   , Types<Any, RT,     ScopedElement<RT>>
-   , Types<Any, char,   ScopedElement<char>>
-                        
-   , Types<Any, Text*,  ScopedElement<Text*>>
-   , Types<Any, int*,   ScopedElement<int*>>
-   , Types<Any, Any*,   ScopedElement<Any*>>
-   , Types<Any, RT*,    ScopedElement<RT*>>
-   , Types<Any, char*,  ScopedElement<char*>>
+   , Types<Any, ScopedElement<Text>>
+   , Types<Any, ScopedElement<int>>
+   , Types<Any, ScopedElement<Any>>
+   , Types<Any, ScopedElement<RT>>
+   , Types<Any, ScopedElement<char>>
+                
+   , Types<Any, ScopedElement<Text*>>
+   , Types<Any, ScopedElement<int*>>
+   , Types<Any, ScopedElement<Any*>>
+   , Types<Any, ScopedElement<RT*>>
+   , Types<Any, ScopedElement<char*>>
 
-   , Types<Any, Text**, ScopedElement<Text**>>
-   , Types<Any, int**,  ScopedElement<int**>>
-   , Types<Any, Any**,  ScopedElement<Any**>>
-   , Types<Any, RT**,   ScopedElement<RT**>>
-   , Types<Any, char**, ScopedElement<char**>>
+   , Types<Any, ScopedElement<Text**>>
+   , Types<Any, ScopedElement<int**>>
+   , Types<Any, ScopedElement<Any**>>
+   , Types<Any, ScopedElement<RT**>>
+   , Types<Any, ScopedElement<char**>>
 
-   , Types<TAny<Text>,   Text,   ScopedElement<Text>>
-   , Types<TAny<int>,    int,    ScopedElement<int>>
-   , Types<TAny<Any>,    Any,    ScopedElement<Any>>
-   , Types<TAny<RT>,     RT,     ScopedElement<RT>>
-   , Types<TAny<char>,   char,   ScopedElement<char>>
-                                 
-   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*>>
-   , Types<TAny<int*>,   int*,   ScopedElement<int*>>
-   , Types<TAny<Any*>,   Any*,   ScopedElement<Any*>>
-   , Types<TAny<RT*>,    RT*,    ScopedElement<RT*>>
-   , Types<TAny<char*>,  char*,  ScopedElement<char*>>
+   , Types<TAny<Text>,   ScopedElement<Text>>
+   , Types<TAny<int>,    ScopedElement<int>>
+   , Types<TAny<Any>,    ScopedElement<Any>>
+   , Types<TAny<RT>,     ScopedElement<RT>>
+   , Types<TAny<char>,   ScopedElement<char>>
+                         
+   , Types<TAny<Text*>,  ScopedElement<Text*>>
+   , Types<TAny<int*>,   ScopedElement<int*>>
+   , Types<TAny<Any*>,   ScopedElement<Any*>>
+   , Types<TAny<RT*>,    ScopedElement<RT*>>
+   , Types<TAny<char*>,  ScopedElement<char*>>
 
-   , Types<TAny<Text**>, Text**, ScopedElement<Text**>>
-   , Types<TAny<int**>,  int**,  ScopedElement<int**>>
-   , Types<TAny<Any**>,  Any**,  ScopedElement<Any**>>
-   , Types<TAny<RT**>,   RT**,   ScopedElement<RT**>>
-   , Types<TAny<char**>, char**, ScopedElement<char**>>
+   , Types<TAny<Text**>, ScopedElement<Text**>>
+   , Types<TAny<int**>,  ScopedElement<int**>>
+   , Types<TAny<Any**>,  ScopedElement<Any**>>
+   , Types<TAny<RT**>,   ScopedElement<RT**>>
+   , Types<TAny<char**>, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Any, Text,   ScopedElement<Text, true>>
-   , Types<Any, int,    ScopedElement<int, true>>
-   , Types<Any, Any,    ScopedElement<Any, true>>
-   , Types<Any, RT,     ScopedElement<RT, true>>
-   , Types<Any, char,   ScopedElement<char, true>>
-                        
-   , Types<Any, Text*,  ScopedElement<Text*, true>>
-   , Types<Any, int*,   ScopedElement<int*, true>>
-   , Types<Any, Any*,   ScopedElement<Any*, true>>
-   , Types<Any, RT*,    ScopedElement<RT*, true>>
-   , Types<Any, char*,  ScopedElement<char*, true>>
+   , Types<Any, ScopedElement<Text, true>>
+   , Types<Any, ScopedElement<int, true>>
+   , Types<Any, ScopedElement<Any, true>>
+   , Types<Any, ScopedElement<RT, true>>
+   , Types<Any, ScopedElement<char, true>>
+                
+   , Types<Any, ScopedElement<Text*, true>>
+   , Types<Any, ScopedElement<int*, true>>
+   , Types<Any, ScopedElement<Any*, true>>
+   , Types<Any, ScopedElement<RT*, true>>
+   , Types<Any, ScopedElement<char*, true>>
 
-   , Types<Any, Text**, ScopedElement<Text**, true>>
-   , Types<Any, int**,  ScopedElement<int**, true>>
-   , Types<Any, Any**,  ScopedElement<Any**, true>>
-   , Types<Any, RT**,   ScopedElement<RT**, true>>
-   , Types<Any, char**, ScopedElement<char**, true>>
+   , Types<Any, ScopedElement<Text**, true>>
+   , Types<Any, ScopedElement<int**, true>>
+   , Types<Any, ScopedElement<Any**, true>>
+   , Types<Any, ScopedElement<RT**, true>>
+   , Types<Any, ScopedElement<char**, true>>
 
-   , Types<TAny<Text>,   Text,   ScopedElement<Text, true>>
-   , Types<TAny<int>,    int,    ScopedElement<int, true>>
-   , Types<TAny<Any>,    Any,    ScopedElement<Any, true>>
-   , Types<TAny<RT>,     RT,     ScopedElement<RT, true>>
-   , Types<TAny<char>,   char,   ScopedElement<char, true>>
-                                 
-   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*, true>>
-   , Types<TAny<int*>,   int*,   ScopedElement<int*, true>>
-   , Types<TAny<Any*>,   Any*,   ScopedElement<Any*, true>>
-   , Types<TAny<RT*>,    RT*,    ScopedElement<RT*, true>>
-   , Types<TAny<char*>,  char*,  ScopedElement<char*, true>>
+   , Types<TAny<Text>,   ScopedElement<Text, true>>
+   , Types<TAny<int>,    ScopedElement<int, true>>
+   , Types<TAny<Any>,    ScopedElement<Any, true>>
+   , Types<TAny<RT>,     ScopedElement<RT, true>>
+   , Types<TAny<char>,   ScopedElement<char, true>>
+                         
+   , Types<TAny<Text*>,  ScopedElement<Text*, true>>
+   , Types<TAny<int*>,   ScopedElement<int*, true>>
+   , Types<TAny<Any*>,   ScopedElement<Any*, true>>
+   , Types<TAny<RT*>,    ScopedElement<RT*, true>>
+   , Types<TAny<char*>,  ScopedElement<char*, true>>
 
-   , Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>
-   , Types<TAny<int**>,  int**,  ScopedElement<int**, true>>
-   , Types<TAny<Any**>,  Any**,  ScopedElement<Any**, true>>
-   , Types<TAny<RT**>,   RT**,   ScopedElement<RT**, true>>
-   , Types<TAny<char**>, char**, ScopedElement<char**, true>>
+   , Types<TAny<Text**>, ScopedElement<Text**, true>>
+   , Types<TAny<int**>,  ScopedElement<int**, true>>
+   , Types<TAny<Any**>,  ScopedElement<Any**, true>>
+   , Types<TAny<RT**>,   ScopedElement<RT**, true>>
+   , Types<TAny<char**>, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Any, pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Any, pptr16, ScopedElementPacked<pptr16>>
-   , Types<Any, pptr32, ScopedElementPacked<pptr32>>
+   , Types<Any, ScopedElementPacked<pptr8>>
+   , Types<Any, ScopedElementPacked<pptr16>>
+   , Types<Any, ScopedElementPacked<pptr32>>
 
-   , Types<TAny<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TAny<pptr16>, pptr16, ScopedElementPacked<pptr16>>
-   , Types<TAny<pptr32>, pptr32, ScopedElementPacked<pptr32>>
+   , Types<TAny<pptr8>,  ScopedElementPacked<pptr8>>
+   , Types<TAny<pptr16>, ScopedElementPacked<pptr16>>
+   , Types<TAny<pptr32>, ScopedElementPacked<pptr32>>
    //TODO pointers to packed pointers?
    //TODO pointers to incompletes?
    //TODO aggregates?
@@ -129,8 +129,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 ) {
    static MemoryState memoryState;
    using T = typename TestType::First;
-   using E = typename TestType::Second;
-   using ScopedE = typename TestType::template At<2>;
+   using ScopedE = typename TestType::Second;
+   using E = TypeOf<ScopedE>;
+
    constexpr bool Managed   = ScopedE::Managed;
    //constexpr bool Sparse    = CT::Sparse<E>;
    //constexpr bool Reffed    = CT::Referenced<Decay<E>>;
