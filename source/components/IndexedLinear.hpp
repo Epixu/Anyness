@@ -46,7 +46,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::Index INDEX>
       constexpr auto SimplifyIndex(this C const& self, INDEX index)
       assumptious -> Count<C> {
-         LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
+         //LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
          /*if (self.IsEmpty())
             return 0;*/
 
@@ -93,7 +93,7 @@ namespace Langulus::Anyness::Component
             // Unsafe, works only on assumptions.                       
             // Using an integer index explicitly makes a statement,     
             // that you know what you're doing.                         
-            LglsAssumeUser(static_cast<Count<C>>(index) < self.GetCount(),
+            LglsAssumeUser(static_cast<Count<C>>(index) <= self.GetCount(),
                "Integer index out of range");
 
             if constexpr (CT::Signed<INDEX>) {

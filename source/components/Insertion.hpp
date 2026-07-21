@@ -593,16 +593,99 @@ namespace Langulus::Anyness::Component
       /// MARK: ConcatAt                                                      
       /// Concatenation at specific index.                                    
       /// Possible only for contiguous containers with multiple elements.     
-      template<CT::IndexedLinearly C>
-      auto ConcatAt(this C& self, CT::Index auto&& idx, CT::Container auto&& data) -> size_t {
+      template<CT::IndexedLinearly C, CT::IndexedLinearly T>
+      auto ConcatAt(this C& self, CT::Index auto&& idx, T&& data) -> size_t {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
          const size_t rhs_count = DeintCast(data).GetCount();
          if (not rhs_count)
             return 0;
+         
+         const size_t lhs_count = self.GetCount();
+         if (lhs_count == 0) {
+            self.AssertZeroIndex(idx);
 
-         self.AbsorbType(FWDIntent(data));
+            if (not self.IsDisowned() and self.GetUses() == 1) {
+               // This is empty, but preallocated                       
+               TODO();
+            }
+            else {
+               // This is empty and unallocated                         
+               self.AllocateFresh(rhs_count);
+               auto dst = self.GetHandle();
+               auto src = DeintCast(data).GetHandle();
+               try {
+                  CopyRegion(src, dst, rhs_count);
+               }
+               catch (...) {
+                  // Account for throws inside constructors          
+                  const size_t inserted = dst - self.GetHandle();
+                  TODO(); //TODO a gap remains, move things back
+                  self.SetCountInner(inserted);
+                  throw;
+               }
+            }
+
+            self.SetCountInner(rhs_count);
+            return rhs_count;  
+         }
+
+         // Reallocate/branch out                                    
+         const size_t all_count = lhs_count + rhs_count;
+         const size_t offset    = self.SimplifyIndex(idx);
+
+         if (not self.IsDisowned() and self.GetUses() == 1) {
+            // No need to branch-out                                 
+            self.AllocateMore(all_count);
+            auto dst = self.GetHandle() + offset;
+            MakeGap(dst, offset, lhs_count, rhs_count);
+            auto src = DeintCast(data).GetHandle();
+            try {
+               CopyRegion(src, dst, rhs_count);
+            }
+            catch (...) {
+               // Account for throws inside constructors             
+               const size_t inserted = dst - self.GetHandle();
+               TODO(); //TODO a gap remains, move things back
+               self.SetCountInner(inserted);
+               throw;
+            }
+         }
+         else {
+            // We need to branch-out: insert old and new elements    
+            // in another container, which we will later swap.       
+            C temp {Disown{self}};
+            temp.Reserve(all_count);
+            auto src = self.GetHandle();
+            auto dst = temp.GetHandle();
+
+            // Copy original before 'offset'                         
+            CopyRegion(src, dst, offset);
+
+            // Copy new elements in the gap                          
+            try {
+               CopyRegion(src, dst, rhs_count);
+            }
+            catch (...) {
+               // Account for throws inside constructors             
+               const size_t inserted = dst - self.GetHandle();
+               TODO(); //TODO a gap remains, move things back
+               self.SetCountInner(inserted);
+               throw;
+            }
+
+            // Copy original after 'offset'                          
+            CopyRegion(src, dst, lhs_count - offset);
+
+            // Swap                                                  
+            self.Swap(temp);
+         }
+
+         self.SetCountInner(all_count);
+         return rhs_count;
+
+         /*self.AbsorbType(FWDIntent(data));
 
          // Reallocate/branch out                                       
          const size_t lhs_count = self.GetCount();
@@ -615,7 +698,7 @@ namespace Langulus::Anyness::Component
          auto src = DeintCast(data).GetHandle();
          CopyRegion(src, dst, rhs_count);             //TODO catch user data exceptions on construction, partial success allowed
          self.SetCountInner(all_count);
-         return rhs_count;
+         return rhs_count;*/
       }
 
       /// MARK: Concat                                                        

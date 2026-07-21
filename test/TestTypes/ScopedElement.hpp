@@ -28,11 +28,15 @@ struct ScopedElement {
    AllocationPtr entries[Langulus::IndirectsOf<T> + 1] = {};
 
 protected:
+   /// Initialize all levels of indirection by nesting this method            
    template<class INNER, class...A>
    static void NestedConstructor(INNER*& place, AllocationPtr* entry, A&&...arguments) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
+         // Innermost dense indirection reached                         
          if constexpr (MANAGED) {
+            TODO(); // build actual char* data
+            
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(sizeof(INNER))));
             #else
@@ -58,6 +62,7 @@ protected:
          }
       }
       else {
+         // Allocate another indirection                                
          if constexpr (MANAGED) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(sizeof(INNER))));

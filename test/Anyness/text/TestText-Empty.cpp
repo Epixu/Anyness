@@ -10,6 +10,7 @@
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
+//TODO char* std::string_view std::string std::array<char> Literal
 
 TEST_CASE_TEMPLATE("Test empty Text", TestType
    // Elements are not allocated by the memory manager                  
@@ -855,7 +856,6 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Move     {movable2}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Abandon  {movable3}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Clone    {immovable}));
-         REQUIRE(inserted == 5*8);
 
          Text_CheckState_OwnedFull(pack);
 
@@ -868,42 +868,57 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             }
          }
 
-         REQUIRE(pack.GetCount() == 5*8);
-         REQUIRE(pack.GetReserved() >= 5*8);
-
-         //TODO
-         /*for (uint i = 0; i < 4*5; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
-            if constexpr (Reffed)
-               REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
          }
-
-         for (uint i = 20; i < 20 + 3*5; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray2[i%5]);
-            if constexpr (Reffed)
-               REQUIRE(DenseCast(*darray2[i%5]).GetReferences() == (Sparse ? 4 : 1));
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack,
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+            );
          }
-
-         // Last one is cloned and pointers won't match                 
-         if constexpr (Sparse) {
-            for (uint i = 35; i < 40; ++i) {
-               REQUIRE(*pack.template GetAt<E>(i) != *darray1[i%5]);
-               REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i%5]));
-               if constexpr (Reffed) {
-                  REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == 5);
-                  REQUIRE(DenseCast(pack.template GetAt<E>(i)).GetReferences() == 1);
-               }
-            }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack,
+               "12345"
+               "12345"
+               "12345"
+               "12345"
+               "6789:"
+               "6789:"
+               "6789:"
+               "12345"
+            );
          }
          else {
-            for (uint i = 35; i < 40; ++i) {
-               REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
-               if constexpr (Reffed) {
-                  REQUIRE(darray1[i%5]->GetReferences() == 1);
-                  REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
-               }
-            }
-         }*/
+            Text_CheckState_ContainsString(pack,
+               "4950515253"
+               "4950515253"
+               "4950515253"
+               "4950515253"
+               "5455565758"
+               "5455565758"
+               "5455565758"
+               "4950515253"
+            );
+         }
 
          BenchmarkTextStd("Empty/Insert/Array/Back", 30, 100,
             T temp,              temp.InsertAt(Index::Back, immovable),
@@ -921,54 +936,69 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Move     {movable2}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Abandon  {movable3}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Clone    {immovable}));
-         REQUIRE(inserted == 5*8);
 
          Text_CheckState_OwnedFull(pack);
 
          if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i) {
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
             }
          }
 
-         REQUIRE(pack.GetCount() == 5*8);
-         REQUIRE(pack.GetReserved() >= 5*8);
-
-         //TODO
-         // First one is cloned and pointers won't match                
-         /*if constexpr (Sparse) {
-            for (uint i = 0; i < 5; ++i) {
-               REQUIRE(*pack.template GetAt<E>(i) != *darray1[i]);
-               REQUIRE(DenseCast(pack.template GetAt<E>(i)) == DenseCast(*darray1[i]));
-               if constexpr (Reffed) {
-                  REQUIRE(DenseCast(*darray1[i]).GetReferences() == 5);
-                  REQUIRE(DenseCast(pack.template GetAt<E>(i)).GetReferences() == 1);
-               }
-            }
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack,
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+            );
+         }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack,
+               "12345"
+               "6789:"
+               "6789:"
+               "6789:"
+               "12345"
+               "12345"
+               "12345"
+               "12345"
+            );
          }
          else {
-            for (uint i = 0; i < 5; ++i) {
-               REQUIRE(*pack.template GetAt<E>(i) == *darray1[i]);
-               if constexpr (Reffed) {
-                  REQUIRE(darray1[i]->GetReferences() == 1);
-                  REQUIRE(pack.template GetAt<E>(i)->GetReferences() == 1);
-               }
-            }
+            Text_CheckState_ContainsString(pack,
+               "4950515253"
+               "5455565758"
+               "5455565758"
+               "5455565758"
+               "4950515253"
+               "4950515253"
+               "4950515253"
+               "4950515253"
+            );
          }
-
-         for (uint i = 5; i < 5 + 3*5; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray2[i%5]);
-            if constexpr (Reffed)
-               REQUIRE(DenseCast(*darray2[i%5]).GetReferences() == (Sparse ? 4 : 1));
-         }
-
-         for (uint i = 20; i < 20 + 4*5; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i%5]);
-            if constexpr (Reffed)
-               REQUIRE(DenseCast(*darray1[i%5]).GetReferences() == (Sparse ? 5 : 1));
-         }*/
 
          BenchmarkTextStd("Empty/Insert/Array/Front", 30, 100,
             T temp,              temp.InsertAt(Index::Front, darray1),
@@ -1000,33 +1030,34 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
 
          Text_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::DeepDense<E>) {
-            Many_CheckState_Default<int>  (movable1[0]);
-            Many_CheckState_Default<int>  (movable2[0]);
-            Many_CheckState_Abandoned<int>(movable3[0]);
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
          }
 
-         REQUIRE(pack.GetCount() == 8);
-         REQUIRE(pack.GetReserved() >= 8);
-
-         /*for (int i = 0; i < 4; ++i) {
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[i]);
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
          }
-
-         for (int i = 4; i < 7; ++i)
-            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
-
-         // Last one is cloned and pointers won't match                 
-         if constexpr (Sparse) {
-            REQUIRE(*pack.template GetAt<E>(7) != *darray1[4]);
-            REQUIRE(DenseCast(pack.template GetAt<E>(7)) == DenseCast(*darray1[4]));
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack,
+               "\"49\"\"50\"\"51\"\"52\"\"54\"\"54\"\"54\"\"53\""
+            );
          }
-         else REQUIRE(*pack.template GetAt<E>(7) == *darray1[4]);
-
-         if constexpr (Reffed) {
-            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
-            REQUIRE(DenseCast(pack.template GetAt<E>(7)).GetReferences() == 1);
-         }*/
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack, "12346665");
+         }
+         else {
+            Text_CheckState_ContainsString(pack, "4950515254545453");
+         }
 
          BenchmarkTextStd("Empty/Insert/Element/Back", 30, 100,
             T temp,              temp << immovable[0],
@@ -1040,39 +1071,41 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
               >> Refer    {immovable[1]}
               >> Copy     {immovable[2]}
               >> Disown   {immovable[3]}
-              >> std::move(movable1[0])
-              >> Move     {movable2[0]}
-              >> Abandon  {movable3[0]}
+              >> std::move( movable1[0])
+              >> Move     { movable2[0]}
+              >> Abandon  { movable3[0]}
               >> Clone    {immovable[4]};
 
          Text_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::DeepDense<E>) {
-            Many_CheckState_Default<int>  (movable1[0]);
-            Many_CheckState_Default<int>  (movable2[0]);
-            Many_CheckState_Abandoned<int>(movable3[0]);
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
          }
 
-         REQUIRE(pack.GetCount() == 8);
-         REQUIRE(pack.GetReserved() >= 8);
-
-         // first one is cloned and pointers won't match                
-         /*if constexpr (Sparse) {
-            REQUIRE(*pack.template GetAt<E>(0) != *darray1[4]);
-            REQUIRE(DenseCast(pack.template GetAt<E>(0)) == DenseCast(*darray1[4]));
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
          }
-         else REQUIRE(*pack.template GetAt<E>(0) == *darray1[4]);
-
-         if constexpr (Reffed) {
-            REQUIRE(DenseCast(*darray1[4]).GetReferences() == 1);
-            REQUIRE(DenseCast(pack.template GetAt<E>(0)).GetReferences() == 1);
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack,
+               "\"53\"\"54\"\"54\"\"54\"\"52\"\"51\"\"50\"\"49\""
+            );
          }
-
-         for (int i = 1; i < 4; ++i)
-            REQUIRE(*pack.template GetAt<E>(i) == *darray2[0]);
-
-         for (int i = 4; i < 8; ++i)
-            REQUIRE(*pack.template GetAt<E>(i) == *darray1[4 - (i - 3)%5]);*/
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack, "56664321");
+         }
+         else {
+            Text_CheckState_ContainsString(pack, "5354545452515049");
+         }
 
          BenchmarkTextStd("Empty/Insert/Element/Front", 30, 100,
             T temp,              temp >> immovable[0],
