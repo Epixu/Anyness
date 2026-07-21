@@ -10,6 +10,12 @@
 #include "Logger.hpp"
 #include "NameOf.hpp"
 
+#if LANGULUS(DEBUG)
+   #include "Utils/DebugBreak.hpp"
+#else
+   #define LglsDebugBreak()
+#endif
+
 #if LANGULUS(STACKTRACE)
    #include <stacktrace>
 
@@ -21,6 +27,7 @@
       #define LANGULUS_DEFAULT_STACK_DEPTH 3
    #endif
 #endif
+
 namespace Langulus
 {
    #if LANGULUS(STACKTRACE)
@@ -90,6 +97,8 @@ namespace Langulus
             Logger::Line("At: ", location);
       #endif
 
+      LglsDebugBreak();
+
       // Throw                                                          
       if constexpr (CT::Exception<E>)
          throw E {m1.data(), location};
@@ -106,7 +115,7 @@ namespace Langulus
    ///   @param m1 optional main error message if condition doesn't hold      
    ///   @param location optional location of the error                       
    ///   @param mn additional information to log                              
-   template<class E = Exception, class...MORE>
+   template<bool BREAK = false, class E = Exception, class...MORE>
    constexpr void AssertInner(
       [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assertion failure>",
@@ -125,6 +134,10 @@ namespace Langulus
                   Logger::Line("At: ", location);
             #endif
 
+            if constexpr (BREAK) {
+               LglsDebugBreak();
+            }
+
             // Throw                                                    
             if constexpr (CT::Exception<E>)
                throw E {m1.data(), location};
@@ -135,6 +148,7 @@ namespace Langulus
    }
    
    #define LglsAssert(...) ::Langulus::AssertInner(HERE(), __VA_ARGS__)
+   #define LglsAssertAndBreak(...) ::Langulus::AssertInner<true>(HERE(), __VA_ARGS__)
 
    /// Assertion that works at runtime.                                       
    /// Doesn't throw or ruin compilation.                                     
@@ -175,7 +189,7 @@ namespace Langulus
    ///   @param m1 optional main error message if condition doesn't hold      
    ///   @param location optional location of the error                       
    ///   @param mn additional information to log                              
-   template<class E = Exception, class...MORE>
+   template<bool BREAK = false, class E = Exception, class...MORE>
    constexpr void AssumeUserInner(
       [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown user assumption failure>",
@@ -193,6 +207,10 @@ namespace Langulus
                if (location)
                   Logger::Line("At: ", location);
             #endif
+
+            if constexpr (BREAK) {
+               LglsDebugBreak();
+            }
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -232,8 +250,9 @@ namespace Langulus
       }
    }
 
-      #define LglsAssumeUser(...)     ::Langulus::AssumeUserInner(HERE(), __VA_ARGS__)
-      #define LglsAssumeUserWarn(...) ::Langulus::AssumeUserWarnInner(HERE(), __VA_ARGS__)
+      #define LglsAssumeUser(...)         ::Langulus::AssumeUserInner(HERE(), __VA_ARGS__)
+      #define LglsAssumeUserAndBreak(...) ::Langulus::AssumeUserInner<true>(HERE(), __VA_ARGS__)
+      #define LglsAssumeUserWarn(...)     ::Langulus::AssumeUserWarnInner(HERE(), __VA_ARGS__)
    
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
@@ -243,6 +262,7 @@ namespace Langulus
          LglsCompilerSpecificAssume(__VA_ARGS__)
    #else
       #define LglsAssumeUser(...)            LANGULUS(NOOP)
+      #define LglsAssumeUserAndBreak(...)    LANGULUS(NOOP)
       #define LglsAssumeUserWarn(...)        LANGULUS(NOOP)
       #define LglsAssumeUserAndOptimize(...) LglsCompilerSpecificAssume(__VA_ARGS__)
    #endif
@@ -256,7 +276,7 @@ namespace Langulus
    ///   @param m1 optional main error message if condition doesn't hold      
    ///   @param location optional location of the error                       
    ///   @param mn additional information to log                              
-   template<class E = Exception, class...MORE>
+   template<bool BREAK = false, class E = Exception, class...MORE>
    constexpr void AssumeDevInner(
       [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown dev assumption failure>",
@@ -274,6 +294,10 @@ namespace Langulus
                if (location)
                   Logger::Line("At: ", location);
             #endif
+
+            if constexpr (BREAK) {
+               LglsDebugBreak();
+            }
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -312,8 +336,9 @@ namespace Langulus
       }
    }
 
-      #define LglsAssumeDev(...)     ::Langulus::AssumeDevInner(HERE(), __VA_ARGS__)
-      #define LglsAssumeDevWarn(...) ::Langulus::AssumeDevWarnInner(HERE(), __VA_ARGS__)
+      #define LglsAssumeDev(...)          ::Langulus::AssumeDevInner(HERE(), __VA_ARGS__)
+      #define LglsAssumeDevAndBreak(...)  ::Langulus::AssumeDevInner<true>(HERE(), __VA_ARGS__)
+      #define LglsAssumeDevWarn(...)      ::Langulus::AssumeDevWarnInner(HERE(), __VA_ARGS__)
    
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
@@ -323,6 +348,7 @@ namespace Langulus
          LglsCompilerSpecificAssume(__VA_ARGS__)
    #else
       #define LglsAssumeDev(...)             LANGULUS(NOOP)
+      #define LglsAssumeDevAndBreak(...)     LANGULUS(NOOP)
       #define LglsAssumeDevWarn(...)         LANGULUS(NOOP)
       #define LglsAssumeDevAndOptimize(...)  LglsCompilerSpecificAssume(__VA_ARGS__)
    #endif
@@ -335,7 +361,7 @@ namespace Langulus
    ///   @param m1 optional main error message if condition doesn't hold      
    ///   @param location optional location of the error                       
    ///   @param mn additional information to log                              
-   template<uint LEVEL, class E = Exception, class...MORE>
+   template<uint LEVEL, bool BREAK = false, class E = Exception, class...MORE>
    constexpr void AssumeInner(
       [[maybe_unused]] const char* location, bool condition,
       ::std::string_view const& m1 = "<unknown assumption failure>",
@@ -355,6 +381,10 @@ namespace Langulus
                      Logger::Line("At: ", location);
                #endif
 
+               if constexpr (BREAK) {
+                  LglsDebugBreak();
+               }
+   
                // Throw                                                 
                if constexpr (CT::Exception<E>)
                   throw E {m1.data(), location};
@@ -368,7 +398,8 @@ namespace Langulus
    /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
-   #define LglsAssume(LEVEL, ...) ::Langulus::AssumeInner<LEVEL>(HERE(), __VA_ARGS__)
+   #define LglsAssume(LEVEL, ...)         ::Langulus::AssumeInner<LEVEL>(HERE(), __VA_ARGS__)
+   #define LglsAssumeAndBreak(LEVEL, ...) ::Langulus::AssumeInner<LEVEL, true>(HERE(), __VA_ARGS__)
 
    #define LglsAssumeAndOptimize(LEVEL, ...) \
       ::Langulus::AssumeInner<LEVEL>(HERE(), __VA_ARGS__) \

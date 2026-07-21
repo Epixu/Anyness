@@ -24,7 +24,7 @@ namespace Langulus
       #if LANGULUS(SAFE)
          static_assert(CT::Unsigned<T>, "T should be unsigned");
          constexpr T lastPowerOfTwo = (T {1}) << (T {sizeof(T) * 8 - 1});
-         LglsAssumeDev(x <= lastPowerOfTwo, "Roof2 overflowed");
+         LglsAssumeDevAndBreak(x <= lastPowerOfTwo, "Roof2 overflowed");
       #endif
       return ::std::bit_ceil(x);
    }

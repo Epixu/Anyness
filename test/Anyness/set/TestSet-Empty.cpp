@@ -948,6 +948,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          REQUIRE_NOTHROW(inserted += pack.Merge(Copy     {immovable}));
          REQUIRE_NOTHROW(inserted += pack.Merge(Disown   {immovable}));
          REQUIRE(inserted == 5);
+         DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable);
 
          REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
