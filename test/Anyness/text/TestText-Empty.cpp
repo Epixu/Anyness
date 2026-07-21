@@ -187,6 +187,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
    GIVEN("Default-constructed container") {
       const ScopedE element {555};
       T pack;
+      prevent_optimization(pack);
 
       /// MARK: Gap test                                                      
       WHEN("Gap test") {

@@ -35,30 +35,48 @@ protected:
       if constexpr (CT::Dense<INNER>) {
          // Innermost dense indirection reached                         
          if constexpr (MANAGED) {
-            TODO(); // build actual char* data
-            
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(sizeof(INNER))));
-            #else
-               *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Langulus::Roof2(sizeof(INNER))));
-            #endif
+            if constexpr (Same<INNER, char> and IndirectsOf<T> > 0) {
+               ::std::string converted = ::std::to_string(LglsFwd(arguments)...);
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(converted.size()+1)));
+               #else
+                  *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Langulus::Roof2(converted.size()+1)));
+               #endif
 
-            place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
+               place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
+               memcpy(place, converted.c_str(), converted.size()+1);
+            }
+            else {
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(sizeof(INNER))));
+               #else
+                  *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Langulus::Roof2(sizeof(INNER))));
+               #endif
 
-            if constexpr (requires { new INNER (LglsFwd(arguments)...); })
-               new (place) INNER (LglsFwd(arguments)...);
-            else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
-               new (place) INNER (INNER::FromNumber(LglsFwd(arguments)...));
-            else
-               static_assert(false, "Unable to construct");
+               place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
+
+               if constexpr (requires { new INNER (LglsFwd(arguments)...); })
+                  new (place) INNER (LglsFwd(arguments)...);
+               else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
+                  new (place) INNER (INNER::FromNumber(LglsFwd(arguments)...));
+               else
+                  static_assert(false, "Unable to construct");
+            }
          }
          else {
-            if constexpr (requires { new INNER (LglsFwd(arguments)...); })
-               place = new INNER (LglsFwd(arguments)...);
-            else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
-               place = new INNER (INNER::FromNumber(LglsFwd(arguments)...));
-            else
-               static_assert(false, "Unable to construct");
+            if constexpr (Same<INNER, char> and IndirectsOf<T> > 0) {
+               ::std::string converted = ::std::to_string(LglsFwd(arguments)...);
+               place = (char*) malloc(converted.size()+1);
+               memcpy(place, converted.c_str(), converted.size()+1);
+            }
+            else {
+               if constexpr (requires { new INNER (LglsFwd(arguments)...); })
+                  place = new INNER (LglsFwd(arguments)...);
+               else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
+                  place = new INNER (INNER::FromNumber(LglsFwd(arguments)...));
+               else
+                  static_assert(false, "Unable to construct");
+            }
          }
       }
       else {
@@ -72,9 +90,7 @@ protected:
 
             place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
          }
-         else {
-            place = new INNER{ nullptr };
-         }
+         else place = new INNER {nullptr};
 
          NestedConstructor(*place, entry + 1, LglsFwd(arguments)...);
       }
@@ -93,7 +109,11 @@ protected:
                "Unmanaged CT::Referenced instance memory was deleted before references reach zero"
                " - revise your test to avoid false positives."
             );
-            delete place;
+
+            if constexpr (Same<INNER, char> and IndirectsOf<T> > 0)
+               free(place);
+            else
+               delete place;
          }
          else if constexpr (MANAGED) {
             LglsAssumeDev((*entry)->GetUses() >= 1,

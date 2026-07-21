@@ -54,4 +54,8 @@ namespace doctest
    constexpr int BenchmarkMeasureCycles = 1000;
 #endif
 
-#define prevent_optimization(a) volatile auto a##_optimization_prevention = &a; (void) a##_optimization_prevention;
+#if LANGULUS(BENCHMARK)
+   #define prevent_optimization(a)
+#else
+   #define prevent_optimization(a) volatile auto a##_optimization_prevention = a; (void) a##_optimization_prevention;
+#endif
