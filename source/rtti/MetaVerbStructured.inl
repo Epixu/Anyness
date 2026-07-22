@@ -56,7 +56,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetCppName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mCppNameOf;
+         return Registry::GetMetaVerbByID(id)->mCppNameOf;
       return {};
    }
    
@@ -65,7 +65,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetInfo() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mInfoOf;
+         return Registry::GetMetaVerbByID(id)->mInfoOf;
       return {};
    }
    
@@ -74,7 +74,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetHash() const noexcept -> Hash {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mHash;
+         return Registry::GetMetaVerbByID(id)->mHash;
       return {};
    }
    
@@ -83,7 +83,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mVersionMajor;
+         return Registry::GetMetaVerbByID(id)->mVersionMajor;
       return 0;
    }
 
@@ -92,7 +92,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mVersionMinor;
+         return Registry::GetMetaVerbByID(id)->mVersionMinor;
       return 0;
    }
    
@@ -101,8 +101,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> Definition::BoundarySet const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mBoundaries;
-
+         return Registry::GetMetaVerbByID(id)->mBoundaries;
       static const Definition::BoundarySet fallback;
       return fallback;
    }
@@ -113,7 +112,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mNameOf;
+         return Registry::GetMetaVerbByID(id)->mNameOf;
       return DefinitionVerb::InvalidName;
    }
 
@@ -122,7 +121,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mNameOfReverse;
+         return Registry::GetMetaVerbByID(id)->mNameOfReverse;
       return DefinitionVerb::InvalidName;
    }
 
@@ -131,7 +130,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveOperator() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mOperator;
+         return Registry::GetMetaVerbByID(id)->mOperator;
       return {};
    }
 
@@ -140,7 +139,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeOperator() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mOperatorReverse;
+         return Registry::GetMetaVerbByID(id)->mOperatorReverse;
       return {};
    }
 
@@ -149,7 +148,7 @@ namespace Langulus::RTTI::Inner
    auto MetaVerbStructured_X8<ID_SIZE>::GetPrecedence() const noexcept -> float {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaVerbByID(id)->mPrecedence;
+         return Registry::GetMetaVerbByID(id)->mPrecedence;
       return 0;
    }
 
@@ -157,7 +156,7 @@ namespace Langulus::RTTI::Inner
    template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetContextless() const noexcept -> DefinitionVerb::FContextless {
       return contextless
-         ? Instance.GetMetaVerbByID(Base::GetID())->mCurrentBoundary.mContextless
+         ? Registry::GetMetaVerbByID(Base::GetID())->mCurrentBoundary.mContextless
          : nullptr;
    }
 
@@ -177,7 +176,7 @@ namespace Langulus::RTTI::Inner
    template<uint ID_SIZE>
    MetaVerbStructured_X8<ID_SIZE>::operator bool() const noexcept {
       if (Base::operator bool()) {
-         LglsAssert(Instance.GetMetaVerbByID(Base::GetID()),
+         LglsAssert(Registry::GetMetaVerbByID(Base::GetID()),
             "Valid meta with invalid definition");
          return true;
       }

@@ -80,7 +80,7 @@ namespace Langulus
    ///   @param m1 optional main error message                                
    ///   @param location optional location of the error                       
    ///   @param mn additional information to log                              
-   template<class E = Exception, class...MORE>
+   template<bool BREAK = false, class E = Exception, class...MORE>
    void ErrorInner(
       [[maybe_unused]] const char* location,
       ::std::string_view const& m1 = "<unknown error>",
@@ -97,7 +97,9 @@ namespace Langulus
             Logger::Line("At: ", location);
       #endif
 
-      LglsDebugBreak();
+      if constexpr (BREAK) {
+         LglsDebugBreak();
+      }
 
       // Throw                                                          
       if constexpr (CT::Exception<E>)
@@ -107,6 +109,7 @@ namespace Langulus
    }
 
    #define LglsError(...) ::Langulus::ErrorInner(HERE() __VA_OPT__(,) __VA_ARGS__)
+   #define LglsErrorAndBreak(...) ::Langulus::ErrorInner<true>(HERE() __VA_OPT__(,) __VA_ARGS__)
    
    /// MARK: Assert                                                           
    /// Assertion that works both at runtime and at compile-time.              

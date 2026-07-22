@@ -52,14 +52,14 @@ namespace Langulus::RTTI
          // Try to get an already existing definition - the tag might   
          // have been reflected previously in another shared library    
          const auto cppname = CppNameOf<T>();
-         DefinitionTag const* meta = Instance.GetMetaTagByCppName(cppname);
+         DefinitionTag const* meta = Registry::GetMetaTagByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
          const auto token = NameOfTag<T>();
          DefinitionTag& definition = meta
             ? const_cast<DefinitionTag&>(*meta)
-            : Instance.RegisterTag(cppname, token);
+            : Registry::RegisterTag(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack

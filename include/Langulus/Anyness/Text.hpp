@@ -220,15 +220,31 @@ namespace Langulus::Anyness
                return *this;
             using CHAR = Deref<Deptr<DT>>;
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
-            const auto count = strlen(source);
-            if (not count) {
-               this->Clear();
-               return *this;
-            }
+            
+            if constexpr (CT::CustomPointer<DT>) {
+               // Custom pointer needs to be unpacked                   
+               auto unpacked_source = source.Unpack();
+               const auto count = strlen(unpacked_source);
+               if (not count) {
+                  this->Clear();
+                  return *this;
+               }
 
-            this->BranchOut(count);
-            memcpy(this->GetRawAs<uint8_t>(), source, count);
-            this->SetCountInner(count);
+               this->BranchOut(count);
+               memcpy(this->GetRawAs<uint8_t>(), unpacked_source, count);
+               this->SetCountInner(count);
+            }
+            else {
+               const auto count = strlen(source);
+               if (not count) {
+                  this->Clear();
+                  return *this;
+               }
+
+               this->BranchOut(count);
+               memcpy(this->GetRawAs<uint8_t>(), source, count);
+               this->SetCountInner(count);
+            }
          }
          else {
             // Create from an std container                             

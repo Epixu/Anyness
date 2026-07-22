@@ -38,14 +38,14 @@ namespace Langulus::RTTI
          // Try to get an already existing definition - the const might 
          // have been reflected previously in another shared library    
          const auto cppname = CppNameOf<E>();
-         DefinitionConst const* meta = Instance.GetMetaConstByCppName(cppname);
+         DefinitionConst const* meta = Registry::GetMetaConstByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
          const auto token = NameOf<E, false>();
          DefinitionConst& definition = meta
             ? const_cast<DefinitionConst&>(*meta)
-            : Instance.RegisterConst(cppname, token);
+            : Registry::RegisterConst(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack

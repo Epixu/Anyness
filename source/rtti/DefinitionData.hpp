@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Definition.hpp"
+#include "Langulus/Typenav.hpp"
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/Utils/Pot.hpp>
@@ -290,6 +291,15 @@ namespace Langulus::RTTI
          ::std::unordered_map<::std::string, BoundaryDependent> mOtherBoundaries;
       #endif
 
+      LANGULUS_API(RTTI)
+      void ReflectOrigin(size_t minElements, size_t sizeofT);
+      LANGULUS_API(RTTI)
+      void ReflectConstOrigin();
+      LANGULUS_API(RTTI)
+      void ReflectStandardSparse(bool mut, bool complete, bool denserComplete, size_t minElements);
+      LANGULUS_API(RTTI)
+      void ReflectCustomSparse(bool mut, bool complete, size_t minElements, size_t sizeofT);
+
    public:
       using CTTI_ReflectAs = void;
 
@@ -299,7 +309,9 @@ namespace Langulus::RTTI
       static auto Reflect() -> DefinitionData const*;
       template<class T> requires (CT::Dense<T> and ::std::is_const_v<T>)
       static auto Reflect() -> DefinitionData const*;
-      template<class T> requires CT::Sparse<T>
+      template<class T> requires ::std::is_pointer_v<T>
+      static auto Reflect() -> DefinitionData const*;
+      template<class T> requires CT::CustomPointer<T>
       static auto Reflect() -> DefinitionData const*;
       
       DefinitionData(const Token& cppname) noexcept

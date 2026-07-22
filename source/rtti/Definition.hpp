@@ -17,6 +17,16 @@
 
 #define LANGULUS_META_VERBOSITY_MASTER_SWITCH() 0
 
+#if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_RTTI)
+   #define LANGULUS_API_RTTI() LANGULUS_EXPORT()
+#else
+   #define LANGULUS_API_RTTI() LANGULUS_IMPORT()
+#endif
+
+/// Make the rest of the code aware, that Langulus::RTTI has been included    
+#define LANGULUS_LIBRARY_RTTI() 1
+
+
 namespace Langulus::RTTI
 {
    class DefinitionConst;

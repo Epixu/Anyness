@@ -52,7 +52,7 @@ namespace Langulus::RTTI
          // Try to get an already existing definition - the verb might  
          // have been reflected previously in another shared library    
          const auto cppname = CppNameOf<T>();
-         DefinitionVerb const* meta = Instance.GetMetaVerbByCppName(cppname);
+         DefinitionVerb const* meta = Registry::GetMetaVerbByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
          
@@ -62,7 +62,7 @@ namespace Langulus::RTTI
          const auto opNeg   = OperatorOfVerbReverse<T>();
          DefinitionVerb& definition = meta
             ? const_cast<DefinitionVerb&>(*meta)
-            : Instance.RegisterVerb(cppname, verbPos, verbNeg, opPos, opNeg);
+            : Registry::RegisterVerb(cppname, verbPos, verbNeg, opPos, opNeg);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack

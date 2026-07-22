@@ -40,7 +40,7 @@ namespace Langulus::RTTI::Inner
    inline auto MetaTagPacked_16::GetName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaTagByID(id)->mNameOf;
+         return Registry::GetMetaTagByID(id)->mNameOf;
       return DefinitionTag::InvalidName;
    }
 
@@ -48,7 +48,7 @@ namespace Langulus::RTTI::Inner
    inline auto MetaTagPacked_16::GetInfo() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaTagByID(id)->mInfoOf;
+         return Registry::GetMetaTagByID(id)->mInfoOf;
       return {};
    }
 
@@ -56,7 +56,7 @@ namespace Langulus::RTTI::Inner
    inline auto MetaTagPacked_16::GetCppName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaTagByID(id)->mCppNameOf;
+         return Registry::GetMetaTagByID(id)->mCppNameOf;
       return {};
    }
 
@@ -64,7 +64,7 @@ namespace Langulus::RTTI::Inner
    inline auto MetaTagPacked_16::GetHash() const noexcept -> Hash {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaTagByID(id)->mHash;
+         return Registry::GetMetaTagByID(id)->mHash;
       return {};
    }
 
@@ -72,7 +72,7 @@ namespace Langulus::RTTI::Inner
    inline auto MetaTagPacked_16::GetVersionMajor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaTagByID(id)->mVersionMajor;
+         return Registry::GetMetaTagByID(id)->mVersionMajor;
       return 0;
    }
 
@@ -80,14 +80,14 @@ namespace Langulus::RTTI::Inner
    inline auto MetaTagPacked_16::GetVersionMinor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaTagByID(id)->mVersionMinor;
+         return Registry::GetMetaTagByID(id)->mVersionMinor;
       return 0;
    }
 
 #if LANGULUS(SAFE)
    inline MetaTagPacked_16::operator bool() const noexcept {
       if (Base::operator bool()) {
-         LglsAssert(Instance.GetMetaTagByID(Base::GetID()),
+         LglsAssert(Registry::GetMetaTagByID(Base::GetID()),
             "Valid meta with invalid definition");
          return true;
       }

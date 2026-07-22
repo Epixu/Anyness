@@ -81,7 +81,7 @@ namespace Langulus::RTTI::Inner
    -> DefinitionData const* {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant);
+         return Registry::GetMetaDataByID(id, sparse, constant);
       return nullptr;
    }
 
@@ -96,8 +96,8 @@ namespace Langulus::RTTI::Inner
       if (lid == rid)
          return true;
       if (lid and rid) {
-         auto o1 = Instance.GetMetaDataByID(lid,       sparse,       constant)->mOrigin;
-         auto o2 = Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mOrigin;
+         auto o1 = Registry::GetMetaDataByID(lid,       sparse,       constant)->mOrigin;
+         auto o2 = Registry::GetMetaDataByID(rid, other.sparse, other.constant)->mOrigin;
          return o1 == o2 and o1;
          //TODO figure this out: types can't be akin if incomplete, because we can't reflect incomplete types rn.
          // this is inconsistent, because Akin actually allows incomplete types in C++.
@@ -130,8 +130,8 @@ namespace Langulus::RTTI::Inner
       const auto lid = Base::GetID();
       const auto rid = other.Base::GetID();
       if (lid and rid) {
-         auto o1 = Instance.GetMetaDataByID(lid,       sparse,       constant)->mDecvqAll;
-         auto o2 = Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mDecvqAll;
+         auto o1 = Registry::GetMetaDataByID(lid,       sparse,       constant)->mDecvqAll;
+         auto o2 = Registry::GetMetaDataByID(rid, other.sparse, other.constant)->mDecvqAll;
          return o1 == o2;
       }
       return not lid and not rid;
@@ -145,9 +145,9 @@ namespace Langulus::RTTI::Inner
          if constexpr (PT_SIZE > 1) {
             return Structured<PT_SIZE>::size
                ? Structured<PT_SIZE>::size
-               : Instance.GetMetaDataByID(id, sparse, constant)->mSize;
+               : Registry::GetMetaDataByID(id, sparse, constant)->mSize;
          }
-         else return Instance.GetMetaDataByID(id, sparse, constant)->mSize;
+         else return Registry::GetMetaDataByID(id, sparse, constant)->mSize;
       }
       return 0;
    }
@@ -157,7 +157,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetAlignment() const noexcept -> pot_t {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mAlign;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mAlign;
       return pot_t(Alignment);
    }
 
@@ -166,7 +166,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mNameOf;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mNameOf;
       return DefinitionData::InvalidName;
    }
    
@@ -175,7 +175,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetInfo() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mInfoOf;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mInfoOf;
       return {};
    }
 
@@ -184,7 +184,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetCppName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCppNameOf;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCppNameOf;
       return {};
    }
 
@@ -193,7 +193,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetHash() const noexcept -> Hash {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mHash;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mHash;
       return {};
    }
 
@@ -202,7 +202,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetFiles() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mFilesOf;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mFilesOf;
       return {};
    }
 
@@ -211,7 +211,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetSuffix() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mSuffixOf;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mSuffixOf;
       return {};
    }
 
@@ -220,7 +220,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mBoundaries;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mBoundaries;
 
       static const Definition::BoundarySet fallback;
       return fallback;
@@ -231,7 +231,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetVersionMajor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mVersionMajor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mVersionMajor;
       return {};
    }
 
@@ -240,7 +240,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetVersionMinor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mVersionMinor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mVersionMinor;
       return {};
    }
    
@@ -249,7 +249,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetMinAllocation() const noexcept -> pot_t {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mMinimalAllocation;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mMinimalAllocation;
       return pot_t(MinimalAllocation);
    }
 
@@ -258,7 +258,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetAllocationTable() const noexcept -> size_t const* {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mAllocationTable;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mAllocationTable;
       return {};
    }
 
@@ -268,7 +268,7 @@ namespace Langulus::RTTI::Inner
       auto ME()::GetMinPoolsize() const noexcept -> pot_t {
          const auto id = Base::GetID();
          if (id)
-            return Instance.GetMetaDataByID(id, sparse, constant)->mMinimalPoolSize;
+            return Registry::GetMetaDataByID(id, sparse, constant)->mMinimalPoolSize;
          return pot_t(MinimalPoolSize);
       }
    
@@ -277,7 +277,7 @@ namespace Langulus::RTTI::Inner
       auto ME()::GetPoolTactic() const noexcept -> PoolTactic {
          const auto id = Base::GetID();
          if (id)
-            return Instance.GetMetaDataByID(id, sparse, constant)->mPoolTactic;
+            return Registry::GetMetaDataByID(id, sparse, constant)->mPoolTactic;
          return PoolTactic::Default;
       }
    #endif
@@ -290,7 +290,7 @@ namespace Langulus::RTTI::Inner
       if (not id or not sparse)
          return 0;
 
-      auto d = Instance.GetMetaDataByID(id, sparse, constant);
+      auto d = Registry::GetMetaDataByID(id, sparse, constant);
       size_t result = 0;
       while (d->mDeptr) {
          if (reinterpret_cast<intptr_t>(d->mDeptr) == 1)
@@ -311,7 +311,7 @@ namespace Langulus::RTTI::Inner
       if (not id or not sparse)
          return 0;
 
-      auto d = Instance.GetMetaDataByID(id, sparse, constant);
+      auto d = Registry::GetMetaDataByID(id, sparse, constant);
       size_t result = 0;
       while (d->mDeptr) {
          if (d->mPointerSpecification.IsPacked())
@@ -329,7 +329,7 @@ namespace Langulus::RTTI::Inner
    constexpr auto ME()::GetPointerSpecification() const noexcept -> PointerSpecification {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mPointerSpecification;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mPointerSpecification;
       return {};
    }
 
@@ -380,7 +380,7 @@ namespace Langulus::RTTI::Inner
    constexpr bool ME()::IsAbstract() const noexcept {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mAbstract;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mAbstract;
       return false;
    }
 
@@ -389,7 +389,7 @@ namespace Langulus::RTTI::Inner
    constexpr bool ME()::IsExecutable() const noexcept {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mExecutable;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mExecutable;
       return false;
    }
 
@@ -398,7 +398,7 @@ namespace Langulus::RTTI::Inner
    constexpr bool ME()::HasGetHashMethod() const noexcept {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mHasGetHashMethod;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mHasGetHashMethod;
       return {};
    }
    
@@ -408,7 +408,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::FUnary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDestructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDestructor;
       return {};
    }
    
@@ -418,7 +418,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDereference;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDereference;
       return {};
    }
 
@@ -428,7 +428,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::FReference {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferencer;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferencer;
       return {};
    }
 
@@ -438,7 +438,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::FResolve {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mResolver;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mResolver;
       return {};
    }
 
@@ -447,7 +447,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetDefaultConstructor() const noexcept -> DefinitionData::FUnary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDefaultConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDefaultConstructor;
       return {};
    }
    
@@ -456,7 +456,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetDescribeConstructor() const noexcept -> DefinitionData::FDescribe {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDescribeConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDescribeConstructor;
       return {};
    }   
 
@@ -465,7 +465,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetReferConstructor() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferConstructor;
       return {};
    }
 
@@ -474,7 +474,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetReferAssigner() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferAssigner;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferAssigner;
       return {};
    }
 
@@ -483,7 +483,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetMoveConstructor() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMoveConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMoveConstructor;
       return {};
    }
 
@@ -492,7 +492,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetMoveAssigner() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMoveAssigner;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMoveAssigner;
       return {};
    }
 
@@ -501,7 +501,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetAbandonConstructor() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mAbandonConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mAbandonConstructor;
       return {};
    }
 
@@ -510,7 +510,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetAbandonAssigner() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mAbandonAssigner;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mAbandonAssigner;
       return {};
    }
 
@@ -519,7 +519,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetDisownConstructor() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDisownConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDisownConstructor;
       return {};
    }
 
@@ -528,7 +528,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetDisownAssigner() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDisownAssigner;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDisownAssigner;
       return {};
    }
 
@@ -537,7 +537,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetCloneConstructor() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCloneConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCloneConstructor;
       return {};
    }
 
@@ -546,7 +546,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetCloneAssigner() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCloneAssigner;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCloneAssigner;
       return {};
    }
 
@@ -555,7 +555,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetCopyConstructor() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCopyConstructor;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCopyConstructor;
       return {};
    }
 
@@ -564,7 +564,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetCopyAssigner() const noexcept -> DefinitionData::FBinary {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCopyAssigner;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCopyAssigner;
       return {};
    }
 
@@ -573,7 +573,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetComparer() const noexcept -> DefinitionData::FCompare {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mComparer;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mComparer;
       return {};
    }
 
@@ -582,7 +582,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetComparerEqual() const noexcept -> DefinitionData::FCompareEqual {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mComparerEqual;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mComparerEqual;
       return {};
    }
 
@@ -591,7 +591,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetHasher() const noexcept -> DefinitionData::FHash {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mHasher;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mHasher;
       return {};
    }
 
@@ -600,7 +600,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetDispatcher() const noexcept -> DefinitionData::FDispatch {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDispatcher;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDispatcher;
       return {};
    }
 
@@ -613,7 +613,7 @@ namespace Langulus::RTTI::Inner
 
       const auto id = Base::GetID();
       if (id) {
-         auto d = Instance.GetMetaDataByID(id, sparse, constant);
+         auto d = Registry::GetMetaDataByID(id, sparse, constant);
          MetaDataStructured_XY result =
             d->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
             ? nullptr : d->mDeptr;
@@ -628,7 +628,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetOrigin() const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mOrigin;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mOrigin;
       return {};
    }
    
@@ -637,7 +637,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetDecvqAll() const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mDecvqAll;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mDecvqAll;
       return {};
    }
    
@@ -646,7 +646,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetDecvq() const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mDecvqOnce;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mDecvqOnce;
       return {};
    }
    
@@ -657,7 +657,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::AddPtr() const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id) {
-         auto ptr = Instance.GetMetaDataByID(id, sparse, constant)->mAddPtr;
+         auto ptr = Registry::GetMetaDataByID(id, sparse, constant)->mAddPtr;
          LglsAssert(ptr, "Pointer type hasn't been reflected yet");
          return ptr;
       }
@@ -671,7 +671,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::AddConst() const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id) {
-         auto cnst = Instance.GetMetaDataByID(id, sparse, constant)->mAddConst;
+         auto cnst = Registry::GetMetaDataByID(id, sparse, constant)->mAddConst;
          LglsAssert(cnst, "Constant type hasn't been reflected yet");
          return cnst;
       }
@@ -683,7 +683,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetConcrete() const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id) {
-         auto d = Instance.GetMetaDataByID(id, sparse, constant);
+         auto d = Registry::GetMetaDataByID(id, sparse, constant);
          return d->mCurrentBoundary.mConcrete
             ? d->mCurrentBoundary.mConcrete()
             : nullptr;
@@ -696,7 +696,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetProducer() const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id) {
-         auto d = Instance.GetMetaDataByID(id, sparse, constant);
+         auto d = Registry::GetMetaDataByID(id, sparse, constant);
          return d->mCurrentBoundary.mProducer
             ? d->mCurrentBoundary.mProducer()
             : nullptr;
@@ -709,7 +709,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetBases() const noexcept -> DefinitionData::BaseList const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mBases;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mBases;
 
       static const DefinitionData::BaseList fallback;
       return fallback;
@@ -720,7 +720,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetVerbs() const noexcept -> DefinitionData::VerbList const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mVerbs;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mVerbs;
 
       static const DefinitionData::VerbList fallback;
       return fallback;
@@ -731,7 +731,7 @@ namespace Langulus::RTTI::Inner
    auto ME()::GetMembers() const noexcept -> DefinitionData::MemberList const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMembers;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMembers;
 
       static const DefinitionData::MemberList fallback;
       return fallback;
@@ -743,7 +743,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::ValuesList const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mNamedValues;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mNamedValues;
 
       static const DefinitionData::ValuesList fallback;
       return fallback;
@@ -755,7 +755,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::MorphismList const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMorphismsTo;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMorphismsTo;
 
       static const DefinitionData::MorphismList fallback;
       return fallback;
@@ -767,7 +767,7 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::MorphismList const& {
       const auto id = Base::GetID();
       if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMorphismsFrom;
+         return Registry::GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMorphismsFrom;
 
       static const DefinitionData::MorphismList fallback;
       return fallback;
@@ -784,8 +784,8 @@ namespace Langulus::RTTI::Inner
       if (not from_id or not to_id)
          return {nullptr, nullptr};
 
-      const auto dfrom = Instance.GetMetaDataByID(from_id, sparse, constant);
-      const auto dto = Instance.GetMetaDataByID(to_id, to.sparse, to.constant);
+      const auto dfrom = Registry::GetMetaDataByID(from_id, sparse, constant);
+      const auto dto = Registry::GetMetaDataByID(to_id, to.sparse, to.constant);
       auto found = dfrom->mCurrentBoundary.mMorphismsTo.find(dto->mDecvqAll);
       if (found != dfrom->mCurrentBoundary.mMorphismsTo.end())
          return found->second;

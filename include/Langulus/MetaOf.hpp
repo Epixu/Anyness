@@ -81,43 +81,43 @@ namespace Langulus
    /// Convenience literals for getting meta definitions from token...        
    LANGULUS(INLINED)
    RTTI::DMeta operator ""_dmeta(const char* token, size_t size) noexcept {
-      return RTTI::Instance.GetMetaDataByToken(Token {token, size});
+      return RTTI::Registry::GetMetaDataByToken(Token {token, size});
    }
 
    LANGULUS(INLINED)
    RTTI::TMeta operator ""_tmeta(const char* token, size_t size) noexcept {
-      return RTTI::Instance.GetMetaTagByToken(Token {token, size});
+      return RTTI::Registry::GetMetaTagByToken(Token {token, size});
    }
 
    LANGULUS(INLINED)
    RTTI::CMeta operator ""_cmeta(const char* token, size_t size) noexcept {
-      return RTTI::Instance.GetMetaConstByToken(Token {token, size});
+      return RTTI::Registry::GetMetaConstByToken(Token {token, size});
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta operator ""_vmeta(const char* token, size_t size) noexcept {
-      return RTTI::Instance.GetMetaVerbByToken(Token {token, size});
+      return RTTI::Registry::GetMetaVerbByToken(Token {token, size});
    }
    
    /// ... as well as getting them manually                                   
    LANGULUS(INLINED)
    RTTI::DMeta MetaDataOf(const Token& token) noexcept {
-      return RTTI::Instance.GetMetaDataByToken(token);
+      return RTTI::Registry::GetMetaDataByToken(token);
    }
 
    LANGULUS(INLINED)
    RTTI::TMeta MetaTagOf(const Token& token) noexcept {
-      return RTTI::Instance.GetMetaTagByToken(token);
+      return RTTI::Registry::GetMetaTagByToken(token);
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta MetaVerbOf(const Token& token) noexcept {
-      return RTTI::Instance.GetMetaVerbByToken(token);
+      return RTTI::Registry::GetMetaVerbByToken(token);
    }
 
    LANGULUS(INLINED)
    RTTI::CMeta MetaConstOf(const Token& token) noexcept {
-      return RTTI::Instance.GetMetaConstByToken(token);
+      return RTTI::Registry::GetMetaConstByToken(token);
    }
 #endif
 }

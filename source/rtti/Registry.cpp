@@ -28,25 +28,66 @@
 
 namespace Langulus::RTTI
 {
-   Registry Instance {};
+   namespace 
+   {
+      // Definitions indexed by lowercase reflected name                
+      template<class T>
+      using MetaMap  = ::std::unordered_map<Token, T>;
+      //using MetaSet  = ::std::unordered_set<Inner::Definition const*>;
+   
+      // Definitions indexed by ID                                      
+      template<class T>
+      using Indexed = ::std::vector<T>;
+   
+      // @attention order of these containers matters!                  
+      // Database for meta data definitions                             
+      MetaMap<::std::unique_ptr<DefinitionData>> mMetaDataByCppName;
+      MetaMap<DefinitionData const*>  mMetaDataByToken;
+      Indexed<DefinitionData const*>  mMetaDataByID;
+   
+      // Database for named values                                      
+      MetaMap<::std::unique_ptr<DefinitionConst>> mMetaConstantsByCppName;
+      MetaMap<DefinitionConst const*> mMetaConstantsByToken;
+      Indexed<DefinitionConst const*> mMetaConstantsByID;
+   
+      // Database for meta trait definitions                            
+      MetaMap<::std::unique_ptr<DefinitionTag>> mMetaTagsByCppName;
+      MetaMap<DefinitionTag const*>   mMetaTagsByToken;
+      Indexed<DefinitionTag const*>   mMetaTagsByID;
+   
+      // Database for meta verb definitions                             
+      MetaMap<::std::unique_ptr<DefinitionVerb>> mMetaVerbsByCppName;
+      MetaMap<DefinitionVerb const*>  mMetaVerbsByToken;
+      Indexed<DefinitionVerb const*>  mMetaVerbsByID;
+   
+      // Database for ambiguous tokens                                  
+      // All definitions indexed by their last lowercased token         
+      MetaMap<MetaSet> mMetaAmbiguous;
+      // Meta data definitions, indexed by file extensions              
+      MetaMap<MetaSet> mFileDatabase;
+      
+         
+      /// Common way to extract something from the registry by ID             
+      ///   @param where where to search in                                   
+      ///   @param id the id to search for                                    
+      ///   @return the found element, or nullptr if not found                
+      auto GetMetaByID(const auto& where, size_t id) assumptious {
+         LglsAssumeDevAndOptimize(id != 0, "Invalid ID");
+         return where[id-1];
+      }
+   }
+   
+   //Registry Instance {};
 
    /// Database destruction                                                   
-   Registry::~Registry() {}
+   //Registry::~Registry() {}
    
-   /// Common way to extract something from the registry by ID                
-   ///   @param where where to search in                                      
-   ///   @param id the id to search for                                       
-   ///   @return the found element, or nullptr if not found                   
-   auto Registry::GetMetaByID(const auto& where, size_t id) const assumptious {
-      LglsAssumeDevAndOptimize(id != 0, "Invalid ID");
-      return where[id-1];
-   }
 
    /// Get an existing data definition by its CppNameOf                       
    ///   @param token the C++ name of the data definition                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByCppName(const Token& token)
-   const noexcept -> DefinitionData const* {
+   noexcept -> DefinitionData const* {
       const auto foundToken = mMetaDataByCppName.find(token);
       if (foundToken == mMetaDataByCppName.end())
          return nullptr;
@@ -58,7 +99,7 @@ namespace Langulus::RTTI
    ///   @param token the reflected token of the data definition              
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByToken(const Token& token)
-   const assumptious -> DefinitionData const* {
+   assumptious -> DefinitionData const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaDataByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaDataByToken.end())
@@ -70,7 +111,7 @@ namespace Langulus::RTTI
    ///   @param token the C++ name of the constant definition                 
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByCppName(const Token& token)
-   const noexcept -> DefinitionConst const* {
+   noexcept -> DefinitionConst const* {
       const auto foundToken = mMetaConstantsByCppName.find(token);
       if (foundToken == mMetaConstantsByCppName.end())
          return nullptr;
@@ -82,7 +123,7 @@ namespace Langulus::RTTI
    ///   @param token the reflected token of the constant definition          
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByToken(const Token& token)
-   const assumptious -> DefinitionConst const* {
+   assumptious -> DefinitionConst const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaConstantsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaConstantsByToken.end())
@@ -94,7 +135,7 @@ namespace Langulus::RTTI
    ///   @param token the C++ name of the tag definition                      
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByCppName(const Token& token)
-   const noexcept -> DefinitionTag const* {
+   noexcept -> DefinitionTag const* {
       const auto foundToken = mMetaTagsByCppName.find(token);
       if (foundToken == mMetaTagsByCppName.end())
          return nullptr;
@@ -106,7 +147,7 @@ namespace Langulus::RTTI
    ///   @param token the reflected token of the tag definition               
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByToken(const Token& token)
-   const assumptious -> DefinitionTag const* {
+   assumptious -> DefinitionTag const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaTagsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaTagsByToken.end())
@@ -118,7 +159,7 @@ namespace Langulus::RTTI
    ///   @param token the C++ name of the verb definition                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByCppName(const Token& token)
-   const noexcept -> DefinitionVerb const* {
+   noexcept -> DefinitionVerb const* {
       const auto foundToken = mMetaVerbsByCppName.find(token);
       if (foundToken == mMetaVerbsByCppName.end())
          return nullptr;
@@ -132,7 +173,7 @@ namespace Langulus::RTTI
    ///      you can search by positive, as well as negative token             
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByToken(const Token& token)
-   const assumptious -> DefinitionVerb const* {
+   assumptious -> DefinitionVerb const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaVerbsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaVerbsByToken.end())
@@ -146,7 +187,7 @@ namespace Langulus::RTTI
    ///   @param constant is the data type constant?                           
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByID(size_t id, bool sparse, bool constant)
-   const assumptious -> DefinitionData const* {
+   assumptious -> DefinitionData const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       DefinitionData const* found = GetMetaByID(mMetaDataByID, id);
       LglsAssumeDevAndOptimize(found, "ID wasn't found");
@@ -174,7 +215,7 @@ namespace Langulus::RTTI
    ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByID(size_t id)
-   const assumptious -> DefinitionTag const* {
+   assumptious -> DefinitionTag const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaTagsByID, id);
    }
@@ -183,7 +224,7 @@ namespace Langulus::RTTI
    ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByID(size_t id)
-   const assumptious -> DefinitionVerb const* {
+   assumptious -> DefinitionVerb const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaVerbsByID, id);
    }
@@ -192,7 +233,7 @@ namespace Langulus::RTTI
    ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByID(size_t id)
-   const assumptious -> DefinitionConst const* {
+   assumptious -> DefinitionConst const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaConstantsByID, id);
    }
@@ -202,7 +243,7 @@ namespace Langulus::RTTI
    ///   @param token the token to search for                                 
    ///   @return the set of associated meta definitions                       
    auto Registry::GetAmbiguousMeta(const Token& token)
-   const assumptious -> const MetaSet& {
+   assumptious -> const MetaSet& {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       static const MetaSet fallback {};
       const auto foundToken = mMetaAmbiguous.find(Inner::ToLowercase(token));
@@ -224,7 +265,7 @@ namespace Langulus::RTTI
    ///   @param keyword the token to search for                               
    ///   @return the disambiguated token; throws if not found/ambiguous       
    auto Registry::DisambiguateMeta(const Token& keyword)
-   const -> Inner::Definition const* {
+   -> Inner::Definition const* {
       auto& symbols = GetAmbiguousMeta(keyword);
       LglsAssert(not symbols.empty(), "Keyword not found", ": `", keyword, '`');
       
@@ -342,7 +383,7 @@ namespace Langulus::RTTI
    ///   @param token the file extension to search for                        
    ///   @return all meta definitions associated with the file extension      
    auto Registry::ResolveFileExtension(const Token& token)
-   const assumptious -> const MetaSet& {
+   assumptious -> const MetaSet& {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       static const MetaSet fallback {};
       const auto foundToken = mFileDatabase.find(Inner::ToLowercase(token));

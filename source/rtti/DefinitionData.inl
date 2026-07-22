@@ -7,6 +7,8 @@
 ///                                                                           
 #pragma once
 #include "DefinitionData.hpp"
+#include "Langulus/Typenav.hpp"
+//#include "Langulus/CT/Integer.hpp"
 #include <Langulus/CT/Abstract.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/DefineTag.hpp>
@@ -30,10 +32,10 @@
 #include <Langulus/CT/Executable.hpp>
 #include <Langulus/IntentOf.hpp>
 
-#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
-   #include <optional>
-#else
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include "Registry.hpp"
+#else
+   #include <optional>
 #endif
 
 #include "DefinitionVerb.hpp"
@@ -51,171 +53,62 @@ namespace Langulus::RTTI
 {
    namespace Inner
    {
-      /// These functions are used to reduce the number of generated unique   
-      /// lambdas at reflection time                                          
-      template<CT::Sparse T> LANGULUS(NOINLINE)
-      void SparseDefaultDeref(void* from, void* to) {
+      /// Function callbacks for custom pointers                              
+      template<CT::CustomPointer T> LANGULUS(NOINLINE)
+      void CustomSparseDefaultDeref(void* from, void* to) {
          static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
-         if constexpr (::std::is_same_v<T, void*>) {
-            auto typed_from = static_cast<void**>(from);
-            auto typed_to   = static_cast<void**>(to);
-            *typed_to = *typed_from;
-         }
-         else {
-            static_assert(CT::CustomPointer<T>,
-               "T should be a custom pointer, use void* if not");
-            using DenserT = Deptr<T>;
-            auto typed_from = static_cast<T*>(from);
-            auto typed_to   = static_cast<DenserT*>(to);
-            *typed_to = **typed_from;
-         }
+         using DenserT = Deptr<T>;
+         auto typed_from = static_cast<T*>(from);
+         auto typed_to   = static_cast<DenserT*>(to);
+         *typed_to = **typed_from;
       };
 
-      template<CT::Sparse T> LANGULUS(NOINLINE)
-      void SparseDefaultConstructor(void* at) noexcept {
-         static_assert(CT::NotConvolutedAnywhere<T>,
+      template<::std::integral T> LANGULUS(NOINLINE)
+      void CustomSparseDefaultConstructor(void* at) noexcept {
+         static_assert(CT::Decayed<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          auto atT = static_cast<T*>(at);
          new (atT) T{};
       };
 
-      template<CT::Sparse T> LANGULUS(NOINLINE)
-      void SparseCopyConstructor(void* from, void* to) noexcept {
-         static_assert(CT::NotConvolutedAnywhere<T>,
+      template<::std::integral T> LANGULUS(NOINLINE)
+      void CustomSparseCopyConstructor(void* from, void* to) noexcept {
+         static_assert(CT::Decayed<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          auto fromT = static_cast<T*>(from);
          auto toT = static_cast<T*>(to);
          *toT = *fromT;
       };
       
-      template<CT::Sparse T> LANGULUS(NOINLINE)
-      auto SparseCompare(const void* lhs, const void* rhs) noexcept -> Compared {
-         static_assert(CT::NotConvolutedAnywhere<T>,
+      template<::std::integral T> LANGULUS(NOINLINE)
+      auto CustomSparseCompare(const void* lhs, const void* rhs) noexcept -> Compared {
+         static_assert(CT::Decayed<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
-         
-         // Pointers are either the same or not - not ordered for       
-         // security reasons                                            
-         if constexpr (::std::is_same_v<T, void*>) {
-            auto lhsT = static_cast<void const* const*>(lhs);
-            auto rhsT = static_cast<void const* const*>(rhs);
-            return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
-         }
-         else {
-            auto lhsT = static_cast<T const*>(lhs);
-            auto rhsT = static_cast<T const*>(rhs);
-            return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
-         }
+         auto lhsT = static_cast<T const*>(lhs);
+         auto rhsT = static_cast<T const*>(rhs);
+         return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
       };
 
-      template<CT::Sparse T> LANGULUS(NOINLINE)
-      bool SparseCompareEqual(const void* lhs, const void* rhs) noexcept {
-         static_assert(CT::NotConvolutedAnywhere<T>,
+      template<::std::integral T> LANGULUS(NOINLINE)
+      bool CustomSparseCompareEqual(const void* lhs, const void* rhs) noexcept {
+         static_assert(CT::Decayed<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
-         
-         if constexpr (::std::is_same_v<T, void*>) {
-            auto lhsT = static_cast<void const* const*>(lhs);
-            auto rhsT = static_cast<void const* const*>(rhs);
-            return *lhsT == *rhsT;
-         }
-         else {
-            auto lhsT = static_cast<T const*>(lhs);
-            auto rhsT = static_cast<T const*>(rhs);
-            return *lhsT == *rhsT;
-         }
+         auto lhsT = static_cast<T const*>(lhs);
+         auto rhsT = static_cast<T const*>(rhs);
+         return *lhsT == *rhsT;
       };
 
-      template<CT::Sparse T> LANGULUS(NOINLINE)
-      auto SparseHash(void* lhs) noexcept -> Hash {
-         static_assert(CT::NotConvolutedAnywhere<T>,
+      template<::std::integral T> LANGULUS(NOINLINE)
+      auto CustomSparseHash(void* lhs) noexcept -> Hash {
+         static_assert(CT::Decayed<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          auto lhsT = static_cast<T*>(lhs);
          return HashOf<true>(*lhsT);
       };
    }
    
-   /// Set reflected morphisms                                                
-   /// @attention morphisms assume that source is initialized,                
-   ///    but destination is only allocated and not yet constructed           
-   /// @attention serialization assumes both sides are valid and constructed  
-   ///    pointers. Context is optional.                                      
-   template<class T>
-   void DefinitionData::FillMorphisms() {
-      using MAPTO = MorphismsFrom<T>;
-      if constexpr (not CT::Void<MAPTO>) {
-         MAPTO::ForEach([this]<class TO_RAW>{
-            using TO = CT::ReflectedAs<TO_RAW>;
-
-            auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
-            auto converter_function = [](void* from, void* to) {
-               auto fromT = static_cast<ConstAll<T*>>(from);
-               auto toT   = static_cast<TO*>(to);
-               new (toT) TO {Langulus::Convert<TO>(*fromT)};
-            };
-            
-            if constexpr (CT::Serializer<TO>) {
-               // Destination type can act as a serializer, too         
-               using S = SerializerOf<TO>;
-
-               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<ConstAll<T*>>(from);
-                  auto toT   = static_cast<TO*>(to);
-                  auto conT  = static_cast<typename S::Context*>(context);
-                  return Langulus::Serialize(*fromT, *toT, conT);
-               };
-            
-               mCurrentBoundary.mMorphismsTo.emplace(
-                  destination_type,
-                  Morphism {converter_function, serializer_function}
-               );
-            }
-            else {
-               mCurrentBoundary.mMorphismsTo.emplace(
-                  destination_type,
-                  Morphism {converter_function, nullptr}
-               );
-            }
-         });
-      }
    
-      using MAPFROM = MorphismsTo<T>;
-      if constexpr (not CT::Void<MAPFROM>) {
-         MAPFROM::ForEach([this]<class FROM_RAW>{
-            using FROM = CT::ReflectedAs<FROM_RAW>;
-
-            auto source_type = const_cast<DefinitionData*>(Reflect<FROM>());
-            auto converter_function = [](void* from, void* to) {
-               auto fromT = static_cast<ConstAll<FROM*>>(from);
-               auto toT   = static_cast<T*>(to);
-               new (toT) T {Langulus::Convert<T>(*fromT)};
-            };
-            
-            if constexpr (CT::Serializer<T>) {
-               // Destination type can act as a serializer, too         
-               using S = SerializerOf<T>;
-
-               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<ConstAll<FROM*>>(from);
-                  auto toT   = static_cast<T*>(to);
-                  auto conT  = static_cast<typename S::Context*>(context);
-                  return Langulus::Serialize(*fromT, *toT, conT);
-               };
-            
-               mCurrentBoundary.mMorphismsFrom.emplace(
-                  source_type,
-                  Morphism {converter_function, serializer_function}
-               );
-            }
-            else {
-               mCurrentBoundary.mMorphismsFrom.emplace(
-                  source_type,
-                  Morphism {converter_function, nullptr}
-               );
-            }
-         });
-      }
-   }
-
    /// Reflect or return an already reflected data                            
    ///   @attention when making a shared library and reflecting your types    
    ///      at library initialization, it is recommended you mark all other   
@@ -274,14 +167,14 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
-         DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
+         DefinitionData const* meta = Registry::GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
          const auto token = NameOf<T, false>();
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
-            : Instance.RegisterData(cppname, token);
+            : Registry::RegisterData(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -307,30 +200,17 @@ namespace Langulus::RTTI
       definition.ReflectCommon<T>();
       definition.mSize       = sizeof(T);
       definition.mAlign      = alignof(T);
-      definition.mConst      = false;
       definition.mDeep       = CT::Deep<T>;
       definition.mPOD        = CT::POD<T> and not CT::Abstract<T>;
       definition.mNullable   = CT::Nullable<T> and not CT::Abstract<T>;
       definition.mAbstract   = CT::Abstract<T>;
       definition.mExecutable = CT::Executable<T>;
-      definition.mOrigin     = &definition;
-      definition.mDecvqOnce  = &definition;
-      definition.mDecvqAll   = &definition;
 
       if constexpr (CT::Suffix<T>)
          definition.mSuffixOf = SuffixOf<T>();
 
       if constexpr (CT::Files<T>)
          definition.mFilesOf = FilesOf<T>();
-
-      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // Origin type encountered, time to reserve a new ID           
-         definition.mID = Instance.ReserveDataID(&definition);
-         definition.mDedicatedID = true;
-         /*IF_SAFE(LglsAssumeDev(not definition.mDedicatedID,
-            "ID has already been reserved"));
-         IF_SAFE(definition.mDedicatedID = true);*/
-      #endif
 
       // Reflect the concrete type                                      
       if constexpr (CT::Concretizable<T>) {
@@ -543,11 +423,12 @@ namespace Langulus::RTTI
          // Reflect pooling properties                                  
          definition.mMinimalPoolSize = CT::GetMinPool<T>();
          definition.mPoolTactic = CT::GetPoolTactic<T>();
-      
+
          // Make sure that types registered from an external shared     
          // library are _always_ pooled by type, so that we're able to  
          // unregister them and free their dedicated pools when the     
          // shared library is unloaded                                  
+         /// @attention this has to be inlined, always                  
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if (Boundary)
                definition.mPoolTactic = PoolTactic::Type;
@@ -556,12 +437,7 @@ namespace Langulus::RTTI
       
       // Calculate the allocation table                                 
       auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
-      for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
-         const size_t threshold = size_t {1} << bit;
-         const size_t elements = threshold / sizeof(T);
-         definition.mAllocationTable[bit] = minElements > elements
-            ? minElements : elements;
-      }
+      definition.ReflectOrigin(minElements, sizeof(T));
 
       using BASES = BasesOf<T>;
       if constexpr (not CT::Void<BASES>) {
@@ -672,14 +548,14 @@ namespace Langulus::RTTI
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
          const auto cppname {CppNameOf<Decvq<T>>() + " const"};
-         DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
+         DefinitionData const* meta = Registry::GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
       
          const auto token {NameOf<Decvq<T>, false>() + " const"};
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
-            : Instance.RegisterData(cppname, token);
+            : Registry::RegisterData(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -703,97 +579,25 @@ namespace Langulus::RTTI
       definition.ReflectCommon<T>();
       definition.mSize       = sizeof(T);
       definition.mAlign      = alignof(T);
-      definition.mConst      = true;
       definition.mDeep       = CT::Deep<T>;
       definition.mPOD        = CT::POD<T> and not CT::Abstract<T>;
       definition.mNullable   = CT::Nullable<T> and not CT::Abstract<T>;
       definition.mAbstract   = CT::Abstract<T>;
       definition.mExecutable = CT::Executable<T>;
-
-      // Reflect the origin type                                        
-      definition.mOrigin    = Reflect<CT::ReflectedAs<Decay<T>>>();
-      definition.mSuffixOf  = definition.mOrigin->mSuffixOf;
-      definition.mFilesOf   = definition.mOrigin->mFilesOf;
-      definition.mDecvqOnce = definition.mOrigin;
-      definition.mDecvqAll  = definition.mOrigin;
-      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         definition.mID     = definition.mDecvqOnce->mID;
-      #endif
-      
-      auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
-      decvq->mAddConst = &definition;
-      
-      definition.mCurrentBoundary.mConcrete
-         = definition.mOrigin->mCurrentBoundary.mConcrete;
-      definition.mCurrentBoundary.mProducer
-         = definition.mOrigin->mCurrentBoundary.mProducer;
-
-      //                                                                
-      // Constructor reflections                                        
-      // Reuse the same lambdas as the dequalified reflection           
-      // (template bloat reduction)                                     
-      definition.mCurrentBoundary.mDefaultConstructor
-         = definition.mOrigin->mCurrentBoundary.mDefaultConstructor;
-      definition.mCurrentBoundary.mCopyConstructor
-         = definition.mOrigin->mCurrentBoundary.mCopyConstructor;
-      definition.mCurrentBoundary.mReferConstructor
-         = definition.mOrigin->mCurrentBoundary.mReferConstructor;
-      definition.mCurrentBoundary.mCloneConstructor
-         = definition.mOrigin->mCurrentBoundary.mCloneConstructor;
-      definition.mCurrentBoundary.mDisownConstructor
-         = definition.mOrigin->mCurrentBoundary.mDisownConstructor;
-      definition.mCurrentBoundary.mMoveConstructor
-         = definition.mOrigin->mCurrentBoundary.mMoveConstructor;
-      definition.mCurrentBoundary.mAbandonConstructor
-         = definition.mOrigin->mCurrentBoundary.mAbandonConstructor;
-      definition.mCurrentBoundary.mDestructor
-         = definition.mOrigin->mCurrentBoundary.mDestructor;
-
-      //                                                                
-      // Other utilities                                                
-      definition.mCurrentBoundary.mHasher
-         = definition.mOrigin->mCurrentBoundary.mHasher;
-      definition.mCurrentBoundary.mReferencer
-         = definition.mOrigin->mCurrentBoundary.mReferencer;
-      definition.mCurrentBoundary.mComparer
-         = definition.mOrigin->mCurrentBoundary.mComparer;
-      definition.mCurrentBoundary.mComparerEqual
-         = definition.mOrigin->mCurrentBoundary.mComparerEqual;
-      definition.mCurrentBoundary.mResolver
-         = definition.mOrigin->mCurrentBoundary.mResolver;
-      definition.mMinimalAllocation
-         = definition.mOrigin->mMinimalAllocation;
+      definition.mOrigin     = Reflect<CT::ReflectedAs<Decay<T>>>();
+      definition.ReflectConstOrigin();
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         definition.mPoolTactic
-            = definition.mOrigin->mPoolTactic;
-         definition.mMinimalPoolSize
-            = definition.mOrigin->mMinimalPoolSize;
-
          // Make sure that types registered from an external shared     
          // library are always pooled by type, so that we're able to    
          // unregister them and free their dedicated pools when the     
          // shared library is unloaded                                  
+         /// @attention this has to be inlined, always                  
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if (Boundary)
                definition.mPoolTactic = PoolTactic::Type;
          #endif
       #endif
-
-      memcpy(
-         definition.mAllocationTable,
-         definition.mOrigin->mAllocationTable,
-         sizeof(definition.mAllocationTable)
-      );
-
-      definition.mCurrentBoundary.mBases
-         = definition.mOrigin->mCurrentBoundary.mBases;
-      definition.mCurrentBoundary.mMorphismsTo
-         = definition.mOrigin->mCurrentBoundary.mMorphismsTo;
-      definition.mNamedValues
-         = definition.mOrigin->mNamedValues;
-      definition.mCurrentBoundary.mMembers
-         = definition.mOrigin->mCurrentBoundary.mMembers;
 
       using VERBS = VerbsOf<T>;
       if constexpr (not CT::Void<VERBS>) {
@@ -836,17 +640,15 @@ namespace Langulus::RTTI
       return &definition;
    }
    
-   /// Reflect or return an already reflected data                            
+   /// Reflect or return an already reflected data (standard pointer)         
    ///   @attention when making a shared library and reflecting your types    
    ///      at library initialization, it is recommended you mark all other   
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T the type to reflect                                        
-   template<class T> requires CT::Sparse<T>
+   template<class T> requires ::std::is_pointer_v<T>
    auto DefinitionData::Reflect() -> DefinitionData const* {
-      static_assert(not CT::Array<T>,
-         "Reflecting a bounded array is forbidden to avoid bloat");
       static_assert(not CT::Volatile<T>,
          "Can't reflect volatile type, use Devq before reflection");
       static_assert(not CT::Reference<T>,
@@ -864,38 +666,24 @@ namespace Langulus::RTTI
          ::std::string token;
          DefinitionData const* meta;
 
-         if constexpr (::std::is_pointer_v<T>) {
-            // Recostruct pointer name and token at runtime to avoid a  
-            // lot of compilation time                                  
-            //    @attention we do this for conventional pointers only  
-            cppname = CppNameOf<Decvq<Deptr<T>>>();
-            if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
-            if constexpr (CT::Constant<T>) cppname += "* const";
-            else cppname += "*";
-            meta = Instance.GetMetaDataByCppName(cppname);
-            if (meta and meta->IsInRelevantBoundary())
-               return meta;
+         // Recostruct pointer name and token at runtime to avoid a     
+         // lot of compilation time                                     
+         cppname = CppNameOf<Decvq<Deptr<T>>>();
+         if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
+         if constexpr (CT::Constant<T>) cppname += "* const";
+         else cppname += "*";
+         meta = Registry::GetMetaDataByCppName(cppname);
+         if (meta and meta->IsInRelevantBoundary())
+            return meta;
 
-            token = NameOf<Decvq<Deptr<T>>, false>();
-            if constexpr (CT::Constant<Deptr<T>>) token += " const";
-            if constexpr (CT::Constant<T>) token += "* const";
-            else token += "*";
-         }
-         else {
-            // Custom pointers                                          
-            cppname = CppNameOf<Decvq<T>>();
-            if constexpr (CT::Constant<T>) cppname += " const";
-            meta = Instance.GetMetaDataByCppName(cppname);
-            if (meta and meta->IsInRelevantBoundary())
-               return meta;
-
-            token = NameOf<Decvq<T>, false>();
-            if constexpr (CT::Constant<T>) token += " const";
-         }
+         token = NameOf<Decvq<Deptr<T>>, false>();
+         if constexpr (CT::Constant<Deptr<T>>) token += " const";
+         if constexpr (CT::Constant<T>) token += "* const";
+         else token += "*";
 
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
-            : Instance.RegisterData(cppname, token);
+            : Registry::RegisterData(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -906,29 +694,20 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          ::std::string cppname;
-         if constexpr (::std::is_pointer_v<T>) {
-            cppname = CppNameOf<Decvq<Deptr<T>>>();
-            if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
-            if constexpr (CT::Constant<T>) cppname += "* const";
-            else cppname += "*";
-         }
-         else cppname = CppNameOf<Decvq<T>>();
+         cppname = CppNameOf<Decvq<Deptr<T>>>();
+         if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
+         if constexpr (CT::Constant<T>) cppname += "* const";
+         else cppname += "*";
 
          DefinitionData& definition = s_definition.emplace(cppname);
-         if constexpr (::std::is_pointer_v<T>) {
-            definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
-            if constexpr (CT::Constant<Deptr<T>>)
-               definition.mNameOf += " const";
-            if constexpr (CT::Constant<T>)
-               definition.mNameOf += "* const";
-            else
-               definition.mNameOf += "*";
-            definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
-         }
-         else {
-            definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
-            definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
-         }
+         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
+         if constexpr (CT::Constant<Deptr<T>>)
+            definition.mNameOf += " const";
+         if constexpr (CT::Constant<T>)
+            definition.mNameOf += "* const";
+         else
+            definition.mNameOf += "*";
+         definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
       
       //                                                                
@@ -938,9 +717,6 @@ namespace Langulus::RTTI
       definition.mSize      = sizeof(T);
       definition.mAlign     = alignof(T);
       definition.mConst     = CT::Constant<T>;
-      definition.mPOD       = true;
-      definition.mNullable  = true;
-      definition.mAbstract  = false;
 
       if constexpr (CT::Complete<Decay<T>>) {
          definition.mDeep = CT::Deep<T>;
@@ -959,9 +735,6 @@ namespace Langulus::RTTI
       using DTOnce = Decvq<T>;
       using DTAll  = DecvqAll<T>;
 
-      if constexpr (CT::CustomPointer<T>)
-         definition.mPointerSpecification = DTAll::Specification;
-
       if constexpr (not ::std::same_as<T, DTAll>) {
          // T has qualifiers                                            
          definition.mDecvqOnce = Reflect<DTOnce>();
@@ -978,7 +751,6 @@ namespace Langulus::RTTI
          definition.mDecvqAll  = &definition;
       }
 
-      using LambdaT = Tif<CT::CustomPointer<T>, DecvqAll<T>, void*>;
       using DenserT = Deref<Deptr<T>>;
       if constexpr (CT::Complete<DenserT>) {
          // Reflect the denser type                                     
@@ -1005,13 +777,8 @@ namespace Langulus::RTTI
             deptr->mAddPtr = definition.mDecvqOnce;
          }
 
-         /*if constexpr (not CT::CustomPointer<T>)
-            deptr->mAddPtr = definition.mDecvqOnce;
-         else if (not deptr->mAddPtr)
-            deptr->mAddPtr = definition.mDecvqOnce;*/
-
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if (not CT::CustomPointer<T> and not CT::Sparse<DenserT> and deptr->mDedicatedID) {
+            if (not CT::Sparse<DenserT> and deptr->mDedicatedID) {
                // We can define ID relatively to deptr to save up on    
                // IDs.                                                  
                //LglsAssumeDev(not deptr->mConst,
@@ -1024,7 +791,7 @@ namespace Langulus::RTTI
                //LglsAssumeDev(not mConst,
                //   "can't make unique ID for a constant type");
                if constexpr (CT::Mutable<T>) {
-                  definition.mID = Instance.ReserveDataID(&definition);
+                  definition.mID = Registry::ReserveDataID(&definition);
                   definition.mDedicatedID = true;
                }
                else {
@@ -1036,8 +803,6 @@ namespace Langulus::RTTI
                definition.mPtrIncludedInID = true;
             }
          #endif
-
-         definition.mCurrentBoundary.mDereference = Inner::SparseDefaultDeref<LambdaT>;
       }
       else {
          // An incomplete sparse type always has mDeptr of 1.           
@@ -1045,10 +810,8 @@ namespace Langulus::RTTI
          definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
 
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            //LglsAssumeDev(not mConst,
-            //   "can't make unique ID for a constant type");
             if constexpr (CT::Mutable<T>) {
-               definition.mID = Instance.ReserveDataID(&definition);
+               definition.mID = Registry::ReserveDataID(&definition);
                definition.mDedicatedID = true;
             }
             else {
@@ -1061,80 +824,6 @@ namespace Langulus::RTTI
          #endif
       }
 
-      /*#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if constexpr (CT::CustomPointer<T> or not CT::Complete<DenserT> or ::std::is_const_v<DenserT>
-         or LglsSif(CT::Complete<DenserT>, return CT::Sparse<DenserT>, return false)) {
-            // Custom pointers always result in a unique ID             
-            // Multiple indirections always result in a unique ID       
-            // Incomplete types are always considered an indirection    
-            // A constant denser type (at any level of indirection)     
-            // also requires a unique ID                                
-            auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
-            decvq->mID = Instance.ReserveDataID(decvq);
-            decvq->mPtrIncludedInID = true;
-            IF_SAFE(LglsAssumeDev(not definition.mDedicatedID,
-               "ID has already been reserved"));
-            IF_SAFE(definition.mDedicatedID = true);
-
-            if constexpr (CT::Constant<T>) {
-               definition.mID = decvq->mID;
-               definition.mPtrIncludedInID = true;
-            }
-         }
-      #endif*/
-
-      //                                                                
-      // Constructor reflections                                        
-      // @note these are allowed even if T is constant                  
-      definition.mCurrentBoundary.mDefaultConstructor
-         = Inner::SparseDefaultConstructor<LambdaT>;
-      definition.mCurrentBoundary.mCopyConstructor
-         = Inner::SparseCopyConstructor<LambdaT>;
-      definition.mCurrentBoundary.mReferConstructor
-         = Inner::SparseCopyConstructor<LambdaT>;
-      definition.mCurrentBoundary.mDisownConstructor
-         = Inner::SparseCopyConstructor<LambdaT>;
-      definition.mCurrentBoundary.mMoveConstructor
-         = Inner::SparseCopyConstructor<LambdaT>;
-      definition.mCurrentBoundary.mAbandonConstructor
-         = Inner::SparseCopyConstructor<LambdaT>;
-
-      if constexpr (CT::Complete<Decay<T>>) {
-         // Always use the origin cloning routine                       
-         definition.mCurrentBoundary.mCloneConstructor
-            = definition.mOrigin->mCurrentBoundary.mCloneConstructor;
-      }
-      
-      //                                                                
-      // Assignment reflections                                         
-      // @note allowed only if T is mutable                             
-      if constexpr (CT::Mutable<T>) {
-         definition.mCurrentBoundary.mCopyAssigner
-            = Inner::SparseCopyConstructor<LambdaT>;
-         definition.mCurrentBoundary.mReferAssigner
-            = Inner::SparseCopyConstructor<LambdaT>;
-         definition.mCurrentBoundary.mDisownAssigner
-            = Inner::SparseCopyConstructor<LambdaT>;
-         definition.mCurrentBoundary.mMoveAssigner
-            = Inner::SparseCopyConstructor<LambdaT>;
-         definition.mCurrentBoundary.mAbandonAssigner
-            = Inner::SparseCopyConstructor<LambdaT>;
-      
-         if constexpr (CT::Complete<Decay<T>>) {
-            // Always use the origin cloning routine                    
-            definition.mCurrentBoundary.mCloneAssigner
-               = definition.mOrigin->mCurrentBoundary.mCloneAssigner;
-         }
-      }
-
-      //                                                                
-      // Other utilities                                                
-      definition.mCurrentBoundary.mHasher
-         = Inner::SparseHash<LambdaT>;   
-      definition.mCurrentBoundary.mComparer
-         = Inner::SparseCompare<LambdaT>;         
-      definition.mCurrentBoundary.mComparerEqual
-         = Inner::SparseCompareEqual<LambdaT>;         
 
       // Reflect the minimal allocation in bytes                        
       definition.mMinimalAllocation = CT::GetMinAlloc<T>();
@@ -1148,6 +837,7 @@ namespace Langulus::RTTI
          // library are always pooled by type, so that we're able to    
          // unregister them and free their dedicated pools when the     
          // shared library is unloaded                                  
+         /// @attention this has to be inlined, always                  
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if (Boundary)
                definition.mPoolTactic = PoolTactic::Type;
@@ -1156,27 +846,252 @@ namespace Langulus::RTTI
       
       // Calculate the allocation table                                 
       auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
-      for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
-         const size_t threshold = size_t {1} << bit;
-         const size_t elements = threshold / sizeof(T);
-         definition.mAllocationTable[bit] = minElements > elements
-            ? minElements : elements;
-      }
+      definition.ReflectStandardSparse(CT::Mutable<T>, CT::Complete<Decay<T>>, CT::Complete<DenserT>, minElements);
+      definition.FillMorphisms<T>();
+
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         LglsVerbose(
+            Logger::Cyan, "Data ", definition.mNameOf,
+            " (ID: ", definition.mID, ") ", Logger::Green,
+            "registered from ", (Boundary?Boundary:"MAIN")
+         );
+      #else
+         LglsVerbose(
+            Logger::Cyan, "Data ", definition.mNameOf,
+            Logger::Green, " reflected"
+         );
+      #endif
+      
+      return &definition;
+   }
+   /// Reflect or return an already reflected data (custom pointer)           
+   ///   @attention when making a shared library and reflecting your types    
+   ///      at library initialization, it is recommended you mark all other   
+   ///      relevant instantiations of this function as extern template, to   
+   ///      save on a lot of compiler resources:                              
+   ///      https://stackoverflow.com/questions/8130602                       
+   ///   @tparam T the type to reflect                                        
+   template<class T> requires CT::CustomPointer<T>
+   auto DefinitionData::Reflect() -> DefinitionData const* {
+      static_assert(not CT::Array<T>,
+         "Reflecting a bounded array is forbidden to avoid bloat");
+      static_assert(not CT::Volatile<T>,
+         "Can't reflect volatile type, use Devq before reflection");
+      static_assert(not CT::Reference<T>,
+         "Can't reflect reference type, use Deref before reflection");
+      static_assert(CT::Reflectable<T>,
+         "Can't reflect data that was explicitly marked unreflectable");
+      static_assert(Exact<CT::ReflectedAs<T>, T>,
+         "Data is marked to be reflected as something else, "
+         "make sure this is respected before reaching this function");
+
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // Try to get an already existing definition - the data might  
+         // have been reflected previously in another shared library    
+         ::std::string cppname;
+         ::std::string token;
+         DefinitionData const* meta;
+         cppname = CppNameOf<Decvq<T>>();
+         if constexpr (CT::Constant<T>) cppname += " const";
+         meta = Registry::GetMetaDataByCppName(cppname);
+         if (meta and meta->IsInRelevantBoundary())
+            return meta;
+
+         token = NameOf<Decvq<T>, false>();
+         if constexpr (CT::Constant<T>) token += " const";
+
+         DefinitionData& definition = meta
+            ? const_cast<DefinitionData&>(*meta)
+            : Registry::RegisterData(cppname, token);
+      #else
+         // There's no centralized registry when MANAGED_REFLECTION is  
+         // disabled, so all we can do is keep a definition on the stack
+         // for each translation unit, and rely on runtime checks to    
+         // make sure that definitions match between those.             
+         static constinit std::optional<DefinitionData> s_definition;
+         if (s_definition.has_value())
+            return &s_definition.value();
+
+         ::std::string cppname;
+         cppname = CppNameOf<Decvq<T>>();
+
+         DefinitionData& definition = s_definition.emplace(cppname);
+         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
+         definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
+      #endif
+      
+      //                                                                
+      // If this is reached, then data is not defined yet from the      
+      // viewpoint of the current boundary/library                      
+      definition.ReflectCommon<T>();
+      definition.mSize      = sizeof(T);
+      definition.mAlign     = alignof(T);
+      definition.mConst     = CT::Constant<T>;
 
       if constexpr (CT::Complete<Decay<T>>) {
-         // Bases, verbs, morphisms and members come from origin        
-         // so that we don't have unnecessary indirections when checking
-         // type properties at runtime                                  
-         definition.mCurrentBoundary.mBases
-            = definition.mOrigin->mCurrentBoundary.mBases;
-         definition.mCurrentBoundary.mVerbs
-            = definition.mOrigin->mCurrentBoundary.mVerbs;
-         //definition.mCurrentBoundary.mMorphismsTo
-         //   = definition.mOrigin->mCurrentBoundary.mMorphismsTo;
-         definition.mCurrentBoundary.mMembers
-            = definition.mOrigin->mCurrentBoundary.mMembers;
+         definition.mDeep = CT::Deep<T>;
+         definition.mExecutable = CT::Executable<T>;
       }
+      else {
+         definition.mDeep = false;
+         definition.mExecutable = false;
+      }
+
+      // Reflect the origin type                                        
+      if constexpr (CT::Complete<Decay<T>>)
+         definition.mOrigin = Reflect<CT::ReflectedAs<Decay<T>>>();
+
+      // Reflect the dequalified types and generate/propagate IDs       
+      using DTOnce = Decvq<T>;
+      using DTAll  = DecvqAll<T>;
+      definition.mPointerSpecification = DTAll::Specification;
+
+      if constexpr (not ::std::same_as<T, DTAll>) {
+         // T has qualifiers                                            
+         definition.mDecvqOnce = Reflect<DTOnce>();
+         definition.mDecvqAll  = Reflect<DTAll>();
+         
+         if constexpr (CT::Constant<T>) {
+            auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
+            decvq->mAddConst = &definition;
+         }
+      }
+      else {
+         // T has no qualifiers                                         
+         definition.mDecvqOnce = &definition;
+         definition.mDecvqAll  = &definition;
+      }
+
+      using LambdaT = DecvqAll<T>;
+      using DenserT = Deref<Deptr<T>>;
+      if constexpr (CT::Complete<DenserT>) {
+         // Reflect the denser type                                     
+         definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
+         auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
+         LglsAssumeDev(deptr->mConst == CT::Constant<DenserT>,
+            "Deptr didn't preserve mutability, reflecting ", NameOf<DenserT>(),
+            " (reflected as ", NameOf<CT::ReflectedAs<DenserT>>(),
+            ") as ", deptr->mNameOf
+         );
+
+         if constexpr (Exact<DenserT*, DTOnce>) {
+            IF_SAFE(if (deptr->mAddPtr and deptr->mAddPtr != definition.mDecvqOnce) {
+               Logger::Error(
+                  deptr->mNameOf, "'s mAddPtr (", deptr->mAddPtr->mNameOf,
+                  ") was erroneously replaced with ", definition.mDecvqOnce->mNameOf,
+                  " while reflecting ", definition.mNameOf
+               );
+            })
+            LglsAssumeDev(
+               not deptr->mAddPtr or deptr->mAddPtr == definition.mDecvqOnce,
+               "mAddPtr was set with different value"
+            );
+            deptr->mAddPtr = definition.mDecvqOnce;
+         }
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            // Deptr already reuses an ID and we can't define this      
+            // pointer relative to it. Time to generate a new ID.       
+            if constexpr (CT::Mutable<T>) {
+               definition.mID = Registry::ReserveDataID(&definition);
+               definition.mDedicatedID = true;
+            }
+            else {
+               // The ID has already been generated by reflecting       
+               // mDecvq                                                
+               definition.mID = definition.mDecvqOnce->mID;
+            }
+
+            definition.mPtrIncludedInID = true;
+         #endif
+
+         definition.mCurrentBoundary.mDereference = Inner::CustomSparseDefaultDeref<LambdaT>;
+      }
+      else {
+         // An incomplete sparse type always has mDeptr of 1.           
+         // We need a unique ID to represent this pointer.              
+         definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if constexpr (CT::Mutable<T>) {
+               definition.mID = Registry::ReserveDataID(&definition);
+               definition.mDedicatedID = true;
+            }
+            else {
+               // The ID has already been generated by reflecting       
+               // mDecvq                                                
+               definition.mID = definition.mDecvqOnce->mID;
+            }
+
+            definition.mPtrIncludedInID = true;
+         #endif
+      }
+
+      using PointerIntEquivalent = typename Decvq<T>::Inner;
+
+      //                                                                
+      // Constructor reflections                                        
+      // @note these are allowed even if T is constant                  
+      definition.mCurrentBoundary.mDefaultConstructor
+         = Inner::CustomSparseDefaultConstructor<PointerIntEquivalent>;
+      definition.mCurrentBoundary.mCopyConstructor
+         = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+      definition.mCurrentBoundary.mReferConstructor
+         = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+      definition.mCurrentBoundary.mDisownConstructor
+         = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+      definition.mCurrentBoundary.mMoveConstructor
+         = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+      definition.mCurrentBoundary.mAbandonConstructor
+         = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+     
+      //                                                                
+      // Assignment reflections                                         
+      // @note allowed only if T is mutable                             
+      if constexpr (CT::Mutable<T>) {
+         definition.mCurrentBoundary.mCopyAssigner
+            = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+         definition.mCurrentBoundary.mReferAssigner
+            = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+         definition.mCurrentBoundary.mDisownAssigner
+            = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+         definition.mCurrentBoundary.mMoveAssigner
+            = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+         definition.mCurrentBoundary.mAbandonAssigner
+            = Inner::CustomSparseCopyConstructor<PointerIntEquivalent>;
+      }
+
+      //                                                                
+      // Other utilities                                                
+      definition.mCurrentBoundary.mHasher
+         = Inner::CustomSparseHash<PointerIntEquivalent>;   
+      definition.mCurrentBoundary.mComparer
+         = Inner::CustomSparseCompare<PointerIntEquivalent>;         
+      definition.mCurrentBoundary.mComparerEqual
+         = Inner::CustomSparseCompareEqual<PointerIntEquivalent>;         
+
+      // Reflect the minimal allocation in bytes                        
+      definition.mMinimalAllocation = CT::GetMinAlloc<T>();
+
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // Reflect pooling properties                                  
+         definition.mPoolTactic = CT::GetPoolTactic<T>();
+         definition.mMinimalPoolSize = CT::GetMinPool<T>();
+
+         // Make sure that types registered from an external shared     
+         // library are always pooled by type, so that we're able to    
+         // unregister them and free their dedicated pools when the     
+         // shared library is unloaded                                  
+         /// @attention this has to be inlined, always                  
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if (Boundary)
+               definition.mPoolTactic = PoolTactic::Type;
+         #endif
+      #endif
       
+      // Calculate the allocation table                                 
+      auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
+      definition.ReflectCustomSparse(CT::Mutable<T>, CT::Complete<Decay<T>>, minElements, sizeof(T));
       definition.FillMorphisms<T>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -1199,6 +1114,87 @@ namespace Langulus::RTTI
       LglsVerbose(Logger::Red, "Destroying data definition: ", Logger::Cyan, mNameOf);
    }
    
+   /// Set reflected morphisms                                                
+   /// @attention morphisms assume that source is initialized,                
+   ///    but destination is only allocated and not yet constructed           
+   /// @attention serialization assumes both sides are valid and constructed  
+   ///    pointers. Context is optional.                                      
+   template<class T>
+   void DefinitionData::FillMorphisms() {
+      using MAPTO = MorphismsFrom<T>;
+      if constexpr (not CT::Void<MAPTO>) {
+         MAPTO::ForEach([this]<class TO_RAW>{
+            using TO = CT::ReflectedAs<TO_RAW>;
+
+            auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
+            auto converter_function = [](void* from, void* to) {
+               auto fromT = static_cast<ConstAll<T*>>(from);
+               auto toT   = static_cast<TO*>(to);
+               new (toT) TO {Langulus::Convert<TO>(*fromT)};
+            };
+            
+            if constexpr (CT::Serializer<TO>) {
+               // Destination type can act as a serializer, too         
+               using S = SerializerOf<TO>;
+
+               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
+                  auto fromT = static_cast<ConstAll<T*>>(from);
+                  auto toT   = static_cast<TO*>(to);
+                  auto conT  = static_cast<typename S::Context*>(context);
+                  return Langulus::Serialize(*fromT, *toT, conT);
+               };
+            
+               mCurrentBoundary.mMorphismsTo.emplace(
+                  destination_type,
+                  Morphism {converter_function, serializer_function}
+               );
+            }
+            else {
+               mCurrentBoundary.mMorphismsTo.emplace(
+                  destination_type,
+                  Morphism {converter_function, nullptr}
+               );
+            }
+         });
+      }
+   
+      using MAPFROM = MorphismsTo<T>;
+      if constexpr (not CT::Void<MAPFROM>) {
+         MAPFROM::ForEach([this]<class FROM_RAW>{
+            using FROM = CT::ReflectedAs<FROM_RAW>;
+
+            auto source_type = const_cast<DefinitionData*>(Reflect<FROM>());
+            auto converter_function = [](void* from, void* to) {
+               auto fromT = static_cast<ConstAll<FROM*>>(from);
+               auto toT   = static_cast<T*>(to);
+               new (toT) T {Langulus::Convert<T>(*fromT)};
+            };
+            
+            if constexpr (CT::Serializer<T>) {
+               // Destination type can act as a serializer, too         
+               using S = SerializerOf<T>;
+
+               auto serializer_function = [](void const* from, void* to, void* context) -> size_t {
+                  auto fromT = static_cast<ConstAll<FROM*>>(from);
+                  auto toT   = static_cast<T*>(to);
+                  auto conT  = static_cast<typename S::Context*>(context);
+                  return Langulus::Serialize(*fromT, *toT, conT);
+               };
+            
+               mCurrentBoundary.mMorphismsFrom.emplace(
+                  source_type,
+                  Morphism {converter_function, serializer_function}
+               );
+            }
+            else {
+               mCurrentBoundary.mMorphismsFrom.emplace(
+                  source_type,
+                  Morphism {converter_function, nullptr}
+               );
+            }
+         });
+      }
+   }
 
    /// Generate a member definition                                           
    ///   @return the generated member descriptor                              
