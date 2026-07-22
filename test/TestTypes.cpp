@@ -252,27 +252,27 @@ SCENARIO("Testing Types::Second") {
 SCENARIO("Testing Types::Reverse") {
    {
       using T = Types<>;
-      static_assert(::std::same_as<typename T::Reverse, T>);
+      static_assert(::std::same_as<decltype(Reverse(T{})), T>);
    }
    {
       using T = Types<int>;
-      static_assert(::std::same_as<typename T::Reverse, T>);
+      static_assert(::std::same_as<decltype(Reverse(T{})), T>);
    }
    {
       using T = Types<Types<int>>;
-      static_assert(::std::same_as<typename T::Reverse, T>);
+      static_assert(::std::same_as<decltype(Reverse(T{})), T>);
    }
    {
       using T = Types<int&, float>;
-      static_assert(::std::same_as<typename T::Reverse, Types<float, int&>>);
+      static_assert(::std::same_as<decltype(Reverse(T{})), Types<float, int&>>);
    }
    {
       using T = Types<int const, float&, bool>;
-      static_assert(::std::same_as<typename T::Reverse, Types<bool, float&, const int>>);
+      static_assert(::std::same_as<decltype(Reverse(T{})), Types<bool, float&, const int>>);
    }
    {
       using T = Types<int const, float&, bool, Types<void> const>;
-      static_assert(::std::same_as<typename T::Reverse, Types<Types<void> const, bool, float&, const int>>);
+      static_assert(::std::same_as<decltype(Reverse(T{})), Types<Types<void> const, bool, float&, const int>>);
    }
 }
 
@@ -280,7 +280,7 @@ SCENARIO("Testing Types::ForEach") {
    {
       using T = Types<>;
       volatile int cumulative_size = 0;
-      T::ForEach([&]<class E> {
+      ForEach(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
       });
       REQUIRE(cumulative_size == 0);
@@ -288,7 +288,7 @@ SCENARIO("Testing Types::ForEach") {
    {
       using T = Types<int>;
       volatile int cumulative_size = 0;
-      T::ForEach([&]<class E> {
+      ForEach(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
       });
       REQUIRE(cumulative_size == sizeof(int));
@@ -296,7 +296,7 @@ SCENARIO("Testing Types::ForEach") {
    {
       using T = Types<Types<int>>;
       volatile int cumulative_size = 0;
-      T::ForEach([&]<class E> {
+      ForEach(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
       });
       REQUIRE(cumulative_size == sizeof(Types<int>));
@@ -304,7 +304,7 @@ SCENARIO("Testing Types::ForEach") {
    {
       using T = Types<int&, float>;
       volatile int cumulative_size = 0;
-      T::ForEach([&]<class E> {
+      ForEach(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
       });
       REQUIRE(cumulative_size == sizeof(int) + sizeof(float));
@@ -312,7 +312,7 @@ SCENARIO("Testing Types::ForEach") {
    {
       using T = Types<int const, float&, bool>;
       volatile int cumulative_size = 0;
-      T::ForEach([&]<class E> {
+      ForEach(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
       });
       REQUIRE(cumulative_size == sizeof(int) + sizeof(float) + sizeof(bool));
@@ -323,7 +323,7 @@ SCENARIO("Testing Types::ForEachAnd") {
    {
       using T = Types<>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachAnd([&]<class E> {
+      const auto result = ForEachAnd(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return true;
       });
@@ -333,7 +333,7 @@ SCENARIO("Testing Types::ForEachAnd") {
    {
       using T = Types<int>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachAnd([&]<class E> {
+      const auto result = ForEachAnd(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return true;
       });
@@ -343,7 +343,7 @@ SCENARIO("Testing Types::ForEachAnd") {
    {
       using T = Types<Types<int>>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachAnd([&]<class E> {
+      const auto result = ForEachAnd(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return true;
       });
@@ -353,7 +353,7 @@ SCENARIO("Testing Types::ForEachAnd") {
    {
       using T = Types<int&, float>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachAnd([&]<class E> {
+      const auto result = ForEachAnd(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return true;
       });
@@ -363,7 +363,7 @@ SCENARIO("Testing Types::ForEachAnd") {
    {
       using T = Types<int const, float&, bool>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachAnd([&]<class E> {
+      const auto result = ForEachAnd(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return true;
       });
@@ -376,7 +376,7 @@ SCENARIO("Testing Types::ForEachOr") {
    {
       using T = Types<>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachOr([&]<class E> {
+      const auto result = ForEachOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return ::std::same_as<E, bool>;
       });
@@ -386,7 +386,7 @@ SCENARIO("Testing Types::ForEachOr") {
    {
       using T = Types<int>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachOr([&]<class E> {
+      const auto result = ForEachOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return ::std::same_as<E, bool>;
       });
@@ -396,7 +396,7 @@ SCENARIO("Testing Types::ForEachOr") {
    {
       using T = Types<int&, float>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachOr([&]<class E> {
+      const auto result = ForEachOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return ::std::same_as<E, bool>;
       });
@@ -406,7 +406,7 @@ SCENARIO("Testing Types::ForEachOr") {
    {
       using T = Types<int const, float&, bool, double>;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachOr([&]<class E> {
+      const auto result = ForEachOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          return ::std::same_as<E, bool>;
       });
@@ -419,7 +419,7 @@ SCENARIO("Testing Types::ForEachConstOr") {
    {
       using T = Types<>;
       volatile int cumulative_size = 0;
-      auto result = T::ForEachConstOr([&]<class E> {
+      auto result = ForEachConstOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          if constexpr (::std::same_as<E, bool>)
             return true;
@@ -432,7 +432,7 @@ SCENARIO("Testing Types::ForEachConstOr") {
    {
       using T = Types<int>;
       volatile int cumulative_size = 0;
-      auto result = T::ForEachConstOr([&]<class E> {
+      auto result = ForEachConstOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          if constexpr (::std::same_as<E, bool>)
             return true;
@@ -445,7 +445,7 @@ SCENARIO("Testing Types::ForEachConstOr") {
    {
       using T = Types<int&, float>;
       volatile int cumulative_size = 0;
-      auto result = T::ForEachConstOr([&]<class E> {
+      auto result = ForEachConstOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          if constexpr (::std::same_as<E, bool>)
             return true;
@@ -458,7 +458,7 @@ SCENARIO("Testing Types::ForEachConstOr") {
    {
       using T = Types<int const, float&, bool, double>;
       volatile int cumulative_size = 0;
-      auto result = T::ForEachConstOr([&]<class E> {
+      auto result = ForEachConstOr(T{}, [&]<class E> {
          cumulative_size += sizeof(E);
          if constexpr (::std::same_as<E, bool>)
             return true;
@@ -475,7 +475,7 @@ SCENARIO("Testing Types::ForEachIndexed") {
    {
       using T = Types<>;
       volatile int cumulative_size = 0;
-      T::ForEachIndexed([&]<class E, int I> {
+      ForEachIndexed(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          static_assert(I == 0);
       });
@@ -485,7 +485,7 @@ SCENARIO("Testing Types::ForEachIndexed") {
       using T = Types<int>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      T::ForEachIndexed([&]<class E, int I> {
+      ForEachIndexed(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -496,7 +496,7 @@ SCENARIO("Testing Types::ForEachIndexed") {
       using T = Types<int&, float>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      T::ForEachIndexed([&]<class E, int I> {
+      ForEachIndexed(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -507,7 +507,7 @@ SCENARIO("Testing Types::ForEachIndexed") {
       using T = Types<int const, float&, bool>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      T::ForEachIndexed([&]<class E, int I> {
+      ForEachIndexed(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -518,7 +518,7 @@ SCENARIO("Testing Types::ForEachIndexed") {
       using T = Types<int const, float&, bool, Types<double>>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      T::ForEachIndexed([&]<class E, int I> {
+      ForEachIndexed(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -532,7 +532,7 @@ SCENARIO("Testing Types::ForEachIndexedAnd") {
       using T = Types<>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedAnd([&]<class E, int I> {
+      const auto result = ForEachIndexedAnd(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -545,7 +545,7 @@ SCENARIO("Testing Types::ForEachIndexedAnd") {
       using T = Types<int>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedAnd([&]<class E, int I> {
+      const auto result = ForEachIndexedAnd(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -558,7 +558,7 @@ SCENARIO("Testing Types::ForEachIndexedAnd") {
       using T = Types<int&, float>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedAnd([&]<class E, int I> {
+      const auto result = ForEachIndexedAnd(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -571,7 +571,7 @@ SCENARIO("Testing Types::ForEachIndexedAnd") {
       using T = Types<int const, float&, bool>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedAnd([&]<class E, int I> {
+      const auto result = ForEachIndexedAnd(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -587,7 +587,7 @@ SCENARIO("Testing Types::ForEachIndexedOr") {
       using T = Types<>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedOr([&]<class E, int I> {
+      const auto result = ForEachIndexedOr(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -600,7 +600,7 @@ SCENARIO("Testing Types::ForEachIndexedOr") {
       using T = Types<int>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedOr([&]<class E, int I> {
+      const auto result = ForEachIndexedOr(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -613,7 +613,7 @@ SCENARIO("Testing Types::ForEachIndexedOr") {
       using T = Types<int&, float>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedOr([&]<class E, int I> {
+      const auto result = ForEachIndexedOr(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -626,7 +626,7 @@ SCENARIO("Testing Types::ForEachIndexedOr") {
       using T = Types<int const, float&, bool, double>;
       volatile int counter = 0;
       volatile int cumulative_size = 0;
-      const auto result = T::ForEachIndexedOr([&]<class E, int I> {
+      const auto result = ForEachIndexedOr(T{}, [&]<class E, int I> {
          cumulative_size += sizeof(E);
          REQUIRE(I == counter);
          counter += 1;
@@ -640,35 +640,35 @@ SCENARIO("Testing Types::ForEachIndexedOr") {
 SCENARIO("Testing Types::Expand") {
    {
       using T = Types<>;
-      T::Expand([]<class...E> {
+      Expand(T{}, []<class...E> {
          static_assert(sizeof...(E) == 0);
          static_assert((sizeof(E) + ...) == 0);
       });
    }
    {
       using T = Types<int>;
-      T::Expand([]<class...E> {
+      Expand(T{}, []<class...E> {
          static_assert(sizeof...(E) == 1);
          static_assert((sizeof(E) + ...) == sizeof(int));
       });
    }
    {
       using T = Types<int&, float>;
-      T::Expand([]<class...E> {
+      Expand(T{}, []<class...E> {
          static_assert(sizeof...(E) == 2);
          static_assert((sizeof(E) + ...) == sizeof(int) + sizeof(float));
       });
    }
    {
       using T = Types<int const, float&, bool>;
-      T::Expand([]<class...E> {
+      Expand(T{}, []<class...E> {
          static_assert(sizeof...(E) == 3);
          static_assert((sizeof(E) + ...) == sizeof(int) + sizeof(float) + sizeof(bool));
       });
    }
    {
       using T = Types<int const, float&, bool, Types<double>>;
-      T::Expand([]<class...E> {
+      Expand(T{}, []<class...E> {
          static_assert(sizeof...(E) == 4);
          static_assert((sizeof(E) + ...) == sizeof(int) + sizeof(float) + sizeof(bool) + sizeof(Types<double>));
       });
@@ -707,35 +707,35 @@ SCENARIO("Testing Types::At") {
 SCENARIO("Testing Types::GenerateTypes") {
    {
       using T = Types<>;
-      auto result = T::GenerateTypes([]<class E> {
+      auto result = GenerateTypes(T{}, []<class E> {
          return Types<E>{};
       });
       static_assert(::std::same_as<decltype(result), T>);
    }
    {
       using T = Types<int>;
-      auto result = T::GenerateTypes([]<class E> {
+      auto result = GenerateTypes(T{}, []<class E> {
          return Types<E>{};
       });
       static_assert(::std::same_as<decltype(result), Types<T>>);
    }
    {
       using T = Types<int&, float>;
-      auto result = T::GenerateTypes([]<class E> {
+      auto result = GenerateTypes(T{}, []<class E> {
          return Types<E>{};
       });
       static_assert(::std::same_as<decltype(result), Types<Types<int&>, Types<float>>>);
    }
    {
       using T = Types<int const, float&, bool>;
-      auto result = T::GenerateTypes([]<class E> {
+      auto result = GenerateTypes(T{}, []<class E> {
          return Types<E>{};
       });
       static_assert(::std::same_as<decltype(result), Types<Types<int const>, Types<float&>, Types<bool>>>);
    }
    {
       using T = Types<int const, float&, bool, Types<double>>;
-      auto result = T::GenerateTypes([]<class E> {
+      auto result = GenerateTypes(T{}, []<class E> {
          return Types<E>{};
       });
       static_assert(::std::same_as<decltype(result), Types<Types<int const>, Types<float&>, Types<bool>, Types<Types<double>>>>);
@@ -745,35 +745,35 @@ SCENARIO("Testing Types::GenerateTypes") {
 SCENARIO("Testing Types::GenerateData") {
    {
       using T = Types<>;
-      constexpr auto result = T::GenerateData([]<class E> {
+      constexpr auto result = GenerateData(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == ::std::tuple<>{});
    }
    {
       using T = Types<int>;
-      constexpr auto result = T::GenerateData([]<class E> {
+      constexpr auto result = GenerateData(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == ::std::tuple<int>{25});
    }
    {
       using T = Types<int, float>;
-      constexpr auto result = T::GenerateData([]<class E> {
+      constexpr auto result = GenerateData(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == ::std::tuple<int, float>{25, 25.0f});
    }
    {
       using T = Types<int const, float, bool>;
-      constexpr auto result = T::GenerateData([]<class E> {
+      constexpr auto result = GenerateData(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == ::std::tuple<int const, float, bool>{25, 25.0f, true});
    }
    {
       using T = Types<int const, float, bool, Types<double>>;
-      constexpr auto result = T::GenerateData([]<class E> {
+      constexpr auto result = GenerateData(T{}, []<class E> {
          if constexpr (CT::Typelist<E>)
             return E{};
          else 
@@ -786,35 +786,35 @@ SCENARIO("Testing Types::GenerateData") {
 SCENARIO("Testing Types::GenerateDataOptimized") {
    {
       using T = Types<>;
-      constexpr auto result = T::GenerateDataOptimized([]<class E> {
+      constexpr auto result = GenerateDataOptimized(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == compact_tuple<>{});
    }
    {
       using T = Types<int>;
-      constexpr auto result = T::GenerateDataOptimized([]<class E> {
+      constexpr auto result = GenerateDataOptimized(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == compact_tuple<int>{25});
    }
    {
       using T = Types<int, float>;
-      constexpr auto result = T::GenerateDataOptimized([]<class E> {
+      constexpr auto result = GenerateDataOptimized(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == compact_tuple<int, float>{25, 25.0f});
    }
    {
       using T = Types<int const, float, bool>;
-      constexpr auto result = T::GenerateDataOptimized([]<class E> {
+      constexpr auto result = GenerateDataOptimized(T{}, []<class E> {
          return static_cast<E>(25);
       });
       static_assert(result == compact_tuple<int const, float, bool>{25, 25.0f, true});
    }
    {
       using T = Types<int const, float, bool, Types<double>>;
-      constexpr auto result = T::GenerateDataOptimized([]<class E> {
+      constexpr auto result = GenerateDataOptimized(T{}, []<class E> {
          if constexpr (CT::Typelist<E>)
             return E{};
          else

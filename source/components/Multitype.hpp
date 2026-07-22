@@ -30,28 +30,28 @@ namespace Langulus::Anyness::Component
    struct LANGULUS_EBCO Multitype<TN...> : TN... {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Subcomponents  = decltype( Types<TN...>::Discard([]<class C> static { return requires { C::SkipThisComponent; }; }));
-      using Id             = decltype(Subcomponents::Extract([]<class C> static { return typename C::Id{}; }));
-      using CTTI_Typed     = decltype(Subcomponents::Extract([]<class C> static { return Types<TypeOf<C>>{}; }));
+      using Subcomponents  = decltype(Discard(Types<TN...>{},  []<class C> static { return requires { C::SkipThisComponent; }; }));
+      using Id             = decltype(Extract(Subcomponents{}, []<class C> static { return typename C::Id{}; }));
+      using CTTI_Typed     = decltype(Extract(Subcomponents{}, []<class C> static { return Types<TypeOf<C>>{}; }));
 
       using Key = CTTI_Typed::First;
       using Val = CTTI_Typed::Second;
 
-      static_assert(Subcomponents::ForEachIndexedAnd([]<class C, size_t I> {
+      static_assert(ForEachIndexedAnd(Subcomponents{}, []<class C, size_t I> {
          return C::Id::Count == 1 and C::Id::First == I; }),
          "Each enabled subcomponent needs to be dedicated to their single dimension, "
          "and all subcomponents need to be sequential"
       );
 
       static constexpr int ComponentPrecedence = -3000;
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == -3000; }),
+      static_assert(ForEachAnd(Subcomponents{}, []<class C> { return C::ComponentPrecedence == -3000; }),
          "All precedences should match");
 
-      static constexpr bool TypeErased = Subcomponents::ForEachOr([]<class C> { return C::TypeErased; });
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::TypeErased == TypeErased; }),
+      static constexpr bool TypeErased = ForEachOr(Subcomponents{}, []<class C> { return C::TypeErased; });
+      static_assert(ForEachAnd(Subcomponents{}, []<class C> { return C::TypeErased == TypeErased; }),
          "Currently all types must either be type-erased or not");
 
-      #define if_inherits(...) requires (Subcomponents::ForEachOr([&]<class C> { \
+      #define if_inherits(...) requires (ForEachOr(Subcomponents{}, [&]<class C> { \
          return requires { self.C::__VA_ARGS__; }; }))
 
       /// Get the contained type                                              
@@ -556,6 +556,7 @@ namespace Langulus::Anyness::Component
       void AbsorbType(this SELF& self, I const& other) {
          static_assert(CT::Handle<I>,
             "Multidimensional types should be set using a handle");
+
          Subcomponents::ForEach([&]<class C> {
             //WORKAROUND GNU 14.2.0 refuses to recognize C as a base    
             //WORKAROUND Clang 21 refuses to unfold when Expand used    
@@ -570,7 +571,7 @@ namespace Langulus::Anyness::Component
       /// Deduce all types of the container from provided arguments           
       ///   @param a The arguments - one for each dimension.                  
       constexpr void DeduceType(this auto& self, auto const&...a) {
-         Subcomponents::Expand([&]<class...C> {
+         Expand(Subcomponents{}, [&]<class...C> {
             (self.C::DeduceType(a), ...);
          });
       }
@@ -593,7 +594,7 @@ namespace Langulus::Anyness::Component
       
       /// Reset all types                                                     
       constexpr void ResetAllTypes(this auto& self) noexcept {
-         Subcomponents::ForEach([&]<class C> noexcept {
+         ForEach(Subcomponents{}, [&]<class C> noexcept {
             if_available(self.C::ResetType());
          });
       }
@@ -616,7 +617,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this SELF& self, I&& intent) if_inherits(ConstructFrom(LglsFwd(intent))) {
-         Subcomponents::ForEach([&]<class C> {
+         ForEach(Subcomponents{}, [&]<class C> {
             if_available(self.C::ConstructFrom(LglsFwd(intent)));
          });
       }

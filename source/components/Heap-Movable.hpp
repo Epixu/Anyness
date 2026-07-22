@@ -506,7 +506,7 @@ namespace Langulus::Anyness::Component
          size_t idx = 1;
          from[0] = to[0] = 0;
          
-         C::ComponentList::ForEach([&]<class COM> {
+         ForEach(typename C::ComponentList{}, [&]<class COM> {
             if constexpr (requires { typename COM::HeapRequest; }) {
                using R = typename COM::HeapRequest;
                if constexpr (IsGlobalFooterRequest<R>) { //TODO maybe check for intersection?
@@ -576,7 +576,7 @@ namespace Langulus::Anyness::Component
          size_t idx = 1;
          from[0] = to[0] = 0;
          
-         C::ComponentList::ForEach([&]<class COM> {
+         ForEach(typename C::ComponentList{}, [&]<class COM> {
             if constexpr (requires { typename COM::HeapRequest; }) {
                using R = typename COM::HeapRequest;
                if constexpr (IsLocalFooterRequest<R> and COM::Id::template Contains<SID>) {

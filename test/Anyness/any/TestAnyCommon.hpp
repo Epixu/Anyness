@@ -181,7 +181,7 @@ void Common_GapTest() {
    Logger::Info("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
 
    SizeSummary summary;
-   T::ComponentList::ForEach([&]<class C> {
+   ForEach(typename T::ComponentList{}, [&]<class C> {
       Common_GapTest_Inner<C, T::Dimensions::Count>(summary);
    });
 

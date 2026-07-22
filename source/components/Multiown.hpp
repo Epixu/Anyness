@@ -29,21 +29,21 @@ namespace Langulus::Anyness::Component
    struct LANGULUS_EBCO Multiown<TN...> : TN... {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Subcomponents  = decltype( Types<TN...>::Discard([]<class C> static { return requires { C::SkipThisComponent; }; }));
-      using Id             = decltype(Subcomponents::Extract([]<class C> static { return typename C::Id{}; }));
+      using Subcomponents  = decltype(Discard(Types<TN...>{},  []<class C> static { return requires { C::SkipThisComponent; }; }));
+      using Id             = decltype(Extract(Subcomponents{}, []<class C> static { return typename C::Id{}; }));
 
-      static_assert(Subcomponents::ForEachIndexedAnd([]<class C, size_t I> {
+      static_assert(ForEachIndexedAnd(Subcomponents{}, []<class C, size_t I> {
          return C::Id::Count == 1 and C::Id::First == I; }),
          "Each enabled subcomponent needs to be dedicated to their single dimension, "
          "and all subcomponents need to be sequential"
       );
 
       static constexpr int ComponentPrecedence = 1000;
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == 1000; }),
+      static_assert(ForEachAnd(Subcomponents{}, []<class C> { return C::ComponentPrecedence == 1000; }),
          "All precedences should match");
 
       static constexpr uint Owned = Subcomponents::First::Owned;
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::Owned == Owned; }),
+      static_assert(ForEachAnd(Subcomponents{}, []<class C> { return C::Owned == Owned; }),
          "Currently all shallow ownerships must be of the same style");
 
       #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
@@ -111,7 +111,7 @@ namespace Langulus::Anyness::Component
 
       /// Resets all allocations                                              
       constexpr void ResetAllAllocations(this auto&& self) noexcept {
-         Subcomponents::ForEach([&]<class C> noexcept {
+         ForEach(Subcomponents{}, [&]<class C> noexcept {
             if_available_gcc(C::ResetAllocationInner)();
          });
       }
@@ -120,7 +120,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this will not dereference previous allocation          
       template<class SELF>
       constexpr void ConstructDefault(this SELF& self) noexcept {
-         Subcomponents::ForEach([&]<class C> noexcept {
+         ForEach(Subcomponents{}, [&]<class C> noexcept {
             if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
@@ -134,7 +134,7 @@ namespace Langulus::Anyness::Component
       ///      something throws an exception while constructing.              
       template<class SELF, CT::Intent I> requires CT::Container<I>
       constexpr void ConstructFrom(this SELF& self, I&& intent) {
-         Subcomponents::ForEach([&]<class C> {
+         ForEach(Subcomponents{}, [&]<class C> {
             if_available_gcc(C::template ConstructFrom<SELF, I>)(LglsFwd(intent));
          });
       }
@@ -143,7 +143,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this never modifies any state                          
       template<class SELF>
       constexpr void Destroy(this SELF& self) assumptious {
-         Subcomponents::Reverse::ForEach([&]<class C> assumptious{
+         ForEach(Reverse(Subcomponents{}), [&]<class C> assumptious{
             if_available_gcc(C::template Destroy<SELF>)();
          });
       }
@@ -151,7 +151,7 @@ namespace Langulus::Anyness::Component
       /// Reference all allocations once.                                     
       template<class SELF>
       constexpr void Keep(this SELF& self) assumptious {
-         Subcomponents::ForEach([&]<class C> assumptious{
+         ForEach(Subcomponents{}, [&]<class C> assumptious{
             if_available_gcc(C::template Keep<SELF>)();
          });
       }
@@ -159,7 +159,7 @@ namespace Langulus::Anyness::Component
       /// Dereference all allocations once, optionally deallocate             
       template<bool DEALLOCATE = true, class SELF>
       constexpr void Free(this SELF& self) assumptious {
-         Subcomponents::Reverse::ForEach([&]<class C> assumptious{
+         ForEach(Reverse(Subcomponents{}), [&]<class C> assumptious{
             if_available_gcc(C::template Free<DEALLOCATE, SELF>)();
          });
       }

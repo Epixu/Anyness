@@ -30,21 +30,21 @@ namespace Langulus::Anyness::Component
    struct LANGULUS_EBCO Multiprovider<TN...> : TN... {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Subcomponents  = decltype( Types<TN...>::Discard([]<class C> static { return requires { C::SkipThisComponent; }; }));
-      using Id             = decltype(Subcomponents::Extract([]<class C> static { return typename C::Id{}; }));
+      using Subcomponents  = decltype(Discard(Types<TN...>{}, []<class C> static { return requires { C::SkipThisComponent; }; }));
+      using Id             = decltype(Extract(Subcomponents{}, []<class C> static { return typename C::Id{}; }));
 
-      static_assert(Subcomponents::ForEachIndexedAnd([]<class C, size_t I> {
+      static_assert(ForEachIndexedAnd(Subcomponents{}, []<class C, size_t I> {
          return C::Id::Count == 1 and C::Id::First == I; }),
          "Each enabled subcomponent needs to be dedicated to their single dimension, "
          "and all subcomponents need to be sequential"
       );
 
       static constexpr int ComponentPrecedence = -2000;
-      static_assert(Subcomponents::ForEachAnd([]<class C> { return C::ComponentPrecedence == -2000; }),
+      static_assert(ForEachAnd(Subcomponents{}, []<class C> { return C::ComponentPrecedence == -2000; }),
          "All precedences should match");
 
-      static constexpr bool HeapCanBeNull = Subcomponents::ForEachOr([]<class C> { return C::HeapCanBeNull; });
-      static constexpr bool Reallocatable = Subcomponents::ForEachOr([]<class C> { return C::Reallocatable; });
+      static constexpr bool HeapCanBeNull = ForEachOr(Subcomponents{}, []<class C> { return C::HeapCanBeNull; });
+      static constexpr bool Reallocatable = ForEachOr(Subcomponents{}, []<class C> { return C::Reallocatable; });
 
       #define if_inherits(...) requires requires { self.C::__VA_ARGS__; }
 
@@ -183,7 +183,7 @@ namespace Langulus::Anyness::Component
       /// Default-initialize the heap pointer                                 
       template<class SELF>
       constexpr void ConstructDefault([[maybe_unused]] this SELF& self) noexcept {
-         Subcomponents::ForEach([&]<class C> noexcept {
+         ForEach(Subcomponents{}, [&]<class C> noexcept {
             if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
@@ -195,7 +195,7 @@ namespace Langulus::Anyness::Component
       ///      a new allocation occurs.                                       
       template<class SELF, CT::Intent I> requires CT::Container<I>
       void ConstructFrom([[maybe_unused]] this SELF& self, I&& intent, size_t reserve = 0) {
-         Subcomponents::ForEach([&]<class C> {
+         ForEach(Subcomponents{}, [&]<class C> {
             if_available_gcc(C::template ConstructFrom<SELF, I>)(LglsFwd(intent), reserve);
          });
       }

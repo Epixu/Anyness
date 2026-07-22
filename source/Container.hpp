@@ -218,7 +218,7 @@ namespace Langulus::Anyness
       template<CT::Typelist L = ComponentList>
       static consteval size_t CountHeapProviders() {
          size_t count = 0;
-         L::ForEach([&count]<class C> {
+         ForEach(L{}, [&count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                count += CountHeapProviders<typename C::Subcomponents>();
             else if constexpr (requires { typename C::HeapProvider; })
@@ -284,7 +284,7 @@ namespace Langulus::Anyness
       template<CT::Typelist L = ComponentList>
       static consteval size_t CountHeapRequests() {
          size_t count = 0;
-         L::ForEach([&count]<class C> {
+         ForEach(L{}, [&count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                count += CountHeapRequests<typename C::Subcomponents>();
             else if constexpr (requires { typename C::HeapRequest; }) {
@@ -300,7 +300,7 @@ namespace Langulus::Anyness
       template<Cid SID, CT::Typelist L = ComponentList>
       static consteval size_t CountHeapFooterRequests() {
          size_t count = 0;
-         L::ForEach([&count]<class C> {
+         ForEach(L{}, [&count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                count += CountHeapFooterRequests<SID, typename C::Subcomponents>();
             else if constexpr (requires { typename C::HeapRequest; }) {
@@ -317,7 +317,7 @@ namespace Langulus::Anyness
       /// the offset up to that point, to get the index in the stack tuple.   
       template<class PICK, CT::Typelist L>
       static constexpr auto GetStackOffsetInner(size_t& offset) {
-         return L::ForEachConstOr([&offset]<class C> {
+         return ForEachConstOr(L{}, [&offset]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                return GetStackOffsetInner<PICK, typename C::Subcomponents>(offset);
             else if constexpr (CT::DerivedFrom<C, PICK>)
@@ -347,7 +347,7 @@ namespace Langulus::Anyness
       ///   @return return type of the provider                               
       template<Cid SID, CT::Typelist L = ComponentList>
       static consteval auto FindProvider() {
-         return L::ForEachConstOr([]<class C> {
+         return ForEachConstOr(L{}, []<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                return FindProvider<SID, typename C::Subcomponents>();
             else if constexpr (requires { C::StackProvider; }) {
@@ -398,7 +398,7 @@ namespace Langulus::Anyness
       static consteval size_t DefineHeapHeader() {
          using PROVIDER = typename decltype(FindProvider<SID>())::First;
          size_t bytesize = 0;
-         L::ForEach([&bytesize]<class C> {
+         ForEach(L{}, [&bytesize]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                bytesize += DefineHeapHeader<SID, typename C::Subcomponents>();
             else if constexpr (requires { typename C::HeapRequest; }) {
@@ -426,7 +426,7 @@ namespace Langulus::Anyness
       ///      is relative to GetAllocation<SID>()->GetBlockStart()           
       template<class PICK, Cid SID, CT::Typelist L>
       static consteval auto GetHeapHeaderOffsetInner(size_t& offset) {
-         return L::ForEachConstOr([&offset]<class C> {
+         return ForEachConstOr(L{}, [&offset]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                return GetHeapHeaderOffsetInner<PICK, SID, typename C::Subcomponents>(offset);
             else if constexpr (CT::DerivedFrom<C, PICK>) {
@@ -500,7 +500,7 @@ namespace Langulus::Anyness
          [[maybe_unused]] const size_t indirects
       ) noexcept {
          size_t bytesize = 0;
-         L::ForEach([&bytesize, &indirects, &count]<class C> {
+         ForEach(L{}, [&bytesize, &indirects, &count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                bytesize += DefineHeapFooter<SID, typename C::Subcomponents>(count, indirects);
             else if constexpr (requires { typename C::HeapRequest; }) {
@@ -530,7 +530,7 @@ namespace Langulus::Anyness
          [[maybe_unused]] const size_t indirects,
          size_t& offset
       ) noexcept {
-         return L::ForEachConstOr([&offset, &indirects, &count]<class C> {
+         return ForEachConstOr(L{}, [&offset, &indirects, &count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                return GetHeapFooterOffsetInner<PICK, SID, typename C::Subcomponents>(count, indirects, offset);
             else if constexpr (CT::DerivedFrom<C, PICK>)
@@ -587,7 +587,7 @@ namespace Langulus::Anyness
          [[maybe_unused]] const size_t count
       ) noexcept {
          size_t bytesize = 0;
-         L::ForEach([&bytesize, &count]<class C> {
+         ForEach(L{}, [&bytesize, &count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                bytesize += DefineHeapFooterGlobal<SID, typename C::Subcomponents>(count);
             else if constexpr (requires { typename C::HeapRequest; }) {
@@ -620,7 +620,7 @@ namespace Langulus::Anyness
       static constexpr auto GetHeapFooterOffsetGlobalInner(
          [[maybe_unused]] const size_t count, size_t& offset
       ) noexcept {
-         return L::ForEachConstOr([&offset, &count]<class C> {
+         return ForEachConstOr(L{}, [&offset, &count]<class C> {
             if constexpr (requires { typename C::Subcomponents; })
                return GetHeapFooterOffsetGlobalInner<PICK, SID, typename C::Subcomponents>(count, offset);
             else if constexpr (CT::DerivedFrom<C, PICK>)
@@ -746,7 +746,7 @@ namespace Langulus::Anyness
       /// Often used to clear global heap footers upon allocation             
       template<class SELF>
       constexpr void ConstructHeapRequestGlobal(this SELF&& self) noexcept {
-         ComponentList::ForEach([&]<class C>{
+         ForEach(ComponentList{}, [&]<class C>{
             if_available_gcc(C::template ConstructHeapRequestGlobal<SELF>)();
          });
       }
@@ -755,7 +755,7 @@ namespace Langulus::Anyness
       ///   @attention works in one dimension at a time!                      
       template<Cid SID, class SELF>
       constexpr void ConstructHeapRequestPerDimension(this SELF&& self) noexcept {
-         ComponentList::ForEach([&]<class C>{
+         ForEach(ComponentList{}, [&]<class C>{
             if_available_gcc(C::template ConstructHeapRequestPerDimension<SID, SELF>)();
          });
       }
@@ -763,7 +763,7 @@ namespace Langulus::Anyness
       /// Default-construct all components                                    
       template<class SELF>
       constexpr void ConstructDefault(this SELF&& self) noexcept {
-         ComponentList::ForEach([&]<class C>{
+         ForEach(ComponentList{}, [&]<class C>{
             if_available_gcc(C::template ConstructDefault<SELF>)();
          });
       }
@@ -783,7 +783,7 @@ namespace Langulus::Anyness
             if (source.IsEmpty()) {
                // If source is empty, we copy only the type and the     
                // unconstrained state. Everything else is defaulted.    
-               ComponentList::ForEach([&self,&from]<class C>{
+               ForEach(ComponentList{}, [&self,&from]<class C>{
                   if constexpr (requires { &C::template GetState<SELF>; }
                             or  requires { &C::template GetType<0, SELF>; }) {
                      if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
@@ -794,7 +794,7 @@ namespace Langulus::Anyness
             }
          }
 
-         ComponentList::ForEach([&self,&from]<class C>{
+         ForEach(ComponentList{}, [&self,&from]<class C>{
                  if_available_gcc(C::template ConstructFrom<SELF, I>)(FWDIntent(from));
             else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
@@ -819,7 +819,7 @@ namespace Langulus::Anyness
          using I = IntentOf(from);
          static_assert(CT::Handle<SELF>);
          static_assert(CT::Disowned<I>, "Slicing supports only disownment for now");
-         ComponentList::ForEach([&]<class C>{
+         ForEach(ComponentList{}, [&]<class C>{
                  if_available_gcc(C::template SliceFrom<ID, SELF, I>)(FWDIntent(from));
             else if_available_gcc(C::template ConstructDefault<SELF>)();
          });
@@ -843,7 +843,7 @@ namespace Langulus::Anyness
                return;
 
             // Notice it executes in reverse                            
-            ComponentList::Reverse::ForEach([&]<class C> {
+            ForEach(Reverse(ComponentList{}), [&]<class C> {
                if_available_gcc(C::template Destroy<SELF>)();
             });
          }
@@ -860,7 +860,7 @@ namespace Langulus::Anyness
                return;
 
             // Notice it executes in reverse                            
-            ComponentList::Reverse::ForEach([&]<class C> {
+            ForEach(Reverse(ComponentList{}), [&]<class C> {
                if_available_gcc(C::template Free<DEALLOCATE, SELF>)();
             });
          }
@@ -875,7 +875,7 @@ namespace Langulus::Anyness
             if (self.IsDisowned())
                return;
 
-            ComponentList::ForEach([&]<class C> {
+            ForEach(ComponentList{}, [&]<class C> {
                if_available_gcc(C::template Keep<SELF>)();
             });
          }

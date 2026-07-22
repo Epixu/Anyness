@@ -114,9 +114,10 @@ namespace Langulus::Anyness::Component
    };
 
    template<CT::Component...CN>
-   constexpr size_t CountEnabled = decltype(Types<CN...>::Discard([]<class C> static {
-      return requires { C::SkipThisComponent; }; })
-   )::Count;
+   constexpr size_t CountEnabled = decltype(Discard(Types<CN...>{},
+      []<class C> static {
+         return requires { C::SkipThisComponent; }; })
+      )::Count;
 }
 
 namespace Langulus::CT
@@ -537,7 +538,7 @@ namespace Langulus::Anyness
          template<CT::Component C1, CT::Component...CN>
          consteval auto DefineStates() {
             if constexpr (requires { typename C1::Subcomponents; }) {
-               constexpr auto first = C1::Subcomponents::Expand([]<class...InnerC1> {
+               constexpr auto first = Expand(typename C1::Subcomponents{}, []<class...InnerC1> {
                   return DefineStates<InnerC1...>();
                });
                return first + DefineStates<CN...>();
@@ -647,7 +648,7 @@ namespace Langulus::Anyness
       template<int ACC, int PRECEDENCE, class C1, class...CN>
       consteval bool ValidateComponentOrderNested() {
          if constexpr (requires { typename C1::Subcomponents; }) {
-            return C1::Subcomponents::Expand([]<class...InnerC1> {
+            return Expand(typename C1::Subcomponents{}, []<class...InnerC1> {
                return ValidateComponentOrderNested<ACC, PRECEDENCE, InnerC1..., CN...>();
             });
          }

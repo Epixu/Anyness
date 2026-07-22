@@ -212,7 +212,7 @@ namespace Langulus::Anyness::Component
          static_assert(not PROVIDERS::Empty);
          if (self.IsDisowned()) {
             self.DisableDisowned();
-            PROVIDERS::ForEach([&]<class P> {
+            ForEach(PROVIDERS{}, [&]<class P> {
                //WORKAROUND GNU 14.2.0 refuses to recognize P as a base 
                //WORKAROUND Clang 21 refuses to unfold when Expand used 
                //WORKAROUND This workaround is the only thing that      
@@ -224,7 +224,7 @@ namespace Langulus::Anyness::Component
             return;
          }
 
-         const bool reusable = PROVIDERS::ForEachAnd([&]<class P> {
+         const bool reusable = ForEachAnd(PROVIDERS{}, [&]<class P> {
             const auto a = self.template GetAllocation<P::Id::First>();
             return a and a->GetUses() == 1;
          });
@@ -234,7 +234,7 @@ namespace Langulus::Anyness::Component
             // But we have to destroy all shared elements.              
             self.template Free<false>();
             if constexpr (CT::ContainsMany<C>) {
-               PROVIDERS::ForEach([&]<class P> {
+               ForEach(PROVIDERS{}, [&]<class P> {
                   //WORKAROUND GNU 14.2.0 refuses to recognize P as a base 
                   //WORKAROUND Clang 21 refuses to unfold when Expand used 
                   //WORKAROUND This workaround is the only thing that      
@@ -252,7 +252,7 @@ namespace Langulus::Anyness::Component
          // destructors. All we do is reset this container and allocate 
          // a new block, which will be exclusively ours.                
          self.Free();
-         PROVIDERS::ForEach([&]<class P> {
+         ForEach(PROVIDERS{}, [&]<class P> {
             //WORKAROUND GNU 14.2.0 refuses to recognize P as a base    
             //WORKAROUND Clang 21 refuses to unfold when Expand used    
             //WORKAROUND This workaround is the only thing that         

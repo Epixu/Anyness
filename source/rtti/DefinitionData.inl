@@ -442,7 +442,7 @@ namespace Langulus::RTTI
       using BASES = BasesOf<T>;
       if constexpr (not CT::Void<BASES>) {
          // Set reflected bases                                         
-         BASES::ForEach([&definition]<class B>{
+         ForEach(BASES{}, [&definition]<class B>{
             definition.mCurrentBoundary.mBases.push_back(
                Base::From<T, B>()
             );
@@ -452,7 +452,7 @@ namespace Langulus::RTTI
       using VERBS = VerbsOf<T>;
       if constexpr (not CT::Void<VERBS>) {
          // Set reflected abilities                                     
-         VERBS::ForEach([&definition]<class V>{
+         ForEach(VERBS{}, [&definition]<class V>{
             static_assert(CT::DefineVerb<V>,
                "Verb list must contain only verbs");
             static_assert(CT::Decayed<V>,
@@ -488,7 +488,7 @@ namespace Langulus::RTTI
       using MEMBERS = MembersOf<T>;
       if constexpr (not CT::Void<MEMBERS>) {
          // Reflecting members                                          
-         MEMBERS::ForEach([&definition]<class M>{
+         ForEach(MEMBERS{}, [&definition]<class M>{
             definition.mCurrentBoundary.mMembers.push_back(
                Member::From<M>()
             );
@@ -603,7 +603,7 @@ namespace Langulus::RTTI
       if constexpr (not CT::Void<VERBS>) {
          // Set reflected abilities                                     
          // These can be different for constant/mutable types           
-         VERBS::ForEach([&definition]<class V>{
+         ForEach(VERBS{}, [&definition]<class V>{
             static_assert(CT::DefineVerb<V>,
                "Verb list must contain only verbs");
             static_assert(CT::Decayed<V>,
@@ -1123,7 +1123,7 @@ namespace Langulus::RTTI
    void DefinitionData::FillMorphisms() {
       using MAPTO = MorphismsFrom<T>;
       if constexpr (not CT::Void<MAPTO>) {
-         MAPTO::ForEach([this]<class TO_RAW>{
+         ForEach(MAPTO{}, [this]<class TO_RAW>{
             using TO = CT::ReflectedAs<TO_RAW>;
 
             auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
@@ -1160,7 +1160,7 @@ namespace Langulus::RTTI
    
       using MAPFROM = MorphismsTo<T>;
       if constexpr (not CT::Void<MAPFROM>) {
-         MAPFROM::ForEach([this]<class FROM_RAW>{
+         ForEach(MAPFROM{}, [this]<class FROM_RAW>{
             using FROM = CT::ReflectedAs<FROM_RAW>;
 
             auto source_type = const_cast<DefinitionData*>(Reflect<FROM>());
@@ -1218,7 +1218,7 @@ namespace Langulus::RTTI
       if constexpr (not CT::Void<TAGS>) {
          // Reflect the trait tag                                       
          m.type = Reflect<AS>;
-         TAGS::ForEach([&m]<class T>{
+         ForEach(TAGS{}, [&m]<class T>{
             static_assert(CT::DefineTag<T>, "T is not a tag definition");
             m.tags.insert(DefinitionTag::Reflect<T>());
          });

@@ -90,7 +90,7 @@ namespace Langulus::Anyness::Component
       constexpr auto GetUnconstrainedState(this auto const& self) noexcept
       -> StateWrapper requires HasStates {
          StateWrapper r = self.GetStateInner();
-         StateList::ForEach([&r]<class S>{
+         ForEach(StateList{}, [&r]<class S>{
             if constexpr (S::UID == StateUid::Typed
             or            S::UID == StateUid::Tracked
             or            S::UID == StateUid::Disowned) {
@@ -104,7 +104,7 @@ namespace Langulus::Anyness::Component
       /// Check if container supports any of the mentioned states             
       template<StateUid...ID>
       static consteval bool CheckStateSupport() {
-         return StateList::ForEachOr([]<class S> noexcept {
+         return ForEachOr(StateList{}, []<class S> noexcept {
             return ((S::UID == ID and (S::Dynamic or S::Enable)) or ...);
          });
       }
@@ -117,7 +117,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if this container is marked as missing               
       constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing { //TODO dimensions?
          bool r = false;
-         StateList::ForEachConstOr([&]<class S>{
+         ForEachConstOr(StateList{}, [&]<class S>{
             if constexpr (S::UID == StateUid::Past or S::UID == StateUid::Future) {
                if constexpr (S::Static) {
                   if constexpr (S::Enable) {
@@ -147,7 +147,7 @@ namespace Langulus::Anyness::Component
          else if constexpr (CanBeDisowned) {
             // Disown state component exists in the container           
             bool r = false;
-            StateList::ForEachConstOr([&]<class S>{
+            ForEachConstOr(StateList{}, [&]<class S>{
                if constexpr (S::UID == StateUid::Disowned) {
                   if constexpr (S::Static) {
                      if constexpr (S::Enable) {
@@ -211,7 +211,7 @@ namespace Langulus::Anyness::Component
       static consteval StateType GetStateBit() requires HasStates {
          StateType i = 0;
          StateType accumulator = 0;
-         StateList::ForEach([&]<class S>{
+         ForEach(StateList{}, [&]<class S>{
             if constexpr (B::UID == S::UID)
                accumulator = (StateType {1} << i);
             ++i;
@@ -223,7 +223,7 @@ namespace Langulus::Anyness::Component
       static consteval StateType GetDefaultState() requires HasStates {
          StateType i = 0;
          StateType accumulator = 0;
-         StateList::ForEach([&]<class S>{
+         ForEach(StateList{}, [&]<class S>{
             if constexpr (S::Enable)
                accumulator |= (StateType {1} << i);
             ++i;
