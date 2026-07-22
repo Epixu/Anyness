@@ -136,7 +136,7 @@
 		__attribute__((always_inline))
 		__inline__ static void LglsDebugBreak(void)
 		{
-			trap_instruction();
+			lgls_trap_instruction();
 		}
 	#elif LANGULUS_DEBUG_BREAK_IMPL == LANGULUS_DEBUG_BREAK_USE_BULTIN_DEBUGTRAP
 		__attribute__((always_inline))
