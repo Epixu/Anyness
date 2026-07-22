@@ -557,7 +557,7 @@ namespace Langulus::Anyness::Component
          static_assert(CT::Handle<I>,
             "Multidimensional types should be set using a handle");
 
-         Subcomponents::ForEach([&]<class C> {
+         ForEach(Subcomponents{}, [&]<class C> {
             //WORKAROUND GNU 14.2.0 refuses to recognize C as a base    
             //WORKAROUND Clang 21 refuses to unfold when Expand used    
             //WORKAROUND This workaround is the only thing that         

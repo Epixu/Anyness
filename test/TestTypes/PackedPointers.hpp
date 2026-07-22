@@ -65,11 +65,22 @@ protected:
       }
       else {
          using NEXT_T = Deptr<INNER>;
-         *entry = Allocator::AllocatePacked<INNER>(
-            Langulus::MetaDataOf<NEXT_T>(), pot_t(Langulus::Roof2(sizeof(NEXT_T))));
-         place = (*entry)->GetBlockStartPackedAs<INNER>();
-         
-         NestedConstructor(*place, entry + 1, LglsFwd(arguments)...);
+
+         if constexpr (Same<NEXT_T, char> and IndirectsOf<T> > 0) {
+            ::std::string converted = ::std::to_string(LglsFwd(arguments)...);
+            *entry = Allocator::AllocatePacked<INNER>(
+               Langulus::MetaDataOf<NEXT_T>(), pot_t(Langulus::Roof2(converted.size()+1)));
+            place = (*entry)->GetBlockStartPackedAs<INNER>();
+
+            memcpy(place.Unpack(), converted.c_str(), converted.size()+1);
+         }
+         else {
+            *entry = Allocator::AllocatePacked<INNER>(
+               Langulus::MetaDataOf<NEXT_T>(), pot_t(Langulus::Roof2(sizeof(NEXT_T))));
+            place = (*entry)->GetBlockStartPackedAs<INNER>();
+            
+            NestedConstructor(*place, entry + 1, LglsFwd(arguments)...);
+         }
       }
    }
    

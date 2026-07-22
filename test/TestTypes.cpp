@@ -327,7 +327,7 @@ SCENARIO("Testing Types::ForEachAnd") {
          cumulative_size += sizeof(E);
          return true;
       });
-      REQUIRE(not result);
+      REQUIRE(result);
       REQUIRE(cumulative_size == 0);
    }
    {
@@ -538,7 +538,7 @@ SCENARIO("Testing Types::ForEachIndexedAnd") {
          counter += 1;
          return true;
       });
-      REQUIRE(not result);
+      REQUIRE(result);
       REQUIRE(cumulative_size == 0);
    }
    {

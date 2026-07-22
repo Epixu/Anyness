@@ -99,7 +99,7 @@ struct SizeSummary {
 template<class C, size_t DimensionsCount>
 void Common_GapTest_Inner(SizeSummary& summary) {
    if constexpr (requires { typename C::Subcomponents; }) {
-      C::Subcomponents::ForEach([&]<class InnerC> {
+      ForEach(typename C::Subcomponents{}, [&]<class InnerC> {
          Common_GapTest_Inner<InnerC, DimensionsCount>(summary);
       });
    }
