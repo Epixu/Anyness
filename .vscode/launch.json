@@ -3,7 +3,26 @@
    // Hover to view descriptions of existing attributes.
    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
    "version": "0.2.0",
+   "inputs": [
+      {
+         "id": "persistence_folder",
+         "type": "command",
+         "command": "cmake.cacheVariable",
+         "args": {"name": "LANGULUS_PERSIST_DIRECTORY"}
+      }
+   ],
    "configurations": [
+      {
+         "name": "LangulusAnynessReporter",
+         "type": "lldb",
+         "request": "launch",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessReporter.exe",
+         "args": [
+            "-f", "./consumption.txt",
+            "-c", "${input:persistence_folder}/consumption.canon"
+         ],
+         "cwd": "${command:cmake.buildDirectory}"
+      },
       {
          "name": "LangulusAnynessTest-Common",
          "type": "lldb",

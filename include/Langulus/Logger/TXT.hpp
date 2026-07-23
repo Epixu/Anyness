@@ -12,7 +12,6 @@
 
 namespace Langulus::Logger
 {
-   
    ///                                                                        
    /// Generates plain text file from logging messages. Can be used both as   
    /// duplicator or redirector. Strips all styling. Use it like this:        
@@ -32,7 +31,6 @@ namespace Langulus::Logger
 
    public:
       LANGULUS_API(LOGGER)  ToTXT(::std::string_view const& filename);
-      // ReSharper disable once CppEnforceOverridingDestructorStyle     
       LANGULUS_API(LOGGER) ~ToTXT();
 
       LANGULUS_API(LOGGER) void Write(::std::string_view const&) const noexcept;
@@ -41,5 +39,4 @@ namespace Langulus::Logger
       LANGULUS_API(LOGGER) void Clear() const noexcept;
       LANGULUS_API(LOGGER) auto GetFilename() const noexcept -> ::std::string_view;
    };
-
-} // namespace Langulus::Logger
+}

@@ -29,41 +29,45 @@ if(CMAKE_CXX_FLAGS)
     STRING(FIND ${CMAKE_CXX_FLAGS} "/Zc:trigraphs" TRIGRAPHS_ENABLED1)
     STRING(FIND ${CMAKE_CXX_FLAGS} "-trigraphs"    TRIGRAPHS_ENABLED2)
     if (${TRIGRAPHS_ENABLED1} GREATER -1 OR ${TRIGRAPHS_ENABLED2} GREATER -1)
-        message(FATAL_ERROR "[LANGULUS] Langulus can't be built with trigraphs enabled - the symbol ?? is used in scripting instead")
+        message(FATAL_ERROR "[LANGULUS] Langulus can't be built with trigraphs enabled \
+- the symbol ?? is used in scripting instead")
     endif()
 endif()
 
 # Reflected options                                                           
 option(LANGULUS_OPTION_SHARED_LIBRARIES 
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
-    true by default" ON)
+true by default" ON)
     
 option(LANGULUS_OPTION_SAFE_MODE 
     "Overrides additional error checking and sanity checks, \
-    incurs a serious runtime overhead, disabled by default" OFF)
+incurs a serious runtime overhead, disabled by default" OFF)
 
 option(LANGULUS_OPTION_PARANOIA 
     "Make sure that any unused memory is nullified, \
-    incurs a serious runtime overhead, disabled by default" OFF)
+incurs a serious runtime overhead, disabled by default" OFF)
 
 option(LANGULUS_OPTION_TESTING 
     "Builds tests, disabled by default - Langulus tests are very exhaustive \
-    and might increase your build time and RAM usage significantly" OFF)
+and might increase your build time and RAM usage significantly" OFF)
     
 option(LANGULUS_OPTION_BENCHMARK
-    "Enable benchmarking in tests, disabled by default. Will increase test time tenfold! Will disable LANGULUS_OPTION_SAFE_MODE in order to avoid overhead!" OFF)
+    "Enable benchmarking in tests, disabled by default. \
+Will increase test time tenfold! Will disable LANGULUS_OPTION_SAFE_MODE \
+in order to avoid overhead!" OFF)
 
 option(LANGULUS_OPTION_DEBUGGING 
     "Explicitly define debug mode, in the case that default flags are \
-    not detected by some odd reason, disabled by default" OFF)
+not detected by some odd reason, disabled by default" OFF)
 
 option(LANGULUS_OPTION_NEWDELETE 
     "Overrides new/delete operators for anything statically linked to this library, \
-    or provides LANGULUS_MONOPOLIZE_MEMORY() macro for you to use to override them, if dynamically linked. \
-    This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled" OFF)
+or provides LANGULUS_MONOPOLIZE_MEMORY() macro for you to use to override them, \
+if dynamically linked. \
+This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled" OFF)
 
 option(LANGULUS_OPTION_UNICODE
-    "Provides UTF8, UTF16, UTF32 tools and conversions inside Text containers (WIP)" OFF)
+    "Provides UTF8, UTF16, UTF32 tools and conversions inside Logger and Text containers" ON)
 
 option(LANGULUS_OPTION_COMPRESSION
     "Links to zstd library and provides memory compression for use with containers (WIP)" OFF)
@@ -93,23 +97,37 @@ option(LANGULUS_LOGGER_DISABLE_OS           "Disables OS logging via Logger::OS(
 
 option(LANGULUS_OPTION_MANAGED_MEMORY
     "Memory will be pooled and recycled when freed, and you can safely push any kind of pointer, \
-    as long as it was allocated by the memory manager, or by the overridden new/delete feature. Enabled by default" ON)
+as long as it was allocated by the memory manager, or by the overridden new/delete feature. \
+Enabled by default" ON)
 
 option(LANGULUS_OPTION_MANAGED_REFLECTION
     "Reflections will be kept in a centralized location, when reflected, which speeds up \
-    type comparisons, and allows you to dynamically modify the reflection at runtime. \
-    This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled. Enabled by default" ON)
+type comparisons, and allows you to dynamically modify the reflection at runtime. \
+This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled. \
+Enabled by default" ON)
 
 option(LANGULUS_OPTION_MEMORY_STATISTICS
-    "Memory manager shall keep track of statistics, for the price of little overhead. Disabled by default" OFF)
+    "Memory manager shall keep track of statistics, for the price of little overhead. \
+Disabled by default" OFF)
+
+cmake_path (GET PROJECT_BINARY_DIR STEM LAST_ONLY LANGULUS_BUILD_IDENTIFIER)
+message (STATUS "[LANGULUS] Build identifier: \"${LANGULUS_BUILD_IDENTIFIER}\"")
+
+if (NOT DEFINED LANGULUS_PERSIST_DIRECTORY)
+    set(LANGULUS_PERSIST_DIRECTORY "${CMAKE_SOURCE_DIR}/persist/${LANGULUS_BUILD_IDENTIFIER}" CACHE PATH
+        "Place where reports from different builds end up, \
+so we can keep track of build time and performance")
+    message(STATUS "[LANGULUS] LANGULUS_PERSIST_DIRECTORY not defined, \
+using default: ${LANGULUS_PERSIST_DIRECTORY}")
+endif()
 
 if (LANGULUS_OPTION_SHARED_LIBRARIES)
     set(LANGULUS_LIBRARY_TYPE SHARED CACHE INTERNAL "" FORCE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "" FORCE)
-    message("[LANGULUS] Building as shared library")
+    message(STATUS "[LANGULUS] Building as shared library")
 else()
     set(LANGULUS_LIBRARY_TYPE STATIC CACHE INTERNAL "" FORCE)
-    message("[LANGULUS] Building as static library")
+    message(STATUS "[LANGULUS] Building as static library")
 endif()
 
 # Check if this project is built as standalone, or as a part of something else
@@ -117,6 +135,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     # It is very important these are set before any targets are introduced		
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
     if (LANGULUS_OPTION_LOGGING)
         # Configure and link {fmt} library                                    
@@ -124,6 +143,18 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
             GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master	
+        )
+    endif()
+
+    if (LANGULUS_OPTION_UNICODE)
+        # Configure and link simdutf library                                    
+        set(SIMDUTF_TESTS OFF)
+        set(SIMDUTF_TOOLS OFF)
+        set(SIMDUTF_ICONV OFF)
+        fetch_external_module(
+            simdutf
+            GIT_REPOSITORY https://github.com/simdutf/simdutf.git
+            GIT_TAG        6582ea62ce9866655191f48964997c77fbe1663f # master	
         )
     endif()
 endif()
@@ -154,7 +185,10 @@ target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
 target_include_directories(LangulusAnyness PUBLIC include)
 target_include_directories(LangulusAnyness PUBLIC .)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
-target_link_libraries(LangulusAnyness PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>)
+target_link_libraries(LangulusAnyness
+    PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>
+           $<$<BOOL:${LANGULUS_OPTION_UNICODE}>:simdutf>
+)
 #target_compile_options(LangulusAnyness PUBLIC -Wl,--icf=all)
 
 set(LANGULUS_ALIGNMENT 16 CACHE STRING "Default langulus alignment (in bytes)")
@@ -221,15 +255,6 @@ if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
        GIT_TAG         persistence
    )
    target_link_libraries(LangulusAnyness PUBLIC ctrack)
-   set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK or LANGULUS_OPTION_PROFILING being enabled" FORCE)
-
-   # If there's a highscore provided with the source, use it as baseline      
-   # when testing for performance regression                                  
-   if(        EXISTS "ctrack_highscore.txt"
-      AND NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ctrack_highscore.txt")
-      file(
-         COPY        "ctrack_highscore.txt"
-         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
-      )
-   endif()
+   set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK \
+or LANGULUS_OPTION_PROFILING being enabled" FORCE)
 endif()

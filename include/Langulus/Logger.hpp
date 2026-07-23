@@ -249,6 +249,7 @@ namespace Langulus::Logger
       ///                                                                     
       /// Interface override                                                  
       LANGULUS_API(LOGGER) void Write(::std::string_view const&) const noexcept;
+      LANGULUS_API(LOGGER) void Write(::std::wstring_view const&) const noexcept;
       LANGULUS_API(LOGGER) void Write(Style) const noexcept;
       LANGULUS_API(LOGGER) void NewLine() const noexcept;
       LANGULUS_API(LOGGER) void Clear() const noexcept;

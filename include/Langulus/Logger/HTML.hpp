@@ -12,7 +12,6 @@
 
 namespace Langulus::Logger
 {
-   
    ///                                                                        
    /// Generates HTML code from logging messages. Can be used both as         
    /// duplicator or redirector. Colors and styles are consistent with        
@@ -33,7 +32,6 @@ namespace Langulus::Logger
 
    public:
       LANGULUS_API(LOGGER)  ToHTML(::std::string_view const& filename);
-      // ReSharper disable once CppEnforceOverridingDestructorStyle     
       LANGULUS_API(LOGGER) ~ToHTML();
 
       LANGULUS_API(LOGGER) void Write(::std::string_view const&) const noexcept;
@@ -41,7 +39,5 @@ namespace Langulus::Logger
       LANGULUS_API(LOGGER) void NewLine() const noexcept;
       LANGULUS_API(LOGGER) void Clear() const noexcept;
       LANGULUS_API(LOGGER) auto GetFilename() const noexcept -> ::std::string_view;
-
    };
-
-} // namespace Langulus::Logger
+}

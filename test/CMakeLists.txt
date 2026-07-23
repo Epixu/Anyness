@@ -4,6 +4,11 @@ fetch_external_module(
     GIT_TAG         1da23a3e8119ec5cce4f9388e91b065e20bf06f5 #v2.4.12
 )
 
+add_langulus_test(LangulusAnynessReporter
+   SOURCES	   MainReporter.cpp
+   LIBRARIES   LangulusAnyness
+)
+
 add_langulus_test(LangulusAnynessTest-Common
    SOURCES	   Main.cpp 
                TestAssume.cpp

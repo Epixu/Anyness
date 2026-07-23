@@ -59,8 +59,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc-14",
         "CMAKE_CXX_COMPILER": "g++-14",
-        "CMAKE_C_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\"",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\""
+        "CMAKE_C_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -fproc-stat-report=consumption.txt",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -fproc-stat-report=consumption.txt"
       }
     },
     {
@@ -71,8 +71,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-19",
         "CMAKE_CXX_COMPILER": "clang++-19",
-        "CMAKE_C_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\"",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -ftemplate-backtrace-limit=0"
+        "CMAKE_C_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -fproc-stat-report=consumption.txt",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -fproc-stat-report=consumption.txt -ftemplate-backtrace-limit=0"
       }
     },
     {
@@ -83,13 +83,13 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang.exe",
         "CMAKE_CXX_COMPILER": "clang++.exe",
-        "CMAKE_C_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\"",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -ftemplate-backtrace-limit=0"
+        "CMAKE_C_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -fproc-stat-report=consumption.txt",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\"  -fproc-stat-report=consumption.txt -ftemplate-backtrace-limit=0"
       }
     },
     {
-      "name": "cl-v145",
-      "description": "Target Visual C++ v145 compiler",
+      "name": "cl",
+      "description": "Target Visual C++ compiler",
       "inherits": "base",
       "hidden": true,
       "cacheVariables": {
@@ -100,8 +100,8 @@
       }
     },
     {
-      "name": "clang-cl-19",
-      "description": "Target Clang-Cl 19",
+      "name": "clang-cl",
+      "description": "Target Clang-Cl",
       "inherits": "base",
       "hidden": true,
       "cacheVariables": {
@@ -171,54 +171,6 @@
         "LANGULUS_SANITIZE_LINKER_FLAGS": "",
         "LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC": "/fsanitize=address /Zi -D_DISABLE_VECTOR_ANNOTATION -D_DISABLE_STRING_ANNOTATION",
         "LANGULUS_SANITIZE_LINKER_FLAGS_MSVC": "clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
-      }
-    },
-    
-    {
-      "name": "vendor-clang-cl-x86",
-      "description": "Enables vendor specific toolchains for clang-cl x86",
-      "inherits": "base",
-      "hidden": true,
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "ClangCL x86"
-        }
-      }
-    },
-    
-    {
-      "name": "vendor-clang-cl-x64",
-      "description": "Enables vendor specific toolchains for clang-cl x64",
-      "inherits": "base",
-      "hidden": true,
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "ClangCL x64"
-        }
-      }
-    },
-
-    {
-      "name": "vendor-clang-x86",
-      "description": "Enables vendor specific toolchains for clang x86",
-      "inherits": "base",
-      "hidden": true,
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "WSL Clang x86"
-        }
-      }
-    },
-    
-    {
-      "name": "vendor-clang-x64",
-      "description": "Enables vendor specific toolchains for clang x64",
-      "inherits": "base",
-      "hidden": true,
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "WSL Clang x64"
-        }
       }
     },
     

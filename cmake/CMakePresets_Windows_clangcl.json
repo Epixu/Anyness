@@ -12,139 +12,139 @@
     {
       "name": "windows-clang-cl-x64-debug-safe-SSE2-managed",
       "displayName": "clang-cl x64 Debug Safe SSE2",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "SSE2", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "debug", "SSE2" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX-managed",
       "displayName": "clang-cl x64 Debug Safe AVX",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "debug", "AVX" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX2-managed",
       "displayName": "clang-cl x64 Debug Safe AVX2",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX2", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "debug", "AVX2" ]
     },
     
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX-managed-coverage",
       "displayName": "clang-cl x64 Debug Safe AVX Coverage",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "coverage", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "debug", "AVX", "coverage" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX-managed-sanitize",
       "displayName": "clang-cl x64 Release Safe AVX SanitizeAddress",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "sanitize-address", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "release", "AVX", "sanitize-address" ]
     },
 
     {
       "name": "windows-clang-cl-x64-debug-safe-SSE2-unmanaged",
       "displayName": "clang-cl x64 Debug Safe SSE2 Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "SSE2", "unmanaged", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "debug", "SSE2", "unmanaged" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX-unmanaged",
       "displayName": "clang-cl x64 Debug Safe AVX Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "unmanaged", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "debug", "AVX", "unmanaged" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX2-unmanaged",
       "displayName": "clang-cl x64 Debug Safe AVX2 Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX2", "unmanaged", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "debug", "AVX2", "unmanaged" ]
     },
 
     {
       "name": "windows-clang-cl-x86-debug-safe-noSIMD-managed",
       "displayName": "clang-cl x86 Debug Safe NoSIMD",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "NoSIMD", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "debug", "NoSIMD" ]
     },
     {
       "name": "windows-clang-cl-x86-debug-safe-SSE2-managed",
       "displayName": "clang-cl x86 Debug Safe SSE2",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "SSE2", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "debug", "SSE2" ]
     },
     {
       "name": "windows-clang-cl-x86-debug-safe-AVX-managed",
       "displayName": "clang-cl x86 Debug Safe AVX",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "debug", "AVX" ]
     },
     {
       "name": "windows-clang-cl-x86-debug-safe-AVX2-managed",
       "displayName": "clang-cl x86 Debug Safe AVX2",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX2", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "debug", "AVX2" ]
     },
 
     {
       "name": "windows-clang-cl-x64-release-safe-SSE2-managed",
       "displayName": "clang-cl x64 Release Safe SSE2",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "SSE2", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "release", "SSE2" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX-managed",
       "displayName": "clang-cl x64 Release Safe AVX",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "release", "AVX" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX2-managed",
       "displayName": "clang-cl x64 Release Safe AVX2",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX2", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "release", "AVX2" ]
     },
 
     {
       "name": "windows-clang-cl-x64-release-safe-SSE2-unmanaged",
       "displayName": "clang-cl x64 Release Safe SSE2 Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "SSE2", "unmanaged", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "release", "SSE2", "unmanaged" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX-unmanaged",
       "displayName": "clang-cl x64 Release Safe AVX Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "unmanaged", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "release", "AVX", "unmanaged" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX2-unmanaged",
       "displayName": "clang-cl x64 Release Safe AVX2 Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX2", "unmanaged", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl", "x64", "release", "AVX2", "unmanaged" ]
     },
 
     {
       "name": "windows-clang-cl-x86-release-safe-noSIMD-managed",
       "displayName": "clang-cl x86 Release Safe NoSIMD",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "NoSIMD", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "NoSIMD" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-SSE2-managed",
       "displayName": "clang-cl x86 Release Safe SSE2",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "SSE2", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "SSE2" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-AVX-managed",
       "displayName": "clang-cl x86 Release Safe AVX",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "AVX" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-AVX2-managed",
       "displayName": "clang-cl x86 Release Safe AVX2",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX2", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "AVX2" ]
     },
 
     {
       "name": "windows-clang-cl-x86-release-safe-noSIMD-unmanaged",
       "displayName": "clang-cl x86 Release Safe NoSIMD Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "NoSIMD", "unmanaged", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "NoSIMD", "unmanaged" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-SSE2-unmanaged",
       "displayName": "clang-cl x86 Release Safe SSE2 Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "SSE2", "unmanaged", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "SSE2", "unmanaged" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-AVX-unmanaged",
       "displayName": "clang-cl x86 Release Safe AVX Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX", "unmanaged", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "AVX", "unmanaged" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-AVX2-unmanaged",
       "displayName": "clang-cl x86 Release Safe AVX2 Unmanaged",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX2", "unmanaged", "vendor-clang-cl-x86" ]
+      "inherits": [ "windows", "clang-cl", "x86", "release", "AVX2", "unmanaged" ]
     }
   ]
 }

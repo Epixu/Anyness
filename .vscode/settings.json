@@ -181,14 +181,10 @@
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
     ".vs": true,
-    "out": true,
-    "external": true
+    ".cache": true,
+    "compile_commands.json": true,
+    "out": true
   },
-   "hide-files.files": [
-    ".vs",
-    "out",
-    "external"
-  ],
   "workbench.colorTheme": "Dark 2026",
   "debug.console.fontSize": 10,
   "terminal.integrated.fontSize": 10,

@@ -5,7 +5,10 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
+#include "simdutf/implementation.h"
 #include <Langulus/Logger.hpp>
+#include <string>
+#include <simdutf.h>
 
 #if LANGULUS_OS(WINDOWS)
    #define WIN32_LEAN_AND_MEAN
@@ -25,12 +28,6 @@ namespace Langulus::Logger
 using namespace Langulus;
 using namespace Langulus::Logger;
 
-
-/// Scoped tabulator destruction                                              
-/*Scope::~Scope() noexcept {
-   if (mTabs > 0)
-      GlobalState.Write(Tabs {-mTabs});
-}*/
 
 /// Logger construction                                                       
 State::State() {
@@ -97,6 +94,36 @@ void State::Write(const ::std::string_view& stdString) const noexcept {
    // Dispatch to duplicators                                           
    for (auto attachment : mDuplicators)
       attachment->Write(stdString);
+}
+
+/// Write text (convert wide characters to UTF8)                              
+///   @attention will always flush file/console                               
+///   @param stdString - the text view to write                               
+void State::Write(const ::std::wstring_view& stdString) const noexcept {
+   ::std::string buffer;
+   size_t conversion_result = 0;
+
+   if constexpr (sizeof(wchar_t) == 2) {
+      auto src = reinterpret_cast<char16_t const*>(stdString.data());
+      buffer.resize(simdutf::utf8_length_from_utf16(src, stdString.size()));
+      conversion_result = simdutf::convert_utf16_to_utf8_safe(
+         src, stdString.size(),
+         buffer.data(), buffer.size()
+      );
+   }
+   else if constexpr (sizeof(wchar_t) == 4) {
+      auto src = reinterpret_cast<char32_t const*>(stdString.data());
+      buffer.resize(simdutf::utf8_length_from_utf32(src, stdString.size()));
+      conversion_result = simdutf::convert_utf32_to_utf8(
+         src, stdString.size(),
+         buffer.data()
+      );
+   }
+
+   if (not conversion_result)
+      Write("<invalid wide string>");
+   else
+      Write(buffer);
 }
 
 /// Apply a style                                                             

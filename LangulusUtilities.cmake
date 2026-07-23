@@ -6,7 +6,7 @@ function(fetch_external_module NAME GIT_REPOSITORY REPO GIT_TAG TAG)
         set(LANGULUS_EXTERNAL_DIRECTORY "${CMAKE_SOURCE_DIR}/external" CACHE PATH
             "Place where external dependencies will be downloaded")
         message(STATUS "[LANGULUS] LANGULUS_EXTERNAL_DIRECTORY not defined, \
-      using default: ${LANGULUS_EXTERNAL_DIRECTORY}")
+using default: ${LANGULUS_EXTERNAL_DIRECTORY}")
     endif()
 
    # Completely avoid downloading or updating anything, once the appropriate  
@@ -15,7 +15,8 @@ function(fetch_external_module NAME GIT_REPOSITORY REPO GIT_TAG TAG)
    if (EXISTS "${LANGULUS_EXTERNAL_DIRECTORY}/${NAME}-src")
       set(FETCHCONTENT_SOURCE_DIR_${UPPERCASE_NAME} "${LANGULUS_EXTERNAL_DIRECTORY}/${NAME}-src" CACHE INTERNAL "" FORCE)
       message(STATUS "[LANGULUS] Reusing the cached external library ${NAME}")
-      message(STATUS "[LANGULUS] (delete ${LANGULUS_EXTERNAL_DIRECTORY}/${NAME}-src manually if you want to redownload)")
+      message(STATUS "[LANGULUS] (delete ${LANGULUS_EXTERNAL_DIRECTORY}/${NAME}-src \
+manually if you want to redownload)")
    else()
       unset(FETCHCONTENT_SOURCE_DIR_${UPPERCASE_NAME} CACHE)
       message(STATUS "[LANGULUS] Freshly downloading external library ${NAME}...")
@@ -87,9 +88,9 @@ endfunction()
 
 # Create an executable															
 function(add_langulus_app NAME)
-    set(multiValueArgs SOURCES LIBRARIES DEPENDENCIES EMSCRIPTEN_COMPILE_FLAGS EMSCRIPTEN_LINK_FLAGS)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "" "" "${multiValueArgs}")
-	   add_executable(${NAME} ${arg_SOURCES})
+   set(multiValueArgs SOURCES LIBRARIES DEPENDENCIES EMSCRIPTEN_COMPILE_FLAGS EMSCRIPTEN_LINK_FLAGS)
+   cmake_parse_arguments(PARSE_ARGV 0 arg "" "" "${multiValueArgs}")
+	add_executable(${NAME} ${arg_SOURCES})
 
    if (EMSCRIPTEN)
       # Pack all dependencies into a *.data file                              
