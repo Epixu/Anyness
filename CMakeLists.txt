@@ -154,7 +154,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
         fetch_external_module(
             simdutf
             GIT_REPOSITORY https://github.com/simdutf/simdutf.git
-            GIT_TAG        6582ea62ce9866655191f48964997c77fbe1663f # master	
+            GIT_TAG        ca7acbcea967b5dcbab490066e99e3a6e6925539 # 9.0.0	
         )
     endif()
 endif()

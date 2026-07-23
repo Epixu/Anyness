@@ -3,6 +3,7 @@
 /.vs
 /.cache
 /external
+/persist
 /Testing
 *.user
 *.bak
