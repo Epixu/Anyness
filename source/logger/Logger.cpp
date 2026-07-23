@@ -8,6 +8,7 @@
 #include "simdutf/implementation.h"
 #include <Langulus/Logger.hpp>
 #include <string>
+#include <cstring>
 #include <simdutf.h>
 
 #if LANGULUS_OS(WINDOWS)
