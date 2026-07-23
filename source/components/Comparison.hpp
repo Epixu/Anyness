@@ -111,7 +111,7 @@ namespace Langulus::Anyness::Component
                if constexpr (not Same<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
                   // Types are different                                
                   LglsVerbose(Logger::Red, "Types differ (typed): ",
-                     NameOf<LT>(), " != ", NameOf<RT>());
+                     NameOfRt<LT>(), " != ", NameOfRt<RT>());
                   return false;
                }
                else {
@@ -138,7 +138,7 @@ namespace Langulus::Anyness::Component
                            LglsVerbose(Logger::Red,
                               "Different POD memory after memcmp (typed)");
                            LglsVerbose(Logger::Red,
-                              "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
+                              "Most likely padding bytes filled with junk - pack your struct: ", NameOfRt<LT>());
                         }
                         return same;
                      }
@@ -182,7 +182,7 @@ namespace Langulus::Anyness::Component
                      return result;
                   }
                   else {
-                     LglsVerbose(Logger::Red, "Type not comparable (typed): ", NameOf<LT>());
+                     LglsVerbose(Logger::Red, "Type not comparable (typed): ", NameOfRt<LT>());
                      return false;
                   }
                }
@@ -382,7 +382,7 @@ namespace Langulus::Anyness::Component
             if constexpr (not Same<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
                // Types are different                                   
                LglsVerbose(Logger::Red, "Types differ (typed): ",
-                  NameOf<LT>(), " != ", NameOf<RT>());
+                  NameOfRt<LT>(), " != ", NameOfRt<RT>());
                return ::std::partial_ordering::unordered;
             }
             else {
@@ -415,7 +415,7 @@ namespace Langulus::Anyness::Component
                }
                else {
                   LglsVerbose(Logger::Red,
-                     "Type not comparable (typed): ", NameOf<LT>());
+                     "Type not comparable (typed): ", NameOfRt<LT>());
                   return ::std::partial_ordering::unordered;
                }
             }

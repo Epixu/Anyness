@@ -28,7 +28,7 @@ namespace Langulus
       else if constexpr (CT::DefineVerb<Decay<T>>)
          return RTTI::VMeta {RTTI::DefinitionVerb::Reflect<Decay<T>>()};
       else
-         return RTTI::DMeta {RTTI::DefinitionData::Reflect<Deref<T>>()};
+         return RTTI::DMeta {RTTI::DefinitionData::Reflect<CT::ReflectedAs<ShedDeref<T>>>()};
    }
 
    /// Get the meta definition of a constant, like an enum                    
@@ -75,6 +75,22 @@ namespace Langulus
    template<auto E>
    RTTI::CMeta MetaConstOf() {
       return RTTI::DefinitionConst::Reflect<E>();
+   }
+
+   /// Get the reflected token of a type. Alternative to NameOf, that has     
+   /// literally no compile-time overhead once T is reflected.                
+   /// Only condition is, that T must be reflectable.                         
+   template<class T>
+   Token TokenOf() {
+      return MetaOf<T>().GetName();
+   }
+
+   /// Get the reflected token of a type. Alternative to NameOf, that has     
+   /// literally no compile-time overhead once T is reflected.                
+   /// Only condition is, that E must be reflectable.                         
+   template<auto E>
+   Token TokenOf() {
+      return MetaOf<E>().GetName();
    }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

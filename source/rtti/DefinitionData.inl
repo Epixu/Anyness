@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "DefinitionData.hpp"
+#include "Langulus/Assume.hpp"
 #include "Langulus/Typenav.hpp"
 //#include "Langulus/CT/Integer.hpp"
 #include <Langulus/CT/Abstract.hpp>
@@ -144,8 +145,27 @@ namespace Langulus::RTTI
          "Can't reflect this function signature - "
          "make sure you're using a pointer to it instead");
 
-      constexpr auto cppname = CppNameOf<T>();
+      const auto cppname = CppNameOfRt<T>();
 
+      #if LANGULUS_COMPILER(MSVC)
+         LglsAssumeDev(not cppname.starts_with("`anonymous-namespace'"),
+            "Reflecting types inside anonymous namespaces is disallowed. "
+            "You would expect that the C++ standard demands, "
+            "that these namespaces have unique names generated, however that's not the case. "
+            "Instead, they will all end up in the same `anonymous-namespace', and result in very "
+            "subtle and infuriating bugs when types with the same name are reflected from multiple translation units."
+         );
+      #elif LANGULUS_COMPILER(CLANG)
+         LglsAssumeDev(not cppname.starts_with("(anonymous namespace)"),
+            "Reflecting types inside anonymous namespaces is disallowed. "
+            "You would expect that the C++ standard demands, "
+            "that these namespaces have unique names generated, however that's not the case. "
+            "Instead, they will all end up in the same (anonymous namespace), and result in very "
+            "subtle and infuriating bugs when types with the same name are reflected from multiple translation units."
+         );
+      #endif
+
+      /* constexpr cppname causes a huge spike in compile time :(
       #if LANGULUS_COMPILER(MSVC)
          static_assert(not cppname.starts_with("`anonymous-namespace'"),
             "Reflecting types inside anonymous namespaces is disallowed. "
@@ -163,6 +183,7 @@ namespace Langulus::RTTI
             "subtle and infuriating bugs when types with the same name are reflected from multiple translation units."
          );
       #endif
+      */
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
@@ -171,7 +192,7 @@ namespace Langulus::RTTI
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         const auto token = NameOf<T, false>();
+         const auto token = NameOfRt<T, false>();
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
             : Registry::RegisterData(cppname, token);
@@ -185,7 +206,7 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          DefinitionData& definition = s_definition.emplace(cppname);
-         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<T, false>());
+         definition.mNameOf = NameOfRt<T>();//Inner::NormalizeAtRuntime(NameOf<T, false>());
          LglsAssert(not definition.mNameOf.empty(),
             "Invalid data token is not allowed - "
             "you have equipped your type (or its base) with an empty CTTI_Named. "
@@ -547,12 +568,12 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
-         const auto cppname {CppNameOf<Decvq<T>>() + " const"};
+         const auto cppname = CppNameOfRt<Decvq<T>>() + " const";
          DefinitionData const* meta = Registry::GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
       
-         const auto token {NameOf<Decvq<T>, false>() + " const"};
+         const auto token = NameOfRt<Decvq<T>, false>() + " const";
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
             : Registry::RegisterData(cppname, token);
@@ -565,10 +586,10 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname {CppNameOf<Decvq<T>>() + " const"};
+         const auto cppname {CppNameOfRt<Decvq<T>>() + " const"};
          DefinitionData& definition = s_definition.emplace(cppname);
       
-         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
+         definition.mNameOf = NameOfRt<Decvq<T>>();//Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
          definition.mNameOf += " const";
          definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
@@ -668,7 +689,7 @@ namespace Langulus::RTTI
 
          // Recostruct pointer name and token at runtime to avoid a     
          // lot of compilation time                                     
-         cppname = CppNameOf<Decvq<Deptr<T>>>();
+         cppname = CppNameOfRt<Decvq<Deptr<T>>>();
          if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
          if constexpr (CT::Constant<T>) cppname += "* const";
          else cppname += "*";
@@ -676,7 +697,7 @@ namespace Langulus::RTTI
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         token = NameOf<Decvq<Deptr<T>>, false>();
+         token = NameOfRt<Decvq<Deptr<T>>, false>();
          if constexpr (CT::Constant<Deptr<T>>) token += " const";
          if constexpr (CT::Constant<T>) token += "* const";
          else token += "*";
@@ -694,13 +715,13 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          ::std::string cppname;
-         cppname = CppNameOf<Decvq<Deptr<T>>>();
+         cppname = CppNameOfRt<Decvq<Deptr<T>>>();
          if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
          if constexpr (CT::Constant<T>) cppname += "* const";
          else cppname += "*";
 
          DefinitionData& definition = s_definition.emplace(cppname);
-         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
+         definition.mNameOf = NameOfRt<Decvq<Deptr<T>>();//Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
          if constexpr (CT::Constant<Deptr<T>>)
             definition.mNameOf += " const";
          if constexpr (CT::Constant<T>)
@@ -757,8 +778,8 @@ namespace Langulus::RTTI
          definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
          auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
          LglsAssumeDev(deptr->mConst == CT::Constant<DenserT>,
-            "Deptr didn't preserve mutability, reflecting ", NameOf<DenserT>(),
-            " (reflected as ", NameOf<CT::ReflectedAs<DenserT>>(),
+            "Deptr didn't preserve mutability, reflecting ", NameOfRt<DenserT>(),
+            " (reflected as ", NameOfRt<CT::ReflectedAs<DenserT>>(),
             ") as ", deptr->mNameOf
          );
 
@@ -891,13 +912,13 @@ namespace Langulus::RTTI
          ::std::string cppname;
          ::std::string token;
          DefinitionData const* meta;
-         cppname = CppNameOf<Decvq<T>>();
+         cppname = CppNameOfRt<Decvq<T>>();
          if constexpr (CT::Constant<T>) cppname += " const";
          meta = Registry::GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         token = NameOf<Decvq<T>, false>();
+         token = NameOfRt<Decvq<T>, false>();
          if constexpr (CT::Constant<T>) token += " const";
 
          DefinitionData& definition = meta
@@ -913,10 +934,10 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          ::std::string cppname;
-         cppname = CppNameOf<Decvq<T>>();
+         cppname = CppNameOfRt<Decvq<T>>();
 
          DefinitionData& definition = s_definition.emplace(cppname);
-         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
+         definition.mNameOf = NameOfRt<Decvq<T>>();//Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
          definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
       
@@ -970,7 +991,7 @@ namespace Langulus::RTTI
          auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
          LglsAssumeDev(deptr->mConst == CT::Constant<DenserT>,
             "Deptr didn't preserve mutability, reflecting ", NameOf<DenserT>(),
-            " (reflected as ", NameOf<CT::ReflectedAs<DenserT>>(),
+            " (reflected as ", NameOfRt<CT::ReflectedAs<DenserT>>(),
             ") as ", deptr->mNameOf
          );
 
@@ -1239,9 +1260,15 @@ namespace Langulus::RTTI
          "Can't have qualifiers here");
       static_assert(not Akin<T, BASE>,
          "Can't have base of the same type as the derived");
-      static_assert(NameOf<T, false>() != NameOf<BASE, false>(),
+
+      /*static_assert(NameOf<T, false>() != NameOf<BASE, false>(),
          "T and BASE have the same NameOf, possibly due to inheritance. "
-         "Specify a different CTTI::Named<T> or T::CTTI_Named for each!");
+         "Specify a different CTTI::Named<T> or T::CTTI_Named for each!");*/
+
+      LglsAssumeDev(NameOfRt<T, false>() != NameOfRt<BASE, false>(),
+         "T and BASE have the same NameOf, possibly due to inheritance. "
+         "Specify a different CTTI::Named<T> or T::CTTI_Named for each!"
+      );
 
       Base result;
       result.type = Reflect<BASE>();

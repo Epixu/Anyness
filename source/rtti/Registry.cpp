@@ -10,7 +10,8 @@
 #include "DefinitionTag.hpp"
 #include "DefinitionConst.hpp"
 #include "DefinitionVerb.hpp"
-#include <ranges>
+#include <Langulus/NameOf-Runtime.hpp>
+//#include <ranges>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #error "This file shouldn't be compiled if MANAGED_REFLECTION is disabled"
@@ -74,6 +75,10 @@ namespace Langulus::RTTI
       auto GetMetaByID(const auto& where, size_t id) assumptious {
          LglsAssumeDevAndOptimize(id != 0, "Invalid ID");
          return where[id-1];
+      }
+
+      constexpr Token ToLastToken(const Token& token) noexcept {
+         return token.substr(Inner::FindLastTokenRt(token));
       }
    }
    
@@ -411,7 +416,7 @@ namespace Langulus::RTTI
 
       // Make sure scripting token doesn't conflict with other metas    
       // that use a capital first letter, such as constants             
-      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      const auto token = Inner::NormalizeRt(token_messy);
       LglsAssert(not token.empty(),
          "Invalid data token is not allowed - "
          "you have equipped your type (or its base) with an empty CTTI_Named. "
@@ -445,7 +450,7 @@ namespace Langulus::RTTI
       mMetaDataByToken[meta->mNameOfLowercased] = meta;
 
       // Index by last lowercase token                                  
-      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfLowercased)].insert(meta);
+      mMetaAmbiguous[ToLastToken(meta->mNameOfLowercased)].insert(meta);
       return *meta;
    }
 
@@ -479,7 +484,7 @@ namespace Langulus::RTTI
 
       // Make sure scripting token doesn't conflict with other metas    
       // that use a capital first letter, such as data definitions      
-      auto token = Inner::NormalizeAtRuntime(token_messy);
+      auto token = Inner::NormalizeRt(token_messy);
       LglsAssert(not token.empty(),
          "Invalid constant token is not allowed - "
          "you have equipped your constant with an empty CTTI::NamedValue. "
@@ -517,7 +522,7 @@ namespace Langulus::RTTI
       mMetaConstantsByToken[meta->mNameOfLowercased] = meta;
 
       // Index by last lowercase token                                  
-      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfLowercased)].insert(meta);
+      mMetaAmbiguous[ToLastToken(meta->mNameOfLowercased)].insert(meta);
       return *meta;
    }
 
@@ -577,7 +582,7 @@ namespace Langulus::RTTI
       mMetaTagsByToken[meta->mNameOfLowercased] = meta;
 
       // Index by last lowercase token                                  
-      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
+      mMetaAmbiguous[ToLastToken(meta->mNameOf)].insert(meta);
       return *meta;
    }
 
@@ -705,9 +710,9 @@ namespace Langulus::RTTI
          mMetaVerbsByToken[meta->mOperatorReverseStripped] = meta;
 
       // Index by last lowercase token                                  
-      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
+      mMetaAmbiguous[ToLastToken(meta->mNameOf)].insert(meta);
       if (not meta->mNameOfReverse.empty())
-         mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfReverse)].insert(meta);
+         mMetaAmbiguous[ToLastToken(meta->mNameOfReverse)].insert(meta);
       if (not meta->mOperatorStripped.empty())
          mMetaAmbiguous[meta->mOperatorStripped].insert(meta);
       if (not meta->mOperatorReverseStripped.empty())

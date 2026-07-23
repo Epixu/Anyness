@@ -51,7 +51,7 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the verb might  
          // have been reflected previously in another shared library    
-         const auto cppname = CppNameOf<T>();
+         const auto cppname = CppNameOfRt<T>();
          DefinitionVerb const* meta = Registry::GetMetaVerbByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
@@ -72,7 +72,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname = CppNameOf<T>();
+         const auto cppname = CppNameOfRt<T>();
          DefinitionVerb& definition = s_definition.emplace(cppname);
 
          definition.mNameOf = Inner::ToLowercase(NameOfVerb<T>());

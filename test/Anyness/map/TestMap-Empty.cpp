@@ -378,7 +378,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             [[maybe_unused]] stdmap src_std {1, *element};
-            BenchmarkMapStd("Empty/AssignAbsorb(Refer(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Refer(" + NameOfRt<E>() + "))", 30, 100,
                T temp,              temp.AssignAbsorb(*element),
                stdmap temp_std,     temp_std = src_std;
             );
@@ -435,7 +435,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkMapStd("Empty/AssignAbsorb(Move(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Move(" + NameOfRt<E>() + "))", 30, 100,
                auto movable = *element;
                T temp,                    temp.AssignAbsorb(::std::move(movable)),
                stdmap movable (1, 555);
@@ -485,7 +485,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetAllocation());
 
             [[maybe_unused]] ::std::vector<E> src_std (1, *element);
-            BenchmarkMapStd("Empty/AssignAbsorb(Copy(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Copy(" + NameOfRt<E>() + "))", 30, 100,
                T temp,              temp.AssignAbsorb(Copy(*element)),
                stdmap temp_std,     temp_std = src_std
             );
@@ -532,7 +532,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetAllocation());
 
             [[maybe_unused]] stdmap src_std ({*element});
-            BenchmarkMapStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Clone(" + NameOfRt<E>() + "))", 30, 100,
                T temp,              temp.AssignAbsorb(Clone(*element)),
                stdmap temp_std,     temp_std = src_std
             );
@@ -579,7 +579,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE_FALSE(pack.GetAllocation());
 
             [[maybe_unused]] stdmap src_std (1, *element);
-            BenchmarkMapStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Disown(" + NameOfRt<E>() + "))", 30, 100,
                T temp,              temp.AssignAbsorb(Disown(*element)),
                stdmap temp_std,     temp_std = src_std
             );
@@ -632,7 +632,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkMapStd("Empty/AssignAbsorb(Abandon(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Abandon(" + NameOfRt<E>() + "))", 30, 100,
                auto movable = *element;
                T temp,                    temp.AssignAbsorb(Abandon(movable)),
                stdmap movable (1, 555);

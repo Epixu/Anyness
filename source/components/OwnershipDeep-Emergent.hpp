@@ -1056,7 +1056,7 @@ namespace Langulus::Anyness::Component
             using T = Decvq<Deref<Deint<I>>>;
             LglsAssumeDev((self.template IsSame<T, SID>()),
                "Type mismatch", ": ", self.template GetType<SID>(),
-               " is not same as ", NameOf<T>()
+               " is not same as ", TokenOf<T>()
             );
             #endif
 

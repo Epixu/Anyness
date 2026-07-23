@@ -27,7 +27,7 @@ using namespace Anyness;
    /// MARK: Benchmark                                                        
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkAny(func, tolerance, my_init, my) { \
-      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |" + NameOf<T>() + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + TokenOf<E>() + ") |" + TokenOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -47,7 +47,7 @@ using namespace Anyness;
    /// Perform two persistent benchmarks across builds - one for Any and      
    /// one for std::any. Make sure they don't deviate a lot.                  
    #define BenchmarkAnyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
-      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |" + NameOf<T>() + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + TokenOf<E>() + ") |" + TokenOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -61,7 +61,7 @@ using namespace Anyness;
          } \
       } \
       i = 0; \
-      const auto token_std = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |std::any|"; \
+      const auto token_std = ::std::string("Test/") + func + "(" + TokenOf<E>() + ") |std::any|"; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          theirs_init; \
          theirs; \
@@ -108,7 +108,7 @@ void Common_GapTest_Inner(SizeSummary& summary) {
          // Scan all stack requests                                        
          using R = typename C::StackRequest;
          if constexpr (CT::NotVoid<R>) {
-            Logger::Info(NameOf<C>(), " component reserves ",
+            Logger::Info(NameOfRt<C>(), " component reserves ",
                sizeof(R), " bytes on the stack");
             summary.stack_size += sizeof(R);
          }
@@ -120,7 +120,7 @@ void Common_GapTest_Inner(SizeSummary& summary) {
          if constexpr (CT::NotVoid<R>) {
             if constexpr (Com::IsRequestModifier<R>) {
                constexpr size_t S = sizeof(TypeOf<R>);
-               Logger::Info(NameOf<C>(), " component reserves ",
+               Logger::Info(NameOfRt<C>(), " component reserves ",
                   S, " bytes on the heap ");
 
                if constexpr (R::AllocatedPerElement) {
@@ -142,7 +142,7 @@ void Common_GapTest_Inner(SizeSummary& summary) {
             }
             else {
                constexpr size_t S = sizeof(R);
-               Logger::Info(NameOf<C>(), " component reserves ",
+               Logger::Info(NameOfRt<C>(), " component reserves ",
                   S, " bytes on the heap");
                summary.heap_size += S;
             }
@@ -170,15 +170,15 @@ void Common_GapTest() {
 
    WARN(matched_bytes == sizeof(T));
 
-   auto s = Logger::InfoSection(NameOf<T>(), " gap test:");
+   auto s = Logger::InfoSection(NameOfRt<T>(), " gap test:");
    if (matched_bytes != sizeof(T)) {
       Logger::Warning("Padding mask (FF corresponds to padding): ");
       Logger::Warning(" ");
       for (auto b : unininitialized)
          Logger::Append(Logger::Hex(b));
    }
-   Logger::Info("Size of ", NameOf<COMPARE_WITH>(), " container is: ", sizeof(COMPARE_WITH), " bytes");
-   Logger::Info("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
+   Logger::Info("Size of ", NameOfRt<COMPARE_WITH>(), " container is: ", sizeof(COMPARE_WITH), " bytes");
+   Logger::Info("Size of ", NameOfRt<T>(), " container is: ", sizeof(T), " bytes");
 
    SizeSummary summary;
    ForEach(typename T::ComponentList{}, [&]<class C> {
@@ -218,9 +218,14 @@ namespace doctest
    template<Langulus::CT::Container T> requires Langulus::CT::Convertible<T, Langulus::Anyness::Text>
    struct StringMaker<T> {
       static String convert(T const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<T>() + "(" + ::Langulus::Convert<Langulus::Anyness::Text>(value) + ")"
-         ));
+         if constexpr (CT::Reflectable<T>)
+            return toString(static_cast<::std::string>(
+               Langulus::Anyness::Text(TokenOf<T>()) + "(" + ::Langulus::Convert<Langulus::Anyness::Text>(value) + ")"
+            ));
+         else
+            return toString(static_cast<::std::string>(
+               Langulus::Anyness::Text(NameOfRt<T>()) + "(" + ::Langulus::Convert<Langulus::Anyness::Text>(value) + ")"
+            ));
       }
    };
 }

@@ -129,8 +129,9 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta);
    REQUIRE(meta != nullptr);
    REQUIRE(meta.GetHash() != Hash {});
-   REQUIRE(meta.GetCppName() == CppNameOf<Deref<T>>());
-   REQUIRE(meta.GetName() == NameOf<Deref<T>>());
+   REQUIRE(meta.GetCppName() == CppNameOfRt<Deref<T>>());
+   REQUIRE(meta.GetName() == NameOfRt<Deref<T>>());
+   REQUIRE(meta.GetName() == TokenOf<Deref<T>>());
    REQUIRE(meta.GetInfo() == InfoOf<Deref<T>>());
    REQUIRE(meta.GetFiles() == FilesOf<Deref<T>>());
    REQUIRE(meta.GetSuffix() == SuffixOf<Deref<T>>());

@@ -59,7 +59,7 @@ namespace Langulus::Anyness::Component
       /// Get the reflected type name                                         
       template<Cid SID = ID> requires (SID == ID)
       constexpr auto GetName() const noexcept {
-         return NameOf<TYPE>();
+         return TokenOf<TYPE>();
       }
 
       /// Statically typed containers are always typed                        

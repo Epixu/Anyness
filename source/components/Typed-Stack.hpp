@@ -98,7 +98,7 @@ namespace Langulus::Anyness::Component
          if constexpr (TypeErased)
             return ThisCom::GetTypeInner().GetName();
          else
-            return NameOf<TYPE>();
+            return TokenOf<TYPE>();
       }
 
       /// Check if block has a data type                                      

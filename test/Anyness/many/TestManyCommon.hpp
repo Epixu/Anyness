@@ -14,7 +14,7 @@
 #if LANGULUS(BENCHMARK)
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkMany(func, tolerance, my_init, my) { \
-      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |" + NameOf<T>() + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + TokenOf<E>() + ") |" + TokenOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -34,7 +34,7 @@
    /// Perform two persistent benchmarks across builds - one for Any and      
    /// one for std::any. Make sure they don't deviate a lot.                  
    #define BenchmarkManyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
-      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |" + NameOf<T>() + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + TokenOf<E>() + ") |" + TokenOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -48,7 +48,7 @@
          } \
       } \
       i = 0; \
-      const auto token_std = ::std::string("Test/") + func + "(" + NameOf<E>() + ") |std::vector|"; \
+      const auto token_std = ::std::string("Test/") + func + "(" + TokenOf<E>() + ") |std::vector|"; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          theirs_init; \
          theirs; \

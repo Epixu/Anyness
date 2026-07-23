@@ -459,6 +459,13 @@ namespace Langulus
             *(d++) = *(s++); 
          return *this;
       }
+
+      template<CT::LiteralChar C>
+      constexpr Literal& operator += (C rhs) noexcept {
+         auto d = data() + size();
+         *d = rhs;
+         return *this;
+      }
    };
 
    /// MARK: CTAD                                                             

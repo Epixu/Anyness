@@ -1005,7 +1005,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
             }
 
             BenchmarkSet(
-               std::string("Absorb/") + intent + "/Emplace(" + static_cast<std::string>(NameOf<E>()) + ")", 30,
+               std::string("Absorb/") + intent + "/Emplace(" + static_cast<std::string>(NameOfRt<E>()) + ")", 30,
                auto movable1 = *element;
                auto movable2 = *originalElement;
                a.Emplace(::std::move(movable1)),   a.Emplace(::std::move(movable2))
@@ -1043,7 +1043,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Map/TMap", TestType
                REQUIRE(a.GetReserved() >= 1);
 
                BenchmarkSet(
-                  std::string("Absorb/") + intent + "/Emplace(Describe(" + static_cast<std::string>(NameOf<E>()) + "))", 30,
+                  std::string("Absorb/") + intent + "/Emplace(Describe(" + static_cast<std::string>(NameOfRt<E>()) + "))", 30,
                   auto movable1 = *element;
                   a.Emplace(::std::move(movable1)),      a.Emplace(Describe{descriptor})
                );

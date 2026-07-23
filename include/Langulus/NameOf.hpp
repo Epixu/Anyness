@@ -10,7 +10,7 @@
 #include "CT/Named.hpp"
 #include "Utils/ASCII.hpp"
 #include <string>
-#include <stdexcept>
+//#include <stdexcept>
 
 
 namespace Langulus::CTTI
@@ -438,58 +438,6 @@ namespace Langulus::RTTI
          return (result < SRC.ArraySize ? SRC.ArraySize : result);
       }
       
-      /// Normalize a type/enum/function name at runtime                      
-      ///   @tparam SRC the token to normalize                                
-      ///   @return new literal                                               
-      inline ::std::string NormalizeAtRuntime(const Token& SRC) {
-         if (not IsASCII(SRC))
-            throw ::std::runtime_error {"Token isn't ASCII"};
-         ::std::string result {SRC};
-   
-         for (const auto& pattern : ReplacePatterns) {
-            size_t fill = 0;
-            size_t prev = 0;
-            size_t curr = result.find(pattern.what, 0);
-            size_t already_replaced = not pattern.with.empty()
-               ? result.find(pattern.with, 0)
-               : result.npos;
-            if (curr == result.npos or not IsTransition(result, curr, curr + pattern.what.size())
-            or (already_replaced != result.npos and curr == already_replaced))
-               continue;
-            
-            ::std::string buffer;
-            buffer.resize(result.size());
-            do {
-               while (curr > prev) {
-                  // Copy anything we've skipped                        
-                  buffer[fill++] = result[prev++];
-               }
-
-               // Replace                                               
-               buffer.resize(curr + pattern.with.size());
-               for (char c : pattern.with)
-                  buffer[fill++] = c;
-               prev += pattern.what.size();
-               
-               curr = result.find(pattern.what, prev);
-               already_replaced = not pattern.with.empty()
-                  ? result.find(pattern.with, prev)
-                  : result.npos;
-            }
-            while (curr != result.npos
-            and   (already_replaced == result.npos or curr != already_replaced));
-            
-            while (prev < result.size()) {
-               // Copy any remaining trailing data                      
-               buffer.resize(fill + (result.size() - prev));
-               buffer[fill++] = result[prev++];
-            }
-            
-            result = LglsMov(buffer);
-         }
-         return result;
-      }
-      
       /// Normalize a type/enum/function name                                 
       ///   @tparam SRC the literal to normalize                              
       ///   @return new literal                                               
@@ -574,6 +522,21 @@ namespace Langulus::RTTI
 
 namespace Langulus
 {
+   ///                                                                        
+   ///   @attention The following functions are 100% compile-time executed,   
+   /// and you should rarely use them because they are quite taxing on        
+   /// compilation time!                                                      
+   ///   Use CppNameOfRt/LastCppNameOfRt/NameOfRt instead, by including       
+   /// NameOf-Runtime.hpp if you can for a faster-compiled, but               
+   /// runtime-costlier alternative. Or you can do a combination of both to   
+   /// balance things out, like:                                              
+   ///   `std::string token = Inner::NormalizeRt(CppNameOf<T, false>());`     
+   /// The above code will use CppNameOf but avoid compile-time normalization,
+   /// which is then done at runtime in order to reduce compilation time.     
+   ///   Normalization is, of course, completely optional as well, if you     
+   /// don't care about consistency across different compilers.               
+   ///                                                                        
+
    /// MARK: CppNameOf                                                        
    /// Get the name of a type, templated or not, with consistently named      
    /// template arguments, even if nested, at compile-time                    

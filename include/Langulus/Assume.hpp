@@ -8,7 +8,7 @@
 #pragma once
 #include "Except.hpp"
 #include "Logger.hpp"
-#include "NameOf.hpp"
+#include "NameOf-Runtime.hpp"
 
 #if LANGULUS(DEBUG)
    #include "Utils/DebugBreak.hpp"
@@ -462,12 +462,11 @@ namespace fmt
 
       template<class CONTEXT>
       auto format([[maybe_unused]] T const& e, CONTEXT& ctx) const {
-         constexpr auto name = ::Langulus::NameOf<T>();
+         ::Langulus::Token name = ::Langulus::NameOfRt<T>();
          #if LANGULUS(DEBUG)
-            return format_to(ctx.out(), "{}({} at {})",
-               static_cast<::Langulus::Token>(name), e.mMessage, e.mLocation);
+            return format_to(ctx.out(), "{}({} at {})", name, e.mMessage, e.mLocation);
          #else
-            return format_to(ctx.out(), "{}", static_cast<::Langulus::Token>(name));
+            return format_to(ctx.out(), "{}", name);
          #endif
       }
    };

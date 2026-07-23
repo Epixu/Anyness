@@ -173,6 +173,7 @@ add_langulus_library(LangulusAnyness
            $<$<BOOL:${statistic_enabled}>:source/fractalloc/Statistics.cpp>
            $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
            source/rtti/DefinitionData.cpp
+           source/NameOf-Runtime.cpp
 )
 
 if(MSVC AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")

@@ -16,7 +16,7 @@
 #if LANGULUS(BENCHMARK)
    /// Perform a persistent benchmark across builds and verify performance    
    #define BenchmarkSet(func, tolerance, my_init, my) { \
-      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() ") |" + NameOf<T>() + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + TokenOf<E>() ") |" + TokenOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -36,7 +36,7 @@
    /// Perform two persistent benchmarks across builds - one for Set and      
    /// one for std::unordered_set. Make sure they don't deviate in a bad way. 
    #define BenchmarkSetStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
-      const auto token = ::std::string("Test/") + func + "(" + NameOf<E>() ") |" + NameOf<T>() + "|"; \
+      const auto token = ::std::string("Test/") + func + "(" + TokenOf<E>() ") |" + TokenOf<T>() + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          my_init; \
@@ -50,7 +50,7 @@
          } \
       } \
       i = 0; \
-      const auto token_std = ::std::string("Test/") + func + "(" + NameOf<E>() ") |std::unordered_set|"; \
+      const auto token_std = ::std::string("Test/") + func + "(" + TokenOf<E>() ") |std::unordered_set|"; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
          theirs_init; \
          theirs; \

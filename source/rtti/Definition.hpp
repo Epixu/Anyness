@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Langulus/HashOf.hpp>
-#include <Langulus/NameOf.hpp>
+//#include <Langulus/NameOf.hpp>
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
 
@@ -16,15 +16,6 @@
 #endif
 
 #define LANGULUS_META_VERBOSITY_MASTER_SWITCH() 0
-
-#if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_RTTI)
-   #define LANGULUS_API_RTTI() LANGULUS_EXPORT()
-#else
-   #define LANGULUS_API_RTTI() LANGULUS_IMPORT()
-#endif
-
-/// Make the rest of the code aware, that Langulus::RTTI has been included    
-#define LANGULUS_LIBRARY_RTTI() 1
 
 
 namespace Langulus::RTTI
@@ -102,7 +93,8 @@ namespace Langulus::RTTI::Inner
    /// a template <>, and skip forward to that                                
    ///   @param token the token to scan                                       
    ///   @return the last token                                               
-   constexpr Token ToLastToken(const Token& token) noexcept {
+   /*constexpr Token ToLastToken(const Token& token) noexcept {
+      return token.substr(Inner::FindLastTokenRt(token));
       size_t depth = 0;
       for (size_t i = token.size() - 1; i < token.size(); --i) {
          switch (token[i]) {
@@ -125,7 +117,7 @@ namespace Langulus::RTTI::Inner
          }
       }
       return token;
-   }
+   }*/
 
    ///                                                                        
    ///   Abstract definition                                                  

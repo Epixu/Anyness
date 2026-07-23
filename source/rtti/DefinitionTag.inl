@@ -51,7 +51,7 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the tag might   
          // have been reflected previously in another shared library    
-         const auto cppname = CppNameOf<T>();
+         const auto cppname = CppNameOfRt<T>();
          DefinitionTag const* meta = Registry::GetMetaTagByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
@@ -69,7 +69,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname = CppNameOf<T>();
+         const auto cppname = CppNameOfRt<T>();
          DefinitionTag& definition = s_definition.emplace(cppname);
 
          definition.mNameOf = Inner::ToLowercase(NameOfTag<T>());

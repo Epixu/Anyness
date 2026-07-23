@@ -819,7 +819,7 @@ namespace Langulus::CTTI
          "Strip all decorations on all indirections first");
 
       static constexpr auto Convert(ConstAll<T&> from) -> Anyness::Text {
-         return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+         return Anyness::Text(TokenOf<T>()) + "(" + Anyness::Text::Hex<true>(from) + ")";
       }
    };
 
