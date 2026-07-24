@@ -142,7 +142,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
         fetch_external_module(
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-            GIT_TAG        tags/12.2.0
+            GIT_TAG        tags/11.2.0
         )
     endif()
 
