@@ -150,7 +150,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
         # Configure and link simdutf library                                    
         set(SIMDUTF_TESTS OFF)
         set(SIMDUTF_TOOLS OFF)
-        set(SIMDUTF_ICONV OFF)
+        #set(SIMDUTF_ICONV OFF)
         fetch_external_module(
             simdutf
             GIT_REPOSITORY https://github.com/simdutf/simdutf.git
