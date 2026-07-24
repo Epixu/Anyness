@@ -398,7 +398,7 @@ namespace Langulus::Anyness
       static Text Hex(const auto& from) {
          Text result;
          result.AllocateFresh(sizeof(from) * 2);
-         auto from_bytes = reinterpret_cast<const std::byte*>(&from);
+         auto from_bytes = reinterpret_cast<const char*>(&from);
          auto to_bytes = result.GetRaw();
          for (size_t i = 0; i < sizeof(from); ++i) {
             if constexpr (REVERSE)

@@ -142,7 +142,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
         fetch_external_module(
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-            GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master	
+            GIT_TAG        tags/12.2.0
         )
     endif()
 
@@ -154,7 +154,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
         fetch_external_module(
             simdutf
             GIT_REPOSITORY https://github.com/simdutf/simdutf.git
-            GIT_TAG        ca7acbcea967b5dcbab490066e99e3a6e6925539 # 9.0.0	
+            GIT_TAG        tags/v9.0.0	
         )
     endif()
 endif()
@@ -187,7 +187,7 @@ target_include_directories(LangulusAnyness PUBLIC .)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
 target_link_libraries(LangulusAnyness
     PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>
-           $<$<BOOL:${LANGULUS_OPTION_UNICODE}>:simdutf>
+           $<$<BOOL:${LANGULUS_OPTION_UNICODE}>:simdutf::simdutf>
 )
 #target_compile_options(LangulusAnyness PUBLIC -Wl,--icf=all)
 

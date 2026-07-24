@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Core.hpp"
+#include <ctime>
 
 #if LANGULUS_FEATURE(LOGGING)
 #include <fmt/format.h>
@@ -205,9 +206,15 @@ namespace Langulus::Logger
       LANGULUS(INLINED)
       void FmtPrintTime() noexcept {
          try {
-            using Clock = ::std::chrono::system_clock;
-            const auto now = Clock::to_time_t(Clock::now());
-            fmt::print("{:%T}", fmt::localtime(now));
+            const auto utc_now = std::chrono::system_clock::now();
+            const auto utc_time_t = std::chrono::system_clock::to_time_t(utc_now);
+            std::tm tm_local = {};
+            #ifdef _MSC_VER
+               localtime_s(&tm_local, &utc_time_t);
+            #else
+               localtime_r(&utc_time_t, &tm_local);
+            #endif
+            fmt::print("{:%T}", tm_local);
          }
          catch (...) { fmt::print("<timestamp error>"); }
       }
@@ -228,10 +235,10 @@ namespace Langulus::Logger
    ///   @return the hex string in the form of std::array                     
    auto Hex(const auto& from) {
       ::std::array<char, sizeof(from) * 2> result {};
-      auto from_bytes = reinterpret_cast<const std::byte*>(&from);
+      auto from_bytes = reinterpret_cast<const char*>(&from);
       auto to_bytes = result.data();
       for (size_t i = 0; i < sizeof(from); ++i)
-         ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[sizeof(from) - i - 1]);
+         ::fmt::format_to_n(to_bytes + i * 2, 2, fmt::runtime("{:02X}"), from_bytes[sizeof(from) - i - 1]);
       return result;
    }
    

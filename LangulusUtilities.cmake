@@ -19,12 +19,13 @@ using default: ${LANGULUS_EXTERNAL_DIRECTORY}")
 manually if you want to redownload)")
    else()
       unset(FETCHCONTENT_SOURCE_DIR_${UPPERCASE_NAME} CACHE)
-      message(STATUS "[LANGULUS] Freshly downloading external library ${NAME}...")
+      message(STATUS "[LANGULUS] Freshly downloading external library ${NAME} from ${REPO} ...")
    endif()
 
    FetchContent_Declare(
       ${NAME}
       GIT_REPOSITORY  ${REPO}
+      GIT_SHALLOW     TRUE
       GIT_TAG         ${TAG}
       SOURCE_DIR      "${LANGULUS_EXTERNAL_DIRECTORY}/${NAME}-src"
       SUBBUILD_DIR    "${CMAKE_BINARY_DIR}/external/${NAME}-subbuild"

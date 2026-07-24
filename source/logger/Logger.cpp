@@ -8,7 +8,6 @@
 #include "simdutf/implementation.h"
 #include <Langulus/Logger.hpp>
 #include <string>
-#include <cstring>
 #include <simdutf.h>
 
 #if LANGULUS_OS(WINDOWS)
@@ -52,8 +51,11 @@ State::~State() {}
 ///   @return the timestamp text as {:%F %T %Z}                               
 ::std::string Interface::GetAdvancedTime() noexcept {
    try {
-      const auto now = Clock::to_time_t(Clock::now());
-      return fmt::format("{:%F %T %Z}", fmt::localtime(now));
+      //const auto now = Clock::to_time_t(Clock::now());
+      //return fmt::format("{:%F %T %Z}", fmt::localtime(now));
+
+      const auto localTime = Clock::now();
+      return fmt::format("{:%F %T %Z}", localTime);
    }
    catch (...) { return "<advanced time error>"; }
 }
@@ -62,8 +64,15 @@ State::~State() {}
 ///   @return the timestamp text as {:%T}                                     
 ::std::string Interface::GetSimpleTime() noexcept {
    try {
-      const auto now = Clock::to_time_t(Clock::now());
-      return fmt::format("{:%T}", fmt::localtime(now));
+      const auto utc_now = Clock::now();
+      const auto utc_time_t = Clock::to_time_t(utc_now);
+      std::tm tm_local = {};
+      #ifdef _MSC_VER
+         localtime_s(&tm_local, &utc_time_t);
+      #else
+         localtime_r(&utc_time_t, &tm_local);
+      #endif
+      return fmt::format("{:%T}", tm_local);
    }
    catch (...) { return "<simple time error>"; }
 }

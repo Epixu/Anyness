@@ -38,9 +38,9 @@ void ToHTML::Write(::std::string_view const& text) const noexcept {
 void ToHTML::Write(Style style) const noexcept {
    bool header = false;
    if (style.has_foreground()) {
-      const auto fg = style.get_foreground().value.term_color;
+      const auto fg = style.get_foreground().value();
       if (not GlobalState.mDefaultStyle.has_foreground()
-      or fg != GlobalState.mDefaultStyle.get_foreground().value.term_color) {
+      or fg != GlobalState.mDefaultStyle.get_foreground().value()) {
          if (not header) {
             mFile << "</span><span class=\"";
             header = true;
@@ -52,9 +52,9 @@ void ToHTML::Write(Style style) const noexcept {
    }
 
    if (style.has_background()) {
-      const auto bg = style.get_background().value.term_color;
+      const auto bg = style.get_background().value();
       if (not GlobalState.mDefaultStyle.has_background()
-      or bg != GlobalState.mDefaultStyle.get_background().value.term_color) {
+      or bg != GlobalState.mDefaultStyle.get_background().value()) {
          if (not header) {
             mFile << "</span><span class=\"";
             header = true;
@@ -196,12 +196,12 @@ void ToHTML::WriteHeader() const {
       mFile << "      line-height: 9px;\n";
 
       if (GlobalState.mDefaultStyle.has_foreground()) {
-         auto c = GlobalState.mDefaultStyle.get_foreground().value.term_color;
+         auto c = GlobalState.mDefaultStyle.get_foreground().value();
          mFile << "      " << foregroundColors[static_cast<fmt::terminal_color>(c)] << "\n";
       }
 
       if (GlobalState.mDefaultStyle.has_background()) {
-         auto c = GlobalState.mDefaultStyle.get_background().value.term_color;
+         auto c = GlobalState.mDefaultStyle.get_background().value();
          mFile << "      " << backgroundColors[static_cast<fmt::terminal_color>(c)] << "\n";
       }
 
