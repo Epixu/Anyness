@@ -187,9 +187,9 @@ bool compare_or_canonize(tool_map& canon, tool_map const& dirty, difference& dif
                if (f.second.peak_memory_kb)
                   peak_memory_score = 1.0 - static_cast<double>(found_f->second.peak_memory_kb) / static_cast<double>(f.second.peak_memory_kb);
 
-               if ((fabs(total_time_score)  > tolerance and abs(diff_file.total_time_microseconds) > minimal_time_change)
-               or  (fabs(user_time_score)   > tolerance and abs(diff_file.user_time_microseconds)  > minimal_time_change)
-               or  (fabs(peak_memory_score) > tolerance and abs(diff_file.peak_memory_kb) > minimal_memory_change)) {
+               if ((std::abs(total_time_score)  > tolerance and std::abs(diff_file.total_time_microseconds) > minimal_time_change)
+               or  (std::abs(user_time_score)   > tolerance and std::abs(diff_file.user_time_microseconds)  > minimal_time_change)
+               or  (std::abs(peak_memory_score) > tolerance and std::abs(diff_file.peak_memory_kb) > minimal_memory_change)) {
                   auto& anomalous_tool = diff.anomalies[d.first];
                   auto& anomalous_file = anomalous_tool.data_per_file[f.first];
 
@@ -298,16 +298,16 @@ int report_anomalies(difference const& diff) {
       for (auto& f : t.second.data_per_file) {
          Logger::Line(f.first, ": ");
 
-         if (f.second.total_time_microseconds < 0)
+         if (f.second.total_time_microseconds < -minimal_time_change)
             Logger::Line(Logger::Green, "   ++ build time improved by ", f.second.total_time_microseconds, " microseconds");
-         else if (f.second.total_time_microseconds > 0){
+         else if (f.second.total_time_microseconds > minimal_time_change) {
             Logger::Line(Logger::Red, "   -- build time worsened by ", f.second.total_time_microseconds, " microseconds");
             ++bad_anomalies;
          }
 
-         if (f.second.peak_memory_kb < 0)
+         if (f.second.peak_memory_kb < -minimal_memory_change)
             Logger::Line(Logger::Green, "   ++ build RAM usage reduced by ", f.second.peak_memory_kb, " KB");
-         else if (f.second.peak_memory_kb > 0){
+         else if (f.second.peak_memory_kb > minimal_memory_change) {
             Logger::Line(Logger::Red, "   -- build RAM usage increased by ", f.second.peak_memory_kb, " KB");
             ++bad_anomalies;
          }
