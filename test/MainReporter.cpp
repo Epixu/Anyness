@@ -16,6 +16,9 @@
 using namespace Langulus;
 namespace FS = std::filesystem;
 
+constexpr long long minimal_time_change = 1'000'000;  // 1 second
+constexpr long long minimal_memory_change = 32'768;    // 32 MB
+
 struct tool {
    struct data {
       long long total_time_microseconds;
@@ -36,11 +39,14 @@ struct difference {
 };
 
 void populate_tool_map(tool_map& map, FS::path const& file);
-bool compare_or_canonize(tool_map& dst, tool_map const& src, difference& diff, float tolerance = 0.3f);
+bool compare_or_canonize(tool_map& dst, tool_map const& src, difference& diff, float tolerance = 0.1f);
 void write_new_canon(tool_map const& canon, FS::path const& file);
-int report_anomalies(difference const& diff, FS::path const& file);
+int report_anomalies(difference const& diff);
 
 int main(int argc, char* argv[]) {
+   Logger::ToHTML html_anomalies {"anomalies.htm"};
+   Logger::AttachDuplicator(&html_anomalies);
+
    LglsAssert(argc == 5, "Wrong number of arguments");
    FS::path report;
    FS::path canon;
@@ -83,7 +89,9 @@ int main(int argc, char* argv[]) {
    if (rewrite_canon_file)
       write_new_canon(canon_tool_map, canon);
 
-   return report_anomalies(diff, "anomalies.htm");
+   auto r = report_anomalies(diff);
+   Logger::DettachDuplicator(&html_anomalies);
+   return r;
 }
 
 
@@ -91,6 +99,15 @@ int main(int argc, char* argv[]) {
 ///                                                                           
 /// IMPLEMENTATION DETAILS                                                    
 ///                                                                           
+long long canon_file_count = 0;
+long long canon_overlapping_total_time = 0;
+long long canon_overlapping_user_time = 0;
+long long canon_overlapping_memory_usage = 0;
+
+long long curr_file_count = 0;
+long long curr_overlapping_total_time = 0;
+long long curr_overlapping_user_time = 0;
+long long curr_overlapping_memory_usage = 0;
 
 
 /// Reads a file into a map                                                   
@@ -139,6 +156,15 @@ bool compare_or_canonize(tool_map& canon, tool_map const& dirty, difference& dif
                auto& diff_total = diff.changes[d.first];
                auto& diff_file  = diff_total.data_per_file[f.first];
 
+               canon_overlapping_total_time   += found_f->second.total_time_microseconds;
+               canon_overlapping_user_time    += found_f->second.user_time_microseconds;
+               canon_overlapping_memory_usage += found_f->second.peak_memory_kb;
+
+               curr_file_count += 1;
+               curr_overlapping_total_time   += f.second.total_time_microseconds;
+               curr_overlapping_user_time    += f.second.user_time_microseconds;
+               curr_overlapping_memory_usage += f.second.peak_memory_kb;
+
                diff_file.total_time_microseconds = f.second.total_time_microseconds - found_f->second.total_time_microseconds;
                diff_file.user_time_microseconds  = f.second.user_time_microseconds  - found_f->second.user_time_microseconds;
                diff_file.peak_memory_kb          = f.second.peak_memory_kb          - found_f->second.peak_memory_kb;
@@ -151,20 +177,20 @@ bool compare_or_canonize(tool_map& canon, tool_map const& dirty, difference& dif
                diff.total.user_time_microseconds  += diff_file.user_time_microseconds;
                diff.total.peak_memory_kb          += diff_file.peak_memory_kb;
 
-               double total_time_score = 0;
-               double user_time_score = 0;
+               double total_time_score  = 0;
+               double user_time_score   = 0;
                double peak_memory_score = 0;
 
                if (f.second.total_time_microseconds)
-                  total_time_score = 1.0f - static_cast<double>(found_f->second.total_time_microseconds) / static_cast<double>(f.second.total_time_microseconds);
+                  total_time_score = 1.0 - static_cast<double>(found_f->second.total_time_microseconds) / static_cast<double>(f.second.total_time_microseconds);
                if (f.second.user_time_microseconds)
-                  user_time_score = 1.0f - static_cast<double>(found_f->second.user_time_microseconds) / static_cast<double>(f.second.user_time_microseconds);
+                  user_time_score = 1.0 - static_cast<double>(found_f->second.user_time_microseconds) / static_cast<double>(f.second.user_time_microseconds);
                if (f.second.peak_memory_kb)
-                  peak_memory_score = 1.0f - static_cast<double>(found_f->second.peak_memory_kb) / static_cast<double>(f.second.peak_memory_kb);
+                  peak_memory_score = 1.0 - static_cast<double>(found_f->second.peak_memory_kb) / static_cast<double>(f.second.peak_memory_kb);
 
-               if (fabs(total_time_score)  > tolerance
-               or  fabs(user_time_score)   > tolerance
-               or  fabs(peak_memory_score) > tolerance) {
+               if ((fabs(total_time_score)  > tolerance and abs(diff_file.total_time_microseconds) > minimal_time_change)
+               or  (fabs(user_time_score)   > tolerance and abs(diff_file.user_time_microseconds)  > minimal_time_change)
+               or  (fabs(peak_memory_score) > tolerance and abs(diff_file.peak_memory_kb) > minimal_memory_change)) {
                   auto& anomalous_tool = diff.anomalies[d.first];
                   auto& anomalous_file = anomalous_tool.data_per_file[f.first];
 
@@ -188,6 +214,9 @@ bool compare_or_canonize(tool_map& canon, tool_map const& dirty, difference& dif
       }
    }
 
+   for (auto& t : canon)
+      canon_file_count += t.second.data_per_file.size();
+
    return new_canonized_entries;
 }
 
@@ -208,33 +237,85 @@ void write_new_canon(tool_map const& canon, FS::path const& file) {
 }
 
 /// Report anomalies                                                          
-int report_anomalies(difference const& diff, FS::path const& file) {
-   if (diff.anomalies.empty())
+int report_anomalies(difference const& diff) {
+   Logger::Info("--------------------------------- ");
+   Logger::Info("--------------------------------- ");
+
+   ::std::string file_note = " (all " + std::to_string(canon_file_count) + " files)";
+   if (curr_file_count != canon_file_count) {
+      file_note = " (only for the overlapping " + std::to_string(curr_file_count)
+                + " out of " + std::to_string(canon_file_count) + " canon files)";
+   }
+
+   Logger::Info(" TOTAL BUILD TIME", file_note, ":");
+   double total_time_score = 1.0 - static_cast<double>(canon_overlapping_total_time)
+                                 / static_cast<double>(curr_overlapping_total_time);
+   
+   int total_time_score_int = static_cast<int>(100.0 * total_time_score);
+   if (total_time_score_int == 0)
+      Logger::Info("   Current:    ", curr_overlapping_total_time, " microseconds    (no significant difference)");
+   else if (total_time_score_int < 0)
+      Logger::Info("   Current:    ", Logger::Green, curr_overlapping_total_time, " microseconds    (", -total_time_score_int,"% faster)");
+   else
+      Logger::Info("   Current:    ", Logger::Red, curr_overlapping_total_time, " microseconds    (", total_time_score_int,"% slower)");
+   Logger::Info(   "   Canon:      ", canon_overlapping_total_time, " microseconds");
+
+   Logger::Info(" USER BUILD TIME", file_note, ":");
+   double user_time_score = 1.0 - static_cast<double>(canon_overlapping_user_time)
+                                / static_cast<double>(curr_overlapping_user_time);
+
+   int user_time_score_int = static_cast<int>(100.0 * user_time_score);
+   if (user_time_score_int == 0)
+      Logger::Info("   Current:    ", curr_overlapping_user_time, " microseconds    (no significant difference)");
+   else if (user_time_score_int < 0)
+      Logger::Info("   Current:    ", Logger::Green, curr_overlapping_user_time, " microseconds    (", -user_time_score_int,"% faster)");
+   else
+      Logger::Info("   Current:    ", Logger::Red, curr_overlapping_user_time, " microseconds    (", user_time_score_int,"% slower)");
+   Logger::Info(   "   Canon:      ", canon_overlapping_user_time, " microseconds");
+
+   Logger::Info(" BUILD MEMORY USAGE", file_note, ":");
+   double memory_score = 1.0 - static_cast<double>(canon_overlapping_memory_usage)
+                             / static_cast<double>(curr_overlapping_memory_usage);
+
+   int memory_score_int = static_cast<int>(100.0 * memory_score);
+   if (memory_score_int == 0)
+      Logger::Info("   Current:    ", curr_overlapping_memory_usage, " KB             (no significant difference)");
+   else if (memory_score_int < 0)
+      Logger::Info("   Current:    ", Logger::Green, curr_overlapping_memory_usage, " KB             (", -memory_score_int,"% less)");
+   else
+      Logger::Info("   Current:    ", Logger::Red, curr_overlapping_memory_usage, " KB             (", memory_score_int,"% more)");
+   Logger::Info(   "   Canon:      ", canon_overlapping_memory_usage, " KB");
+
+   Logger::Info("---------------------------------\n");
+
+   if (diff.anomalies.empty()) {
+      Logger::Info(Logger::Green, "No anomalies detected");
       return 0;
+   }
 
-   Logger::ToHTML html_anomalies {file.string()};
-   Logger::AttachDuplicator(&html_anomalies);
-
-   std::ofstream output(file);
-   LglsAssert(output.is_open(), "Can't open file: ", file.c_str());
-
+   int bad_anomalies = 0;
    for (auto& t : diff.anomalies) {
       auto _ = Logger::InfoSection("Anomalies in ", t.first, ":");
       for (auto& f : t.second.data_per_file) {
          Logger::Line(f.first, ": ");
 
          if (f.second.total_time_microseconds < 0)
-            Logger::Append(Logger::Green, "build time improved by ", f.second.total_time_microseconds, " microseconds");
-         else
-            Logger::Append(Logger::Red, "build time worsened by ", f.second.total_time_microseconds, " microseconds");
+            Logger::Line(Logger::Green, "   ++ build time improved by ", f.second.total_time_microseconds, " microseconds");
+         else if (f.second.total_time_microseconds > 0){
+            Logger::Line(Logger::Red, "   -- build time worsened by ", f.second.total_time_microseconds, " microseconds");
+            ++bad_anomalies;
+         }
 
          if (f.second.peak_memory_kb < 0)
-            Logger::Append(Logger::Green, "; build RAM usage reduced by ", f.second.peak_memory_kb, " KB");
-         else
-            Logger::Append(Logger::Red, "; build RAM usage increased by ", f.second.peak_memory_kb, " KB");
+            Logger::Line(Logger::Green, "   ++ build RAM usage reduced by ", f.second.peak_memory_kb, " KB");
+         else if (f.second.peak_memory_kb > 0){
+            Logger::Line(Logger::Red, "   -- build RAM usage increased by ", f.second.peak_memory_kb, " KB");
+            ++bad_anomalies;
+         }
       }
    }
 
-   Logger::DettachDuplicator(&html_anomalies);
-   return diff.anomalies.size();
+   Logger::Info("---------------------------------");
+   Logger::Info("---------------------------------\n");
+   return bad_anomalies;
 }
