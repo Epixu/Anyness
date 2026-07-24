@@ -47,7 +47,6 @@ int main(int argc, char* argv[]) {
    Logger::ToHTML html_anomalies {"anomalies.htm"};
    Logger::AttachDuplicator(&html_anomalies);
 
-   LglsAssert(argc == 5, "Wrong number of arguments");
    FS::path report;
    FS::path canon;
 

@@ -5,21 +5,21 @@
    "version": "0.2.0",
    "inputs": [
       {
-         "id": "persistence_folder",
+         "id": "percist_folder",
          "type": "command",
          "command": "cmake.cacheVariable",
-         "args": {"name": "LANGULUS_PERSIST_DIRECTORY"}
+         "args": {"name": "LANGULUS_PERCIST_DIRECTORY"}
       }
    ],
    "configurations": [
       {
-         "name": "LangulusAnynessReporter",
+         "name": "LangulusPercist",
          "type": "lldb",
          "request": "launch",
-         "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessReporter.exe",
+         "program": "${command:cmake.launchTargetDirectory}/LangulusPercist.exe",
          "args": [
             "-f", "./consumption.txt",
-            "-c", "${input:persistence_folder}/consumption.canon"
+            "-c", "${input:percist_folder}/consumption.canon"
          ],
          "cwd": "${command:cmake.buildDirectory}"
       },
