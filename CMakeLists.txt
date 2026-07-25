@@ -143,6 +143,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
             GIT_TAG        tags/11.2.0
+            GIT_SHALLOW    TRUE
         )
     endif()
 
@@ -154,7 +155,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
         fetch_external_module(
             simdutf
             GIT_REPOSITORY https://github.com/simdutf/simdutf.git
-            GIT_TAG        tags/v9.0.0	
+            GIT_TAG        f542909a257bb3a9947f8e9fcaaba68a3e1f3b8b # v9.0.0 with some missing header fixes
         )
     endif()
 endif()
@@ -253,6 +254,7 @@ if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
        ctrack
        GIT_REPOSITORY  https://github.com/Epixu/ctrack.git
        GIT_TAG         persistence
+       GIT_SHALLOW     TRUE
    )
    target_link_libraries(LangulusAnyness PUBLIC ctrack)
    set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK \

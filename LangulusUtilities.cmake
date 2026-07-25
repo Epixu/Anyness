@@ -25,7 +25,6 @@ manually if you want to redownload)")
    FetchContent_Declare(
       ${NAME}
       GIT_REPOSITORY  ${REPO}
-      GIT_SHALLOW     TRUE
       GIT_TAG         ${TAG}
       SOURCE_DIR      "${LANGULUS_EXTERNAL_DIRECTORY}/${NAME}-src"
       SUBBUILD_DIR    "${CMAKE_BINARY_DIR}/external/${NAME}-subbuild"
