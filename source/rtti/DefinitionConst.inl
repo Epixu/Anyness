@@ -58,7 +58,7 @@ namespace Langulus::RTTI
          const auto cppname = CppNameOfRt<E>();
          DefinitionConst& definition = s_definition.emplace(cppname);
 
-         definition.mNameOf = Inner::NormalizeAtRuntime(NameOfRt<E, false>());
+         definition.mNameOf = NameOfRt<E>();
          LglsAssert(not definition.mNameOf.empty(),
             "Invalid constant token is not allowed - "
             "you have equipped your constant with an empty CTTI::NamedValue. "

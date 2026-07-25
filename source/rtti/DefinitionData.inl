@@ -721,7 +721,7 @@ namespace Langulus::RTTI
          else cppname += "*";
 
          DefinitionData& definition = s_definition.emplace(cppname);
-         definition.mNameOf = NameOfRt<Decvq<Deptr<T>>();//Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
+         definition.mNameOf = NameOfRt<Decvq<Deptr<T>>>();
          if constexpr (CT::Constant<Deptr<T>>)
             definition.mNameOf += " const";
          if constexpr (CT::Constant<T>)

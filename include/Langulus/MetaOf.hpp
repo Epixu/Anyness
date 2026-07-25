@@ -23,12 +23,15 @@ namespace Langulus
    ///   @return the meta definition of the provided type                     
    template<class T>
    auto MetaOf() {
-      if constexpr (CT::DefineTag<Decay<T>>)
-         return RTTI::TMeta {RTTI::DefinitionTag::Reflect<Decay<T>>()};
-      else if constexpr (CT::DefineVerb<Decay<T>>)
-         return RTTI::VMeta {RTTI::DefinitionVerb::Reflect<Decay<T>>()};
-      else
-         return RTTI::DMeta {RTTI::DefinitionData::Reflect<CT::ReflectedAs<ShedDeref<T>>>()};
+      if constexpr (CT::Complete<Decay<T>>) {
+         if constexpr (CT::DefineTag<Decay<T>>)
+            return RTTI::TMeta {RTTI::DefinitionTag::Reflect<Decay<T>>()};
+         else if constexpr (CT::DefineVerb<Decay<T>>)
+            return RTTI::VMeta {RTTI::DefinitionVerb::Reflect<Decay<T>>()};
+         else
+            return RTTI::DMeta {RTTI::DefinitionData::Reflect<CT::ReflectedAs<ShedDeref<T>>>()};
+      }
+      else return RTTI::DMeta {RTTI::DefinitionData::Reflect<CT::ReflectedAs<ShedDeref<T>>>()};
    }
 
    /// Get the meta definition of a constant, like an enum                    

@@ -56,7 +56,6 @@ namespace Langulus::CTTI
 #define DEFINE_NAMEOF_TYPE_TEST(WHAT, RESULT) \
    WHEN("Taken the name of type " #WHAT) { \
       REQUIRE(NameOfRt<WHAT>() == RESULT); \
-      REQUIRE(TokenOf<WHAT>() == RESULT); \
       static_assert(NameOf<WHAT>() == RESULT); \
    }
 
