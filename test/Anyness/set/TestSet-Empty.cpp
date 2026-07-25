@@ -39,6 +39,8 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
+   , Types<TSet<Text>,   ScopedElement<Text>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Set, ScopedElement<Text>>
    , Types<Set, ScopedElement<int>>
@@ -58,7 +60,6 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    , Types<Set, ScopedElement<RT**>>
    , Types<Set, ScopedElement<char**>>
 
-   , Types<TSet<Text>,   ScopedElement<Text>>
    , Types<TSet<int>,    ScopedElement<int>>
    , Types<TSet<Any>,    ScopedElement<Any>>
    , Types<TSet<RT>,     ScopedElement<RT>>
@@ -951,6 +952,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          DumpSet(pack);
          Set_CheckState_ContainsArray(pack, immovable);
 
+         //auto table = pack.GetHashTable();
          REQUIRE_NOTHROW(inserted += pack.Merge(std::move(movable1)));
          REQUIRE(inserted == 10);
          DumpSet(pack);

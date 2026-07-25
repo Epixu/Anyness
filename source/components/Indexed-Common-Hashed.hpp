@@ -448,6 +448,7 @@ namespace Langulus::Anyness::Component
          Id::ForEach([&handle,&item]<Cid D>{
             handle.template EmplaceWithIntent<D>(LglsFwd(item));
          });
+         LglsAssertAndBreak(attempts < 10);
          *table = attempts;
          return table - tableBeg;
       }

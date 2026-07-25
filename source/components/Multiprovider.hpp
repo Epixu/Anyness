@@ -230,12 +230,22 @@ namespace Langulus::Anyness::Component
       }
 
       /// Remap footer requests onto the new reserve                          
-      ///   @param elements the newly reserved number of elements             
+      ///   @param newReserved the newly reserved number of elements          
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = 0>
-      void RemapAllHeapRequests(this auto& self, size_t elements) {
+      void RemapAllHeapRequests(this auto& self, size_t newReserved) {
          using C = typename Subcomponents::template At<SID>;
-         self.C::RemapAllHeapRequests(elements);
+         self.C::RemapAllHeapRequests(newReserved);
+      }
+
+      /// Transfer footer requests onto the new reserve and memory            
+      ///   @param oldSelf container with the old heap                        
+      ///   @param newReserved the newly reserved number of elements          
+      ///   @attention works on one dimension at a time!                      
+      template<Cid SID = 0, class SELF>
+      void TransferAllHeapRequests(this SELF& self, SELF const& oldSelf, size_t newReserved) {
+         using C = typename Subcomponents::template At<SID>;
+         self.C::TransferAllHeapRequests(oldSelf, newReserved);
       }
 
       /// Invoked to remedy the situation when element constructors throw     
