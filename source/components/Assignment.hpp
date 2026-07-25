@@ -16,7 +16,7 @@
 #include <Langulus/CT/ReflectAs.hpp>
 
 
-namespace Langulus::CT
+/*namespace Langulus::CT
 {
    /// Check if container's elements are unfold-assignable                    
    ///   @attention type-erased elements are always assignable, and will fail 
@@ -70,22 +70,25 @@ namespace Langulus::CT
    /// container can be assigned                                              
    template<class C, class A>
    concept DeepAssignable = Inner::DeepAssignable<C, A>();
-}
+}*/
 
 namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.Assignment<ID, SHARED...>
+   #define ThisCom self.Assignment<CONVERT, ID, SHARED...>
 
    ///                                                                        
    /// Implements element assignment for containers.                          
    /// Assignment acts on the first element, if container is contiguous.      
    /// For discontiguous containers, like sets and maps, the assignment falls 
    /// back to insertion.                                                     
+   ///   @tparam CONVERT whether to serialize as self before assigning item.  
+   ///      Useful for byte and text containers. Use 'false' to assign without
+   ///      serialization.                                                    
    ///   @tparam ID heap/stack we're assigning to                             
    ///   @tparam SHARED other providers that share assignment behavior        
-   template<Cid ID, Cid...SHARED>
+   template<bool CONVERT, Cid ID, Cid...SHARED>
    struct Assignment {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -94,6 +97,7 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 3000;
       template<Cid SID>
       static constexpr bool Relevant = Id::template Contains<SID>;
+      static constexpr bool AttemptConvertOnAssign = CONVERT;
 
       //template<CT::Container C, class A>
       //void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
@@ -109,6 +113,12 @@ namespace Langulus::Anyness::Component
             // Assignment for maps/sets falls back to merge             
             self.Clear();
             self.Merge(LglsFwd(argument));
+         }
+         else if constexpr (CONVERT) {
+            // Rely on insertion to convert the argument                
+            static_assert(C::AttemptConvertOnInsert);
+            self.Clear();
+            self.Insert(LglsFwd(argument));
          }
          else if constexpr (not CT::HeapAllocated<C>) {
             // This container is on the stack, and by extension         
@@ -403,13 +413,8 @@ namespace Langulus::Anyness::Component
                using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
                T* const dst = self.template GetRawAs<T, SID>();
 
-               //if constexpr (CT::Mutable<T> or not I::IsMoved())
-                  IntentAssign(*dst, I::Nest(*rhs.template GetRawAs<T, SID>()));
-               //else
-               //   IntentAssign(*dst, Refer(*rhs.template GetRawAs<T, SID>()));
+               IntentAssign(*dst, I::Nest(*rhs.template GetRawAs<T, SID>()));
             }
-
-            //if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
          else {
             if constexpr (CT::TypeErased<C, IT>) {
@@ -446,8 +451,6 @@ namespace Langulus::Anyness::Component
                IT* const dst = self.template GetRawAs<IT, SID>();
                IntentAssign(*dst, LglsFwd(intent));
             }
-
-            //if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
          }
 
          if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));

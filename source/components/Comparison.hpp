@@ -43,10 +43,13 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements comparison for containers. This includes functions for      
    /// searching and pattern-matching.                                        
+   ///   @tparam CONVERT whether to serialize as self before comparing range. 
+   ///      Useful for byte and text containers. Use 'false' to compare       
+   ///      without serialization.                                            
    ///   @tparam HASH whether to compare hashes before elements. This is      
    ///      mostly useful when hash is cachable, otherwise kind of pointless. 
    ///   @tparam ID, SHARED heaps/stacks we're comparing                      
-   template<bool HASH, Cid ID, Cid...SHARED>
+   template<bool CONVERT, bool HASH, Cid ID, Cid...SHARED>
    struct Comparison {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -779,9 +782,16 @@ namespace Langulus::Anyness::Component
       ///   @attention compares only the main dimension                       
       ///   @param A1 the sequence of items to search for                     
       ///   @return true if item was found in the main dimension              
-      template<CT::ContainsMany C, CT::ContainsMany A1> requires CT::NoIntent<A1>
+      template<CT::ContainsMany C, /*CT::ContainsMany*/class A1> requires CT::NoIntent<A1>
       bool ContainsRange(this C const& self, A1 const& a1) {
-         return static_cast<bool>(self.FindRange(a1));
+         if constexpr (CONVERT) {
+            const C converted = Langulus::Convert<C>(a1);
+            return static_cast<bool>(self.FindRange(converted));
+         }
+         else {
+            static_assert(CT::Container<A1>, "Argument must be a container");
+            return static_cast<bool>(self.FindRange(a1));
+         }
       }
 
       /// MARK: ContainsEx                                                    

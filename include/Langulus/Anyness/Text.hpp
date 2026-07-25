@@ -51,14 +51,14 @@ namespace Langulus::Anyness
          Com::IndexedLinear<>,            // Indexed directly           
          Com::OwnershipStack<>,           // Allocation is referenced   
          Com::HashStack<>,                // Variable hash (cached)     
-         Com::Insertion<Text>,            // Serialize + insert         
+         Com::Insertion<true>,            // Serialize + insert         
          Com::InsertionOperators<>,       // << and >> insertion        
          Com::InsertionOperatorsConcat<>, // + and += concat            
-         Com::Merging<Text>,              // Serialize + merge          
+         Com::Merging<true>,              // Serialize + merge          
          Com::MergingOperators<>,         // <<= and >>= merging        
          Com::Removal<>,                  // Allows removal             
-         Com::Assignment<>,               // Allows assignment          
-         Com::Comparison<>,               // Allows for comparison      
+         Com::Assignment<true>,           // Allows assignment          
+         Com::Comparison<true>,           // Allows for comparison      
          Com::Conversion<>,               // Allows conversion          
          Com::IterationForEach<>,         // ForEach iteration          
          Com::IterationRange<>,           // Range iteration            
@@ -103,6 +103,30 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
+      /// Construction that absorbs the provided containers                   
+      template<class A1, class...AN>
+      constexpr Text(Inner::Absorb, A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0)
+            this->Absorb(LglsFwd(a1));
+         else {
+            this->ConstructDefault();
+            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+         }
+      }
+      
+      /// Construction that emplaces all arguments inside                     
+      template<class A1, class...AN>
+      constexpr Text(Inner::Piecewise, A1&& a1, AN&&...an) {
+         this->ConstructDefault();
+         this->Insert(LglsFwd(a1), LglsFwd(an)...);
+      }
+
+      /// Construction from Serial::Operator                                  
+      ///   @attention this is a non-owning constructor, often used as a      
+      ///      temporary                                                      
+      explicit constexpr Text(Serial::Operator const& o)
+         : Text {o.mToken} {}
+
       /// Construction from any kind of text that is an Anyness container     
       template<CT::Text T> requires CT::Container<T>
       constexpr Text(T&& text) {
@@ -110,6 +134,8 @@ namespace Langulus::Anyness
       }
 
       /// Construction from any kind of text that isn't an Anyness container  
+      ///   @attention this is by default a non-owning constructor, unless    
+      ///      you use a Copy/Clone intent                                    
       template<CT::Text T> requires CT::NotContainer<T>
       constexpr Text(T&& text) {
          using S  = IntentOf(text);
@@ -173,9 +199,10 @@ namespace Langulus::Anyness
       }
 
       /// Construction from all kinds of characters                           
+      ///   @attention this is an owning constructor                          
       template<CT::Character T>
       constexpr Text(T&& ch) {
-         this->AllocateFresh(1 /*this->RequestHeap(1)*/);
+         this->AllocateFresh(1);
          *this->GetRawAs<char>() = DeintCast(ch);
          this->SetCountInner(1);
          this->ResetHash();
@@ -195,7 +222,7 @@ namespace Langulus::Anyness
       /// arrays, null-terminated string pointers, standard containers, etc.  
       ///   @param argument the argument to assign                            
       ///   @return reference to self                                         
-      template<CT::Text T> requires CT::NotContainer<T>
+      /*template<CT::Text T> requires CT::NotContainer<T>
       Text& Assign(T&& argument) {
          using DT = Deint<T>;
          decltype(auto) source = DeintCast(LglsFwd(argument));
@@ -265,7 +292,7 @@ namespace Langulus::Anyness
 
          this->ResetHash();
          return *this;
-      }
+      }*/
 
       /// Construction from all kinds of text, trim length to desired count   
       ///   @attention intent is ignored - this doesn't apply ownership, only 
@@ -447,12 +474,12 @@ namespace Langulus::Anyness
       }
 
       /// Append a serial operator                                            
-      Text& operator += (Serial::Operator const& rhs) {
+      /*Text& operator += (Serial::Operator const& rhs) {
          return operator += (rhs.mToken);
-      }
+      }*/
       
       /// Custom concatenation operator that includes characters              
-      template<CT::Character T> requires CT::NoIntent<T>
+      /*template<CT::Character T> requires CT::NoIntent<T>
       Text& operator += (T&& rhs) {
          static_assert(Same<T, char>, "Type mismatch");
 
@@ -469,11 +496,11 @@ namespace Langulus::Anyness
          this->SetCountInner(count + 1);
          this->ResetHash();
          return *this;
-      }
+      }*/
       
       /// Custom concatenation operator that includes string literals,        
       /// null-terminated string pointers, and std::continuous_ranges         
-      template<CT::Text T> requires CT::NotContainer<T>
+      /*template<CT::Text T> requires CT::NotContainer<T>
       Text& operator += (T&& rhs) {
          // Notice we're not checking if empty, but rather if allocated.
          // This is in case we've called Text::Reserve() earlier.       
@@ -528,22 +555,22 @@ namespace Langulus::Anyness
 
          this->ResetHash();
          return *this;
-      }
+      }*/
 
       /// Custom concatenation operator for other text/containers.            
       /// Automatically serializes non-text items.                            
-      template<CT::Container T>
+      /*template<CT::Container T>
       Text& operator += (T&& rhs) {
          if constexpr (CT::Text<T>)
             this->Concat(LglsFwd(rhs));
          else
             Serialize(rhs, *this);
          return *this;
-      }
+      }*/
       
       /// Custom concatenation operator that includes string literals,        
       /// null-terminated string pointers, and std::continuous_ranges         
-      template<CT::Text T> requires CT::NotContainer<T>
+      /*template<CT::Text T> requires CT::NotContainer<T>
       Text operator + (T const& rhs) const {
          // Notice we're not checking if empty, but rather if allocated.
          // This is in case we've called Text::Reserve() earlier.       
@@ -597,9 +624,9 @@ namespace Langulus::Anyness
 
          result.ResetHash();
          return result;
-      }
+      }*/
       
-      template<CT::Text T> requires CT::NotContainer<T>
+      /*template<CT::Text T> requires CT::NotContainer<T>
       friend Text operator + (T const& lhs, Text const& rhs) {
          return Text {lhs} + rhs;
       }
@@ -614,7 +641,7 @@ namespace Langulus::Anyness
          else temp = Convert<Text>(lhs);
          temp.Concat(rhs);
          return temp;
-      }
+      }*/
 
       explicit operator ::std::string() const {
          return {this->GetRaw(), this->GetCount()};

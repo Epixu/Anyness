@@ -38,10 +38,10 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>,
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         
-      Com::Assignment<0, 1>,              // Allows assignment          
+      Com::Assignment<false, 0, 1>,       // Allows assignment          
       Com::Removal<0, 1>,                 // Allows clear/reset         
       Com::Conversion<0, 1>,              // Allows conversion          
-      Com::Comparison<true, 0, 1>,        // Allows comparisons         
+      Com::Comparison<false, true, 0, 1>, // Allows comparisons         
       Com::State::Encrypted<>             // Toggle encryption          
    >;
 }
@@ -121,8 +121,8 @@ namespace Langulus::Anyness
          return *this;
       }
 
-      using Com::Comparison<true, 0, 1>::operator <=>;
-      using Com::Comparison<true, 0, 1>::operator ==;
+      using Com::Comparison<false, true, 0, 1>::operator <=>;
+      using Com::Comparison<false, true, 0, 1>::operator ==;
 
       auto GetKeyHandle() const noexcept -> typename HandleType::KeyHandle {
          return {*this};

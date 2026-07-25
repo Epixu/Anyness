@@ -19,17 +19,18 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.Merging<AS, ID, SHARED...>
+   #define ThisCom self.Merging<CONVERT, ID, SHARED...>
 
    ///                                                                        
    /// Implements merging for containers.                                     
    /// Merging (unlike emplacement) extends the memory space and may move     
    /// things around. It guarantees that nothing gets overwritten.            
    /// Merging (unlike insertion) disallows for duplicated elements.          
-   ///   @tparam AS type to serialize as before merging. Useful for byte      
-   ///      and text containers. Use void to insert without serialization.    
+   ///   @tparam CONVERT whether to serialize as self before merging item.    
+   ///      Useful for byte and text containers. Use 'false' to merge without 
+   ///      serialization.                                                    
    ///   @tparam ID, SHARED providers that share the same merge behavior.     
-   template<class AS, Cid ID, Cid...SHARED>
+   template<bool CONVERT, Cid ID, Cid...SHARED>
    struct Merging {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
@@ -37,6 +38,7 @@ namespace Langulus::Anyness::Component
 
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
+      static constexpr bool AttemptConvertOnMerge = CONVERT;
 
    private:
       template<CT::Container C>
@@ -56,9 +58,8 @@ namespace Langulus::Anyness::Component
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         if constexpr (CT::NotVoid<AS> and not Same<TypeOf<AS>, Deint<A1>, Deint<AN>...>) {
-            // Conversion to AS required.                               
-            static_assert(Exact<C, AS>, "Serializing insertion type mismatch");
+         if constexpr (CONVERT and not Same<TypeOf<C>, Deint<A1>, Deint<AN>...>) {
+            // Conversion to C required.                                
             const size_t initial_count = self.GetCountInner();
             size_t offset = self.SimplifyIndex(idx);
             // ConvertMergeInner uses MergeRangeAt, so any exceptions   
@@ -185,9 +186,8 @@ namespace Langulus::Anyness::Component
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         if constexpr (CT::NotVoid<AS> and not Same<TypeOf<AS>, Deint<A1>, Deint<AN>...>) {
-            // Conversion to AS required.                               
-            static_assert(Exact<C, AS>, "Serializing insertion type mismatch");
+         if constexpr (CONVERT and not Same<TypeOf<C>, Deint<A1>, Deint<AN>...>) {
+            // Conversion to C required.                                
             const size_t initial_count = self.GetCountInner();
             size_t offset = initial_count;
             // ConvertInsertInner uses ConcatAt, so any exceptions will 
@@ -363,10 +363,10 @@ namespace Langulus::Anyness::Component
       void ConvertMergeInner(this C& self, size_t& at, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<I>>;
-         static_assert(CT::NotVoid<AS> and not Same<TypeOf<AS>, IT>,
+         static_assert(CONVERT and not Same<TypeOf<C>, IT>,
             "Use MergeInnerLinear instead");
       
-         AS converted;
+         C converted;
          if constexpr (CT::Array<T>) {
             for (size_t i = 0; i < ExtentOf<T>; ++i)
                Langulus::Serialize(DeintCast(a)[i], converted);
@@ -387,7 +387,7 @@ namespace Langulus::Anyness::Component
       static void MergeInnerLinear(H& to, size_t const*& it, size_t& counter, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<T>>;
-         static_assert(CT::Void<AS> or Same<TypeOf<AS>, IT>,
+         static_assert(not CONVERT or Same<TypeOf<H>, IT>,
             "Use ConvertMergeInner instead");
 
          if constexpr (CT::Array<T>) {
@@ -428,11 +428,11 @@ namespace Langulus::Anyness::Component
       /// Inserts 'a' into a hash map at the appropriate bucket. Supports T   
       /// being a bounded array. Does not perform conversion.                 
       ///   @attention works in all dimensions at once                        
-      template<class T>
-      void MergeInnerTable(this auto& self, size_t const*& it, size_t& counter, T&& a) {
+      template<class C, class T>
+      void MergeInnerTable(this C& self, size_t const*& it, size_t& counter, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<T>>;
-         static_assert(CT::Void<AS> or Same<TypeOf<AS>, IT>,
+         static_assert(not CONVERT or Same<TypeOf<C>, IT>,
             "Use ConvertMergeInnerTable instead"); //TODO function not implemented yet
 
          if constexpr (CT::Array<T>) {

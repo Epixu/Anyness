@@ -5,135 +5,67 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "TestManyCommon.hpp"
+#include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
-
-namespace Langulus::Anyness
-{
-   // Reuses definitions from TestMany-Empty.cpp. Reduces compile time.  
-   extern template struct TMany<Text>;
-   extern template struct TMany<int>;
-   extern template struct TMany<Any>;
-   extern template struct TMany<RT>;
-   extern template struct TMany<char>;
-
-   extern template struct TMany<Text*>;
-   extern template struct TMany<int*>;
-   extern template struct TMany<Any*>;
-   extern template struct TMany<RT*>;
-   extern template struct TMany<char*>;
-
-   extern template struct TMany<Text**>;
-   extern template struct TMany<int**>;
-   extern template struct TMany<Any**>;
-   extern template struct TMany<RT**>;
-   extern template struct TMany<char**>;
-
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   extern template struct TMany<pptr8>;
-   extern template struct TMany<pptr16>;
-   extern template struct TMany<pptr32>;
-#endif
-}
+#include <Langulus/Anyness/SerializeText.hpp>
 
 
-TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
+TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Many, Text,   ScopedElement<Text>>
-   , Types<Many, int,    ScopedElement<int>>
-   , Types<Many, Many,   ScopedElement<Many>>
-   , Types<Many, RT,     ScopedElement<RT>>
-   , Types<Many, char,   ScopedElement<char>>
+   , Types<Text, ScopedElement<Text>>
+   , Types<Text, ScopedElement<int>>
+   , Types<Text, ScopedElement<Many>>
+   , Types<Text, ScopedElement<RT>>
+   , Types<Text, ScopedElement<char>>
 
-   , Types<Many, Text*,  ScopedElement<Text*>>
-   , Types<Many, int*,   ScopedElement<int*>>
-   , Types<Many, Many*,  ScopedElement<Many*>>
-   , Types<Many, RT*,    ScopedElement<RT*>>
-   , Types<Many, char*,  ScopedElement<char*>>
+   , Types<Text, ScopedElement<Text*>>
+   , Types<Text, ScopedElement<int*>>
+   , Types<Text, ScopedElement<Many*>>
+   , Types<Text, ScopedElement<RT*>>
+   , Types<Text, ScopedElement<char*>>
 
-   , Types<Many, Text**, ScopedElement<Text**>>
-   , Types<Many, int**,  ScopedElement<int**>>
-   , Types<Many, Many**, ScopedElement<Many**>>
-   , Types<Many, RT**,   ScopedElement<RT**>>
-   , Types<Many, char**, ScopedElement<char**>>
-
-   , Types<TMany<Text>,   Text,   ScopedElement<Text>>
-   , Types<TMany<int>,    int,    ScopedElement<int>>
-   , Types<TMany<Many>,   Many,   ScopedElement<Many>>
-   , Types<TMany<RT>,     RT,     ScopedElement<RT>>
-   , Types<TMany<char>,   char,   ScopedElement<char>>
-
-   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*>>
-   , Types<TMany<int*>,   int*,   ScopedElement<int*>>
-   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*>>
-   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*>>
-   , Types<TMany<char*>,  char*,  ScopedElement<char*>>
-
-   , Types<TMany<Text**>, Text**, ScopedElement<Text**>>
-   , Types<TMany<int**>,  int**,  ScopedElement<int**>>
-   , Types<TMany<Many**>, Many**, ScopedElement<Many**>>
-   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**>>
-   , Types<TMany<char**>, char**, ScopedElement<char**>>
+   , Types<Text, ScopedElement<Text**>>
+   , Types<Text, ScopedElement<int**>>
+   , Types<Text, ScopedElement<Many**>>
+   , Types<Text, ScopedElement<RT**>>
+   , Types<Text, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Many, Text,   ScopedElement<Text, true>>
-   , Types<Many, int,    ScopedElement<int, true>>
-   , Types<Many, Many,   ScopedElement<Many, true>>
-   , Types<Many, RT,     ScopedElement<RT, true>>
-   , Types<Many, char,   ScopedElement<char, true>>
+   , Types<Text, ScopedElement<Text,   true>>
+   , Types<Text, ScopedElement<int,    true>>
+   , Types<Text, ScopedElement<Many,   true>>
+   , Types<Text, ScopedElement<RT,     true>>
+   , Types<Text, ScopedElement<char,   true>>
 
-   , Types<Many, Text*,  ScopedElement<Text*, true>>
-   , Types<Many, int*,   ScopedElement<int*, true>>
-   , Types<Many, Many*,  ScopedElement<Many*, true>>
-   , Types<Many, RT*,    ScopedElement<RT*, true>>
-   , Types<Many, char*,  ScopedElement<char*, true>>
+   , Types<Text, ScopedElement<Text*,  true>>
+   , Types<Text, ScopedElement<int*,   true>>
+   , Types<Text, ScopedElement<Many*,  true>>
+   , Types<Text, ScopedElement<RT*,    true>>
+   , Types<Text, ScopedElement<char*,  true>>
 
-   , Types<Many, Text**, ScopedElement<Text**, true>>
-   , Types<Many, int**,  ScopedElement<int**, true>>
-   , Types<Many, Many**, ScopedElement<Many**, true>>
-   , Types<Many, RT**,   ScopedElement<RT**, true>>
-   , Types<Many, char**, ScopedElement<char**, true>>
-
-   , Types<TMany<Text>,   Text,   ScopedElement<Text, true>>
-   , Types<TMany<int>,    int,    ScopedElement<int, true>>
-   , Types<TMany<Many>,   Many,   ScopedElement<Many, true>>
-   , Types<TMany<RT>,     RT,     ScopedElement<RT, true>>
-   , Types<TMany<char>,   char,   ScopedElement<char, true>>
-
-   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*, true>>
-   , Types<TMany<int*>,   int*,   ScopedElement<int*, true>>
-   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*, true>>
-   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*, true>>
-   , Types<TMany<char*>,  char*,  ScopedElement<char*, true>>
-
-   , Types<TMany<Text**>, Text**, ScopedElement<Text**, true>>
-   , Types<TMany<int**>,  int**,  ScopedElement<int**, true>>
-   , Types<TMany<Many**>, Many**, ScopedElement<Many**, true>>
-   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**, true>>
-   , Types<TMany<char**>, char**, ScopedElement<char**, true>>
+   , Types<Text, ScopedElement<Text**, true>>
+   , Types<Text, ScopedElement<int**,  true>>
+   , Types<Text, ScopedElement<Many**, true>>
+   , Types<Text, ScopedElement<RT**,   true>>
+   , Types<Text, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Many, pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Many, pptr16, ScopedElementPacked<pptr16>>
-   , Types<Many, pptr32, ScopedElementPacked<pptr32>>
-
-   , Types<TMany<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TMany<pptr16>, pptr16, ScopedElementPacked<pptr16>>
-   , Types<TMany<pptr32>, pptr32, ScopedElementPacked<pptr32>>
+   , Types<Text, ScopedElementPacked<pptr8>>
+   , Types<Text, ScopedElementPacked<pptr16>>
+   , Types<Text, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
-   using T = typename TestType::First;
-   using E = typename TestType::Second;
-   using ScopedE = typename TestType::template At<2>;
+   using T        = typename TestType::First;
+   using ScopedE  = typename TestType::Second;
+   using E        = TypeOf<ScopedE>;
+
    constexpr bool Managed = ScopedE::Managed;
-   constexpr bool Sparse  = CT::Sparse<E>;
-   constexpr bool Reffed  = CT::Referenced<Decay<E>>;
 
    #if LANGULUS(BENCHMARK)
-      using stdvec = ::std::vector<E>;
+      using stdstr = ::std::string;
    #endif
 
    GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
@@ -211,36 +143,32 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       T pack_disowned {Absorb,      Disown(piecewise1)};
 
       WHEN("Absorb-constructed") {
-         Many_CheckState_OwnedFull<E>(pack_referred1);
-         Many_CheckState_OwnedFull<E>(pack_referred2);
-         Many_CheckState_OwnedFull<E>(pack_copied);
-         Many_CheckState_OwnedFull<E>(pack_cloned);
-         Many_CheckState_OwnedFull<E>(pack_moved1);
-         Many_CheckState_OwnedFull<E>(pack_moved2);
-         Many_CheckState_OwnedFull<E>(pack_abandoned);
-         Many_CheckState_DisownedFull<E>(pack_disowned);
+         Text_CheckState_OwnedFull(pack_referred1);
+         Text_CheckState_OwnedFull(pack_referred2);
+         Text_CheckState_OwnedFull(pack_copied);
+         Text_CheckState_OwnedFull(pack_cloned);
+         Text_CheckState_OwnedFull(pack_moved1);
+         Text_CheckState_OwnedFull(pack_moved2);
+         Text_CheckState_OwnedFull(pack_abandoned);
+         Text_CheckState_DisownedFull(pack_disowned);
 
-         Many_CheckState_ContainsOne(pack_referred1,  Refer(originalElement), 3);
-         Many_CheckState_ContainsOne(pack_referred2,  Refer(originalElement), 3);
-         Many_CheckState_ContainsOne(pack_copied,     Refer(originalElement), 1);
-         Many_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
-         Many_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
-         Many_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
+         Text_CheckState_ContainsOne(pack_referred1,  Refer(originalElement), 3);
+         Text_CheckState_ContainsOne(pack_referred2,  Refer(originalElement), 3);
+         Text_CheckState_ContainsOne(pack_copied,     Refer(originalElement), 1);
+         Text_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
+         Text_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
+         Text_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
 
          if constexpr (Managed) {
             // Entries are still propagated when absorbed               
-            Many_CheckState_ContainsOne(pack_disowned,  Refer(originalElement), 3);
+            Text_CheckState_ContainsOne(pack_disowned,  Refer(originalElement), 3);
          }
-         else Many_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
+         else Text_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
 
-         if constexpr (Reffed) {
-            REQUIRE(DenseCast(*originalElement).GetReferences() == (CT::Sparse<E> ? 8 : 1));
-         }
-
-         BenchmarkManyStd("Empty/AbsorbConstructor", 30, 100,
+         BenchmarkTextStd("Empty/AbsorbConstructor", 30, 100,
             T temp,                                   (new (&temp) T{Absorb, piecewise1}),
-            stdvec temp_std1 (1, *originalElement);
-            stdvec temp_std2,                         new (&temp_std2) stdvec {temp_std1}
+            stdstr temp_std1 (1, *originalElement);
+            stdstr temp_std2,                         new (&temp_std2) stdstr {temp_std1}
          );
       }
 
@@ -255,12 +183,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             }
 
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd("Absorb/" + intent + "/Assign/Refer", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Refer", 30, 100,
                a.Assign(*element),                 a.Assign(*originalElement),
-               stdvec temp_std (1, *element),      temp_std[0] = *originalElement
+               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -273,52 +201,53 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
 
       if constexpr (CT::DeepDense<E>) {
+         WHEN("Assigned and misabsorbed by refer") {
+            auto misabsorb_refer = [&](auto& a, int uses) {
+               REQUIRE_THROWS(a.AssignAbsorb(*element));
+
+               Text_CheckState_ContainsOne(a, Refer(originalElement), uses);
+            };
+
+            misabsorb_refer(pack_referred1, 3);
+            Text_CheckState_OwnedFull<E>(pack_referred1);
+
+            misabsorb_refer(pack_referred2, 3);
+            Text_CheckState_OwnedFull<E>(pack_referred2);
+
+            misabsorb_refer(pack_copied,    1);
+            Text_CheckState_OwnedFull<E>(pack_copied);
+
+            misabsorb_refer(pack_cloned,    1);
+            Text_CheckState_OwnedFull<E>(pack_cloned);
+
+            misabsorb_refer(pack_moved1,    1);
+            Text_CheckState_OwnedFull<E>(pack_moved1);
+
+            misabsorb_refer(pack_moved2,    1);
+            Text_CheckState_OwnedFull<E>(pack_moved2);
+
+            misabsorb_refer(pack_abandoned, 1);
+            Text_CheckState_OwnedFull<E>(pack_abandoned);
+
+            misabsorb_refer(pack_disowned,  3);
+            Text_CheckState_DisownedFull<E>(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed referred container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_refer = [&](auto& a, int uses) {
-                  REQUIRE_THROWS(a.AssignAbsorb(*element));
-
-                  Many_CheckState_ContainsOne(a, Refer(originalElement), uses);
-               };
-
-               misabsorb_refer(pack_referred1, 3);
-               Many_CheckState_OwnedFull<E>(pack_referred1);
-
-               misabsorb_refer(pack_referred2, 3);
-               Many_CheckState_OwnedFull<E>(pack_referred2);
-
-               misabsorb_refer(pack_copied,    1);
-               Many_CheckState_OwnedFull<E>(pack_copied);
-
-               misabsorb_refer(pack_cloned,    1);
-               Many_CheckState_OwnedFull<E>(pack_cloned);
-
-               misabsorb_refer(pack_moved1,    1);
-               Many_CheckState_OwnedFull<E>(pack_moved1);
-
-               misabsorb_refer(pack_moved2,    1);
-               Many_CheckState_OwnedFull<E>(pack_moved2);
-
-               misabsorb_refer(pack_abandoned, 1);
-               Many_CheckState_OwnedFull<E>(pack_abandoned);
-
-               misabsorb_refer(pack_disowned,  3);
-               Many_CheckState_DisownedFull<E>(pack_disowned);
-               return;
-            }
-
             auto absorb_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(*element));
 
-               Many_Helper_TestSame(a, *element);
+               Text_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == element->GetUses());
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd("Absorb/" + intent + "/AssignAbsorb/Refer", 30, 100,
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Refer", 30, 100,
                   a.AssignAbsorb(*element),                 a.AssignAbsorb(*originalElement),
-                  stdvec temp_std1 (1, *element);
-                  stdvec temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdstr temp_std1 (1, *element);
+                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -337,12 +266,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Clone(element));
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, Clone(element));
 
-            BenchmarkManyStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
                a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
-               stdvec temp_std (1, *element),      temp_std[0] = *originalElement
+               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -355,37 +284,38 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
 
       if constexpr (CT::DeepDense<E>) {
+         WHEN("Assigned and misabsorbed by clone") {
+            auto misabsorb_clone = [&](T& a) {
+               REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
+               Text_CheckState_OwnedFull(a);
+               Text_CheckState_ContainsOne(a, Clone(originalElement));
+            };
+
+            misabsorb_clone(pack_referred1);
+            misabsorb_clone(pack_referred2);
+            misabsorb_clone(pack_copied);
+            misabsorb_clone(pack_cloned);
+            misabsorb_clone(pack_moved1);
+            misabsorb_clone(pack_moved2);
+            misabsorb_clone(pack_abandoned);
+            misabsorb_clone(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed cloned container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_clone = [&](T& a) {
-                  REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Clone(originalElement));
-               };
-
-               misabsorb_clone(pack_referred1);
-               misabsorb_clone(pack_referred2);
-               misabsorb_clone(pack_copied);
-               misabsorb_clone(pack_cloned);
-               misabsorb_clone(pack_moved1);
-               misabsorb_clone(pack_moved2);
-               misabsorb_clone(pack_abandoned);
-               misabsorb_clone(pack_disowned);
-               return;
-            }
-
             auto absorb_clone = [&](T& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(Clone(*element)));
 
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-               Many_Helper_TestSame(a, *element);
+               Text_CheckState_OwnedFull(*element);
+               Text_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd("Absorb/" + intent + "/AssignAbsorb/Clone", 30, 100,
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Clone", 30, 100,
                   a.AssignAbsorb(Clone(*element)),          a.AssignAbsorb(Clone(*originalElement)),
-                  stdvec temp_std1 (1, *element);
-                  stdvec temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdstr temp_std1 (1, *element);
+                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -404,12 +334,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
                a.Assign(Copy(*element)),           a.Assign(Copy(*originalElement)),
-               stdvec temp_std (1, *element),      temp_std[0] = *originalElement
+               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -422,37 +352,38 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
 
       if constexpr (CT::DeepDense<E>) {
+         WHEN("Assigned and misabsorbed by copy") {
+            auto misabsorb_copy = [&](T& a) {
+               REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
+               Text_CheckState_OwnedFull<E>(a);
+               Text_CheckState_ContainsOne(a, Refer(originalElement));
+            };
+
+            misabsorb_copy(pack_referred1);
+            misabsorb_copy(pack_referred2);
+            misabsorb_copy(pack_copied);
+            misabsorb_copy(pack_cloned);
+            misabsorb_copy(pack_moved1);
+            misabsorb_copy(pack_moved2);
+            misabsorb_copy(pack_abandoned);
+            misabsorb_copy(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed copied container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_copy = [&](T& a) {
-                  REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Refer(originalElement));
-               };
-
-               misabsorb_copy(pack_referred1);
-               misabsorb_copy(pack_referred2);
-               misabsorb_copy(pack_copied);
-               misabsorb_copy(pack_cloned);
-               misabsorb_copy(pack_moved1);
-               misabsorb_copy(pack_moved2);
-               misabsorb_copy(pack_abandoned);
-               misabsorb_copy(pack_disowned);
-               return;
-            }
-
             auto absorb_copy = [&](T& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(Copy(*element)));
 
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-               Many_Helper_TestSame(a, *element);
+               Text_CheckState_OwnedFull(*element);
+               Text_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd("Absorb/" + intent + "/AssignAbsorb/Copy", 30, 100,
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Copy", 30, 100,
                   a.AssignAbsorb(Copy(*element)),           a.AssignAbsorb(Copy(*originalElement)),
-                  stdvec temp_std1 (1, *element);
-                  stdvec temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdstr temp_std1 (1, *element);
+                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -472,16 +403,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_Default<TypeOf<E>>(movable);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd("Absorb/" + intent + "/Assign/Move", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Move", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
                a.Assign(Move(movable1)),                       a.Assign(Move(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               stdvec temp_std (1, ::std::move(movable1)),     temp_std[0] = ::std::move(movable2)
+               stdstr temp_std (1, ::std::move(movable1)),     temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -494,45 +425,46 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
 
       if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and absorbed moved container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_move = [&](T& a) {
-                  auto movable = *element;
-                  REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
+         WHEN("Assigned and misabsorbed by move") {
+            auto misabsorb_move = [&](T& a) {
+               auto movable = *element;
+               REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
 
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Refer(originalElement));
-                  Many_CheckState_OwnedFull<int>(movable);
-                  REQUIRE(movable.GetUses() == 2);
-                  REQUIRE(movable.template As<int>() == 555);
-               };
-
-               misabsorb_move(pack_referred1);
-               misabsorb_move(pack_referred2);
-               misabsorb_move(pack_copied);
-               misabsorb_move(pack_cloned);
-               misabsorb_move(pack_moved1);
-               misabsorb_move(pack_moved2);
-               misabsorb_move(pack_abandoned);
-               misabsorb_move(pack_disowned);
-               return;
+               Text_CheckState_OwnedFull<E>(a);
+               Text_CheckState_ContainsOne(a, Refer(originalElement));
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable);
+               REQUIRE(movable.GetUses() == 2);
+               REQUIRE(movable.template As<int>() == 555);
             };
 
+            misabsorb_move(pack_referred1);
+            misabsorb_move(pack_referred2);
+            misabsorb_move(pack_copied);
+            misabsorb_move(pack_cloned);
+            misabsorb_move(pack_moved1);
+            misabsorb_move(pack_moved2);
+            misabsorb_move(pack_abandoned);
+            misabsorb_move(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
+         WHEN("Assigned and absorbed moved container") {
             auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(::std::move(movable)));
 
-               Many_CheckState_Default<TypeOf<E>>(movable);
-               Many_Helper_TestSame(a, *element);
+               Text_CheckState_Default(movable);
+               Text_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd("Absorb/" + intent + "/AssignAbsorb/Move", 30, 100,
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Move", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
                   a.AssignAbsorb(Move(movable1)),          a.AssignAbsorb(Move(movable2)),
-                  stdvec movable1 (1, *element);
-                  stdvec movable2 (1, *originalElement),   movable1 = ::std::move(movable2)
+                  stdstr movable1 (1, *element);
+                  stdstr movable2 (1, *originalElement),   movable1 = ::std::move(movable2)
                );
             };
 
@@ -549,12 +481,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          auto assign_disown = [&](T& a, [[maybe_unused]] const char* intent) {
             REQUIRE_NOTHROW(a.Assign(Disown(*element)));
 
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Disown(element));
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, Disown(element));
 
-            BenchmarkManyStd("Absorb/" + intent + "/Assign/Disown", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Disown", 30, 100,
                a.Assign(Disown(*element)),      a.Assign(Disown(*originalElement)),
-               stdvec temp_std (1, *element),   temp_std[0] = *originalElement
+               stdstr temp_std (1, *element),   temp_std[0] = *originalElement
             );
          };
 
@@ -567,25 +499,26 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
 
       if constexpr (CT::DeepDense<E>) {
+         WHEN("Assigned and misabsorbed by disown") {
+            auto misabsorb_disown = [&](T& a) {
+               REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
+               Text_CheckState_OwnedFull<E>(a);
+               Text_CheckState_ContainsOne(a, Disown(originalElement));
+            };
+
+            misabsorb_disown(pack_referred1);
+            misabsorb_disown(pack_referred2);
+            misabsorb_disown(pack_copied);
+            misabsorb_disown(pack_cloned);
+            misabsorb_disown(pack_moved1);
+            misabsorb_disown(pack_moved2);
+            misabsorb_disown(pack_abandoned);
+            misabsorb_disown(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed disowned container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_disown = [&](T& a) {
-                  REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Disown(originalElement));
-               };
-
-               misabsorb_disown(pack_referred1);
-               misabsorb_disown(pack_referred2);
-               misabsorb_disown(pack_copied);
-               misabsorb_disown(pack_cloned);
-               misabsorb_disown(pack_moved1);
-               misabsorb_disown(pack_moved2);
-               misabsorb_disown(pack_abandoned);
-               misabsorb_disown(pack_disowned);
-               return;
-            }
-
             auto absorb_disown = [&](T& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(Disown(*element)));
 
@@ -598,10 +531,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 0);
                REQUIRE_FALSE(a.GetAllocation());
 
-               BenchmarkManyStd("Absorb/" + intent + "/AssignAbsorb/Disown", 30, 100,
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Disown", 30, 100,
                   a.AssignAbsorb(Disown(*element)),         a.AssignAbsorb(Disown(*originalElement)),
-                  stdvec temp_std1 (1, *element);
-                  stdvec temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdstr temp_std1 (1, *element);
+                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -621,16 +554,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_Abandoned<TypeOf<E>>(movable);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd("Absorb/" + intent + "/Assign/Abandon", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Abandon", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
                a.Assign(Abandon(movable1)),                   a.Assign(Abandon(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               stdvec temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
+               stdstr temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -643,45 +576,46 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
 
       if constexpr (CT::DeepDense<E>) {
+         WHEN("Assigned and misabsorbed by abandon") {
+            auto misabsorb_abandon = [&](T& a) {
+               auto movable = *element;
+               REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
+
+               Text_CheckState_OwnedFull<E>(a);
+               Text_CheckState_ContainsOne(a, Refer(originalElement));
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable);
+               REQUIRE(movable.GetUses() == 2);
+            };
+
+            misabsorb_abandon(pack_referred1);
+            misabsorb_abandon(pack_referred2);
+            misabsorb_abandon(pack_copied);
+            misabsorb_abandon(pack_cloned);
+            misabsorb_abandon(pack_moved1);
+            misabsorb_abandon(pack_moved2);
+            misabsorb_abandon(pack_abandoned);
+            misabsorb_abandon(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed abandoned container") {
-            if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_abandon = [&](T& a) {
-                  auto movable = *element;
-                  REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
-
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Refer(originalElement));
-                  Many_CheckState_OwnedFull<int>(movable);
-                  REQUIRE(movable.GetUses() == 2);
-               };
-
-               misabsorb_abandon(pack_referred1);
-               misabsorb_abandon(pack_referred2);
-               misabsorb_abandon(pack_copied);
-               misabsorb_abandon(pack_cloned);
-               misabsorb_abandon(pack_moved1);
-               misabsorb_abandon(pack_moved2);
-               misabsorb_abandon(pack_abandoned);
-               misabsorb_abandon(pack_disowned);
-               return;
-            }
-
             auto absorb_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(Abandon(movable)));
 
-               Many_CheckState_Abandoned<TypeOf<E>>(movable);
-               Many_Helper_TestSame(a, *element);
+               Text_CheckState_Abandoned(movable);
+               Text_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd("Absorb/" + intent + "/AssignAbsorb/Abandon", 30, 100,
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Abandon", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
                   a.AssignAbsorb(Abandon(movable1)),          a.AssignAbsorb(Abandon(movable2)),
-                  stdvec movable1 (1, *element);
-                  stdvec movable2 (1, *originalElement);
-                  stdvec temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
+                  stdstr movable1 (1, *element);
+                  stdstr movable2 (1, *originalElement);
+                  stdstr temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
                );
             };
 
@@ -697,7 +631,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       WHEN("Assigned compatible empty self") {
          auto assign_empty_self = [&](T& a) {
             REQUIRE_NOTHROW(a = T{});
-            Many_CheckState_Default<E>(a);
+            Text_CheckState_Default(a);
          };
 
          assign_empty_self(pack_referred1);
@@ -718,7 +652,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             LglsDisableWarning_SelfAssign
                REQUIRE_NOTHROW(a = a);
             LglsDisableWarningPop
-            Many_Helper_TestSame(a, backup, not allow_change_in_constness);
+            Text_Helper_TestSame(a, backup, not allow_change_in_constness);
             REQUIRE(a.GetUses() == uses_before);
          };
 
@@ -737,8 +671,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T absorbed1 {a};
             T absorbed2 {Refer {a}};
 
-            Many_Helper_TestSame(absorbed1, compare_against);
-            Many_Helper_TestSame(absorbed2, compare_against);
+            Text_Helper_TestSame(absorbed1, compare_against);
+            Text_Helper_TestSame(absorbed2, compare_against);
             REQUIRE(absorbed1.GetUses() == uses);
             REQUIRE(absorbed2.GetUses() == uses);
          };
@@ -758,9 +692,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T backup = a;
             T absorbed {::std::move(a)};
 
-            Many_CheckState_Default<E>(a);
-            Many_CheckState_OwnedFull<E>(absorbed);
-            Many_Helper_TestSame(absorbed, backup);
+            Text_CheckState_Default(a);
+            Text_CheckState_OwnedFull(absorbed);
+            Text_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -779,9 +713,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T backup = a;
             T absorbed {Move(a)};
 
-            Many_CheckState_Default<E>(a);
-            Many_CheckState_OwnedFull<E>(absorbed);
-            Many_Helper_TestSame(absorbed, backup);
+            Text_CheckState_Default(a);
+            Text_CheckState_OwnedFull(absorbed);
+            Text_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -800,9 +734,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T backup = a;
             T absorbed {Abandon {a}};
 
-            Many_CheckState_Abandoned<E>(a);
-            Many_CheckState_OwnedFull<E>(absorbed);
-            Many_Helper_TestSame(absorbed, backup);
+            Text_CheckState_Abandoned(a);
+            Text_CheckState_OwnedFull(absorbed);
+            Text_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -820,8 +754,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          auto absorb_construct_disown = [&](T& a, int uses) {
             T absorbed {Disown {a}};
 
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_DisownedFull<E>(absorbed);
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_DisownedFull(absorbed);
             REQUIRE(absorbed.GetRaw() == a.GetRaw());
             REQUIRE(absorbed.IsExact(a.GetType()));
             REQUIRE(absorbed == a);
@@ -840,8 +774,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          absorb_construct_disown(pack_abandoned, 1);
 
          T absorbed{Disown {pack_disowned}};
-         Many_CheckState_DisownedFull<E>(pack_disowned);
-         Many_CheckState_DisownedFull<E>(absorbed);
+         Text_CheckState_DisownedFull(pack_disowned);
+         Text_CheckState_DisownedFull(absorbed);
          REQUIRE(absorbed.GetRaw() == pack_disowned.GetRaw());
          REQUIRE(absorbed.IsExact(pack_disowned.GetType()));
          REQUIRE(absorbed == pack_disowned);
@@ -852,53 +786,40 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       }
       
       WHEN("Absorbed by copy") {
-         const bool managed_sparse = Sparse and Managed;
-         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs, int indi_refs) {
+         auto absorb_construct_copy = [&](T& a, int uses) {
             T absorbed {Copy {a}};
 
             REQUIRE(a.GetUses() == uses);
-            Many_CheckState_OwnedFull<E>(absorbed);
+            Text_CheckState_OwnedFull(absorbed);
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
-            REQUIRE(absorbed.template As<E>() == a.template As<E>());
-
-            if constexpr (Sparse) {
-               auto entry = *absorbed.GetEntries();
-
-               if (entry)
-                  REQUIRE(entry->GetUses() == entry_refs);
-               
-               if constexpr (Reffed) {
-                  auto e = absorbed.template As<E>();
-                  REQUIRE(DenseCast(e).GetReferences() == indi_refs);
-               }
-            }
+            Text_CheckState_ContainsOne(absorbed, Refer(a));
          };
 
-         absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3, 9);
-         Many_CheckState_OwnedFull<E>(pack_referred1);
+         absorb_construct_copy(pack_referred1, 3);
+         Text_CheckState_OwnedFull(pack_referred1);
 
-         absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3, 9);
-         Many_CheckState_OwnedFull<E>(pack_referred2);
+         absorb_construct_copy(pack_referred2, 3);
+         Text_CheckState_OwnedFull(pack_referred2);
 
-         absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3, 9);
-         Many_CheckState_OwnedFull<E>(pack_copied);
+         absorb_construct_copy(pack_copied,    1);
+         Text_CheckState_OwnedFull(pack_copied);
 
-         absorb_construct_copy(pack_cloned,    1, 2, 2);
-         Many_CheckState_OwnedFull<E>(pack_cloned);
+         absorb_construct_copy(pack_cloned,    1);
+         Text_CheckState_OwnedFull(pack_cloned);
 
-         absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1, 9);
-         Many_CheckState_OwnedFull<E>(pack_moved1);
+         absorb_construct_copy(pack_moved1,    1);
+         Text_CheckState_OwnedFull(pack_moved1);
 
-         absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1, 9);
-         Many_CheckState_OwnedFull<E>(pack_moved2);
+         absorb_construct_copy(pack_moved2,    1);
+         Text_CheckState_OwnedFull(pack_moved2);
 
-         absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1, 9);
-         Many_CheckState_OwnedFull<E>(pack_abandoned);
+         absorb_construct_copy(pack_abandoned, 1);
+         Text_CheckState_OwnedFull(pack_abandoned);
 
-         absorb_construct_copy(pack_disowned,  3, managed_sparse ? 9 : 0, 9);
-         Many_CheckState_DisownedFull<E>(pack_disowned);
+         absorb_construct_copy(pack_disowned,  3);
+         Text_CheckState_DisownedFull(pack_disowned);
       }
       
       WHEN("Absorbed by clone") {
@@ -906,11 +827,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             T absorbed {Clone {a}};
 
             if (uses == 0)
-               Many_CheckState_DisownedFull<E>(a);
+               Text_CheckState_DisownedFull(a);
             else
-               Many_CheckState_OwnedFull<E>(a);
+               Text_CheckState_OwnedFull(a);
 
-            Many_CheckState_OwnedFull<E>(absorbed);
+            Text_CheckState_OwnedFull(absorbed);
             REQUIRE((absorbed == a) == CT::Dense<E>);
             REQUIRE(absorbed.GetUses() == 1);
          };
@@ -925,102 +846,20 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          absorb_construct_clone(pack_disowned,  0);
       }
       
-      /// MARK: Emplace                                                       
-      WHEN("Emplace (overwrite)") {
-         auto emplace_overwrite = [&](T& a, [[maybe_unused]] const char* intent) {
-            ScopedE i666{666};
-            const auto i666backup = *i666;
-            decltype(auto) instance = a.Emplace(::std::move(*i666));
-
-            Many_CheckState_OwnedFull<E>(a);
-            if constexpr (CT::Handle<decltype(instance)>)
-               REQUIRE(instance.CompareOneEqual(i666backup));
-            else
-               REQUIRE(instance == i666backup);
-
-            REQUIRE(a.GetCount() == 1);
-            REQUIRE(a.GetReserved() >= 1);
-
-            if constexpr (CT::Typed<T>) {
-               REQUIRE(*a == i666backup);
-               if constexpr (CT::Handle<decltype(instance)>)
-                  REQUIRE(&*a == &*instance);
-               else
-                  REQUIRE(&*a == &instance);
-            }
-
-            BenchmarkMany("Absorb/" + intent + "/Emplace", 30,
-               auto movable1 = *element;
-               auto movable2 = *originalElement;
-               a.Emplace(::std::move(movable1)),   a.Emplace(::std::move(movable2))
-            );
-
-            if constexpr (not Managed) {
-               // On unmanaged tests i666 will be destroyed at the end of this scope,
-               // and the container will be left with a dangling pointer.
-               // Make sure this isn't happening. When inserting raw unmanaged pointers, 
-               // safety is solely in the hands of the user.
-               a.Reset();
-            }
-         };
-
-         emplace_overwrite(pack_referred1, "Refer");
-         emplace_overwrite(pack_copied,    "Copy");
-         emplace_overwrite(pack_cloned,    "Clone");
-         emplace_overwrite(pack_moved1,    "Move");
-         emplace_overwrite(pack_abandoned, "Abandon");
-         emplace_overwrite(pack_disowned,  "Disown");
-      }
-
-      /// MARK: Describe                                                      
-      WHEN("Emplace (overwrite, describe)") {
-         auto emplace_overwrite_describe = [&](T& a, [[maybe_unused]] const char* intent) {
-            ScopedE i666{666};
-            const auto i666backup = *i666;
-            Many descriptor {Piecewise, ::std::move(*i666)};
-
-            if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) {
-               decltype(auto) instance = a.Emplace(Describe{descriptor});
-
-               Many_CheckState_OwnedFull<E>(a);
-               REQUIRE(instance.CompareOneEqual(i666backup));
-               REQUIRE(a.GetCount() == 1);
-               REQUIRE(a.GetReserved() >= 1);
-
-               BenchmarkMany("Absorb/" + intent + "/Emplace/Describe", 30,
-                  auto movable1 = *element;
-                  a.Emplace(::std::move(movable1)),      a.Emplace(Describe{descriptor})
-               );
-            }
-            else if constexpr (CT::TypeErased<T>) {
-               REQUIRE_THROWS(a.Emplace(Describe{descriptor}));
-
-               Many_CheckState_Default<E>(a, true);
-            }
-         };
-
-         emplace_overwrite_describe(pack_referred1, "Refer");
-         emplace_overwrite_describe(pack_copied,    "Copy");
-         emplace_overwrite_describe(pack_cloned,    "Clone");
-         emplace_overwrite_describe(pack_moved1,    "Move");
-         emplace_overwrite_describe(pack_abandoned, "Abandon");
-         emplace_overwrite_describe(pack_disowned,  "Disown");
-      }
-      
       /// MARK: Clear                                                         
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent, int uses = 1) {
-            BenchmarkManyStd("Absorb/" + intent + "/Clear", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Clear", 30, 100,
                T temp = a,                         temp.Clear(),
-               stdvec temp_std (1, *element),      temp_std.clear()
+               stdstr temp_std (1, *element),      temp_std.clear()
             );
 
             REQUIRE_NOTHROW(a.Clear());
 
             if (uses != 1)
-               Many_CheckState_Default<E>(a, true);
+               Text_CheckState_Default(a, true);
             else
-               Many_CheckState_OwnedEmpty<E>(a);
+               Text_CheckState_OwnedEmpty(a);
          };
 
          clear_full(pack_referred1, "Refer", 3);
@@ -1034,14 +873,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       /// MARK: Reset                                                         
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkManyStd("Absorb/" + intent + "/Reset", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/Reset", 30, 100,
                T temp = a,                         temp.Reset(),
-               stdvec temp_std (1, *element),      temp_std.clear()
+               stdstr temp_std (1, *element),      temp_std.clear()
             );
 
             REQUIRE_NOTHROW(a.Reset());
 
-            Many_CheckState_Default<E>(a);
+            Text_CheckState_Default(a);
          };
 
          reset_full(pack_referred1, "Refer");
@@ -1052,8 +891,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
          reset_full(pack_disowned,  "Disown");
       }
 
-      if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and not CT::Container<E>) {
-         // Works only if E doesn't move entries around                 
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
          WHEN("Reset, and then immediately allocated again") {
             auto reset_and_reallocate = [&](T& a) {
                const auto memory = a.GetRaw();
@@ -1071,7 +909,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             reset_and_reallocate(pack_abandoned);
             //reset_and_reallocate(pack_disowned); // likely to be reallocated in a new place due to lack of authority on the original memory
          }
-      }
+      #endif
 
       /// MARK: Compare                                                       
       WHEN("Compared") {
@@ -1090,15 +928,15 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             REQUIRE_FALSE(a != same_pack);
 
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkManyStd("Absorb/" + intent + "/operator==", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/operator==", 30, 100,
                (void) 0,                                    dont_optimize |= (a == same_pack),
-               const stdvec a_std (1, *element);
-               const stdvec another_pack1_std (1, *e1),     dont_optimize |= (a_std == another_pack1_std)
+               const stdstr a_std (1, *element);
+               const stdstr another_pack1_std (1, *e1),     dont_optimize |= (a_std == another_pack1_std)
             );
-            BenchmarkManyStd("Absorb/" + intent + "/operator!=", 30, 100,
+            BenchmarkTextStd("Absorb/" + intent + "/operator!=", 30, 100,
                (void) 0,                                    dont_optimize |= (a != same_pack),
-               const stdvec a_std (1, *element);
-               const stdvec another_pack1_std (1, *e1),     dont_optimize |= (a_std != another_pack1_std)
+               const stdstr a_std (1, *element);
+               const stdstr another_pack1_std (1, *e1),     dont_optimize |= (a_std != another_pack1_std)
             );
          };
 
@@ -1112,32 +950,92 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
 
       /// MARK: Contains                                                      
       WHEN("Contains when full") {
-         ScopedE e1 {1};
-         
          auto contains_full = [&](auto& a) {
-            REQUIRE      (a.Contains(*originalElement));
-            REQUIRE_FALSE(a.Contains(*e1));
+            if constexpr (CT::Sparse<E>) {
+               //TODO pointers are always different
+               REQUIRE_FALSE(a.Contains('?'));
+               REQUIRE_FALSE(a.Contains('g')); // larger than a hex digit
+            }
+            else if constexpr (Same<E, Text>) {
+               REQUIRE      (a.Contains('5'));
+               REQUIRE      (a.Contains('6'));
+               REQUIRE_FALSE(a.Contains('?'));
+            }
+            else if constexpr (Same<E, RT>) {
+               REQUIRE      (a.Contains('R'));
+               REQUIRE      (a.Contains('T'));
+               REQUIRE      (a.Contains('('));
+               REQUIRE      (a.Contains(')'));
+               REQUIRE_FALSE(a.Contains('?'));
+            }
+            else if constexpr (Same<E, char>) {
+               REQUIRE      (a.Contains('+'));
+               REQUIRE_FALSE(a.Contains('?'));
+            }
+            else {
+               REQUIRE      (a.Contains('5'));
+               REQUIRE      (a.Contains('6'));
+               REQUIRE_FALSE(a.Contains('?'));
+            }
          };
 
          contains_full(pack_referred1);
          contains_full(pack_referred2);
          contains_full(pack_copied);
-
-         if constexpr (Sparse) {
-            REQUIRE      (pack_cloned.GetDense().Contains(DenseCast(*originalElement)));
-            REQUIRE_FALSE(pack_cloned.Contains(*originalElement));
-            REQUIRE_FALSE(pack_cloned.Contains(*e1));
-         }
-         else contains_full(pack_cloned);
-
+         contains_full(pack_cloned);
          contains_full(pack_moved1);
          contains_full(pack_moved2);
          contains_full(pack_abandoned);
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkMany("Absorb/Contains", 30,
+         BenchmarkText("Absorb/Contains", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
+         );
+      }
+
+      /// MARK: Contains Range                                                
+      WHEN("ContainsRange when full") {
+         auto contains_full = [&](auto& a) {
+            if constexpr (CT::Sparse<E>) {
+               //TODO pointers are always different
+            }
+            else if constexpr (Same<E, RT>) {
+               REQUIRE      (a.ContainsRange("RT("));
+               REQUIRE_FALSE(a.ContainsRange("int"));
+               REQUIRE_FALSE(a.ContainsRange(""));
+            }
+            else if constexpr (Same<E, char>) {
+               REQUIRE      (a.ContainsRange("+"));
+               REQUIRE_FALSE(a.ContainsRange("?"));
+               REQUIRE_FALSE(a.ContainsRange(""));
+            }
+            else {
+               REQUIRE      (a.ContainsRange("55"));
+               REQUIRE      (a.ContainsRange("556"));
+               REQUIRE      (a.ContainsRange("56"));
+               REQUIRE      (a.ContainsRange("6"));
+               REQUIRE      (a.ContainsRange("5"));
+               REQUIRE_FALSE(a.ContainsRange("?"));
+               REQUIRE_FALSE(a.ContainsRange("57"));
+               REQUIRE_FALSE(a.ContainsRange("557"));
+               REQUIRE_FALSE(a.ContainsRange("5578"));
+               REQUIRE_FALSE(a.ContainsRange(""));
+            }
+         };
+
+         contains_full(pack_referred1);
+         contains_full(pack_referred2);
+         contains_full(pack_copied);
+         contains_full(pack_cloned);
+         contains_full(pack_moved1);
+         contains_full(pack_moved2);
+         contains_full(pack_abandoned);
+         contains_full(pack_disowned);
+
+         [[maybe_unused]] volatile bool dont_optimize = false;
+         BenchmarkText("Absorb/Contains", 30,
+            (void) 0, dont_optimize |= pack_referred1.ContainsRange(*element)
          );
       }
    }
@@ -1154,105 +1052,33 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       /// MARK: GetHandle                                                     
       WHEN("GetHandle is called on mutable container") {
          auto src_handle = src.GetHandle();
+         static_assert(::std::same_as<decltype(src_handle), THandle<char&>>);
 
-         if constexpr (CT::Untyped<T>)
-            static_assert(::std::same_as<decltype(src_handle), HandleMut>);
-         else
-            static_assert(::std::same_as<decltype(src_handle), THandle<E&>>);
-
-         auto src_data = src_handle.template Get<E>();
-         AllocationPtr const* src_entries = nullptr;
-
-         Handle_CheckState_OwnedFull<E>(src_handle);
-
-         if constexpr (Sparse) {
-            src_entries = src_handle.GetEntries();
-            REQUIRE(*src_entries == e556.entries[1]);
-            if constexpr (Managed)
-               REQUIRE(e556.entries[1]->GetUses() == 2);
-         }
-
-         if constexpr (Reffed) {
-            REQUIRE(DenseCast(src_data).GetReferences() == (Sparse ? 2 : 1));
-            REQUIRE(DenseCast(src_data).destroyed == false);
-         }
+         auto src_data = src_handle.template Get<char>();
+         Handle_CheckState_OwnedFull<char>(src_handle);
 
          auto dst_handle = dst.GetHandle();
-         auto dst_data   = dst_handle.template Get<E>();
-         AllocationPtr const* dst_entries = nullptr;
-
-         Handle_CheckState_OwnedFull<E>(dst_handle);
-
-         if constexpr (Sparse) {
-            dst_entries = dst_handle.GetEntries();
-            REQUIRE(*dst_entries == e6.entries[1]);
-            if constexpr (Managed)
-               REQUIRE(e6.entries[1]->GetUses() == 2);
-            REQUIRE(dst_entries != src_entries);
-         }
+         auto dst_data   = dst_handle.template Get<char>();
+         Handle_CheckState_OwnedFull<char>(dst_handle);
 
          REQUIRE(dst_data != src_data);
-
-         if constexpr (Reffed) {
-            REQUIRE(DenseCast(dst_data).GetReferences() == (Sparse ? 2 : 1));
-            REQUIRE(DenseCast(dst_data).destroyed == false);
-         }
 
          THEN("Handle assigned to another container") {
             REQUIRE_NOTHROW(dst_handle.Assign(Move(src_handle)));
 
-            Handle_CheckState_OwnedFull<E>(src_handle);
-            Handle_CheckState_OwnedFull<E>(dst_handle);
-            REQUIRE(src_handle.template Get<E>() == src_data);
-            REQUIRE(dst_handle.template Get<E>() == dst_data);
-            
-            auto& moved_in = DenseCast(dst_data);
-            if constexpr (Sparse) {
-               REQUIRE(src_handle.GetEntries() == src_entries);
-               REQUIRE(*src_data == nullptr);
-               REQUIRE(*src_entries == nullptr);
-
-               REQUIRE(dst_handle.GetEntries() == dst_entries);
-               REQUIRE(*dst_data == *e556);
-               REQUIRE(*dst_entries == e556.entries[1]);
-               if constexpr (Managed) {
-                  REQUIRE(e556.entries[1]->GetUses() == 2);
-                  REQUIRE(e6.entries[1]->GetUses() == 1);
-               }
-
-               if constexpr (Reffed) {
-                  REQUIRE(DenseCast(*e6).GetReferences() == 1);
-                  REQUIRE(moved_in.GetReferences() == 2);
-                  REQUIRE(moved_in.data == DenseCast(*e556).data);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == false);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
-            else {
-               auto& moved_out = DenseCast(src_data);
-               if constexpr (Reffed) {
-                  REQUIRE(moved_out.GetReferences() == 1);
-                  REQUIRE(moved_out.destroyed == false);
-                  REQUIRE(moved_out.moved_in == false);
-                  REQUIRE(moved_out.moved_out == true);
-
-                  REQUIRE(moved_in.GetReferences() == 1);
-                  REQUIRE(moved_in.data == DenseCast(*e556).data);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == true);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
+            Handle_CheckState_OwnedFull<char>(src_handle);
+            Handle_CheckState_OwnedFull<char>(dst_handle);
+            REQUIRE(src_handle.template Get<char>() == src_data);
+            REQUIRE(dst_handle.template Get<char>() == dst_data);
          }
          
          THEN("Handle is swapped with another container's handle") {
             REQUIRE_NOTHROW(dst_handle.SwapContents(src_handle));
 
-            Handle_CheckState_OwnedFull<E>(src_handle);
-            Handle_CheckState_OwnedFull<E>(dst_handle);
-            REQUIRE(src_handle.template Get<E>() == src_data);
-            REQUIRE(dst_handle.template Get<E>() == dst_data);
+            Handle_CheckState_OwnedFull<char>(src_handle);
+            Handle_CheckState_OwnedFull<char>(dst_handle);
+            REQUIRE(src_handle.template Get<char>() == src_data);
+            REQUIRE(dst_handle.template Get<char>() == dst_data);
             
             auto& moved_in  = DenseCast(dst_data);
             auto& moved_out = DenseCast(src_data);
@@ -1260,194 +1086,40 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
             REQUIRE(moved_in  == DenseCast(*e556));
             REQUIRE(moved_out == DenseCast(*e6));
 
-            if constexpr (Sparse) {
-               REQUIRE(src_handle.GetEntries() == src_entries);
-               REQUIRE(dst_handle.GetEntries() == dst_entries);
-   
-               REQUIRE(*dst_entries == e556.entries[1]);
-               REQUIRE(*src_entries == e6.entries[1]);
-               if constexpr (Managed) {
-                  REQUIRE(e556.entries[1]->GetUses() == 2);
-                  REQUIRE(e6.entries[1]->GetUses() == 2);
-               }
-
-               if constexpr (Reffed) {
-                  REQUIRE(moved_out.GetReferences() == 2);
-                  REQUIRE(moved_out.data == DenseCast(*e6).data);
-                  REQUIRE(moved_out.destroyed == false);
-                  REQUIRE(moved_out.moved_in == false);
-                  REQUIRE(moved_out.moved_out == false);
-
-                  REQUIRE(moved_in.GetReferences() == 2);
-                  REQUIRE(moved_in.data == DenseCast(*e556).data);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == false);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
-            else {
-               if constexpr (Reffed) {
-                  REQUIRE(moved_out.GetReferences() == 1);
-                  REQUIRE(moved_out.destroyed == false);
-                  REQUIRE(moved_out.moved_in == true);
-                  REQUIRE(moved_out.moved_out == false);
-
-                  REQUIRE(moved_in.GetReferences() == 1);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == true);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
-
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
                dst_handle.SwapContents(src_handle);
          }
          
          THEN("Handle moved into a local handle") {
-            THandle<E> local {Absorb, Move(src_handle)};
+            THandle<char> local {Absorb, Move(src_handle)};
 
-            Handle_CheckState_OwnedFull<E>(src_handle);
-            Handle_CheckState_OwnedFull<E>(local);
-            REQUIRE(src_handle.template Get<E>() == src_data);
-            REQUIRE(local.template Get<E>() != src_data);
+            Handle_CheckState_OwnedFull<char>(src_handle);
+            Handle_CheckState_OwnedFull<char>(local);
+            REQUIRE(src_handle.template Get<char>() == src_data);
+            REQUIRE(local.template Get<char>() != src_data);
             
-            auto& moved_in = DenseCast(local.template Get<E>());
+            auto& moved_in = DenseCast(local.template Get<char>());
             REQUIRE(moved_in == DenseCast(*e556));
-
-            if constexpr (Sparse) {
-               REQUIRE(src_handle.GetEntries() == src_entries);
-               REQUIRE(local.GetEntries() != src_entries);
-
-               REQUIRE(*src_data == nullptr);
-               REQUIRE(*src_entries == nullptr);
-
-               REQUIRE(local.GetEntries()[0] == e556.entries[1]);
-               if constexpr (Managed) {
-                  REQUIRE(e556.entries[1]->GetUses() == 2);
-                  REQUIRE(e6.entries[1]->GetUses() == 2);
-               }
-
-               if constexpr (Reffed) {
-                  REQUIRE(DenseCast(*e6).GetReferences() == 2);
-                  REQUIRE(moved_in.GetReferences() == 2);
-                  REQUIRE(moved_in.data == DenseCast(*e556).data);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == false);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
-            else {
-               auto& moved_out = DenseCast(src_data);
-
-               if constexpr (Reffed) {
-                  REQUIRE(moved_out.GetReferences() == 1);
-                  REQUIRE(moved_out.destroyed == false);
-                  REQUIRE(moved_out.moved_in == false);
-                  REQUIRE(moved_out.moved_out == true);
-
-                  REQUIRE(moved_in.GetReferences() == 1);
-                  REQUIRE(moved_in.data == DenseCast(*e556).data);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == true);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
          }
 
          THEN("Handle is swapped with local handle, and then back to container") {
-            THandle<E> local;
+            THandle<char> local;
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
-            auto local_data = local.template Get<E>();
-            AllocationPtr const* local_entries = nullptr;
+            auto local_data = local.template Get<char>();
 
             Handle_CheckState_OwnedFull<E>(src_handle);
             Handle_CheckState_OwnedFull<E>(local);
-            REQUIRE(src_handle.template Get<E>() == src_data);
+            REQUIRE(src_handle.template Get<char>() == src_data);
             REQUIRE(local_data);
             REQUIRE(local_data != src_data);
 
             auto& moved_in = DenseCast(local_data);
             REQUIRE(moved_in == DenseCast(*e556));
 
-            if constexpr (Sparse) {
-               REQUIRE(src_handle.GetEntries() == src_entries);
-               local_entries = local.GetEntries();
-               REQUIRE(local_entries != nullptr);
-               REQUIRE(local_entries != src_entries);
-
-               REQUIRE(*src_data == nullptr);
-               REQUIRE(*src_entries == nullptr);
-
-               REQUIRE(*local_entries == e556.entries[1]);
-               if constexpr (Managed)
-                  REQUIRE(e556.entries[1]->GetUses() == 2);
-
-               if constexpr (Reffed) {
-                  REQUIRE(moved_in.GetReferences() == 2);
-                  REQUIRE(moved_in.data == DenseCast(*e556).data);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == false);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
-            else {
-               auto& moved_out = DenseCast(src_data);
-
-               if constexpr (Reffed) {
-                  REQUIRE(moved_out.GetReferences() == 1);
-                  REQUIRE(moved_out.destroyed == false);
-                  REQUIRE(moved_out.moved_in == true);
-                  REQUIRE(moved_out.moved_out == false);
-
-                  REQUIRE(moved_in.GetReferences() == 1);
-                  REQUIRE(moved_in.data == DenseCast(*e556).data);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == true);
-                  REQUIRE(moved_in.moved_out == false);
-               }
-            }
-
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
-            REQUIRE(src_handle.template Get<E>() == src_data);
-            REQUIRE(local.template Get<E>() == local_data);
-
-            if constexpr (Sparse) {
-               REQUIRE(src_handle.GetEntries() == src_entries);
-               REQUIRE(local.GetEntries() != src_entries);
-               REQUIRE(local.GetEntries() == local_entries);
-               REQUIRE(*local_entries == nullptr);
-               REQUIRE(*src_data != nullptr);
-
-               REQUIRE(*src_entries == e556.entries[1]);
-               if constexpr (Managed)
-                  REQUIRE(e556.entries[1]->GetUses() == 2);
-
-               if constexpr (Reffed) {
-                  auto& moved_out = DenseCast(src_data);
-                  REQUIRE(moved_out.GetReferences() == 2);
-                  REQUIRE(moved_out.data == DenseCast(*e556).data);
-                  REQUIRE(moved_out.destroyed == false);
-                  REQUIRE(moved_out.moved_in == false);
-                  REQUIRE(moved_out.moved_out == false);
-               }
-            }
-            else {
-               auto& moved_out = DenseCast(src_data);
-
-               if constexpr (Reffed) {
-                  REQUIRE(moved_in.GetReferences() == 1);
-                  REQUIRE(moved_in.destroyed == false);
-                  REQUIRE(moved_in.moved_in == true);
-                  REQUIRE(moved_in.moved_out == false);
-
-                  REQUIRE(moved_out.GetReferences() == 1);
-                  REQUIRE(moved_out.data == DenseCast(*e556).data);
-                  REQUIRE(moved_out.destroyed == false);
-                  REQUIRE(moved_out.moved_in == true);
-                  REQUIRE(moved_out.moved_out == false);
-               }
-            }
+            REQUIRE(src_handle.template Get<char>() == src_data);
+            REQUIRE(local.template Get<char>() == local_data);
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
@@ -1458,27 +1130,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       WHEN("GetHandle is called on constant container") {
          T const& pack_constant = src;
          auto handle = pack_constant.GetHandle();
+         static_assert(::std::same_as<decltype(handle), THandle<char const&>>);
 
-         if constexpr (CT::Untyped<T>)
-            static_assert(::std::same_as<decltype(handle), Handle>);
-         else
-            static_assert(::std::same_as<decltype(handle), THandle<ConstAll<E&>>>);
-
-         Handle_CheckState_OwnedFull<E const>(handle);
-         
-         if constexpr (Sparse) {
-            auto entries = handle.GetEntries();
-            REQUIRE(entries);
-            REQUIRE(*entries == e556.entries[1]);
-            if constexpr (Managed)
-               REQUIRE(e556.entries[1]->GetUses() == 2);
-         }
-
-         if constexpr (Reffed) {
-            auto& data = DenseCast(handle.template Get<E>());
-            REQUIRE(data.GetReferences() == (Sparse ? 2 : 1));
-            REQUIRE(data.destroyed == false);
-         }
+         Handle_CheckState_OwnedFull<char const>(handle);
       }
    }
 

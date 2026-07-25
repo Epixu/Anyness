@@ -27,10 +27,10 @@ namespace Langulus::Anyness::Inner
       Com::MultiownDeep<EnableComponentIf<CT::Sparse<K>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0>>,
                         EnableComponentIf<CT::Sparse<V>, Com::OwnershipDeepHeap<Com::StrongOwnership, true, 1>>>,
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
-      Com::Merging<void, 0, 1>,           // Only merging for keys      
+      Com::Merging<false, 0, 1>,          // Only merging for keys      
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
-      Com::Comparison<true, 0, 1>,        // Allows comparisons of K/V  
+      Com::Comparison<false, true, 0, 1>, // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
       Com::State::Sorted<SORT>,           // Toggle ordered map         
@@ -139,7 +139,6 @@ namespace Langulus::Anyness
          static_assert(Same<PK, K>, "Key type mismatch");
          static_assert(Same<PV, V>, "Val type mismatch");
          return TPair<PK, PV> {Copy {LglsFwd(pair)}}; //TODO Anyness::Piecewise, ?
-         //return TPair<PK, PV> {LglsFwd(pair)}; //TODO Anyness::Piecewise, ?
       }
 
       /// Clear the map and assign a single pair                              
@@ -152,24 +151,19 @@ namespace Langulus::Anyness
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> TMap& {
          this->Clear();
-         //this->DeduceType(key, val);
          TPair temp {LglsFwd(key), LglsFwd(val)};
-         //this->MergeInner(Abandon {temp.GetHandle()});
          this->Merge(Abandon {temp.GetHandle()});
          return *this;
       }
-
-      //using Com::Comparison<0/*, true, 1*/>::operator <=>;
-      //using Com::Comparison<0/*, true, 1*/>::operator ==;
       
       /// Equality comparison with maps                                       
       constexpr bool operator == (CT::Map auto const& rhs) const assumptious {
-         return Com::Comparison<true, 0, 1>::operator == (rhs);
+         return Com::Comparison<false, true, 0, 1>::operator == (rhs);
       }
 
       /// Equality comparison with pairs                                      
       constexpr bool operator == (CT::Pair auto const& rhs) const assumptious {
-         using C = Com::Comparison<true, 0, 1>;
+         using C = Com::Comparison<false, true, 0, 1>;
          return C::template CompareOneEqual<0>(rhs.GetKey())
             and C::template CompareOneEqual<1>(rhs.GetVal());
       }
@@ -177,29 +171,6 @@ namespace Langulus::Anyness
       constexpr bool IsKeyConstant() const noexcept {
          return true;
       }
-
-      /*template<CT::NotVoid AS>
-      decltype(auto) KeyAsAt(this auto&& self, CT::Index auto&& idx) {
-         return self.template AsAt<AS, 0>(LglsFwd(idx));
-      }
-      template<CT::NotVoid AS>
-      decltype(auto) ValAsAt(this auto&& self, CT::Index auto&& idx) {
-         return self.template AsAt<AS, 1>(LglsFwd(idx));
-      }*/
-
-      /*constexpr auto GetKeyEntries() const noexcept requires CT::Sparse<K> {
-         return this->template GetEntries<0>();
-      }
-      constexpr auto GetValEntries() const noexcept requires CT::Sparse<V> {
-         return this->template GetEntries<1>();
-      }
-
-      auto GetKeyEntriesAt(CT::Index auto&& idx) const assumptious requires CT::Sparse<K> {
-         return this->template GetEntriesAt<0>(LglsFwd(idx));
-      }
-      auto GetValEntriesAt(CT::Index auto&& idx) const assumptious requires CT::Sparse<V> {
-         return this->template GetEntriesAt<1>(LglsFwd(idx));
-      }*/
    };
 
    /// MARK: CTAD                                                             

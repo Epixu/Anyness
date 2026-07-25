@@ -39,8 +39,6 @@ namespace Langulus::Anyness
 
 
 TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
-   , Types<TSet<Text>,   ScopedElement<Text>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Set, ScopedElement<Text>>
    , Types<Set, ScopedElement<int>>
@@ -60,6 +58,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    , Types<Set, ScopedElement<RT**>>
    , Types<Set, ScopedElement<char**>>
 
+   , Types<TSet<Text>,   ScopedElement<Text>>
    , Types<TSet<int>,    ScopedElement<int>>
    , Types<TSet<Any>,    ScopedElement<Any>>
    , Types<TSet<RT>,     ScopedElement<RT>>
@@ -207,6 +206,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(not requires (T pack)         { pack.GetDense(); });
       static_assert(not requires (T pack)         { pack +   pack; });
       static_assert(    CT::TextRange<E> or not requires (T pack, E item) { pack + item; });
+      static_assert(    CT::TextRange<E> or not requires (T pack, E item) { item + pack; });
+      static_assert(not CT::TextRange<E> or     requires (T pack, E item) { {item + pack} -> CT::Text; });
       static_assert(not CT::TextRange<E> or     requires (T pack, E item) { {pack + item} -> CT::Text; });
       static_assert(not requires (T pack)         { pack +=  pack; });
       static_assert(not requires (T pack, E item) { pack +=  item; });

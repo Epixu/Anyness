@@ -12,7 +12,9 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Adds operators for front (>>) and back (<<) insertion                  
+   /// Adds operators for front (>>) and back (<<) insertion.                 
+   /// May convert the argument (if AS is specified in Com::Insertion).       
+   /// May deepen the container in order to insert, if able to.               
    ///   @tparam ID, SHARED operators that share the same insertion behavior. 
    ///   @attention this relies on Com::Insertion being present               
    template<Cid ID, Cid...SHARED>

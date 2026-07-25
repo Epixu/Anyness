@@ -79,7 +79,7 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.Insertion<AS, ID, SHARED...>
+   #define ThisCom self.Insertion<CONVERT, ID, SHARED...>
 
    ///                                                                        
    /// Implements insertion for containers.                                   
@@ -99,15 +99,17 @@ namespace Langulus::Anyness::Component
    ///      container if `IsOr() == true`, and then inserts the new content.  
    ///   5. Or/OrAt - an or-preserving insertion that deepens the             
    ///      container if `IsOr() == false`, and then inserts the new content. 
-   ///   @tparam AS type to serialize as before inserting. Useful for byte    
-   ///      and text containers. Use void to insert without serialization.    
+   ///   @tparam CONVERT whether to serialize as self before inserting item.  
+   ///      Useful for byte and text containers. Use 'false' to insert without
+   ///      serialization.                                                    
    ///   @tparam ID, SHARED providers that share the same insertion behavior. 
-   template<class AS, Cid ID, Cid...SHARED>
+   template<bool CONVERT, Cid ID, Cid...SHARED>
    struct Insertion {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
       using Id             = Values<ID, SHARED...>;
 
+      static constexpr bool AttemptConvertOnInsert = CONVERT;
       static constexpr int ComponentPrecedence = 3000;
 
    private:
@@ -173,6 +175,9 @@ namespace Langulus::Anyness::Component
       /// MARK: InsertAt                                                      
       /// Insert one or more elements at the specified position. Supports     
       /// intents and arrays.                                                 
+      /// Insertion, unlike concatenation, may attempt to convert arguments   
+      /// (if AS is specified), or deepen the container, in order to be able  
+      /// to insert.                                                          
       ///   @tparam FORCE if true, the container is allowed to deepen in      
       ///      order to incorporate elements of different types. Otherwise    
       ///      a compile-time or runtime exception will be thrown, if an      
@@ -188,10 +193,9 @@ namespace Langulus::Anyness::Component
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         if constexpr (CT::NotVoid<AS>
-         and not Same<TypeOf<AS>, DeextAll<Deint<A1>>, DeextAll<Deint<AN>>...>) {
+         if constexpr (CONVERT
+         and not Same<TypeOf<C>, DeextAll<Deint<A1>>, DeextAll<Deint<AN>>...>) {
             // Conversion to AS required.                               
-            static_assert(Exact<C, AS>, "Serializing insertion type mismatch");
             const size_t initial_count = self.GetCountInner();
             size_t offset = self.SimplifyIndex(idx);
             // ConvertInsertInner uses ConcatAt, so any exceptions will 
@@ -360,6 +364,9 @@ namespace Langulus::Anyness::Component
       /// Insert one or more elements at the performance-optimal position.    
       /// This usually means at the back of a contiguous container. Supports  
       /// intents and arrays.                                                 
+      /// Insertion, unlike concatenation, may attempt to convert arguments   
+      /// (if AS is specified), or deepen the container, in order to be able  
+      /// to insert.                                                          
       ///   @tparam FORCE if true, the container is allowed to deepen in      
       ///      order to incorporate elements of different types. Otherwise    
       ///      a compile-time or runtime exception will be thrown, if an      
@@ -371,9 +378,8 @@ namespace Langulus::Anyness::Component
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
 
-         if constexpr (CT::NotVoid<AS> and not Same<TypeOf<AS>, Deint<A1>, Deint<AN>...>) {
+         if constexpr (CONVERT and not Same<TypeOf<C>, Deint<A1>, Deint<AN>...>) {
             // Conversion to AS required.                               
-            static_assert(Exact<C, AS>, "Serializing insertion type mismatch");
             const size_t initial_count = self.GetCountInner();
             size_t offset = initial_count;
             // ConvertInsertInner uses ConcatAt, so any exceptions will 
@@ -592,7 +598,13 @@ namespace Langulus::Anyness::Component
       
       /// MARK: ConcatAt                                                      
       /// Concatenation at specific index.                                    
+      /// Unlike InsertAt, concatenation always inserts the contents of the   
+      /// argument containers one by one, without conversion.                 
       /// Possible only for contiguous containers with multiple elements.     
+      ///   @param idx the index to insert at                                 
+      ///   @param a1_intent, an_intent the containers to insert at the given 
+      ///      position                                                       
+      ///   @return the number of concatenated elements                       
       template<CT::IndexedLinearly C, CT::IndexedLinearly T>
       auto ConcatAt(this C& self, CT::Index auto&& idx, T&& data) -> size_t {
          static_assert(CT::ContainsMany<C>,
@@ -702,8 +714,9 @@ namespace Langulus::Anyness::Component
       }
 
       /// MARK: Concat                                                        
-      /// Concatenation at the back. Unlike insertion, concatenation always   
-      /// inserts the contents of the argument containers one by one.         
+      /// Concatenation at the back.                                          
+      /// Unlike Insert, concatenation always inserts the contents of the     
+      /// argument containers one by one, without conversion.                 
       /// Possible only for contiguous containers with multiple elements.     
       ///   @param a1_intent, an_intent the containers to concatenate to the  
       ///      right of 'this'                                                
@@ -802,30 +815,20 @@ namespace Langulus::Anyness::Component
       void ConvertInsertInner(this C& self, size_t& at, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<I>>;
-         static_assert(CT::NotVoid<AS> and not Same<TypeOf<AS>, IT>,
+         static_assert(CONVERT and not Same<TypeOf<C>, IT>,
             "Use InsertInner instead");
-      
-         //if constexpr (not Same<C, IT>) {
-            // Convert all arguments and then concatenate the results   
-            AS converted;
-            if constexpr (CT::Array<T>) {
-               for (size_t i = 0; i < ExtentOf<T>; ++i)
-                  Langulus::Serialize(DeintCast(a)[i], converted);
-            }
-            else Langulus::Serialize(DeintCast(a), converted);
+   
+         // Convert all arguments and then concatenate the results      
+         C converted;
+         if constexpr (CT::Array<T>) {
+            for (size_t i = 0; i < ExtentOf<T>; ++i)
+               Langulus::Serialize(DeintCast(a)[i], converted);
+         }
+         else Langulus::Serialize(DeintCast(a), converted);
 
-            const size_t offset = converted.GetCount();
-            ThisCom::ConcatAt(at, Abandon {converted});
-            at += offset;
-         /*}
-         else {
-            // No conversion required, just concatenate the results     
-            if constexpr (CT::Array<T>) {
-               for (size_t i = 0; i < ExtentOf<T>; ++i)
-                  at += ThisCom::ConcatAt(at, I::Nest(DeintCast(a)[i]));
-            }
-            else at += ThisCom::ConcatAt(at, I::Nest(a));
-         }*/
+         const size_t offset = converted.GetCount();
+         ThisCom::ConcatAt(at, Abandon {converted});
+         at += offset;
       }
 
       /// MARK: InsertInner                                                   
@@ -837,7 +840,7 @@ namespace Langulus::Anyness::Component
       static void InsertInner(H& to, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<T>>;
-         static_assert(CT::Void<AS> or Same<TypeOf<AS>, IT>,
+         static_assert(not CONVERT or Same<TypeOf<H>, IT>,
             "Use ConvertInsertInner instead");
 
          // Non-converting insertion                                    

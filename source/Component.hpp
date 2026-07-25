@@ -580,9 +580,9 @@ namespace Langulus::Anyness
       );
 
       /// Comparison, search, pattern matching                                
-      template<bool HASH = true, Cid = 0, Cid...> struct Comparison;
+      template<bool CONVERT = false, bool HASH = true, Cid = 0, Cid...> struct Comparison;
       #define LglsComComparison(modifier) \
-         template<bool, Cid, Cid...> modifier struct Comparison
+         template<bool, bool, Cid, Cid...> modifier struct Comparison
 
       /// Conversion                                                          
       template<Cid = 0, Cid...> struct Conversion;
@@ -594,13 +594,13 @@ namespace Langulus::Anyness
       #define LglsComEmplacement(modifier) \
          template<Cid, Cid...> modifier struct Emplacement
 
-      template<Cid = 0, Cid...> struct Assignment;
+      template<bool CONVERT = false, Cid = 0, Cid...> struct Assignment;
       #define LglsComAssignment(modifier) \
-         template<Cid, Cid...> modifier struct Assignment
+         template<bool, Cid, Cid...> modifier struct Assignment
 
-      template<class AS = void, Cid = 0, Cid...> struct Insertion;
+      template<bool CONVERT = false, Cid = 0, Cid...> struct Insertion;
       #define LglsComInsertion(modifier) \
-         template<class, Cid, Cid...> modifier struct Insertion
+         template<bool, Cid, Cid...> modifier struct Insertion
 
       template<Cid = 0, Cid...> struct InsertionOperators;
       #define LglsComInsertionOperators(modifier) \
@@ -610,9 +610,9 @@ namespace Langulus::Anyness
       #define LglsComInsertionOperatorsConcat(modifier) \
          template<Cid, Cid...> modifier struct InsertionOperatorsConcat
 
-      template<class AS = void, Cid = 0, Cid...> struct Merging;
+      template<bool CONVERT = false, Cid = 0, Cid...> struct Merging;
       #define LglsComMerging(modifier) \
-         template<class, Cid, Cid...> modifier struct Merging
+         template<bool, Cid, Cid...> modifier struct Merging
 
       template<Cid = 0, Cid...> struct MergingOperators;
       #define LglsComMergingOperators(modifier) \

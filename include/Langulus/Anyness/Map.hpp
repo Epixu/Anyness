@@ -48,11 +48,11 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipStack<Com::StrongOwnership, 0, 1>,
       Com::OwnershipDeepHeap<Com::StrongOwnership, true, 0, 1>,
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
-      Com::Merging<void, 0, 1>,           // Only merging for keys      
-      //Com::Assignment<1>,                 // Assignment of values       
+      Com::Merging<false, 0, 1>,          // Only merging for keys      
+      //Com::Assignment<false, 1>,        // Assignment of values       
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
-      Com::Comparison<true, 0, 1>,        // Allows comparisons of K/V  
+      Com::Comparison<false, true, 0, 1>, // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
       Com::State::Sorted<SORT>,           // Toggle ordered map         
@@ -188,32 +188,17 @@ namespace Langulus::Anyness::Inner
          this->Reset();
          TPair temp {LglsFwd(key), LglsFwd(val)};
          this->Merge(Abandon {temp.GetHandle()});
-         /*this->DeduceType(key, val);
-         TPair temp {LglsFwd(key), LglsFwd(val)};
-         this->MergeInner(Abandon {temp.GetHandle()});*/
          return *this;
       }
 
-      //using Com::Comparison<0/*, true, 1*/>::operator <=>;
-      //using Com::Comparison<0/*, true, 1*/>::operator ==;
-
-      /// Three-way comparison with pairs                                     
-      /*template<CT::Container C, CT::Pair P> requires CT::NoIntent<P>
-      constexpr Compared operator <=> (this C const& lhs, P const& rhs) assumptious {
-         const auto key_compare = lhs.template CompareOne<0>(rhs.key);
-         if (key_compare == Compared::Equivalent)
-            return lhs.template CompareOne<1>(rhs.val);
-         return key_compare;
-      }*/
-
       /// Equality comparison with maps                                       
       constexpr bool operator == (CT::Map auto const& rhs) const assumptious {
-         return Com::Comparison<true, 0, 1>::operator == (rhs);
+         return Com::Comparison<false, true, 0, 1>::operator == (rhs);
       }
 
       /// Equality comparison with pairs                                      
       constexpr bool operator == (CT::Pair auto const& rhs) const assumptious {
-         using C = Com::Comparison<true, 0, 1>;
+         using C = Com::Comparison<false, true, 0, 1>;
          return C::template CompareOneEqual<0>(rhs.GetKey())
             and C::template CompareOneEqual<1>(rhs.GetVal());
       }

@@ -41,12 +41,12 @@ namespace Langulus::Anyness
          Com::IndexedLinear<>,               // Indexed directly        
          Com::OwnershipStack<>,              // Allocation is referenced
          Com::HashStack<>,                   // Variable hash (cached)  
-         Com::Insertion<Bytes>,              // Serialize + insert      
+         Com::Insertion<true>,               // Serialize + insert      
          Com::InsertionOperators<>,          // << and >> insertion     
          Com::InsertionOperatorsConcat<>,    // + and += concat         
          Com::Removal<>,                     // Allows removal          
-         Com::Assignment<>,                  // Allows assignment       
-         Com::Comparison<>,                  // Allows for comparison   
+         Com::Assignment<true>,              // Allows assignment       
+         Com::Comparison<true>,              // Allows for comparison   
          Com::Conversion<>,                  // Allows conversion       
          Com::IterationForEach<>,            // ForEach iteration       
          Com::IterationRange<>               // Range iteration       😊
