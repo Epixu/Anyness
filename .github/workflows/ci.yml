@@ -96,7 +96,7 @@ jobs:
           ${{matrix.debug_flags}}
 
       - name: Build
-        run: cmake --build build -j4 --config ${{matrix.build}}
+        run: cmake --build build -j1 --config ${{matrix.build}}  # minimizing parallelism to save runner RAM
 
       - name: Test
         run: cd build && ctest -V -C ${{matrix.build}}
