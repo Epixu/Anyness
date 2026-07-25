@@ -5,8 +5,8 @@ fetch_external_module(
     GIT_SHALLOW     TRUE
 )
 
-add_langulus_test(LangulusAnynessReporter
-   SOURCES	   MainReporter.cpp
+add_langulus_app(LangulusPercist
+   SOURCES	   Precist.cpp
    LIBRARIES   LangulusAnyness
 )
 
