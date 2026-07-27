@@ -7,15 +7,17 @@
 ///                                                                           
 #include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
+#include "test/Anyness/many/TestManyCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
+   , Types<Text, ScopedElement<Many>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Text, ScopedElement<Text>>
    , Types<Text, ScopedElement<int>>
-   , Types<Text, ScopedElement<Many>>
    , Types<Text, ScopedElement<RT>>
    , Types<Text, ScopedElement<char>>
 
@@ -209,28 +211,28 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             };
 
             misabsorb_refer(pack_referred1, 3);
-            Text_CheckState_OwnedFull<E>(pack_referred1);
+            Text_CheckState_OwnedFull(pack_referred1);
 
             misabsorb_refer(pack_referred2, 3);
-            Text_CheckState_OwnedFull<E>(pack_referred2);
+            Text_CheckState_OwnedFull(pack_referred2);
 
             misabsorb_refer(pack_copied,    1);
-            Text_CheckState_OwnedFull<E>(pack_copied);
+            Text_CheckState_OwnedFull(pack_copied);
 
             misabsorb_refer(pack_cloned,    1);
-            Text_CheckState_OwnedFull<E>(pack_cloned);
+            Text_CheckState_OwnedFull(pack_cloned);
 
             misabsorb_refer(pack_moved1,    1);
-            Text_CheckState_OwnedFull<E>(pack_moved1);
+            Text_CheckState_OwnedFull(pack_moved1);
 
             misabsorb_refer(pack_moved2,    1);
-            Text_CheckState_OwnedFull<E>(pack_moved2);
+            Text_CheckState_OwnedFull(pack_moved2);
 
             misabsorb_refer(pack_abandoned, 1);
-            Text_CheckState_OwnedFull<E>(pack_abandoned);
+            Text_CheckState_OwnedFull(pack_abandoned);
 
             misabsorb_refer(pack_disowned,  3);
-            Text_CheckState_DisownedFull<E>(pack_disowned);
+            Text_CheckState_DisownedFull(pack_disowned);
          }
       }
 
@@ -287,20 +289,34 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and misabsorbed by clone") {
-            auto misabsorb_clone = [&](T& a) {
+            auto misabsorb_clone = [&](T& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_ContainsOne(a, *originalElement);
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
-            misabsorb_clone(pack_referred1);
-            misabsorb_clone(pack_referred2);
-            misabsorb_clone(pack_copied);
-            misabsorb_clone(pack_cloned);
-            misabsorb_clone(pack_moved1);
-            misabsorb_clone(pack_moved2);
-            misabsorb_clone(pack_abandoned);
-            misabsorb_clone(pack_disowned);
+            misabsorb_clone(pack_referred1, 3);
+            Text_CheckState_OwnedFull(pack_referred1);
+
+            misabsorb_clone(pack_referred2, 3);
+            Text_CheckState_OwnedFull(pack_referred2);
+
+            misabsorb_clone(pack_copied,    1);
+            Text_CheckState_OwnedFull(pack_copied);
+
+            misabsorb_clone(pack_cloned,    1);
+            Text_CheckState_OwnedFull(pack_cloned);
+
+            misabsorb_clone(pack_moved1,    1);
+            Text_CheckState_OwnedFull(pack_moved1);
+
+            misabsorb_clone(pack_moved2,    1);
+            Text_CheckState_OwnedFull(pack_moved2);
+
+            misabsorb_clone(pack_abandoned, 1);
+            Text_CheckState_OwnedFull(pack_abandoned);
+
+            misabsorb_clone(pack_disowned,  3);
+            Text_CheckState_DisownedFull(pack_disowned);
          }
       }
 
@@ -357,20 +373,34 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and misabsorbed by copy") {
-            auto misabsorb_copy = [&](T& a) {
+            auto misabsorb_copy = [&](T& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
-               Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, *originalElement);
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
-            misabsorb_copy(pack_referred1);
-            misabsorb_copy(pack_referred2);
-            misabsorb_copy(pack_copied);
-            misabsorb_copy(pack_cloned);
-            misabsorb_copy(pack_moved1);
-            misabsorb_copy(pack_moved2);
-            misabsorb_copy(pack_abandoned);
-            misabsorb_copy(pack_disowned);
+            misabsorb_copy(pack_referred1, 3);
+            Text_CheckState_OwnedFull(pack_referred1);
+
+            misabsorb_copy(pack_referred2, 3);
+            Text_CheckState_OwnedFull(pack_referred2);
+
+            misabsorb_copy(pack_copied,    1);
+            Text_CheckState_OwnedFull(pack_copied);
+
+            misabsorb_copy(pack_cloned,    1);
+            Text_CheckState_OwnedFull(pack_cloned);
+
+            misabsorb_copy(pack_moved1,    1);
+            Text_CheckState_OwnedFull(pack_moved1);
+
+            misabsorb_copy(pack_moved2,    1);
+            Text_CheckState_OwnedFull(pack_moved2);
+
+            misabsorb_copy(pack_abandoned, 1);
+            Text_CheckState_OwnedFull(pack_abandoned);
+
+            misabsorb_copy(pack_disowned,  3);
+            Text_CheckState_DisownedFull(pack_disowned);
          }
       }
 
@@ -407,8 +437,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto movable = *element;
             REQUIRE_NOTHROW(a.Assign(::std::move(movable)));
 
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_Default<TypeOf<E>>(movable);
+            if constexpr (CT::DeepDense<E>) {
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable);
+               Many_Helper_TestSame(movable, *element);
+            }
+
             Text_CheckState_OwnedFull(a);
             Text_CheckState_ContainsOne(a, *element);
 
@@ -432,25 +465,38 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and misabsorbed by move") {
-            auto misabsorb_move = [&](T& a) {
+            auto misabsorb_move = [&](T& a, int uses) {
                auto movable = *element;
                REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
 
-               Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, *originalElement);
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
-               REQUIRE(movable.GetUses() == 2);
-               REQUIRE(movable.template As<int>() == 555);
+               Many_Helper_TestSame(movable, *element);
             };
 
-            misabsorb_move(pack_referred1);
-            misabsorb_move(pack_referred2);
-            misabsorb_move(pack_copied);
-            misabsorb_move(pack_cloned);
-            misabsorb_move(pack_moved1);
-            misabsorb_move(pack_moved2);
-            misabsorb_move(pack_abandoned);
-            misabsorb_move(pack_disowned);
+            misabsorb_move(pack_referred1, 3);
+            Text_CheckState_OwnedFull(pack_referred1);
+
+            misabsorb_move(pack_referred2, 3);
+            Text_CheckState_OwnedFull(pack_referred2);
+
+            misabsorb_move(pack_copied,    1);
+            Text_CheckState_OwnedFull(pack_copied);
+
+            misabsorb_move(pack_cloned,    1);
+            Text_CheckState_OwnedFull(pack_cloned);
+
+            misabsorb_move(pack_moved1,    1);
+            Text_CheckState_OwnedFull(pack_moved1);
+
+            misabsorb_move(pack_moved2,    1);
+            Text_CheckState_OwnedFull(pack_moved2);
+
+            misabsorb_move(pack_abandoned, 1);
+            Text_CheckState_OwnedFull(pack_abandoned);
+
+            misabsorb_move(pack_disowned,  3);
+            Text_CheckState_DisownedFull(pack_disowned);
          }
       }
 
@@ -507,20 +553,35 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and misabsorbed by disown") {
-            auto misabsorb_disown = [&](T& a) {
+            auto misabsorb_disown = [&](T& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
-               Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, *originalElement);
+               
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
-            misabsorb_disown(pack_referred1);
-            misabsorb_disown(pack_referred2);
-            misabsorb_disown(pack_copied);
-            misabsorb_disown(pack_cloned);
-            misabsorb_disown(pack_moved1);
-            misabsorb_disown(pack_moved2);
-            misabsorb_disown(pack_abandoned);
-            misabsorb_disown(pack_disowned);
+            misabsorb_disown(pack_referred1, 3);
+            Text_CheckState_OwnedFull(pack_referred1);
+
+            misabsorb_disown(pack_referred2, 3);
+            Text_CheckState_OwnedFull(pack_referred2);
+
+            misabsorb_disown(pack_copied,    1);
+            Text_CheckState_OwnedFull(pack_copied);
+
+            misabsorb_disown(pack_cloned,    1);
+            Text_CheckState_OwnedFull(pack_cloned);
+
+            misabsorb_disown(pack_moved1,    1);
+            Text_CheckState_OwnedFull(pack_moved1);
+
+            misabsorb_disown(pack_moved2,    1);
+            Text_CheckState_OwnedFull(pack_moved2);
+
+            misabsorb_disown(pack_abandoned, 1);
+            Text_CheckState_OwnedFull(pack_abandoned);
+
+            misabsorb_disown(pack_disowned,  3);
+            Text_CheckState_DisownedFull(pack_disowned);
          }
       }
 
@@ -556,8 +617,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto movable = *element;
             REQUIRE_NOTHROW(a.Assign(Abandon(movable)));
 
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_Abandoned<TypeOf<E>>(movable);
+            if constexpr (CT::DeepDense<E>) {
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable);
+               Many_Helper_TestSame(movable, *element);
+            }
+            
             Text_CheckState_OwnedFull(a);
             Text_CheckState_ContainsOne(a, *element);
 
@@ -581,24 +645,38 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and misabsorbed by abandon") {
-            auto misabsorb_abandon = [&](T& a) {
+            auto misabsorb_abandon = [&](T& a, int uses) {
                auto movable = *element;
                REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
 
-               Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, *originalElement);
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
-               REQUIRE(movable.GetUses() == 2);
+               Many_Helper_TestSame(movable, *element);
             };
 
-            misabsorb_abandon(pack_referred1);
-            misabsorb_abandon(pack_referred2);
-            misabsorb_abandon(pack_copied);
-            misabsorb_abandon(pack_cloned);
-            misabsorb_abandon(pack_moved1);
-            misabsorb_abandon(pack_moved2);
-            misabsorb_abandon(pack_abandoned);
-            misabsorb_abandon(pack_disowned);
+            misabsorb_abandon(pack_referred1, 3);
+            Text_CheckState_OwnedFull(pack_referred1);
+
+            misabsorb_abandon(pack_referred2, 3);
+            Text_CheckState_OwnedFull(pack_referred2);
+
+            misabsorb_abandon(pack_copied,    1);
+            Text_CheckState_OwnedFull(pack_copied);
+
+            misabsorb_abandon(pack_cloned,    1);
+            Text_CheckState_OwnedFull(pack_cloned);
+
+            misabsorb_abandon(pack_moved1,    1);
+            Text_CheckState_OwnedFull(pack_moved1);
+
+            misabsorb_abandon(pack_moved2,    1);
+            Text_CheckState_OwnedFull(pack_moved2);
+
+            misabsorb_abandon(pack_abandoned, 1);
+            Text_CheckState_OwnedFull(pack_abandoned);
+
+            misabsorb_abandon(pack_disowned,  3);
+            Text_CheckState_DisownedFull(pack_disowned);
          }
       }
 
@@ -1077,10 +1155,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             Handle_CheckState_OwnedFull<char>(src_handle);
             Handle_CheckState_OwnedFull<char>(dst_handle);
             Text_CheckState_ContainsOne(src, *e556);
-            if constexpr (Same<E, int>)
-               Text_CheckState_ContainsOne(dst, *ScopedE{65});
-            else
+            if constexpr (Same<E, Text>)
                Text_CheckState_ContainsOne(dst, *ScopedE{56});
+            else
+               Text_CheckState_ContainsOne(dst, *ScopedE{65});
          }
          
          THEN("Handle is swapped with another container's handle") {
@@ -1090,13 +1168,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             Handle_CheckState_OwnedFull<char>(dst_handle);
             REQUIRE(src_handle.template Get<char>()+1 == src_data);
             REQUIRE(dst_handle.template Get<char>()+1 == dst_data);
-            if constexpr (Same<E, int>) {
-               Text_CheckState_ContainsOne(src, *ScopedE{566});
-               Text_CheckState_ContainsOne(dst, *ScopedE{65});
-            }
-            else {
+            if constexpr (Same<E, Text>) {
                Text_CheckState_ContainsOne(src, *ScopedE{656});
                Text_CheckState_ContainsOne(dst, *ScopedE{56});
+            }
+            else {
+               Text_CheckState_ContainsOne(src, *ScopedE{566});
+               Text_CheckState_ContainsOne(dst, *ScopedE{65});
             }
 
             // We should be able to do this indefinitely                
@@ -1126,10 +1204,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             REQUIRE(local_data != src_data);
 
             REQUIRE(*local.template Get<char>() == '5');
-            if constexpr (Same<E, int>)
-               Text_CheckState_ContainsOne(src, *ScopedE{516});
-            else
+            if constexpr (Same<E, Text>)
                Text_CheckState_ContainsOne(src, *ScopedE{156});
+            else
+               Text_CheckState_ContainsOne(src, *ScopedE{516});
 
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
             REQUIRE(src_handle.template Get<char>()+1 == src_data);
