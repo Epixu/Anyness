@@ -756,7 +756,7 @@ namespace Langulus::Anyness::Component
                   }
                }
 
-               h = self.template FindInner<REVERSE, SID>(head, cookie);
+               h = self.template FindInner<REVERSE, SID>(head, cookie + 1);
             }
 
             // If reached, then range wasn't found                      
