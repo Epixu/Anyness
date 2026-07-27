@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../many/TestManyCommon.hpp"
+#include "Langulus/CT/Character.hpp"
 #include <Langulus/Anyness/Text.hpp>
 #include <string>
 
@@ -149,21 +150,29 @@ void Text_CheckState_ContainsString(const T& many, I&& e) {
 
 template<CT::Container T, class I> requires CT::NoIntent<T, I>
 void Text_CheckState_ContainsOne(T const& pack, I const& e, int uses = 1) {
-   T converted;
-   Langulus::Serialize(e, converted);
-   REQUIRE(pack.GetCount() > 0);
-   REQUIRE(pack.GetCount() == converted.GetCount());
-   REQUIRE(pack.GetUses() == uses);
-   REQUIRE(pack.GetReserved() >= pack.GetCount());
+   if constexpr (CT::Character<I>) {
+      REQUIRE(pack.GetCount() == 1);
+      REQUIRE(pack.GetUses() == uses);
+      REQUIRE(pack.GetReserved() >= pack.GetCount());
+      REQUIRE(*pack.Get() == e);
+   }
+   else {
+      T converted;
+      Langulus::Serialize(e, converted);
+      REQUIRE(pack.GetCount() > 0);
+      REQUIRE(pack.GetCount() == converted.GetCount());
+      REQUIRE(pack.GetUses() == uses);
+      REQUIRE(pack.GetReserved() >= pack.GetCount());
 
-   for (size_t i = 0; i < converted.GetCount(); ++i) {
-      REQUIRE(pack.GetRaw()[i] == converted[i]);
-      REQUIRE(pack.template GetRawAs<char>()[i] == converted[i]);
-      REQUIRE(pack.template As<char>() == converted[0]);
-      REQUIRE(pack.template AsAt<char>(i) == converted[i]);
-      REQUIRE(*pack.Get() == *converted.GetRaw());
-      REQUIRE(*pack.template Get<char>() == *converted.GetRaw());
-      REQUIRE(pack.template GetRawAs<char>()[i] == converted.GetRaw()[i]);
+      for (size_t i = 0; i < converted.GetCount(); ++i) {
+         REQUIRE(pack.GetRaw()[i] == converted[i]);
+         REQUIRE(pack.template GetRawAs<char>()[i] == converted[i]);
+         REQUIRE(pack.template As<char>() == converted[0]);
+         REQUIRE(pack.template AsAt<char>(i) == converted[i]);
+         REQUIRE(*pack.Get() == *converted.GetRaw());
+         REQUIRE(*pack.template Get<char>() == *converted.GetRaw());
+         REQUIRE(pack.template GetRawAs<char>()[i] == converted.GetRaw()[i]);
+      }
    }
 }
 

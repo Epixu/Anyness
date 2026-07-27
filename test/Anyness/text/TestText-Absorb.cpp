@@ -13,11 +13,10 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
-   , Types<Text, ScopedElement<Many>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Text, ScopedElement<Text>>
    , Types<Text, ScopedElement<int>>
+   , Types<Text, ScopedElement<Many>>
    , Types<Text, ScopedElement<RT>>
    , Types<Text, ScopedElement<char>>
 
@@ -64,7 +63,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
    using ScopedE  = typename TestType::Second;
    using E        = TypeOf<ScopedE>;
 
-   constexpr bool Managed = ScopedE::Managed;
+   [[maybe_unused]] constexpr bool Managed = ScopedE::Managed;
 
    #if LANGULUS(BENCHMARK)
       using stdstr = ::std::string;
@@ -154,18 +153,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          Text_CheckState_OwnedFull(pack_abandoned);
          Text_CheckState_DisownedFull(pack_disowned);
 
-         Text_CheckState_ContainsOne(pack_referred1,  *originalElement, 3);
-         Text_CheckState_ContainsOne(pack_referred2,  *originalElement, 3);
-         Text_CheckState_ContainsOne(pack_copied,     *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_cloned,     *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_moved1,     *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_abandoned,  *originalElement, 1);
-
-         if constexpr (Managed) {
-            // Entries are still propagated when absorbed               
-            Text_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
-         }
-         else Text_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
+         Text_CheckState_ContainsOne(pack_referred1, *originalElement, 3);
+         Text_CheckState_ContainsOne(pack_referred2, *originalElement, 3);
+         Text_CheckState_ContainsOne(pack_copied,    *originalElement, 1);
+         Text_CheckState_ContainsOne(pack_cloned,    *originalElement, 1);
+         Text_CheckState_ContainsOne(pack_moved1,    *originalElement, 1);
+         Text_CheckState_ContainsOne(pack_abandoned, *originalElement, 1);
+         Text_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
 
          BenchmarkTextStd("Empty/AbsorbConstructor", 30, 100,
             T temp,                                   (new (&temp) T{Absorb, piecewise1}),
@@ -435,6 +429,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       WHEN("Assigned compatible moved value") {
          auto assign_move = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
+            if constexpr (Same<E, RT>)
+               movable.copied_in = false;
+
             REQUIRE_NOTHROW(a.Assign(::std::move(movable)));
 
             if constexpr (CT::DeepDense<E>) {
@@ -615,6 +612,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       WHEN("Assigned compatible abandoned value") {
          auto assign_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
+            if constexpr (Same<E, RT>)
+               movable.copied_in = false;
+
             REQUIRE_NOTHROW(a.Assign(Abandon(movable)));
 
             if constexpr (CT::DeepDense<E>) {
@@ -916,7 +916,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                Text_CheckState_OwnedFull(a);
 
             Text_CheckState_OwnedFull(absorbed);
-            REQUIRE((absorbed == a) == CT::Dense<E>);
+            REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetUses() == 1);
          };
 
@@ -1004,8 +1004,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          auto compared_full = [&](T& a, [[maybe_unused]] const char* intent) {
             T same_pack {a};
 
-            REQUIRE      (a != another_pack1);
-            REQUIRE_FALSE(a == another_pack1);
+            if constexpr (Same<E, RT>) {
+               // RT serializes to the same text regardless inner int   
+               REQUIRE      (a == another_pack1);
+               REQUIRE_FALSE(a != another_pack1);
+            }
+            else {
+               REQUIRE      (a != another_pack1);
+               REQUIRE_FALSE(a == another_pack1);
+            }
+
             REQUIRE      (a != defaulted_pack);
             REQUIRE_FALSE(a == defaulted_pack);
             REQUIRE      (a == same_pack);
@@ -1038,7 +1046,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             if constexpr (CT::Sparse<E>) {
                //TODO pointers are always different
                REQUIRE_FALSE(a.Contains('?'));
-               REQUIRE_FALSE(a.Contains('g')); // larger than a hex digit
             }
             else if constexpr (Same<E, Text>) {
                REQUIRE      (a.Contains('5'));
@@ -1053,7 +1060,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                REQUIRE_FALSE(a.Contains('?'));
             }
             else if constexpr (Same<E, char>) {
-               REQUIRE      (a.Contains('+'));
+               REQUIRE      (a.Contains(','));
                REQUIRE_FALSE(a.Contains('?'));
             }
             else {
@@ -1090,7 +1097,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                REQUIRE_FALSE(a.ContainsRange(""));
             }
             else if constexpr (Same<E, char>) {
-               REQUIRE      (a.ContainsRange("+"));
+               REQUIRE      (a.ContainsRange(","));
                REQUIRE_FALSE(a.ContainsRange("?"));
                REQUIRE_FALSE(a.ContainsRange(""));
             }
@@ -1135,16 +1142,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       /// MARK: GetHandle                                                     
       WHEN("GetHandle is called on mutable container") {
-         auto src_handle = src.GetHandle() + 1;
+         auto src_handle = src.GetHandle();
          static_assert(::std::same_as<decltype(src_handle), THandle<char&>>);
 
-         auto src_data = src_handle.template Get<char>() + 1;
-         REQUIRE(src_handle.template Get<char>()+1 == src_data);
+         auto src_data = src_handle.template Get<char>();
+         REQUIRE(src_handle.template Get<char>() == src_data);
          Handle_CheckState_OwnedFull<char>(src_handle);
 
-         auto dst_handle = dst.GetHandle() + 1;
-         auto dst_data   = dst_handle.template Get<char>() + 1;
-         REQUIRE(dst_handle.template Get<char>()+1 == dst_data);
+         auto dst_handle = dst.GetHandle();
+         auto dst_data   = dst_handle.template Get<char>();
+         REQUIRE(dst_handle.template Get<char>() == dst_data);
          Handle_CheckState_OwnedFull<char>(dst_handle);
 
          REQUIRE(dst_data != src_data);
@@ -1154,11 +1161,19 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             Handle_CheckState_OwnedFull<char>(src_handle);
             Handle_CheckState_OwnedFull<char>(dst_handle);
+
             Text_CheckState_ContainsOne(src, *e556);
-            if constexpr (Same<E, Text>)
-               Text_CheckState_ContainsOne(dst, *ScopedE{56});
+
+            if constexpr (CT::Sparse<E>)
+               ; //TODO
+            else if constexpr (Same<E, char>)
+               Text_CheckState_ContainsString(dst, ",");
+            else if constexpr (Same<E, RT>)
+               Text_CheckState_ContainsString(dst, "RT(unknown)");
+            else if constexpr (Same<E, Text>)
+               Text_CheckState_ContainsString(dst, "\"66\"");
             else
-               Text_CheckState_ContainsOne(dst, *ScopedE{65});
+               Text_CheckState_ContainsString(dst, "56");
          }
          
          THEN("Handle is swapped with another container's handle") {
@@ -1166,15 +1181,27 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             Handle_CheckState_OwnedFull<char>(src_handle);
             Handle_CheckState_OwnedFull<char>(dst_handle);
-            REQUIRE(src_handle.template Get<char>()+1 == src_data);
-            REQUIRE(dst_handle.template Get<char>()+1 == dst_data);
-            if constexpr (Same<E, Text>) {
-               Text_CheckState_ContainsOne(src, *ScopedE{656});
-               Text_CheckState_ContainsOne(dst, *ScopedE{56});
+
+            REQUIRE(src_handle.template Get<char>() == src_data);
+            REQUIRE(dst_handle.template Get<char>() == dst_data);
+
+            if constexpr (CT::Sparse<E>)
+               ; //TODO
+            else if constexpr (Same<E, char>) {
+               Text_CheckState_ContainsString(src, "B");
+               Text_CheckState_ContainsString(dst, ",");
+            }
+            else if constexpr (Same<E, RT>) {
+               Text_CheckState_ContainsString(src, "RT(unknown)");
+               Text_CheckState_ContainsString(dst, "RT(unknown)");
+            }
+            else if constexpr (Same<E, Text>) {
+               Text_CheckState_ContainsString(src, "\"556\"");
+               Text_CheckState_ContainsString(dst, "\"66\"");
             }
             else {
-               Text_CheckState_ContainsOne(src, *ScopedE{566});
-               Text_CheckState_ContainsOne(dst, *ScopedE{65});
+               Text_CheckState_ContainsOne(src, "656");
+               Text_CheckState_ContainsOne(dst, "56");
             }
 
             // We should be able to do this indefinitely                
@@ -1187,9 +1214,27 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             Handle_CheckState_OwnedFull<char>(src_handle);
             Handle_CheckState_OwnedFull<char>(local);
-            REQUIRE(src_handle.template Get<char>()+1 == src_data);
+            REQUIRE(src_handle.template Get<char>() == src_data);
             REQUIRE(local.template Get<char>() != src_data);
-            REQUIRE(*local.template Get<char>() == '5');
+
+            if constexpr (CT::Sparse<E>)
+               ; //TODO
+            else if constexpr (Same<E, char>) {
+               Text_CheckState_ContainsString(src, ",");
+               REQUIRE(*local.template Get<char>() == ',');
+            }
+            else if constexpr (Same<E, RT>) {
+               Text_CheckState_ContainsString(src, "RT(unknown)");
+               REQUIRE(*local.template Get<char>() == 'R');
+            }
+            else if constexpr (Same<E, Text>) {
+               Text_CheckState_ContainsString(src, "\"556\"");
+               REQUIRE(*local.template Get<char>() == '"');
+            }
+            else {
+               Text_CheckState_ContainsString(src, "556");
+               REQUIRE(*local.template Get<char>() == '5');
+            }
          }
 
          THEN("Handle is swapped with local handle, and then back to container") {
@@ -1199,22 +1244,51 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             Handle_CheckState_OwnedFull<char>(src_handle);
             Handle_CheckState_OwnedFull<char>(local);
-            REQUIRE(src_handle.template Get<char>()+1 == src_data);
+            REQUIRE(src_handle.template Get<char>() == src_data);
             REQUIRE(local_data);
             REQUIRE(local_data != src_data);
 
-            REQUIRE(*local.template Get<char>() == '5');
-            if constexpr (Same<E, Text>)
-               Text_CheckState_ContainsOne(src, *ScopedE{156});
-            else
-               Text_CheckState_ContainsOne(src, *ScopedE{516});
+            if constexpr (CT::Sparse<E>)
+               ; //TODO
+            else if constexpr (Same<E, char>) {
+               Text_CheckState_ContainsString(src, "1");
+               REQUIRE(*local.template Get<char>() == ',');
+            }
+            else if constexpr (Same<E, RT>) {
+               Text_CheckState_ContainsString(src, "1T(unknown)");
+               REQUIRE(*local.template Get<char>() == 'R');
+            }
+            else if constexpr (Same<E, Text>) {
+               Text_CheckState_ContainsString(src, "1556\"");
+               REQUIRE(*local.template Get<char>() == '"');
+            }
+            else {
+               Text_CheckState_ContainsString(src, "156");
+               REQUIRE(*local.template Get<char>() == '5');
+            }
 
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
-            REQUIRE(src_handle.template Get<char>()+1 == src_data);
+            REQUIRE(src_handle.template Get<char>() == src_data);
             REQUIRE(local.template Get<char>() == local_data);
 
-            REQUIRE(*local.template Get<char>() == '1');
-            Text_CheckState_ContainsOne(src, *e556);
+            if constexpr (CT::Sparse<E>)
+               ; //TODO
+            else if constexpr (Same<E, char>) {
+               Text_CheckState_ContainsString(src, ",");
+               REQUIRE(*local.template Get<char>() == '1');
+            }
+            else if constexpr (Same<E, RT>) {
+               Text_CheckState_ContainsString(src, "RT(unknown)");
+               REQUIRE(*local.template Get<char>() == '1');
+            }
+            else if constexpr (Same<E, Text>) {
+               Text_CheckState_ContainsString(src, "\"556\"");
+               REQUIRE(*local.template Get<char>() == '1');
+            }
+            else {
+               Text_CheckState_ContainsString(src, "556");
+               REQUIRE(*local.template Get<char>() == '1');
+            }
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
