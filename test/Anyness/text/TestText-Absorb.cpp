@@ -152,18 +152,18 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          Text_CheckState_OwnedFull(pack_abandoned);
          Text_CheckState_DisownedFull(pack_disowned);
 
-         Text_CheckState_ContainsOne(pack_referred1,  Refer(originalElement), 3);
-         Text_CheckState_ContainsOne(pack_referred2,  Refer(originalElement), 3);
-         Text_CheckState_ContainsOne(pack_copied,     Refer(originalElement), 1);
-         Text_CheckState_ContainsOne(pack_cloned,     Clone(originalElement), 1);
-         Text_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
-         Text_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
+         Text_CheckState_ContainsOne(pack_referred1,  *originalElement, 3);
+         Text_CheckState_ContainsOne(pack_referred2,  *originalElement, 3);
+         Text_CheckState_ContainsOne(pack_copied,     *originalElement, 1);
+         Text_CheckState_ContainsOne(pack_cloned,     *originalElement, 1);
+         Text_CheckState_ContainsOne(pack_moved1,     *originalElement, 1);
+         Text_CheckState_ContainsOne(pack_abandoned,  *originalElement, 1);
 
          if constexpr (Managed) {
             // Entries are still propagated when absorbed               
-            Text_CheckState_ContainsOne(pack_disowned,  Refer(originalElement), 3);
+            Text_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
          }
-         else Text_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 3);
+         else Text_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
 
          BenchmarkTextStd("Empty/AbsorbConstructor", 30, 100,
             T temp,                                   (new (&temp) T{Absorb, piecewise1}),
@@ -184,7 +184,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             }
 
             Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_ContainsOne(a, *element);
 
             BenchmarkTextStd("Absorb/" + intent + "/Assign/Refer", 30, 100,
                a.Assign(*element),                 a.Assign(*originalElement),
@@ -205,7 +205,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto misabsorb_refer = [&](auto& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(*element));
 
-               Text_CheckState_ContainsOne(a, Refer(originalElement), uses);
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
             misabsorb_refer(pack_referred1, 3);
@@ -269,7 +269,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, Clone(element));
+            Text_CheckState_ContainsOne(a, *element);
 
             BenchmarkTextStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
                a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
@@ -290,7 +290,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto misabsorb_clone = [&](T& a) {
                REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
                Text_CheckState_OwnedFull(a);
-               Text_CheckState_ContainsOne(a, Clone(originalElement));
+               Text_CheckState_ContainsOne(a, *originalElement);
             };
 
             misabsorb_clone(pack_referred1);
@@ -339,7 +339,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_ContainsOne(a, *element);
 
             BenchmarkTextStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
                a.Assign(Copy(*element)),           a.Assign(Copy(*originalElement)),
@@ -360,7 +360,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto misabsorb_copy = [&](T& a) {
                REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
                Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, Refer(originalElement));
+               Text_CheckState_ContainsOne(a, *originalElement);
             };
 
             misabsorb_copy(pack_referred1);
@@ -410,7 +410,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_Default<TypeOf<E>>(movable);
             Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_ContainsOne(a, *element);
 
             BenchmarkTextStd("Absorb/" + intent + "/Assign/Move", 30, 100,
                auto movable1 = *element;
@@ -437,7 +437,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
 
                Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, Refer(originalElement));
+               Text_CheckState_ContainsOne(a, *originalElement);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
                REQUIRE(movable.GetUses() == 2);
                REQUIRE(movable.template As<int>() == 555);
@@ -489,7 +489,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             REQUIRE_NOTHROW(a.Assign(Disown(*element)));
 
             Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, Disown(element));
+            Text_CheckState_ContainsOne(a, *element);
 
             BenchmarkTextStd("Absorb/" + intent + "/Assign/Disown", 30, 100,
                a.Assign(Disown(*element)),      a.Assign(Disown(*originalElement)),
@@ -510,7 +510,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto misabsorb_disown = [&](T& a) {
                REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
                Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, Disown(originalElement));
+               Text_CheckState_ContainsOne(a, *originalElement);
             };
 
             misabsorb_disown(pack_referred1);
@@ -559,7 +559,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_Abandoned<TypeOf<E>>(movable);
             Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, Refer(element));
+            Text_CheckState_ContainsOne(a, *element);
 
             BenchmarkTextStd("Absorb/" + intent + "/Assign/Abandon", 30, 100,
                auto movable1 = *element;
@@ -586,7 +586,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
 
                Text_CheckState_OwnedFull<E>(a);
-               Text_CheckState_ContainsOne(a, Refer(originalElement));
+               Text_CheckState_ContainsOne(a, *originalElement);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
                REQUIRE(movable.GetUses() == 2);
             };
@@ -795,7 +795,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             T absorbed {Copy {a}};
 
             Text_CheckState_OwnedFull(absorbed);
-            Text_CheckState_ContainsString(absorbed, "\"556\"");
+            Text_CheckState_ContainsOne(absorbed, *originalElement);
+            //Text_CheckState_ContainsString(absorbed, "\"556\"");
 
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
@@ -1047,10 +1048,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
    GIVEN("Two absorb-constructed containers") {
       const ScopedE e556 {556};
-      const ScopedE e6   {6};
+      const ScopedE e66  {66};
 
       T piecewise1{Piecewise, *e556};
-      T piecewise2{Piecewise, *e6};
+      T piecewise2{Piecewise, *e66};
       T src {Absorb, Abandon(piecewise1)};
       T dst {Absorb, Abandon(piecewise2)};
 
@@ -1075,8 +1076,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             Handle_CheckState_OwnedFull<char>(src_handle);
             Handle_CheckState_OwnedFull<char>(dst_handle);
-            Text_CheckState_ContainsString(src, "\"556\"");
-            Text_CheckState_ContainsString(dst, "\"5\"");
+            Text_CheckState_ContainsOne(src, *e556);
+            if constexpr (Same<E, int>)
+               Text_CheckState_ContainsOne(dst, *ScopedE{65});
+            else
+               Text_CheckState_ContainsOne(dst, *ScopedE{56});
          }
          
          THEN("Handle is swapped with another container's handle") {
@@ -1086,8 +1090,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             Handle_CheckState_OwnedFull<char>(dst_handle);
             REQUIRE(src_handle.template Get<char>()+1 == src_data);
             REQUIRE(dst_handle.template Get<char>()+1 == dst_data);
-            Text_CheckState_ContainsString(src, "\"656\"");
-            Text_CheckState_ContainsString(dst, "\"5\"");
+            if constexpr (Same<E, int>) {
+               Text_CheckState_ContainsOne(src, *ScopedE{566});
+               Text_CheckState_ContainsOne(dst, *ScopedE{65});
+            }
+            else {
+               Text_CheckState_ContainsOne(src, *ScopedE{656});
+               Text_CheckState_ContainsOne(dst, *ScopedE{56});
+            }
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
@@ -1105,7 +1115,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          }
 
          THEN("Handle is swapped with local handle, and then back to container") {
-            THandle<char> local = 'x';
+            THandle<char> local = '1';
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
             auto local_data = local.template Get<char>();
 
@@ -1114,14 +1124,19 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             REQUIRE(src_handle.template Get<char>()+1 == src_data);
             REQUIRE(local_data);
             REQUIRE(local_data != src_data);
+
             REQUIRE(*local.template Get<char>() == '5');
-            Text_CheckState_ContainsString(src, "\"x56\"");
+            if constexpr (Same<E, int>)
+               Text_CheckState_ContainsOne(src, *ScopedE{516});
+            else
+               Text_CheckState_ContainsOne(src, *ScopedE{156});
 
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
             REQUIRE(src_handle.template Get<char>()+1 == src_data);
             REQUIRE(local.template Get<char>() == local_data);
-            REQUIRE(*local.template Get<char>() == 'x');
-            Text_CheckState_ContainsString(src, "\"556\"");
+
+            REQUIRE(*local.template Get<char>() == '1');
+            Text_CheckState_ContainsOne(src, *e556);
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)

@@ -147,12 +147,10 @@ void Text_CheckState_ContainsString(const T& many, I&& e) {
    }
 }
 
-template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Text_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) {
-   auto& e = e_with_intent.what;
-
+template<CT::Container T, class I> requires CT::NoIntent<T, I>
+void Text_CheckState_ContainsOne(T const& pack, I const& e, int uses = 1) {
    T converted;
-   Langulus::Serialize(*e, converted);
+   Langulus::Serialize(e, converted);
    REQUIRE(pack.GetCount() > 0);
    REQUIRE(pack.GetCount() == converted.GetCount());
    REQUIRE(pack.GetUses() == uses);
