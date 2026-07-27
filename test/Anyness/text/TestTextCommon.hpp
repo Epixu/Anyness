@@ -150,23 +150,14 @@ void Text_CheckState_ContainsString(const T& many, I&& e) {
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Text_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) {
    auto& e = e_with_intent.what;
-   //using E = typename Decay<Deint<I>>::CTTI_Typed;
-   REQUIRE(pack.GetCount() == 1);
+
+   T converted;
+   Langulus::Serialize(*e, converted);
+   REQUIRE(pack.GetCount() > 0);
+   REQUIRE(pack.GetCount() == converted.GetCount());
    REQUIRE(pack.GetUses() == uses);
-   REQUIRE(pack.GetReserved() >= 1);
+   REQUIRE(pack.GetReserved() >= pack.GetCount());
 
-   /*if constexpr (CT::Cloned<I>) {
-      REQUIRE(pack.template As<E>() != *e);
-      REQUIRE((*pack.template As<E*>()) != *e);
-      REQUIRE(*pack.template GetRawAs<E>() != *e);
-   }
-   else {
-      REQUIRE(pack.template As<E>() == *e);
-      REQUIRE((*pack.template As<E*>()) == *e);
-      REQUIRE(*pack.template GetRawAs<E>() == *e);
-   }*/
-
-   T converted = Langulus::Convert<T>(*e);
    for (size_t i = 0; i < converted.GetCount(); ++i) {
       REQUIRE(pack.GetRaw()[i] == converted[i]);
       REQUIRE(pack.template GetRawAs<char>()[i] == converted[i]);

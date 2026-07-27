@@ -113,8 +113,6 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 3000;
 
    private:
-      //template<CT::Container C>
-      //using Count = typename Deref<C>::CountType;
       template<CT::Container C>
       using Deep  = typename Deref<C>::DeepType;
       template<CT::Container C>
@@ -620,35 +618,37 @@ namespace Langulus::Anyness::Component
 
             if (not self.IsDisowned() and self.GetUses() == 1) {
                // This is empty, but preallocated                       
-               TODO();
+               if (rhs_count > self.GetReserved())
+                  self.AllocateMore(rhs_count);
             }
             else {
                // This is empty and unallocated                         
                self.AllocateFresh(rhs_count);
-               auto dst = self.GetHandle();
-               auto src = DeintCast(data).GetHandle();
-               try {
-                  CopyRegion(src, dst, rhs_count);
-               }
-               catch (...) {
-                  // Account for throws inside constructors          
-                  const size_t inserted = dst - self.GetHandle();
-                  TODO(); //TODO a gap remains, move things back
-                  self.SetCountInner(inserted);
-                  throw;
-               }
+            }
+            
+            auto dst = self.GetHandle();
+            auto src = DeintCast(data).GetHandle();
+            try {
+               CopyRegion(src, dst, rhs_count);
+            }
+            catch (...) {
+               // Account for throws inside constructors                
+               const size_t inserted = dst - self.GetHandle();
+               TODO(); //TODO a gap remains, move things back
+               self.SetCountInner(inserted);
+               throw;
             }
 
             self.SetCountInner(rhs_count);
             return rhs_count;  
          }
 
-         // Reallocate/branch out                                    
+         // Reallocate/branch out                                       
          const size_t all_count = lhs_count + rhs_count;
          const size_t offset    = self.SimplifyIndex(idx);
 
          if (not self.IsDisowned() and self.GetUses() == 1) {
-            // No need to branch-out                                 
+            // No need to branch-out                                    
             self.AllocateMore(all_count);
             auto dst = self.GetHandle() + offset;
             MakeGap(dst, offset, lhs_count, rhs_count);
@@ -657,7 +657,7 @@ namespace Langulus::Anyness::Component
                CopyRegion(src, dst, rhs_count);
             }
             catch (...) {
-               // Account for throws inside constructors             
+               // Account for throws inside constructors                
                const size_t inserted = dst - self.GetHandle();
                TODO(); //TODO a gap remains, move things back
                self.SetCountInner(inserted);
@@ -665,52 +665,37 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            // We need to branch-out: insert old and new elements    
-            // in another container, which we will later swap.       
+            // We need to branch-out: insert old and new elements       
+            // in another container, which we will later swap.          
             C temp {Disown{self}};
             temp.Reserve(all_count);
             auto src = self.GetHandle();
             auto dst = temp.GetHandle();
 
-            // Copy original before 'offset'                         
+            // Copy original before 'offset'                            
             CopyRegion(src, dst, offset);
 
-            // Copy new elements in the gap                          
+            // Copy new elements in the gap                             
             try {
                CopyRegion(src, dst, rhs_count);
             }
             catch (...) {
-               // Account for throws inside constructors             
+               // Account for throws inside constructors                
                const size_t inserted = dst - self.GetHandle();
                TODO(); //TODO a gap remains, move things back
                self.SetCountInner(inserted);
                throw;
             }
 
-            // Copy original after 'offset'                          
+            // Copy original after 'offset'                             
             CopyRegion(src, dst, lhs_count - offset);
 
-            // Swap                                                  
+            // Swap                                                     
             self.Swap(temp);
          }
 
          self.SetCountInner(all_count);
          return rhs_count;
-
-         /*self.AbsorbType(FWDIntent(data));
-
-         // Reallocate/branch out                                       
-         const size_t lhs_count = self.GetCount();
-         const size_t all_count = lhs_count + rhs_count;
-         self.BranchOut(all_count);
-
-         const size_t offset = self.SimplifyIndex(idx);
-         auto dst = self.GetHandle() + offset;
-         MakeGap(dst, offset, lhs_count, rhs_count);  //TODO catch user data exceptions on moves, fatal failure - reset contents
-         auto src = DeintCast(data).GetHandle();
-         CopyRegion(src, dst, rhs_count);             //TODO catch user data exceptions on construction, partial success allowed
-         self.SetCountInner(all_count);
-         return rhs_count;*/
       }
 
       /// MARK: Concat                                                        
@@ -904,7 +889,6 @@ namespace Langulus::Anyness::Component
       ) -> size_t {
          using I = IntentOf(value);
          using T = Deint<I>;
-         //auto& other = DeintCast(value);
 
          if constexpr (CT::TypeErased<C>) {
             if ((not self.IsTyped() and not self.IsValid()) or self.template IsSame<T>()) {
