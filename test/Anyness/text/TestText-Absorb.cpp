@@ -13,6 +13,8 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
+   , Types<Text, ScopedElement<char*,  true>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Text, ScopedElement<Text>>
    , Types<Text, ScopedElement<int>>
@@ -44,7 +46,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
    , Types<Text, ScopedElement<int*,   true>>
    , Types<Text, ScopedElement<Many*,  true>>
    , Types<Text, ScopedElement<RT*,    true>>
-   , Types<Text, ScopedElement<char*,  true>>
 
    , Types<Text, ScopedElement<Text**, true>>
    , Types<Text, ScopedElement<int**,  true>>

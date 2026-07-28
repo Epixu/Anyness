@@ -134,35 +134,43 @@ namespace Langulus::Anyness
       }
 
       /// Construction from any kind of text that isn't an Anyness container  
-      ///   @attention this is by default a non-owning constructor, unless    
-      ///      you use a Copy/Clone intent                                    
       template<CT::Text T> requires CT::NotContainer<T>
       constexpr Text(T&& text) {
-         using S  = IntentOf(text);
-         using ST = TypeOf<S>;
+         using I  = IntentOf(text);
+         using IT = TypeOf<I>;
          decltype(auto) source = DeintCast(LglsFwd(text));
 
-         if constexpr (CT::TextLiteral<ST>) {
+         this->ResetState();
+
+         if constexpr (CT::TextLiteral<IT>) {
             // Create from a text literal/bounded array                 
-            using CHAR = TypeOf<ST>;
+            using CHAR = TypeOf<IT>;
             static_assert(Same<CHAR, char>, "Type mismatch");
+
             const auto count = ::std::char_traits<char>::length(source);
             if (not count) {
                this->ConstructDefault();
                return;
             }
+
             this->SetHeapInner(source);
             this->SetCountInner(count);
+
+            // Bounded arrays and literals are always considered        
+            // constexpr, thus no point in searching for their managed  
+            // memory.                                                  
+            this->SetAllocationInner(nullptr);
          }
-         else if constexpr (CT::TextPointer<ST>) {
+         else if constexpr (CT::TextPointer<IT>) {
             // Create from a null-terminated char pointer               
             if (not source) {
                this->ConstructDefault();
                return;
             }
-            using CHAR = Deptr<ST>;
+
+            using CHAR = Deptr<IT>;
             static_assert(Same<CHAR, char>, "Type mismatch");
-            
+
             size_t count;
             if constexpr (CT::CustomPointer<decltype(source)>)
                count = ::std::char_traits<char>::length(source.Unpack());
@@ -175,26 +183,41 @@ namespace Langulus::Anyness
             }
             this->SetHeapInner(source);
             this->SetCountInner(count);
+
+            // We may own this pointer                                  
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               if constexpr (CT::Disowned<I> or CT::Copied<I> or CT::Cloned<I>)
+                  this->SetAllocationInner(nullptr);
+               else
+                  this->FindAllocationInner();
+            #else
+               this->SetAllocationInner(nullptr);
+            #endif
          }
-         else if constexpr (::std::ranges::contiguous_range<ST>) {
+         else {
             // Create from an std container                             
+            static_assert(::std::ranges::contiguous_range<IT>,
+               "Unsupported text constructor");
+
             if (source.empty()) {
                this->ConstructDefault();
                return;
             }
+
             using CHAR = Deptr<decltype(source.data())>;
             static_assert(Same<CHAR, char>, "Type mismatch");
             this->SetHeapInner(source.data());
             this->SetCountInner(source.size());
-         }
-         else static_assert(false, "Unsupported text constructor");
 
-         // Reset hash                                                  
+            // Assumed never owned by us, no point in searching for the 
+            // allocation.                                              
+            this->SetAllocationInner(nullptr);
+         }
+
          this->ResetHash();
 
          // Take ownership if the intent requires it                    
-         this->SetAllocationInner(nullptr);
-         if constexpr (S::KeepsOnCopy())
+         if constexpr (CT::Copied<I> or CT::Cloned<I>)
             this->TakeOwnership();
       }
 
