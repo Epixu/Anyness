@@ -57,6 +57,7 @@ add_langulus_test(LangulusAnynessTest-Text
    SOURCES	   Main.cpp
                Anyness/text/TestText-Empty.cpp
                Anyness/text/TestText-Absorb.cpp
+               Anyness/text/TestText-Piecewise.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

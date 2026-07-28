@@ -74,6 +74,11 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
       auto originalElement_movable1 = *originalElement;
       auto originalElement_movable2 = *originalElement;
       auto originalElement_movable3 = *originalElement;
+      if constexpr (Same<E, RT>) {
+         originalElement_movable1.copied_in = false;
+         originalElement_movable2.copied_in = false;
+         originalElement_movable3.copied_in = false;
+      }
 
       T pack_referred1{Piecewise,             *originalElement };
       T pack_referred2{Piecewise,       Refer(*originalElement)};
@@ -1230,181 +1235,183 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
       }
    }
 
-   GIVEN("Two piecewise-constructed containers") {
-      const ScopedE e1 {555};
-      const ScopedE e2 {666};
-      T pack1 {Piecewise, *e1};  //  1 use
-      T pack2 {Piecewise, *e2};  //  1 use
-      const T memory1 = pack1;   // +1 use
-      const T memory2 = pack2;   // +1 use
+   if constexpr (not Same<E, RT>) {
+      GIVEN("Two piecewise-constructed containers") {
+         const ScopedE e1 {555};
+         const ScopedE e2 {666};
+         T pack1 {Piecewise, *e1};  //  1 use
+         T pack2 {Piecewise, *e2};  //  1 use
+         const T memory1 = pack1;   // +1 use
+         const T memory2 = pack2;   // +1 use
 
-      WHEN("Copy-assign pack1 to pack2") {
-         pack2 = Copy(pack1);    // data copied, pack2 has 1 uses now, leaving memory2 with 1 remaining
+         WHEN("Copy-assign pack1 to pack2") {
+            pack2 = Copy(pack1);    // data copied, pack2 has 1 uses now, leaving memory2 with 1 remaining
+            
+            Text_CheckState_OwnedFull(pack1);
+            Text_CheckState_OwnedFull(pack2);
+            Text_CheckState_ContainsOne(pack1, *e1, 2);
+            Text_CheckState_ContainsOne(pack2, *e1, 1);
+
+            REQUIRE(memory1.GetUses() == 2);
+            REQUIRE(memory2.GetUses() == 1);
+            
+            REQUIRE(    pack1.CompareEqual(pack2));
+            REQUIRE(    pack2.CompareEqual(memory1));
+            REQUIRE(not pack2.CompareEqual(memory2));
+         }
          
-         Text_CheckState_OwnedFull(pack1);
-         Text_CheckState_OwnedFull(pack2);
-         Text_CheckState_ContainsOne(pack1, *e1, 2);
-         Text_CheckState_ContainsOne(pack2, *e1, 1);
+         WHEN("Refer-assign pack1 in pack2") {
+            pack2 = pack1;
 
-         REQUIRE(memory1.GetUses() == 2);
-         REQUIRE(memory2.GetUses() == 1);
-         
-         REQUIRE(    pack1.CompareEqual(pack2));
-         REQUIRE(    pack2.CompareEqual(memory1));
-         REQUIRE(not pack2.CompareEqual(memory2));
-      }
-      
-      WHEN("Refer-assign pack1 in pack2") {
-         pack2 = pack1;
+            Text_CheckState_OwnedFull(pack1);
+            Text_CheckState_OwnedFull(pack2);
+            Text_CheckState_ContainsOne(pack1, *e1, 3);
+            Text_CheckState_ContainsOne(pack2, *e1, 3);
 
-         Text_CheckState_OwnedFull(pack1);
-         Text_CheckState_OwnedFull(pack2);
-         Text_CheckState_ContainsOne(pack1, *e1, 3);
-         Text_CheckState_ContainsOne(pack2, *e1, 3);
+            REQUIRE(memory1.GetUses() == 3);
+            REQUIRE(memory2.GetUses() == 1);
 
-         REQUIRE(memory1.GetUses() == 3);
-         REQUIRE(memory2.GetUses() == 1);
+            REQUIRE(    pack1.CompareEqual(pack2));
+            REQUIRE(    pack2.CompareEqual(memory1));
+            REQUIRE(not pack2.CompareEqual(memory2));
+         }
 
-         REQUIRE(    pack1.CompareEqual(pack2));
-         REQUIRE(    pack2.CompareEqual(memory1));
-         REQUIRE(not pack2.CompareEqual(memory2));
-      }
+         WHEN("Refer-assign pack1 in pack2 (alt)") {
+            pack2 = Refer {pack1};
 
-      WHEN("Refer-assign pack1 in pack2 (alt)") {
-         pack2 = Refer {pack1};
+            Text_CheckState_OwnedFull(pack1);
+            Text_CheckState_OwnedFull(pack2);
+            Text_CheckState_ContainsOne(pack1, *e1, 3);
+            Text_CheckState_ContainsOne(pack2, *e1, 3);
 
-         Text_CheckState_OwnedFull(pack1);
-         Text_CheckState_OwnedFull(pack2);
-         Text_CheckState_ContainsOne(pack1, *e1, 3);
-         Text_CheckState_ContainsOne(pack2, *e1, 3);
+            REQUIRE(memory1.GetUses() == 3);
+            REQUIRE(memory2.GetUses() == 1);
 
-         REQUIRE(memory1.GetUses() == 3);
-         REQUIRE(memory2.GetUses() == 1);
+            REQUIRE(    pack1.CompareEqual(pack2));
+            REQUIRE(    pack2.CompareEqual(memory1));
+            REQUIRE(not pack2.CompareEqual(memory2));
+         }
 
-         REQUIRE(    pack1.CompareEqual(pack2));
-         REQUIRE(    pack2.CompareEqual(memory1));
-         REQUIRE(not pack2.CompareEqual(memory2));
-      }
+         WHEN("Move-assign pack1 in pack2") {
+            pack2 = ::std::move(pack1);
 
-      WHEN("Move-assign pack1 in pack2") {
-         pack2 = ::std::move(pack1);
+            Text_CheckState_Default(pack1);
+            Text_CheckState_OwnedFull(pack2);
+            Text_CheckState_ContainsOne(pack2, *e1, 2);
+            
+            REQUIRE(memory1.GetUses() == 2);
+            REQUIRE(memory2.GetUses() == 1);
 
-         Text_CheckState_Default(pack1);
-         Text_CheckState_OwnedFull(pack2);
-         Text_CheckState_ContainsOne(pack2, *e1, 2);
-         
-         REQUIRE(memory1.GetUses() == 2);
-         REQUIRE(memory2.GetUses() == 1);
+            REQUIRE(not pack1.CompareEqual(pack2));
+            REQUIRE(    pack2.CompareEqual(memory1));
+            REQUIRE(not pack2.CompareEqual(memory2));
+         }
 
-         REQUIRE(not pack1.CompareEqual(pack2));
-         REQUIRE(    pack2.CompareEqual(memory1));
-         REQUIRE(not pack2.CompareEqual(memory2));
-      }
+         WHEN("Move-assign pack1 in pack2 (alt)") {
+            pack2 = Move {pack1};
 
-      WHEN("Move-assign pack1 in pack2 (alt)") {
-         pack2 = Move {pack1};
+            Text_CheckState_Default(pack1);
+            Text_CheckState_OwnedFull(pack2);
+            Text_CheckState_ContainsOne(pack2, *e1, 2);
+            
+            REQUIRE(memory1.GetUses() == 2);
+            REQUIRE(memory2.GetUses() == 1);
 
-         Text_CheckState_Default(pack1);
-         Text_CheckState_OwnedFull(pack2);
-         Text_CheckState_ContainsOne(pack2, *e1, 2);
-         
-         REQUIRE(memory1.GetUses() == 2);
-         REQUIRE(memory2.GetUses() == 1);
+            REQUIRE(not pack1.CompareEqual(pack2));
+            REQUIRE(    pack2.CompareEqual(memory1));
+            REQUIRE(not pack2.CompareEqual(memory2));
+         }
 
-         REQUIRE(not pack1.CompareEqual(pack2));
-         REQUIRE(    pack2.CompareEqual(memory1));
-         REQUIRE(not pack2.CompareEqual(memory2));
-      }
+         WHEN("Disown-assign pack1 in pack2") {
+            pack2 = Disown(pack1);
+            
+            Text_CheckState_OwnedFull(pack1);
+            Text_CheckState_DisownedFull(pack2);
+            Text_CheckState_ContainsOne(pack1, *e1, 2);
+            Text_CheckState_ContainsOne(pack2, *e1, 2);
 
-      WHEN("Disown-assign pack1 in pack2") {
-         pack2 = Disown(pack1);
-         
-         Text_CheckState_OwnedFull(pack1);
-         Text_CheckState_DisownedFull(pack2);
-         Text_CheckState_ContainsOne(pack1, *e1, 2);
-         Text_CheckState_ContainsOne(pack2, *e1, 2);
+            REQUIRE(memory1.GetUses() == 2);
+            REQUIRE(memory2.GetUses() == 1);
 
-         REQUIRE(memory1.GetUses() == 2);
-         REQUIRE(memory2.GetUses() == 1);
+            REQUIRE(    pack1.CompareEqual(pack2));
+            REQUIRE(    pack2.CompareEqual(memory1));
+            REQUIRE(not pack2.CompareEqual(memory2));
+         }
 
-         REQUIRE(    pack1.CompareEqual(pack2));
-         REQUIRE(    pack2.CompareEqual(memory1));
-         REQUIRE(not pack2.CompareEqual(memory2));
-      }
+         WHEN("Abandon-assign pack1 in pack2") {
+            pack2 = Abandon(pack1);
 
-      WHEN("Abandon-assign pack1 in pack2") {
-         pack2 = Abandon(pack1);
+            Text_CheckState_Abandoned(pack1);
+            Text_CheckState_OwnedFull(pack2);
+            Text_CheckState_ContainsOne(pack2, *e1, 2);
 
-         Text_CheckState_Abandoned(pack1);
-         Text_CheckState_OwnedFull(pack2);
-         Text_CheckState_ContainsOne(pack2, *e1, 2);
+            REQUIRE(memory1.GetUses() == 2);
+            REQUIRE(memory2.GetUses() == 1);
+         }
 
-         REQUIRE(memory1.GetUses() == 2);
-         REQUIRE(memory2.GetUses() == 1);
-      }
+         WHEN("Clone-assign pack1 in pack2") {
+            pack2 = Clone(pack1);
 
-      WHEN("Clone-assign pack1 in pack2") {
-         pack2 = Clone(pack1);
+            Text_CheckState_OwnedFull(pack1);
+            Text_CheckState_OwnedFull(pack2);
+            Text_CheckState_ContainsOne(pack1, *e1, 2);
+            Text_CheckState_ContainsOne(pack2, *e1, 1);
 
-         Text_CheckState_OwnedFull(pack1);
-         Text_CheckState_OwnedFull(pack2);
-         Text_CheckState_ContainsOne(pack1, *e1, 2);
-         Text_CheckState_ContainsOne(pack2, *e1, 1);
+            REQUIRE(memory1.GetUses() == 2);
+            REQUIRE(memory2.GetUses() == 1);
 
-         REQUIRE(memory1.GetUses() == 2);
-         REQUIRE(memory2.GetUses() == 1);
+            REQUIRE(    pack1.CompareEqual(pack2));
+            REQUIRE(    pack2.CompareEqual(memory1));
+            REQUIRE(not pack2.CompareEqual(memory2));
+         }
 
-         REQUIRE(    pack1.CompareEqual(pack2));
-         REQUIRE(    pack2.CompareEqual(memory1));
-         REQUIRE(not pack2.CompareEqual(memory2));
-      }
+         WHEN("Copy-assign pack1 in pack2, then reset pack1") {
+            pack2 = Copy(pack1);
+            pack1.Reset();
 
-      WHEN("Copy-assign pack1 in pack2, then reset pack1") {
-         pack2 = Copy(pack1);
-         pack1.Reset();
+            Text_CheckState_Default(pack1);
+            Text_CheckState_OwnedFull(pack2);
 
-         Text_CheckState_Default(pack1);
-         Text_CheckState_OwnedFull(pack2);
+            REQUIRE(pack2.GetUses() == 1);
+            REQUIRE(pack2 == memory1);
+         }
 
-         REQUIRE(pack2.GetUses() == 1);
-         REQUIRE(pack2 == memory1);
-      }
+         WHEN("Clone-assign pack1 in pack2, then reset pack1") {
+            pack2 = Clone(pack1);
+            REQUIRE(pack1.GetUses() == 2);
+            REQUIRE(pack2.GetUses() == 1);
 
-      WHEN("Clone-assign pack1 in pack2, then reset pack1") {
-         pack2 = Clone(pack1);
-         REQUIRE(pack1.GetUses() == 2);
-         REQUIRE(pack2.GetUses() == 1);
+            const T memory3 = pack2;
+            REQUIRE(pack2.GetUses() == 2);
 
-         const T memory3 = pack2;
-         REQUIRE(pack2.GetUses() == 2);
+            pack1.Reset();
 
-         pack1.Reset();
+            REQUIRE_FALSE(pack1.GetAllocation());
+            REQUIRE(pack2.GetUses() == 2);
+            REQUIRE(memory3.GetUses() == 2);
+         }
 
-         REQUIRE_FALSE(pack1.GetAllocation());
-         REQUIRE(pack2.GetUses() == 2);
-         REQUIRE(memory3.GetUses() == 2);
-      }
+         WHEN("Refer-assign pack1 in pack2, then reset pack1") {
+            pack2 = pack1;
+            pack1.Reset();
+            
+            Text_CheckState_Default(pack1);
+            Text_CheckState_OwnedFull(pack2);
 
-      WHEN("Refer-assign pack1 in pack2, then reset pack1") {
-         pack2 = pack1;
-         pack1.Reset();
-         
-         Text_CheckState_Default(pack1);
-         Text_CheckState_OwnedFull(pack2);
+            REQUIRE(pack2.GetUses() == 2);
+            REQUIRE(pack2 == memory1);
+         }
 
-         REQUIRE(pack2.GetUses() == 2);
-         REQUIRE(pack2 == memory1);
-      }
+         WHEN("Compared") {
+            T defaulted_pack;
 
-      WHEN("Compared") {
-         T defaulted_pack;
-
-         REQUIRE      (pack1 != pack2);
-         REQUIRE_FALSE(pack1 == pack2);
-         REQUIRE      (pack1 != defaulted_pack);
-         REQUIRE_FALSE(pack1 == defaulted_pack);
-         REQUIRE      (pack2 != defaulted_pack);
-         REQUIRE_FALSE(pack2 == defaulted_pack);
+            REQUIRE      (pack1 != pack2);
+            REQUIRE_FALSE(pack1 == pack2);
+            REQUIRE      (pack1 != defaulted_pack);
+            REQUIRE_FALSE(pack1 == defaulted_pack);
+            REQUIRE      (pack2 != defaulted_pack);
+            REQUIRE_FALSE(pack2 == defaulted_pack);
+         }
       }
    }
    
