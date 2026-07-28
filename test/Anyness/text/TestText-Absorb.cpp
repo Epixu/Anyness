@@ -1760,7 +1760,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       /// MARK: Insert at                                                     
       WHEN("Insert an array to a non-existent index") {
-         REQUIRE_THROWS(pack.InsertAt(1000, immovable));
+         size_t inserted = 0;
+         #if LANGULUS(SAFE)
+            REQUIRE_THROWS(inserted = pack.InsertAt(1000, immovable));
+         #else
+            REQUIRE_NOTHROW(inserted = pack.InsertAt(1000, immovable));
+         #endif
+         REQUIRE(inserted == 0);
 
          Text_CheckState_OwnedFull(pack);
          Text_CheckState_ContainsOne(pack, *e556);
@@ -1928,7 +1934,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
          /// MARK: Concat at                                                  
          WHEN("Concatenate to a non-existent index") {
-            REQUIRE_THROWS(pack.ConcatAt(1000, immovable[0]));
+            size_t inserted = 0;
+            #if LANGULUS(SAFE)
+               REQUIRE_THROWS(inserted = pack.ConcatAt(1000, immovable[0]));
+            #else
+               REQUIRE_NOTHROW(inserted = pack.ConcatAt(1000, immovable[0]));
+            #endif
+            REQUIRE(inserted == 0);
             
             Text_CheckState_OwnedFull(pack);
             Text_CheckState_ContainsOne(pack, *e556);

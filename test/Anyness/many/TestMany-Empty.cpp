@@ -1144,7 +1144,13 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
       /// MARK: Insert at                                                     
       WHEN("Insert an array to a non-existent index") {
-         REQUIRE_THROWS(pack.InsertAt(5, immovable));
+         size_t inserted = 0;
+         #if LANGULUS(SAFE)
+            REQUIRE_THROWS(inserted = pack.InsertAt(1000, immovable));
+         #else
+            REQUIRE_NOTHROW(inserted = pack.InsertAt(1000, immovable));
+         #endif
+         REQUIRE(inserted == 0);
 
          // Residual type from the failed insertion remains.            
          // Shouldn't be a problem, generally speaking, because an      
@@ -1155,14 +1161,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
       /// MARK: <<                                                            
       WHEN("Insert at the back by using << operator)") {
-         pack <<           immovable[0]
-              << Refer    {immovable[1]}
-              << Copy     {immovable[2]}
-              << Disown   {immovable[3]}
-              << std::move(movable1[0])
-              << Move     {movable2[0]}
-              << Abandon  {movable3[0]}
-              << Clone    {immovable[4]};
+         REQUIRE_NOTHROW(pack <<           immovable[0]
+                              << Refer    {immovable[1]}
+                              << Copy     {immovable[2]}
+                              << Disown   {immovable[3]}
+                              << std::move(movable1[0])
+                              << Move     {movable2[0]}
+                              << Abandon  {movable3[0]}
+                              << Clone    {immovable[4]});
 
          Many_CheckState_OwnedFull<E>(pack);
 
@@ -1202,14 +1208,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
       /// MARK: >>                                                            
       WHEN("Insert at the front by using >> operator)") {
-         pack >>           immovable[0]
-              >> Refer    {immovable[1]}
-              >> Copy     {immovable[2]}
-              >> Disown   {immovable[3]}
-              >> std::move(movable1[0])
-              >> Move     {movable2[0]}
-              >> Abandon  {movable3[0]}
-              >> Clone    {immovable[4]};
+         REQUIRE_NOTHROW(pack >>           immovable[0]
+                              >> Refer    {immovable[1]}
+                              >> Copy     {immovable[2]}
+                              >> Disown   {immovable[3]}
+                              >> std::move(movable1[0])
+                              >> Move     {movable2[0]}
+                              >> Abandon  {movable3[0]}
+                              >> Clone    {immovable[4]});
 
          Many_CheckState_OwnedFull<E>(pack);
 
