@@ -216,6 +216,13 @@ namespace Langulus::Anyness
          return this->AssignAbsorb(Move {other});
       }
 
+      template<class A>
+      constexpr Text& operator = (A&& argument) {
+         if constexpr (CT::Text<A> and CT::Container<A>)
+            return this->AssignAbsorb(LglsFwd(argument));
+         else
+            return this->Assign(LglsFwd(argument));
+      }
       
       /// MARK: Assign                                                        
       /// Extends the Assignment component to be able to handle character     

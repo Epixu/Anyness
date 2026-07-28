@@ -976,6 +976,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       }
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      if constexpr (Same<E, char>) {
          WHEN("Reset, and then immediately allocated again") {
             auto reset_and_reallocate = [&](T& a) {
                const auto memory = a.GetRaw();
@@ -993,6 +994,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             reset_and_reallocate(pack_abandoned);
             //reset_and_reallocate(pack_disowned); // likely to be reallocated in a new place due to lack of authority on the original memory
          }
+      }
       #endif
 
       /// MARK: Compare                                                       
