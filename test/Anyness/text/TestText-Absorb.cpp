@@ -7,14 +7,11 @@
 ///                                                                           
 #include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
-#include "test/Anyness/many/TestManyCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
-   , Types<Text, ScopedElement<char*,  true>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Text, ScopedElement<Text>>
    , Types<Text, ScopedElement<int>>
@@ -46,6 +43,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
    , Types<Text, ScopedElement<int*,   true>>
    , Types<Text, ScopedElement<Many*,  true>>
    , Types<Text, ScopedElement<RT*,    true>>
+   , Types<Text, ScopedElement<char*,  true>>
 
    , Types<Text, ScopedElement<Text**, true>>
    , Types<Text, ScopedElement<int**,  true>>
@@ -169,16 +167,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          );
       }
 
-      WHEN("Assigned compatible referred value") {
+      /// MARK: Assign/Refer                                                  
+      WHEN("Assigned value by referral") {
          auto assign_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
             REQUIRE_NOTHROW(a.Assign(*element));
 
-            if constexpr (CT::DeepDense<E>) {
-               static_assert(CT::Deep<E> and CT::Dense<E>);
-               static_assert(not ::std::same_as<E, int>);
-               static_assert(not ::std::same_as<E, RT>);
+            if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            }
 
             Text_CheckState_OwnedFull(a);
             Text_CheckState_ContainsOne(a, *element);
@@ -198,7 +193,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       }
 
       if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and misabsorbed by refer") {
+         WHEN("Assigned and misabsorbed by referral") {
             auto misabsorb_refer = [&](auto& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(*element));
 
@@ -232,7 +227,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed referred container") {
+         WHEN("Assigned and absorbed by referral") {
             auto absorb_refer = [&](auto& a, [[maybe_unused]] const char* intent, int uses) {
                REQUIRE_NOTHROW(a.AssignAbsorb(*element));
 
@@ -259,175 +254,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          }
       }
       
-      WHEN("Assigned compatible cloned value") {
-         auto assign_clone = [&](T& a, [[maybe_unused]] const char* intent) {
-            REQUIRE_NOTHROW(a.Assign(Clone(*element)));
-
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
-
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
-               a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
-               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
-            );
-         };
-
-         assign_clone(pack_referred1, "Refer");
-         assign_clone(pack_copied,    "Copy");
-         assign_clone(pack_cloned,    "Clone");
-         assign_clone(pack_moved1,    "Move");
-         assign_clone(pack_abandoned, "Abandon");
-         assign_clone(pack_disowned,  "Disown");
-      }
-
-      if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and misabsorbed by clone") {
-            auto misabsorb_clone = [&](T& a, int uses) {
-               REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
-            };
-
-            misabsorb_clone(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
-            misabsorb_clone(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
-            misabsorb_clone(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
-            misabsorb_clone(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
-            misabsorb_clone(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
-            misabsorb_clone(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
-            misabsorb_clone(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
-            misabsorb_clone(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
-         }
-      }
-
-      if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed cloned container") {
-            auto absorb_clone = [&](T& a, [[maybe_unused]] const char* intent) {
-               REQUIRE_NOTHROW(a.AssignAbsorb(Clone(*element)));
-
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_OwnedFull(*element);
-               Text_CheckState_ContainsString(a, "555");
-               Text_CheckState_ContainsString(*element, "555");
-               REQUIRE(a.GetUses() == 1);
-               REQUIRE(a.GetAllocation() != element->GetAllocation());
-
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Clone", 30, 100,
-                  a.AssignAbsorb(Clone(*element)),          a.AssignAbsorb(Clone(*originalElement)),
-                  stdstr temp_std1 (1, *element);
-                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
-               );
-            };
-
-            absorb_clone(pack_referred1, "Refer");
-            absorb_clone(pack_copied,    "Copy");
-            absorb_clone(pack_cloned,    "Clone");
-            absorb_clone(pack_moved1,    "Move");
-            absorb_clone(pack_abandoned, "Abandon");
-            absorb_clone(pack_disowned,  "Disown");
-         }
-      }
-
-      WHEN("Assigned compatible copied value") {
-         auto assign_copy = [&](T& a, [[maybe_unused]] const char* intent) {
-            REQUIRE_NOTHROW(a.Assign(Copy(*element)));
-
-            if constexpr (CT::DeepDense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
-
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
-               a.Assign(Copy(*element)),           a.Assign(Copy(*originalElement)),
-               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
-            );
-         };
-
-         assign_copy(pack_referred1, "Refer");
-         assign_copy(pack_copied,    "Copy");
-         assign_copy(pack_cloned,    "Clone");
-         assign_copy(pack_moved1,    "Move");
-         assign_copy(pack_abandoned, "Abandon");
-         assign_copy(pack_disowned,  "Disown");
-      }
-
-      if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and misabsorbed by copy") {
-            auto misabsorb_copy = [&](T& a, int uses) {
-               REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
-            };
-
-            misabsorb_copy(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
-            misabsorb_copy(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
-            misabsorb_copy(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
-            misabsorb_copy(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
-            misabsorb_copy(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
-            misabsorb_copy(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
-            misabsorb_copy(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
-            misabsorb_copy(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
-         }
-      }
-
-      if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed copied container") {
-            auto absorb_copy = [&](T& a, [[maybe_unused]] const char* intent) {
-               REQUIRE_NOTHROW(a.AssignAbsorb(Copy(*element)));
-
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_OwnedFull(*element);
-               Text_CheckState_ContainsString(a, "555");
-               Text_CheckState_ContainsString(*element, "555");
-               REQUIRE(a.GetUses() == 1);
-               REQUIRE(a.GetAllocation() != element->GetAllocation());
-
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Copy", 30, 100,
-                  a.AssignAbsorb(Copy(*element)),           a.AssignAbsorb(Copy(*originalElement)),
-                  stdstr temp_std1 (1, *element);
-                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
-               );
-            };
-
-            absorb_copy(pack_referred1, "Refer");
-            absorb_copy(pack_copied,    "Copy");
-            absorb_copy(pack_cloned,    "Clone");
-            absorb_copy(pack_moved1,    "Move");
-            absorb_copy(pack_abandoned, "Abandon");
-            absorb_copy(pack_disowned,  "Disown");
-         }
-      }
-
-      WHEN("Assigned compatible moved value") {
+      /// MARK: Assign/Move                                                   
+      WHEN("Assigned value by move") {
          auto assign_move = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
             if constexpr (Same<E, RT>)
@@ -499,7 +327,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed moved container") {
+         WHEN("Assigned and absorbed by move") {
             auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent, int uses) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(::std::move(movable)));
@@ -527,8 +355,179 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             absorb_move(pack_disowned,  "Disown",  7);
          }
       }
+      
+      /// MARK: Assign/Copy                                                   
+      WHEN("Assigned value by copy") {
+         auto assign_copy = [&](T& a, [[maybe_unused]] const char* intent) {
+            REQUIRE_NOTHROW(a.Assign(Copy(*element)));
 
-      WHEN("Assigned compatible disowned value") {
+            if constexpr (CT::DeepDense<E>)
+               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, *element);
+
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
+               a.Assign(Copy(*element)),           a.Assign(Copy(*originalElement)),
+               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
+            );
+         };
+
+         assign_copy(pack_referred1, "Refer");
+         assign_copy(pack_copied,    "Copy");
+         assign_copy(pack_cloned,    "Clone");
+         assign_copy(pack_moved1,    "Move");
+         assign_copy(pack_abandoned, "Abandon");
+         assign_copy(pack_disowned,  "Disown");
+      }
+
+      if constexpr (CT::DeepDense<E>) {
+         WHEN("Assigned and misabsorbed by copy") {
+            auto misabsorb_copy = [&](T& a, int uses) {
+               REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
+            };
+
+            misabsorb_copy(pack_referred1, 3);
+            Text_CheckState_OwnedFull(pack_referred1);
+
+            misabsorb_copy(pack_referred2, 3);
+            Text_CheckState_OwnedFull(pack_referred2);
+
+            misabsorb_copy(pack_copied,    1);
+            Text_CheckState_OwnedFull(pack_copied);
+
+            misabsorb_copy(pack_cloned,    1);
+            Text_CheckState_OwnedFull(pack_cloned);
+
+            misabsorb_copy(pack_moved1,    1);
+            Text_CheckState_OwnedFull(pack_moved1);
+
+            misabsorb_copy(pack_moved2,    1);
+            Text_CheckState_OwnedFull(pack_moved2);
+
+            misabsorb_copy(pack_abandoned, 1);
+            Text_CheckState_OwnedFull(pack_abandoned);
+
+            misabsorb_copy(pack_disowned,  3);
+            Text_CheckState_DisownedFull(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
+         WHEN("Assigned and absorbed by copy") {
+            auto absorb_copy = [&](T& a, [[maybe_unused]] const char* intent) {
+               REQUIRE_NOTHROW(a.AssignAbsorb(Copy(*element)));
+
+               Text_CheckState_OwnedFull(a);
+               Text_CheckState_OwnedFull(*element);
+               Text_CheckState_ContainsString(a, "555");
+               Text_CheckState_ContainsString(*element, "555");
+               REQUIRE(a.GetUses() == 1);
+               REQUIRE(a.GetAllocation() != element->GetAllocation());
+
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Copy", 30, 100,
+                  a.AssignAbsorb(Copy(*element)),           a.AssignAbsorb(Copy(*originalElement)),
+                  stdstr temp_std1 (1, *element);
+                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+               );
+            };
+
+            absorb_copy(pack_referred1, "Refer");
+            absorb_copy(pack_copied,    "Copy");
+            absorb_copy(pack_cloned,    "Clone");
+            absorb_copy(pack_moved1,    "Move");
+            absorb_copy(pack_abandoned, "Abandon");
+            absorb_copy(pack_disowned,  "Disown");
+         }
+      }
+
+      /// MARK: Assign/Clone                                                  
+      WHEN("Assigned value by clone") {
+         auto assign_clone = [&](T& a, [[maybe_unused]] const char* intent) {
+            REQUIRE_NOTHROW(a.Assign(Clone(*element)));
+
+            if constexpr (CT::DeepDense<E>)
+               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
+            Text_CheckState_OwnedFull(a);
+            Text_CheckState_ContainsOne(a, *element);
+
+            BenchmarkTextStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
+               a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
+               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
+            );
+         };
+
+         assign_clone(pack_referred1, "Refer");
+         assign_clone(pack_copied,    "Copy");
+         assign_clone(pack_cloned,    "Clone");
+         assign_clone(pack_moved1,    "Move");
+         assign_clone(pack_abandoned, "Abandon");
+         assign_clone(pack_disowned,  "Disown");
+      }
+
+      if constexpr (CT::DeepDense<E>) {
+         WHEN("Assigned and misabsorbed by clone") {
+            auto misabsorb_clone = [&](T& a, int uses) {
+               REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
+               Text_CheckState_ContainsOne(a, *originalElement, uses);
+            };
+
+            misabsorb_clone(pack_referred1, 3);
+            Text_CheckState_OwnedFull(pack_referred1);
+
+            misabsorb_clone(pack_referred2, 3);
+            Text_CheckState_OwnedFull(pack_referred2);
+
+            misabsorb_clone(pack_copied,    1);
+            Text_CheckState_OwnedFull(pack_copied);
+
+            misabsorb_clone(pack_cloned,    1);
+            Text_CheckState_OwnedFull(pack_cloned);
+
+            misabsorb_clone(pack_moved1,    1);
+            Text_CheckState_OwnedFull(pack_moved1);
+
+            misabsorb_clone(pack_moved2,    1);
+            Text_CheckState_OwnedFull(pack_moved2);
+
+            misabsorb_clone(pack_abandoned, 1);
+            Text_CheckState_OwnedFull(pack_abandoned);
+
+            misabsorb_clone(pack_disowned,  3);
+            Text_CheckState_DisownedFull(pack_disowned);
+         }
+      }
+
+      if constexpr (CT::Container<E> and CT::Text<E>) {
+         WHEN("Assigned and absorbed by clone") {
+            auto absorb_clone = [&](T& a, [[maybe_unused]] const char* intent) {
+               REQUIRE_NOTHROW(a.AssignAbsorb(Clone(*element)));
+
+               Text_CheckState_OwnedFull(a);
+               Text_CheckState_OwnedFull(*element);
+               Text_CheckState_ContainsString(a, "555");
+               Text_CheckState_ContainsString(*element, "555");
+               REQUIRE(a.GetUses() == 1);
+               REQUIRE(a.GetAllocation() != element->GetAllocation());
+
+               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Clone", 30, 100,
+                  a.AssignAbsorb(Clone(*element)),          a.AssignAbsorb(Clone(*originalElement)),
+                  stdstr temp_std1 (1, *element);
+                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+               );
+            };
+
+            absorb_clone(pack_referred1, "Refer");
+            absorb_clone(pack_copied,    "Copy");
+            absorb_clone(pack_cloned,    "Clone");
+            absorb_clone(pack_moved1,    "Move");
+            absorb_clone(pack_abandoned, "Abandon");
+            absorb_clone(pack_disowned,  "Disown");
+         }
+      }
+
+      /// MARK: Assign/Disown                                                 
+      WHEN("Assigned value by disown") {
          auto assign_disown = [&](T& a, [[maybe_unused]] const char* intent) {
             REQUIRE_NOTHROW(a.Assign(Disown(*element)));
 
@@ -584,7 +583,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed disowned container") {
+         WHEN("Assigned and absorbed by disown") {
             auto absorb_disown = [&](T& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(Disown(*element)));
 
@@ -610,7 +609,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          }
       }
       
-      WHEN("Assigned compatible abandoned value") {
+      /// MARK: Assign/Abandon                                                
+      WHEN("Assigned value by abandon") {
          auto assign_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
             if constexpr (Same<E, RT>)
@@ -682,7 +682,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed abandoned container") {
+         WHEN("Assigned and absorbed by abandon") {
             auto absorb_abandon = [&](T& a, [[maybe_unused]] const char* intent, int uses) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(Abandon(movable)));
@@ -712,7 +712,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          }
       }
 
-      WHEN("Assigned compatible empty self") {
+      /// MARK: Assign empty                                                  
+      WHEN("Ambigous assigned empty self") {
          auto assign_empty_self = [&](T& a) {
             REQUIRE_NOTHROW(a = T{});
             Text_CheckState_Default(a);
@@ -1151,6 +1152,255 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             (void) 0, dont_optimize |= pack_referred1.ContainsRange(*element)
          );
       }
+      
+      /// MARK: Range                                                         
+      WHEN("Range-iterated (default)") {
+         auto scan = [&](auto& pack) {
+            IterateDefault strategy(pack);
+            IterateDefault strategyConst(::std::as_const(pack));
+            using Iterator      = decltype(strategy.begin());
+            using IteratorConst = decltype(strategyConst.begin());
+
+            static_assert(::std::same_as<Iterator,      decltype(strategy.end())>);
+            static_assert(::std::same_as<IteratorConst, decltype(strategyConst.end())>);
+            static_assert(::std::input_or_output_iterator<Iterator>);
+            static_assert(::std::input_or_output_iterator<IteratorConst>);
+
+            static_assert(::std::random_access_iterator<Iterator>);
+            static_assert(::std::random_access_iterator<IteratorConst>);
+            static_assert(::std::contiguous_iterator<Iterator>);
+            static_assert(::std::contiguous_iterator<IteratorConst>);
+
+            size_t counter = 0;
+            for (auto& it : pack) {
+               (void) it;
+               ++counter;
+               static_assert(Same<char, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+
+            counter = 0;
+            for (auto& it : ::std::as_const(pack)) {
+               (void) it;
+               ++counter;
+               static_assert(Same<char, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+
+            counter = 0;
+            for (auto& it : strategy) {
+               (void) it;
+               ++counter;
+               static_assert(Same<char, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+
+            counter = 0;
+            for (auto& it : strategyConst) {
+               (void) it;
+               ++counter;
+               static_assert(Same<char, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+         };
+
+         scan(pack_referred1);
+         scan(pack_referred2);
+         scan(pack_copied);
+         scan(pack_cloned);
+         scan(pack_moved1);
+         scan(pack_moved2);
+         scan(pack_abandoned);
+         scan(pack_disowned);
+      }
+
+      WHEN("Range-iterated (reverse)") {
+         auto scan = [&](auto& pack) {
+            IterateInReverse strategy(pack);
+            IterateInReverse strategyConst(::std::as_const(pack));
+            using Iterator      = decltype(strategy.begin());
+            using IteratorConst = decltype(strategyConst.begin());
+
+            static_assert(::std::same_as<Iterator,      decltype(strategy.end())>);
+            static_assert(::std::same_as<IteratorConst, decltype(strategyConst.end())>);
+            static_assert(::std::input_or_output_iterator<Iterator>);
+            static_assert(::std::input_or_output_iterator<IteratorConst>);
+
+            static_assert(::std::random_access_iterator<Iterator>);
+            static_assert(::std::random_access_iterator<IteratorConst>);
+            static_assert(::std::contiguous_iterator<Iterator>);
+            static_assert(::std::contiguous_iterator<IteratorConst>);
+
+            size_t counter = 0;
+            for (auto& it : strategy) {
+               (void) it;
+               ++counter;
+               static_assert(Exact<char, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+
+            counter = 0;
+            for (auto& it : strategyConst) {
+               (void) it;
+               ++counter;
+               static_assert(Exact<char const, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+         };
+
+         scan(pack_referred1);
+         scan(pack_referred2);
+         scan(pack_copied);
+         scan(pack_cloned);
+         scan(pack_moved1);
+         scan(pack_moved2);
+         scan(pack_abandoned);
+         scan(pack_disowned);
+      }
+
+      WHEN("Range-iterated (noderef)") {
+         auto scan = [&](auto& pack) {
+            IterateNoDeref strategy(pack);
+            IterateNoDeref strategyConst(::std::as_const(pack));
+            using Iterator      = decltype(strategy.begin());
+            using IteratorConst = decltype(strategyConst.begin());
+
+            static_assert(::std::same_as<Iterator,      decltype(strategy.end())>);
+            static_assert(::std::same_as<IteratorConst, decltype(strategyConst.end())>);
+            static_assert(::std::input_or_output_iterator<Iterator>);
+            static_assert(::std::input_or_output_iterator<IteratorConst>);
+            //static_assert(::std::random_access_iterator<Iterator>);
+            //static_assert(::std::contiguous_iterator<Iterator>);
+
+            size_t counter = 0;
+            for (auto& it : strategy) {
+               (void) it;
+               ++counter;
+               static_assert(Exact<typename IterateDefault<false, T>::Iterator const&, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+
+            counter = 0;
+            for (auto& it : strategyConst) {
+               (void) it;
+               ++counter;
+               static_assert(Exact<typename IterateDefault<false, T const>::Iterator const&, decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+         };
+
+         scan(pack_referred1);
+         scan(pack_referred2);
+         scan(pack_copied);
+         scan(pack_cloned);
+         scan(pack_moved1);
+         scan(pack_moved2);
+         scan(pack_abandoned);
+         scan(pack_disowned);
+      }
+
+      WHEN("Range-iterated (handles)") {
+         auto scan = [&](auto& pack) {
+            IterateHandles strategy(pack);
+            IterateHandles strategyConst(::std::as_const(pack));
+            using Iterator      = decltype(strategy.begin());
+            using IteratorConst = decltype(strategyConst.begin());
+
+            static_assert(::std::same_as<Iterator,      decltype(strategy.end())>);
+            static_assert(::std::same_as<IteratorConst, decltype(strategyConst.end())>);
+            static_assert(::std::input_or_output_iterator<Iterator>);
+            static_assert(::std::input_or_output_iterator<IteratorConst>);
+            //static_assert(::std::random_access_iterator<Iterator>);
+            //static_assert(::std::contiguous_iterator<Iterator>);
+
+            size_t counter = 0;
+            for (auto& it : strategy) {
+               (void) it;
+               ++counter;
+               static_assert(CT::Handle<decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+
+            counter = 0;
+            for (auto& it : strategyConst) {
+               (void) it;
+               ++counter;
+               static_assert(CT::Handle<decltype(it)>);
+            }
+            REQUIRE(counter == pack.GetCount());
+         };
+
+         scan(pack_referred1);
+         scan(pack_referred2);
+         scan(pack_copied);
+         scan(pack_cloned);
+         scan(pack_moved1);
+         scan(pack_moved2);
+         scan(pack_abandoned);
+         scan(pack_disowned);
+      }
+
+      WHEN("Range-iterated (together)") {
+         IterateTogether strategy(
+            pack_referred1,
+            pack_referred2,
+            pack_copied,
+            pack_cloned,
+            pack_moved1,
+            pack_moved2,
+            pack_abandoned,
+            pack_disowned
+         );
+         IterateTogether strategyConst(
+            ::std::as_const(pack_referred1),
+                            pack_referred2,
+            ::std::as_const(pack_copied),
+                            pack_cloned,
+            ::std::as_const(pack_moved1),
+                            pack_moved2,
+            ::std::as_const(pack_abandoned),
+            ::std::as_const(pack_disowned)
+         );
+         using Iterator      = decltype(strategy.begin());
+         using IteratorConst = decltype(strategyConst.begin());
+
+         static_assert(::std::same_as<Iterator,      decltype(strategy.end())>);
+         static_assert(::std::same_as<IteratorConst, decltype(strategyConst.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+         static_assert(::std::input_or_output_iterator<IteratorConst>);
+         //static_assert(::std::random_access_iterator<Iterator>);
+         //static_assert(::std::contiguous_iterator<Iterator>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+            static_assert(Exact<char*, decltype(it.template Get<0>())>);
+            static_assert(Exact<char*, decltype(it.template Get<1>())>);
+            static_assert(Exact<char*, decltype(it.template Get<2>())>);
+            static_assert(Exact<char*, decltype(it.template Get<3>())>);
+            static_assert(Exact<char*, decltype(it.template Get<4>())>);
+            static_assert(Exact<char*, decltype(it.template Get<5>())>);
+            static_assert(Exact<char*, decltype(it.template Get<6>())>);
+            static_assert(Exact<char*, decltype(it.template Get<7>())>);
+         }
+         REQUIRE(counter == pack_referred1.GetCount());
+
+         counter = 0;
+         for (auto& it : strategyConst) {
+            (void) it;
+            ++counter;
+            static_assert(Exact<char const*, decltype(it.template Get<0>())>);
+            static_assert(Exact<char*,       decltype(it.template Get<1>())>);
+            static_assert(Exact<char const*, decltype(it.template Get<2>())>);
+            static_assert(Exact<char*,       decltype(it.template Get<3>())>);
+            static_assert(Exact<char const*, decltype(it.template Get<4>())>);
+            static_assert(Exact<char*,       decltype(it.template Get<5>())>);
+            static_assert(Exact<char const*, decltype(it.template Get<6>())>);
+            static_assert(Exact<char const*, decltype(it.template Get<7>())>);
+         }
+         REQUIRE(counter == pack_referred1.GetCount());
+      }
    }
 
    GIVEN("Two absorb-constructed containers") {
@@ -1162,7 +1412,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       T src {Absorb, Abandon(piecewise1)};
       T dst {Absorb, Abandon(piecewise2)};
 
-      /// MARK: GetHandle                                                     
+      /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto src_handle = src.GetHandle();
          static_assert(::std::same_as<decltype(src_handle), THandle<char&>>);
@@ -1320,10 +1570,502 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       WHEN("GetHandle is called on constant container") {
          T const& pack_constant = src;
-         auto handle = pack_constant.GetHandle();
-         static_assert(::std::same_as<decltype(handle), THandle<char const&>>);
+         auto h = pack_constant.GetHandle();
+         static_assert(::std::same_as<decltype(h), THandle<char const&>>);
 
-         Handle_CheckState_OwnedFull<char const>(handle);
+         Handle_CheckState_OwnedFull<char const>(h);
+      }
+   }
+   
+   GIVEN("Absorbed container and a couple of arrays") {
+      const ScopedE darray1[5] {49, 50, 51, 52, 53};
+      const ScopedE darray2[5] {54, 55, 56, 57, 58};
+
+      const E immovable[5] {
+         *darray1[0], *darray1[1], *darray1[2], *darray1[3], *darray1[4]
+      };
+      E movable1[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+      E movable2[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+      E movable3[5] {
+         *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
+      };
+
+      const ScopedE e556 {556};
+      T piecewise1{Piecewise, *e556};
+      T pack {Absorb, Abandon(piecewise1)};
+
+      /// MARK: Insert array                                                  
+      WHEN("Insert an array to the back") {
+         volatile size_t inserted = 0;
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back,           immovable));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Refer    {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Copy     {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Disown   {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, std::move(movable1)));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Move     {movable2}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Abandon  {movable3}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Clone    {immovable}));
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i) {
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+            }
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, Text>) {
+            REQUIRE(inserted == 4*5*8);
+            Text_CheckState_ContainsString(pack,
+               "\"556\"\"49\"\"50\"\"51\"\"52\"\"53\""
+                      "\"49\"\"50\"\"51\"\"52\"\"53\""
+                      "\"49\"\"50\"\"51\"\"52\"\"53\""
+                      "\"49\"\"50\"\"51\"\"52\"\"53\""
+                      "\"54\"\"55\"\"56\"\"57\"\"58\""
+                      "\"54\"\"55\"\"56\"\"57\"\"58\""
+                      "\"54\"\"55\"\"56\"\"57\"\"58\""
+                      "\"49\"\"50\"\"51\"\"52\"\"53\""
+            );
+         }
+         else if constexpr (Same<E, RT>) {
+            REQUIRE(inserted == 10*5*8);
+            Text_CheckState_ContainsString(pack,
+               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            REQUIRE(inserted == 5*8);
+            Text_CheckState_ContainsString(pack,
+               ",12345"
+                "12345"
+                "12345"
+                "12345"
+                "6789:"
+                "6789:"
+                "6789:"
+                "12345"
+            );
+         }
+         else {
+            REQUIRE(inserted == 2*5*8);
+            Text_CheckState_ContainsString(pack,
+               "5564950515253"
+                  "4950515253"
+                  "4950515253"
+                  "4950515253"
+                  "5455565758"
+                  "5455565758"
+                  "5455565758"
+                  "4950515253"
+            );
+         }
+
+         BenchmarkTextStd("Absorb/Insert/Array/Back", 30, 100,
+            T temp,              temp.InsertAt(Index::Back, immovable),
+            stdstr temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+         );
+      }
+
+      WHEN("Insert an array to the front") {
+         size_t inserted = 0;
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front,           immovable));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Refer    {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Copy     {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Disown   {immovable}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, std::move(movable1)));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Move     {movable2}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Abandon  {movable3}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Clone    {immovable}));
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i) {
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+            }
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, Text>) {
+            REQUIRE(inserted == 4*5*8);
+            Text_CheckState_ContainsString(pack,
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"54\"\"55\"\"56\"\"57\"\"58\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\""
+               "\"49\"\"50\"\"51\"\"52\"\"53\"\"556\""
+            );
+         }
+         else if constexpr (Same<E, RT>) {
+            REQUIRE(inserted == 10*5*8);
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)RT(unknown)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            REQUIRE(inserted == 5*8);
+            Text_CheckState_ContainsString(pack,
+               "12345"
+               "6789:"
+               "6789:"
+               "6789:"
+               "12345"
+               "12345"
+               "12345"
+               "12345,"
+            );
+         }
+         else {
+            REQUIRE(inserted == 2*5*8);
+            Text_CheckState_ContainsString(pack,
+               "4950515253"
+               "5455565758"
+               "5455565758"
+               "5455565758"
+               "4950515253"
+               "4950515253"
+               "4950515253"
+               "4950515253556"
+            );
+         }
+
+         BenchmarkTextStd("Absorb/Insert/Array/Front", 30, 100,
+            T temp,              temp.InsertAt(Index::Front, darray1),
+            stdstr temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
+         );
+      }
+
+      /// MARK: Insert at                                                     
+      WHEN("Insert an array to a non-existent index") {
+         REQUIRE_THROWS(pack.InsertAt(1000, immovable));
+
+         Text_CheckState_OwnedFull(pack);
+         Text_CheckState_ContainsOne(pack, *e556);
+      }
+
+      /// MARK: <<                                                            
+      WHEN("Insert at the back by using << operator)") {
+         pack <<           immovable[0]
+              << Refer    {immovable[1]}
+              << Copy     {immovable[2]}
+              << Disown   {immovable[3]}
+              << std::move( movable1[0])
+              << Move     { movable2[0]}
+              << Abandon  { movable3[0]}
+              << Clone    {immovable[4]};
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack,
+               "\"556\"\"49\"\"50\"\"51\"\"52\"\"54\"\"54\"\"54\"\"53\""
+            );
+         }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack, ",12346665");
+         }
+         else {
+            Text_CheckState_ContainsString(pack, "5564950515254545453");
+         }
+
+         BenchmarkTextStd("Absorb/Insert/Element/Back", 30, 100,
+            T temp,              temp << immovable[0],
+            stdstr temp_std,     temp_std.emplace_back(immovable[0])
+         );
+      }
+
+      /// MARK: >>                                                            
+      WHEN("Insert at the front by using >> operator)") {
+         pack >>           immovable[0]
+              >> Refer    {immovable[1]}
+              >> Copy     {immovable[2]}
+              >> Disown   {immovable[3]}
+              >> std::move( movable1[0])
+              >> Move     { movable2[0]}
+              >> Abandon  { movable3[0]}
+              >> Clone    {immovable[4]};
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack,
+               "\"53\"\"54\"\"54\"\"54\"\"52\"\"51\"\"50\"\"49\"\"556\""
+            );
+         }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(unknown)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack, "56664321,");
+         }
+         else {
+            Text_CheckState_ContainsString(pack, "5354545452515049556");
+         }
+
+         BenchmarkTextStd("Absorb/Insert/Element/Front", 30, 100,
+            T temp,              temp >> immovable[0],
+            stdstr temp_std,     temp_std.emplace_front(immovable[0])
+         );
+      }
+
+      /// MARK: Concat array                                                  
+      if constexpr (CT::Text<E> and CT::Container<E>) {
+         WHEN("Concatenate to the back") {
+            size_t inserted = 0;
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back,           immovable[0]));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Refer    {immovable[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Copy     {immovable[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Disown   {immovable[3]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, std::move(movable1[0])));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Move     {movable2[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Abandon  {movable3[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Clone    {immovable[4]}));
+            REQUIRE(inserted == 16);
+
+            Text_CheckState_OwnedFull(pack);
+
+            if constexpr (CT::Container<E>) {
+               for (int i = 0; i < 5; ++i) {
+                  Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+               }
+            }
+
+            Text_CheckState_ContainsString(pack,"\"556\"4950515254555653");
+
+            BenchmarkTextStd("Absorb/Concat/Element/Back", 30, 100,
+               T temp,              temp.ConcatAt(Index::Back, immovable),
+               stdstr temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+            );
+         }
+
+         WHEN("Concatenate to the front") {
+            size_t inserted = 0;
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front,           immovable[0]));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Refer    {immovable[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Copy     {immovable[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Disown   {immovable[3]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, std::move(movable1[0])));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Move     {movable2[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Abandon  {movable3[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Clone    {immovable[4]}));
+            REQUIRE(inserted == 16);
+
+            Text_CheckState_OwnedFull(pack);
+
+            if constexpr (CT::Container<E>) {
+               for (int i = 0; i < 5; ++i) {
+                  Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+               }
+            }
+
+            Text_CheckState_ContainsString(pack,"5356555452515049\"556\"");
+
+            BenchmarkTextStd("Absorb/Concat/Element/Front", 30, 100,
+               T temp,              temp.ConcatAt(Index::Front, darray1),
+               stdstr temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
+            );
+         }
+
+         /// MARK: Concat at                                                  
+         WHEN("Concatenate to a non-existent index") {
+            REQUIRE_THROWS(pack.ConcatAt(1000, immovable[0]));
+            
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_ContainsOne(pack, *e556);
+         }
+      }
+
+      /// MARK: +=                                                            
+      WHEN("Concatenate array at the back by using += operator)") {
+         REQUIRE_NOTHROW(pack +=           immovable );
+         REQUIRE_NOTHROW(pack += Refer    {immovable});
+         REQUIRE_NOTHROW(pack += Copy     {immovable});
+         REQUIRE_NOTHROW(pack += Disown   {immovable});
+         REQUIRE_NOTHROW(pack += std::move( movable1));
+         REQUIRE_NOTHROW(pack += Move     { movable2});
+         REQUIRE_NOTHROW(pack += Abandon  { movable3});
+         REQUIRE_NOTHROW(pack += Clone    {immovable});
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack,
+               ",12345"
+                "12345"
+                "12345"
+                "12345"
+                "6789:"
+                "6789:"
+                "6789:"
+                "12345"
+            );
+         }
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack,
+               "\"556\"4950515253"
+                      "4950515253"
+                      "4950515253"
+                      "4950515253"
+                      "5455565758"
+                      "5455565758"
+                      "5455565758"
+                      "4950515253"
+            );
+         }
+         else {
+            Text_CheckState_ContainsString(pack,
+               "5564950515253"
+                  "4950515253"
+                  "4950515253"
+                  "4950515253"
+                  "5455565758"
+                  "5455565758"
+                  "5455565758"
+                  "4950515253"
+            );
+         }
+
+         BenchmarkTextStd("Absorb/+=/Array/Back", 30, 100,
+            T temp,              temp += immovable,
+            stdstr temp_std,     temp_std.emplace_back(immovable[0])
+         );
+      }
+
+      WHEN("Concatenate element the back by using += operator)") {
+         REQUIRE_NOTHROW(pack +=           immovable[0] );
+         REQUIRE_NOTHROW(pack += Refer    {immovable[1]});
+         REQUIRE_NOTHROW(pack += Copy     {immovable[2]});
+         REQUIRE_NOTHROW(pack += Disown   {immovable[3]});
+         REQUIRE_NOTHROW(pack += std::move( movable1[0]));
+         REQUIRE_NOTHROW(pack += Move     { movable2[0]});
+         REQUIRE_NOTHROW(pack += Abandon  { movable3[0]});
+         REQUIRE_NOTHROW(pack += Clone    {immovable[4]});
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)"
+                          "RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack, ",12346665");
+         }
+         else if constexpr (Same<E, Text>) {
+            Text_CheckState_ContainsString(pack, "\"556\"4950515254545453");
+         }
+         else {
+            Text_CheckState_ContainsString(pack, "5564950515254545453");
+         }
+
+         BenchmarkTextStd("Absorb/+=/Element/Back", 30, 100,
+            T temp,              temp += immovable[0],
+            stdstr temp_std,     temp_std.emplace_back(immovable[0])
+         );
       }
    }
 

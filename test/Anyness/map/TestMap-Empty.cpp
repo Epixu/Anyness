@@ -450,7 +450,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          }
       }*/
       
-      WHEN("Assigned copied value") {
+      WHEN("Assigned value by copy") {
          pack.Assign(Copy(*element1), Copy(*element2));
 
          Map_CheckState_OwnedFull<E1, E2>(pack);
@@ -498,7 +498,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          }
       }*/
       
-      WHEN("Assigned cloned value") {
+      WHEN("Assigned value by clone") {
          pack.Assign(Clone(*element1), Clone(*element2));
 
          Map_CheckState_OwnedFull<E1, E2>(pack);
@@ -545,7 +545,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          }
       }*/
       
-      WHEN("Assigned disowned value") {
+      WHEN("Assigned value by disown") {
          pack.Assign(Disown(*element1), Disown(*element2));
 
          Map_CheckState_OwnedFull<E1, E2>(pack);
@@ -593,7 +593,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          }
       }*/
       
-      WHEN("Assigned abandoned value") {
+      WHEN("Assigned value by abandon") {
          auto movable1 = *element1;
          auto movable2 = *element2;
          pack.Assign(Abandon(movable1), Abandon(movable2));

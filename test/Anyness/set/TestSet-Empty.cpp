@@ -364,7 +364,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
       
-      WHEN("Assigned copied value") {
+      WHEN("Assigned value by copy") {
          REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
 
          Set_CheckState_OwnedFull<E>(pack);
@@ -413,7 +413,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
       
-      WHEN("Assigned cloned value") {
+      WHEN("Assigned value by clone") {
          REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
 
          Set_CheckState_OwnedFull<E>(pack);
@@ -463,7 +463,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
       
-      WHEN("Assigned disowned value") {
+      WHEN("Assigned value by disown") {
          REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
 
          Set_CheckState_OwnedFull<E>(pack);
@@ -508,7 +508,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          }
       }
       
-      WHEN("Assigned abandoned value") {
+      WHEN("Assigned value by abandon") {
          auto movable = *element;
          REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
 

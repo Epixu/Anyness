@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include <source/Component.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <ranges>
 
@@ -56,36 +57,36 @@ namespace Langulus::Anyness
          using reference         = H&;
 
          H mIt;
-         C& mRange;
+         C* mRange;
 
          constexpr Iterator() noexcept = default;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
 
-         constexpr Iterator(H const& it, C& range) noexcept
+         constexpr Iterator(H const& it, C* range) noexcept
             : mIt    {it}
             , mRange {range} {}
 
-         constexpr Iterator(H&& it, C& range) noexcept
+         constexpr Iterator(H&& it, C* range) noexcept
             : mIt    {LglsFwd(it)}
             , mRange {range} {}
 
          constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
-            LglsAssumeUser(&mRange == &rhs.mRange,
+            LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
             mIt = rhs.mIt;
             return *this;
          }
 
          constexpr auto operator = (Iterator&& rhs) assumptious -> Iterator& {
-            LglsAssumeUser(&mRange == &rhs.mRange,
+            LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
             mIt = rhs.mIt;
             return *this;
          }
 
          constexpr bool operator == (CT::Iterator auto const& rhs) const assumptious {
-            LglsAssumeUser(&mRange == &rhs.mRange,
+            LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
             return mIt == rhs.mIt;
          }
@@ -95,8 +96,8 @@ namespace Langulus::Anyness
          }
 
          explicit constexpr operator bool() const noexcept {
-            if constexpr (REVERSE) return mIt != mRange.rend();
-            else                   return mIt != mRange.end();
+            if constexpr (REVERSE) return mIt != mRange->rend();
+            else                   return mIt != mRange->end();
          }
 
          decltype(auto) operator *  () const noexcept { return (mIt); /* *mIt;*/   }
@@ -185,13 +186,13 @@ namespace Langulus::Anyness
       };
 
       auto begin() -> Iterator  {
-         if constexpr (REVERSE) return {range.rbegin(), range};
-         else                   return {range.begin(),  range};
+         if constexpr (REVERSE) return {range.rbegin(), &range};
+         else                   return {range.begin(),  &range};
       }
 
       auto end() -> Iterator {
-         if constexpr (REVERSE) return {range.rend(), range};
-         else                   return {range.end(),  range};
+         if constexpr (REVERSE) return {range.rend(),   &range};
+         else                   return {range.end(),    &range};
       }
    };
 

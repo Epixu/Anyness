@@ -7,15 +7,12 @@
 ///                                                                           
 #include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
-#include "source/Component.hpp"
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
 //TODO char* std::string_view std::string std::array<char> Literal
 
 TEST_CASE_TEMPLATE("Test empty Text", TestType
-   , Types<Text, ScopedElement<char>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Text, ScopedElement<Text>>
    , Types<Text, ScopedElement<int>>
@@ -209,21 +206,19 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Refer                                                  
-      if constexpr (CT::Text<E> and not CT::Container<E>) {
-         WHEN("Assigned value by referral") {
-            REQUIRE_NOTHROW(pack.Assign(*element));
+      WHEN("Assigned value by referral") {
+         REQUIRE_NOTHROW(pack.Assign(*element));
 
-            Text_CheckState_OwnedFull(pack);
-            if constexpr (CT::Character<E>)
-               Text_CheckState_ContainsOne(pack, Refer(element));
-            else
-               Text_CheckState_ContainsString(pack, "555");
+         if constexpr (CT::DeepDense<E>)
+            Many_CheckState_OwnedFull<TypeOf<E>>(*element);
 
-            BenchmarkTextStd("Empty/Assign/Refer", 30, 100,
-               T temp,                 temp.Assign(*element),
-               stdstr temp_std,        temp_std.emplace_back(*element)
-            );
-         }
+         Text_CheckState_OwnedFull(pack);
+         Text_CheckState_ContainsOne(pack, *element);
+
+         BenchmarkTextStd("Empty/Assign/Refer", 30, 100,
+            T temp,                 temp.Assign(*element),
+            stdstr temp_std,        temp_std.emplace_back(*element)
+         );
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -239,6 +234,8 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          WHEN("Assigned and absorbed by referral") {
             REQUIRE_NOTHROW(pack.AssignAbsorb(*element));
 
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_OwnedFull(*element);
             Text_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
@@ -253,21 +250,27 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Move                                                   
-      if constexpr (CT::Text<E> and not CT::Container<E>) {
-         WHEN("Assigned value by move") {
-            auto movable = *element;
-            REQUIRE_NOTHROW(pack.Assign(::std::move(movable)));
+      WHEN("Assigned value by move") {
+         auto movable = *element;
+         if constexpr (Same<E, RT>)
+            movable.copied_in = false;
 
-            Text_CheckState_OwnedFull(pack);
-            Text_CheckState_ContainsString(pack, "555");
+         REQUIRE_NOTHROW(pack.Assign(::std::move(movable)));
 
-            BenchmarkTextStd("Empty/Assign/Move", 30, 100,
-               auto movable = *element;
-               T temp,                       temp.Assign(::std::move(movable)),
-               auto movable = *element;
-               stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
-            );
+         if constexpr (CT::DeepDense<E>) {
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable);
+            Many_Helper_TestSame(movable, *element);
          }
+
+         Text_CheckState_OwnedFull(pack);
+         Text_CheckState_ContainsOne(pack, *element);
+
+         BenchmarkTextStd("Empty/Assign/Move", 30, 100,
+            auto movable = *element;
+            T temp,                       temp.Assign(::std::move(movable)),
+            auto movable = *element;
+            stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
+         );
       }
 
       if constexpr (CT::DeepDense<E>) {
@@ -275,6 +278,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             auto movable = *element;
             REQUIRE_THROWS(pack.AssignAbsorb(::std::move(movable)));
             Text_CheckState_Default(pack);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable);
             Many_Helper_TestSame(movable, *element);
          }
       }
@@ -284,6 +288,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             auto movable = *element;
             REQUIRE_NOTHROW(pack.AssignAbsorb(::std::move(movable)));
 
+            Text_CheckState_OwnedFull(pack);
             Text_CheckState_Default(movable);
             Text_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
@@ -300,22 +305,22 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Copy                                                   
-      if constexpr (CT::Text<E> and not CT::Container<E>) {
-         WHEN("Assigned copied value") {
-            REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
+      WHEN("Assigned value by copy") {
+         REQUIRE_NOTHROW(pack.Assign(Copy(*element)));
 
-            Text_CheckState_OwnedFull(pack);
-            Text_CheckState_ContainsString(pack, "555");
+         if constexpr (CT::DeepDense<E>)
+            Many_CheckState_OwnedFull<TypeOf<E>>(*element);
+         Text_CheckState_OwnedFull(pack);
+         Text_CheckState_ContainsOne(pack, *element);
 
-            BenchmarkTextStd("Empty/Assign/Copy", 30, 100,
-               T temp,              temp.Assign(Copy(*element)),
-               stdstr temp_std,     temp_std.emplace_back(*element)
-            );
-         }
+         BenchmarkTextStd("Empty/Assign/Copy", 30, 100,
+            T temp,              temp.Assign(Copy(*element)),
+            stdstr temp_std,     temp_std.emplace_back(*element)
+         );
       }
 
       if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and misabsorbed copied value") {
+         WHEN("Assigned and misabsorbed by copy") {
             const auto element_backup = *element;
             REQUIRE_THROWS(pack.AssignAbsorb(Copy(*element)));
             Text_CheckState_Default(pack);
@@ -324,18 +329,15 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed copied value") {
+         WHEN("Assigned and absorbed by copy") {
             REQUIRE_NOTHROW(pack.AssignAbsorb(Copy(*element)));
 
-            REQUIRE(pack.GetRaw() != element->GetRaw());
-            REQUIRE(pack.IsExact(element->GetType()));
-            REQUIRE(pack == *element);
-            REQUIRE(pack.IsDeep() == element->IsDeep());
-            REQUIRE_FALSE(pack.IsConstant());
-            REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
-
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_OwnedFull(*element);
+            Text_CheckState_ContainsString(pack, "555");
+            Text_CheckState_ContainsString(*element, "555");
             REQUIRE(pack.GetUses() == 1);
-            REQUIRE(pack.GetAllocation());
+            REQUIRE(pack.GetAllocation() != element->GetAllocation());
 
             BenchmarkTextStd("Empty/AssignAbsorb/Copy", 30, 100,
                T temp,                          temp.AssignAbsorb(Copy(*element)),
@@ -346,22 +348,22 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Clone                                                  
-      if constexpr (CT::Text<E> and not CT::Container<E>) {
-         WHEN("Assigned cloned value") {
-            REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
+      WHEN("Assigned value by clone") {
+         REQUIRE_NOTHROW(pack.Assign(Clone(*element)));
 
-            Text_CheckState_OwnedFull(pack);
-            Text_CheckState_ContainsString(pack, "555");
+         if constexpr (CT::DeepDense<E>)
+            Many_CheckState_OwnedFull<TypeOf<E>>(*element);
+         Text_CheckState_OwnedFull(pack);
+         Text_CheckState_ContainsOne(pack, *element);
 
-            BenchmarkTextStd("Empty/Assign/Clone", 30, 100,
-               T temp,                 temp.Assign(Clone(*element)),
-               stdstr temp_std,        temp_std.emplace_back(*element)
-            );
-         }
+         BenchmarkTextStd("Empty/Assign/Clone", 30, 100,
+            T temp,                 temp.Assign(Clone(*element)),
+            stdstr temp_std,        temp_std.emplace_back(*element)
+         );
       }
 
       if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and misabsorbed cloned value") {
+         WHEN("Assigned and misabsorbed by clone") {
             const auto element_backup = *element;
             REQUIRE_THROWS(pack.AssignAbsorb(Clone(*element)));
             Text_CheckState_Default(pack);
@@ -370,19 +372,15 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed cloned value") {
+         WHEN("Assigned and absorbed by clone") {
             REQUIRE_NOTHROW(pack.AssignAbsorb(Clone(*element)));
-            Text_CheckState_OwnedFull(*element);
-            Text_CheckState_OwnedFull(pack);
 
-            REQUIRE(pack.GetRaw() != element->GetRaw());
-            REQUIRE(pack.IsExact(element->GetType()));
-            REQUIRE(pack == *element);
-            REQUIRE(pack.IsDeep() == element->IsDeep());
-            REQUIRE_FALSE(pack.IsConstant());
-            REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
+            Text_CheckState_OwnedFull(pack);
+            Text_CheckState_OwnedFull(*element);
+            Text_CheckState_ContainsString(pack, "555");
+            Text_CheckState_ContainsString(*element, "555");
             REQUIRE(pack.GetUses() == 1);
-            REQUIRE(pack.GetAllocation());
+            REQUIRE(pack.GetAllocation() != element->GetAllocation());
 
             BenchmarkTextStd("Empty/AssignAbsorb/Clone", 30, 100,
                T temp,                          temp.AssignAbsorb(Clone(*element)),
@@ -393,22 +391,20 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Disown                                                 
-      if constexpr (CT::Text<E> and not CT::Container<E>) {
-         WHEN("Assigned disowned value") {
-            REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
+      WHEN("Assigned value by disown") {
+         REQUIRE_NOTHROW(pack.Assign(Disown(*element)));
 
-            Text_CheckState_OwnedFull(pack);
-            Text_CheckState_ContainsString(pack, "555");
+         Text_CheckState_OwnedFull(pack);
+         Text_CheckState_ContainsOne(pack, *element);
 
-            BenchmarkTextStd("Empty/Assign/Disown", 30, 100,
-               T temp,                 temp.Assign(Disown(*element)),
-               stdstr temp_std,        temp_std.emplace_back(*element)
-            );
-         }
+         BenchmarkTextStd("Empty/Assign/Disown", 30, 100,
+            T temp,                 temp.Assign(Disown(*element)),
+            stdstr temp_std,        temp_std.emplace_back(*element)
+         );
       }
 
       if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and absorbed disowned value") {
+         WHEN("Assigned and misabsorbed by disown") {
             const auto element_backup = *element;
             REQUIRE_THROWS(pack.AssignAbsorb(Disown(*element)));
             Text_CheckState_Default(pack);
@@ -417,13 +413,14 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed disowned value") {
+         WHEN("Assigned and absorbed by disown") {
             REQUIRE_NOTHROW(pack.AssignAbsorb(Disown(*element)));
 
-            Text_CheckState_OwnedFull(*element);
             Text_CheckState_DisownedFull(pack);
+            Text_CheckState_OwnedFull(*element);
             Text_Helper_TestSame(pack, *element, false);
-            REQUIRE(pack.IsConstant());
+            REQUIRE(pack.GetUses() == 1);
+            REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             BenchmarkTextStd("Empty/AssignAbsorb/Disown", 30, 100,
                T temp,                       temp.AssignAbsorb(Disown(*element)),
@@ -434,25 +431,31 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Assign/Abandon                                                
-      if constexpr (CT::Text<E> and not CT::Container<E>) {
-         WHEN("Assigned abandoned value") {
-            auto movable = *element;
-            REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
+      WHEN("Assigned value by abandon") {
+         auto movable = *element;
+         if constexpr (Same<E, RT>)
+            movable.copied_in = false;
 
-            Text_CheckState_OwnedFull(pack);
-            Text_CheckState_ContainsString(pack, "555");
+         REQUIRE_NOTHROW(pack.Assign(Abandon(movable)));
 
-            BenchmarkTextStd("Empty/Assign/Abandon", 30, 100,
-               auto movable = *element;
-               T temp,                       temp.Assign(Abandon(movable)),
-               auto movable = *element;
-               stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
-            );
+         if constexpr (CT::DeepDense<E>) {
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable);
+            Many_Helper_TestSame(movable, *element);
          }
+         
+         Text_CheckState_OwnedFull(pack);
+         Text_CheckState_ContainsOne(pack, *element);
+
+         BenchmarkTextStd("Empty/Assign/Abandon", 30, 100,
+            auto movable = *element;
+            T temp,                       temp.Assign(Abandon(movable)),
+            auto movable = *element;
+            stdstr temp_std,              temp_std.emplace_back(::std::move(movable))
+         );
       }
 
       if constexpr (CT::DeepDense<E>) {
-         WHEN("Assigned and absorbed abandoned value") {
+         WHEN("Assigned and misabsorbed by abandon") {
             auto movable = *element;
             REQUIRE_THROWS(pack.AssignAbsorb(Abandon(movable)));
             Text_CheckState_Default(pack);
@@ -461,10 +464,11 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
-         WHEN("Assigned and absorbed abandoned value") {
+         WHEN("Assigned and absorbed by abandon") {
             auto movable = *element;
             REQUIRE_NOTHROW(pack.AssignAbsorb(Abandon(movable)));
 
+            Text_CheckState_OwnedFull(pack);
             Text_CheckState_Abandoned(movable);
             Text_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == 2);
@@ -615,7 +619,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
       }
 
       /// MARK: Compare                                                       
-      WHEN("Compared empty") {
+      WHEN("Compared") {
          static_assert(not static_cast<bool>(T{}));
          static_assert(       T{} == T{}       );
          static_assert(  not (T{} != T{})      );
@@ -888,6 +892,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             //TODO pointers are always different
          }
          else if constexpr (Same<E, Text>) {
+            REQUIRE(inserted == 4*5*8);
             Text_CheckState_ContainsString(pack,
                "\"49\"\"50\"\"51\"\"52\"\"53\""
                "\"49\"\"50\"\"51\"\"52\"\"53\""
@@ -900,6 +905,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             );
          }
          else if constexpr (Same<E, RT>) {
+            REQUIRE(inserted == 10*5*8);
             Text_CheckState_ContainsString(pack,
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
@@ -912,6 +918,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             );
          }
          else if constexpr (Same<E, char>) {
+            REQUIRE(inserted == 5*8);
             Text_CheckState_ContainsString(pack,
                "12345"
                "12345"
@@ -924,6 +931,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             );
          }
          else {
+            REQUIRE(inserted == 2*5*8);
             Text_CheckState_ContainsString(pack,
                "4950515253"
                "4950515253"
@@ -968,6 +976,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             //TODO pointers are always different
          }
          else if constexpr (Same<E, Text>) {
+            REQUIRE(inserted == 4*5*8);
             Text_CheckState_ContainsString(pack,
                "\"49\"\"50\"\"51\"\"52\"\"53\""
                "\"54\"\"55\"\"56\"\"57\"\"58\""
@@ -980,6 +989,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             );
          }
          else if constexpr (Same<E, RT>) {
+            REQUIRE(inserted == 10*5*8);
             Text_CheckState_ContainsString(pack,
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
@@ -992,6 +1002,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             );
          }
          else if constexpr (Same<E, char>) {
+            REQUIRE(inserted == 5*8);
             Text_CheckState_ContainsString(pack,
                "12345"
                "6789:"
@@ -1004,6 +1015,7 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
             );
          }
          else {
+            REQUIRE(inserted == 2*5*8);
             Text_CheckState_ContainsString(pack,
                "4950515253"
                "5455565758"
