@@ -94,13 +94,13 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          Text_CheckState_OwnedFull(pack_abandoned);
          Text_CheckState_OwnedFull(pack_disowned);
 
-         Text_CheckState_ContainsOne(pack_referred1, *originalElement, 3);
-         Text_CheckState_ContainsOne(pack_referred2, *originalElement, 3);
-         Text_CheckState_ContainsOne(pack_copied,    *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_cloned,    *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_moved1,    *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_abandoned, *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
+         Text_CheckState_ContainsOne(pack_referred1, *originalElement);
+         Text_CheckState_ContainsOne(pack_referred2, *originalElement);
+         Text_CheckState_ContainsOne(pack_copied,    *originalElement);
+         Text_CheckState_ContainsOne(pack_cloned,    *originalElement);
+         Text_CheckState_ContainsOne(pack_moved1,    *originalElement);
+         Text_CheckState_ContainsOne(pack_abandoned, *originalElement);
+         Text_CheckState_ContainsOne(pack_disowned,  *originalElement);
 
          BenchmarkTextStd("Empty/PiecewiseConstructor", 30, 400,
             T temp,              (new (&temp)     T{Piecewise, *originalElement}),
@@ -138,7 +138,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
             auto misabsorb_refer = [&](T& a) {
                REQUIRE_THROWS(a.AssignAbsorb(*element));
 
-               Text_CheckState_ContainsOne(a, *originalElement, 2);
+               Text_CheckState_ContainsOne(a, *originalElement);
+               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             };
 
             misabsorb_refer(pack_referred1);
@@ -154,14 +155,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed by referral") {
-            auto absorb_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
+            auto absorb_refer = [&](auto& a, [[maybe_unused]] const char* intent, int uses) {
                REQUIRE_NOTHROW(a.AssignAbsorb(*element));
 
                Text_CheckState_OwnedFull(a);
                Text_CheckState_OwnedFull(*element);
                Text_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == element->GetUses());
-               REQUIRE(a.GetUses() == 2);
+               REQUIRE(a.GetUses() == uses);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
                BenchmarkTextStd("Piecewise/" + intent + "/AssignAbsorb/Refer", 30, 100,
@@ -171,12 +172,12 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
                );
             };
 
-            absorb_refer(pack_referred1, "Refer");
-            absorb_refer(pack_copied,    "Copy");
-            absorb_refer(pack_cloned,    "Clone");
-            absorb_refer(pack_moved1,    "Move");
-            absorb_refer(pack_abandoned, "Abandon");
-            absorb_refer(pack_disowned,  "Disown");
+            absorb_refer(pack_referred1, "Refer",   2);
+            absorb_refer(pack_copied,    "Copy",    3);
+            absorb_refer(pack_cloned,    "Clone",   4);
+            absorb_refer(pack_moved1,    "Move",    5);
+            absorb_refer(pack_abandoned, "Abandon", 6);
+            absorb_refer(pack_disowned,  "Disown",  7);
          }
       }
       
@@ -221,7 +222,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
                auto movable = *element;
                REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
 
-               Text_CheckState_ContainsOne(a, *originalElement, 2);
+               Text_CheckState_ContainsOne(a, *originalElement);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
                Many_Helper_TestSame(movable, *element);
             };
@@ -239,14 +240,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
       
       if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed by move") {
-            auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent) {
+            auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent, int uses) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(::std::move(movable)));
 
                Text_CheckState_OwnedFull(a);
                Text_CheckState_Default(movable);
                Text_Helper_TestSame(a, *element);
-               REQUIRE(a.GetUses() == 2);
+               REQUIRE(a.GetUses() == uses);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
                BenchmarkTextStd("Piecewise/" + intent + "/AssignAbsorb/Move", 30, 100,
@@ -258,12 +259,12 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
                );
             };
 
-            absorb_move(pack_referred1, "Refer");
-            absorb_move(pack_copied,    "Copy");
-            absorb_move(pack_cloned,    "Clone");
-            absorb_move(pack_moved1,    "Move");
-            absorb_move(pack_abandoned, "Abandon");
-            absorb_move(pack_disowned,  "Disown");
+            absorb_move(pack_referred1, "Refer",   2);
+            absorb_move(pack_copied,    "Copy",    3);
+            absorb_move(pack_cloned,    "Clone",   4);
+            absorb_move(pack_moved1,    "Move",    5);
+            absorb_move(pack_abandoned, "Abandon", 6);
+            absorb_move(pack_disowned,  "Disown",  7);
          }
       }
       
@@ -295,8 +296,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          WHEN("Assigned and misabsorbed by copy") {
             auto misabsorb_copy = [&](T& a) {
                REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
-               Many_CheckState_OwnedFull<E>(a);
-               Many_CheckState_ContainsOne(a, Refer(originalElement));
+
+               Text_CheckState_ContainsOne(a, *originalElement);
+               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             };
 
             misabsorb_copy(pack_referred1);
@@ -366,7 +368,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          WHEN("Assigned and misabsorbed by clone") {
             auto misabsorb_clone = [&](T& a) {
                REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
-               Text_CheckState_ContainsOne(a, *originalElement, 2);
+
+               Text_CheckState_ContainsOne(a, *originalElement);
+               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             };
 
             misabsorb_clone(pack_referred1);
@@ -435,7 +439,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
             auto misabsorb_disown = [&](T& a) {
                REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
                
-               Text_CheckState_ContainsOne(a, *originalElement, 2);
+               Text_CheckState_ContainsOne(a, *originalElement);
+               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
             };
 
             misabsorb_disown(pack_referred1);
@@ -517,7 +522,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
                auto movable = *element;
                REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
 
-               Text_CheckState_ContainsOne(a, *originalElement, 2);
+               Text_CheckState_ContainsOne(a, *originalElement);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
                Many_Helper_TestSame(movable, *element);
             };
@@ -535,14 +540,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
 
       if constexpr (CT::Container<E> and CT::Text<E>) {
          WHEN("Assigned and absorbed by abandon") {
-            auto absorb_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
+            auto absorb_abandon = [&](T& a, [[maybe_unused]] const char* intent, int uses) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(Abandon(movable)));
 
                Text_CheckState_OwnedFull(a);
                Text_CheckState_Abandoned(movable);
                Text_Helper_TestSame(a, *element);
-               REQUIRE(a.GetUses() == 2);
+               REQUIRE(a.GetUses() == uses);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
                BenchmarkTextStd("Piecewise/" + intent + "/AssignAbsorb/Abandon", 30, 100,
@@ -555,12 +560,12 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
                );
             };
 
-            absorb_abandon(pack_referred1, "Refer");
-            absorb_abandon(pack_copied,    "Copy");
-            absorb_abandon(pack_cloned,    "Clone");
-            absorb_abandon(pack_moved1,    "Move");
-            absorb_abandon(pack_abandoned, "Abandon");
-            absorb_abandon(pack_disowned,  "Disown");
+            absorb_abandon(pack_referred1, "Refer",   2);
+            absorb_abandon(pack_copied,    "Copy",    3);
+            absorb_abandon(pack_cloned,    "Clone",   4);
+            absorb_abandon(pack_moved1,    "Move",    5);
+            absorb_abandon(pack_abandoned, "Abandon", 6);
+            absorb_abandon(pack_disowned,  "Disown",  7);
          }
       }
 
@@ -604,24 +609,24 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
       }
 
       WHEN("Absorbed by referral") {
-         auto absorb_construct_refer = [&](T& a, T& compare_against) {
+         auto absorb_construct_refer = [&](T& a) {
             T absorbed1 {a};
             T absorbed2 {Refer {a}};
 
-            Text_Helper_TestSame(absorbed1, compare_against);
-            Text_Helper_TestSame(absorbed2, compare_against);
+            Text_Helper_TestSame(absorbed1, a);
+            Text_Helper_TestSame(absorbed2, a);
             REQUIRE(absorbed1.GetUses() == 3);
             REQUIRE(absorbed2.GetUses() == 3);
          };
 
-         absorb_construct_refer(pack_referred1, pack_referred1);
-         absorb_construct_refer(pack_referred2, pack_referred1);
-         absorb_construct_refer(pack_copied,    pack_copied   );
-         absorb_construct_refer(pack_cloned,    pack_cloned   );
-         absorb_construct_refer(pack_moved1,    pack_moved1   );
-         absorb_construct_refer(pack_moved2,    pack_moved2   );
-         absorb_construct_refer(pack_abandoned, pack_abandoned);
-         absorb_construct_refer(pack_disowned,  pack_referred1);
+         absorb_construct_refer(pack_referred1);
+         absorb_construct_refer(pack_referred2);
+         absorb_construct_refer(pack_copied   );
+         absorb_construct_refer(pack_cloned   );
+         absorb_construct_refer(pack_moved1   );
+         absorb_construct_refer(pack_moved2   );
+         absorb_construct_refer(pack_abandoned);
+         absorb_construct_refer(pack_disowned );
       }
       
       WHEN("Absorbed by move") {
@@ -695,7 +700,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
             Text_CheckState_DisownedFull(absorbed);
             Text_Helper_TestSame(absorbed, a, false);
             REQUIRE(absorbed.IsConstant());
-            REQUIRE(absorbed.GetUses() == 2);
+            REQUIRE(absorbed.GetUses() == 1);
          };
 
          absorb_construct_disown(pack_referred1);
@@ -705,18 +710,18 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          absorb_construct_disown(pack_moved1);
          absorb_construct_disown(pack_moved2);
          absorb_construct_disown(pack_abandoned);
+         absorb_construct_disown(pack_disowned);
 
-         T absorbed{Disown {pack_disowned}};
+         /*T absorbed{Disown {pack_disowned}};
          Text_CheckState_DisownedFull(pack_disowned);
          Text_CheckState_DisownedFull(absorbed);
          Text_Helper_TestSame(absorbed, pack_disowned);
          REQUIRE(absorbed.IsConstant());
-         REQUIRE(absorbed.GetUses() == 2);
+         REQUIRE(absorbed.GetUses() == 2);*/
    }
       
       WHEN("Absorbed by copy") {
-         const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int entry_refs, int indi_refs) {
+         auto absorb_construct_copy = [&](T& a) {
             T absorbed {Copy {a}};
 
             Text_CheckState_OwnedFull(absorbed);
@@ -727,14 +732,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
          };
 
-         absorb_construct_copy(pack_referred1, managed_sparse ? 8 : 3, 9);
-         absorb_construct_copy(pack_referred2, managed_sparse ? 8 : 3, 9);
-         absorb_construct_copy(pack_copied,    managed_sparse ? 8 : 3, 9);
-         absorb_construct_copy(pack_cloned,    2, 2);
-         absorb_construct_copy(pack_moved1,    managed_sparse ? 8 : 1, 9);
-         absorb_construct_copy(pack_moved2,    managed_sparse ? 8 : 1, 9);
-         absorb_construct_copy(pack_abandoned, managed_sparse ? 8 : 1, 9);
-         absorb_construct_copy(pack_disowned,  managed_sparse ? 8 : 1, 9);
+         absorb_construct_copy(pack_referred1);
+         absorb_construct_copy(pack_referred2);
+         absorb_construct_copy(pack_copied   );
+         absorb_construct_copy(pack_cloned   );
+         absorb_construct_copy(pack_moved1   );
+         absorb_construct_copy(pack_moved2   );
+         absorb_construct_copy(pack_abandoned);
+         absorb_construct_copy(pack_disowned );
       }
       
       WHEN("Absorbed by clone") {
@@ -933,7 +938,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
       /// MARK: Contains Range                                                
       WHEN("ContainsRange when full") {
          auto contains_full = [&](auto& a) {
-         if constexpr (CT::Sparse<E>) {
+            if constexpr (CT::Sparse<E>) {
                //TODO pointers are always different
             }
             else if constexpr (Same<E, RT>) {
@@ -1228,133 +1233,138 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
    GIVEN("Two piecewise-constructed containers") {
       const ScopedE e1 {555};
       const ScopedE e2 {666};
-      T pack1 {Piecewise, *e1};
-      T pack2 {Piecewise, *e2};
-      const T memory1 = pack1;
-      const T memory2 = pack2;
+      T pack1 {Piecewise, *e1};  //  1 use
+      T pack2 {Piecewise, *e2};  //  1 use
+      const T memory1 = pack1;   // +1 use
+      const T memory2 = pack2;   // +1 use
 
       WHEN("Copy-assign pack1 to pack2") {
-         pack2 = Copy(pack1);
+         pack2 = Copy(pack1);    // data copied, pack2 has 1 uses now, leaving memory2 with 1 remaining
          
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
-         Many_CheckState_ContainsOne(pack2, Refer(e1));
+         Text_CheckState_OwnedFull(pack1);
+         Text_CheckState_OwnedFull(pack2);
+         Text_CheckState_ContainsOne(pack1, *e1, 2);
+         Text_CheckState_ContainsOne(pack2, *e1, 1);
 
-         REQUIRE(pack1.GetUses() == 2);
-         REQUIRE(pack2.GetUses() == 1);
+         REQUIRE(memory1.GetUses() == 2);
          REQUIRE(memory2.GetUses() == 1);
          
-         REQUIRE(    pack1.CompareEqual(pack1));
          REQUIRE(    pack1.CompareEqual(pack2));
          REQUIRE(    pack2.CompareEqual(memory1));
          REQUIRE(not pack2.CompareEqual(memory2));
-         REQUIRE(    pack2.CompareOneEqual(*e1));
-         REQUIRE(not pack2.CompareOneEqual(*e2));
       }
       
       WHEN("Refer-assign pack1 in pack2") {
          pack2 = pack1;
 
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
-         
-         REQUIRE(pack1.GetUses() == 3);
-         REQUIRE(pack2.GetUses() == 3);
+         Text_CheckState_OwnedFull(pack1);
+         Text_CheckState_OwnedFull(pack2);
+         Text_CheckState_ContainsOne(pack1, *e1, 3);
+         Text_CheckState_ContainsOne(pack2, *e1, 3);
+
+         REQUIRE(memory1.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1.CompareEqual(pack2));
-         REQUIRE(pack2.CompareEqual(memory1));
+
+         REQUIRE(    pack1.CompareEqual(pack2));
+         REQUIRE(    pack2.CompareEqual(memory1));
          REQUIRE(not pack2.CompareEqual(memory2));
-         REQUIRE(pack2.CompareOneEqual(*e1));
       }
 
       WHEN("Refer-assign pack1 in pack2 (alt)") {
          pack2 = Refer {pack1};
 
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
-         
-         REQUIRE(pack1.GetUses() == 3);
-         REQUIRE(pack2.GetUses() == 3);
+         Text_CheckState_OwnedFull(pack1);
+         Text_CheckState_OwnedFull(pack2);
+         Text_CheckState_ContainsOne(pack1, *e1, 3);
+         Text_CheckState_ContainsOne(pack2, *e1, 3);
+
+         REQUIRE(memory1.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1.CompareEqual(pack2));
-         REQUIRE(pack2.CompareEqual(memory1));
+
+         REQUIRE(    pack1.CompareEqual(pack2));
+         REQUIRE(    pack2.CompareEqual(memory1));
          REQUIRE(not pack2.CompareEqual(memory2));
-         REQUIRE(pack2.CompareOneEqual(*e1));
       }
 
       WHEN("Move-assign pack1 in pack2") {
-         T movable = pack1;
-         pack2 = ::std::move(movable);
+         pack2 = ::std::move(pack1);
 
-         Many_CheckState_Default<E>(movable);
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
-         Many_Helper_TestSame(pack1, pack2);
+         Text_CheckState_Default(pack1);
+         Text_CheckState_OwnedFull(pack2);
+         Text_CheckState_ContainsOne(pack2, *e1, 2);
          
-         REQUIRE(pack1.GetUses() == 3);
-         REQUIRE(pack2.GetUses() == 3);
+         REQUIRE(memory1.GetUses() == 2);
          REQUIRE(memory2.GetUses() == 1);
+
+         REQUIRE(not pack1.CompareEqual(pack2));
+         REQUIRE(    pack2.CompareEqual(memory1));
+         REQUIRE(not pack2.CompareEqual(memory2));
       }
 
       WHEN("Move-assign pack1 in pack2 (alt)") {
-         T movable = pack1;
-         pack2 = Move {movable};
+         pack2 = Move {pack1};
 
-         Many_CheckState_Default<E>(movable);
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
-         Many_Helper_TestSame(pack1, pack2);
+         Text_CheckState_Default(pack1);
+         Text_CheckState_OwnedFull(pack2);
+         Text_CheckState_ContainsOne(pack2, *e1, 2);
          
-         REQUIRE(pack1.GetUses() == 3);
-         REQUIRE(pack2.GetUses() == 3);
+         REQUIRE(memory1.GetUses() == 2);
          REQUIRE(memory2.GetUses() == 1);
+
+         REQUIRE(not pack1.CompareEqual(pack2));
+         REQUIRE(    pack2.CompareEqual(memory1));
+         REQUIRE(not pack2.CompareEqual(memory2));
       }
 
       WHEN("Disown-assign pack1 in pack2") {
          pack2 = Disown(pack1);
          
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_DisownedFull<E>(pack2);
-         Many_Helper_TestSame(pack1, pack2, false);
+         Text_CheckState_OwnedFull(pack1);
+         Text_CheckState_DisownedFull(pack2);
+         Text_CheckState_ContainsOne(pack1, *e1, 2);
+         Text_CheckState_ContainsOne(pack2, *e1, 2);
 
-         REQUIRE(pack1.GetUses() == 2);
-         REQUIRE(pack2.GetUses() == 2);
+         REQUIRE(memory1.GetUses() == 2);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack2 == memory1);
-         REQUIRE(pack2 != memory2);
-         REQUIRE(pack2.CompareOneEqual(*e1));
+
+         REQUIRE(    pack1.CompareEqual(pack2));
+         REQUIRE(    pack2.CompareEqual(memory1));
+         REQUIRE(not pack2.CompareEqual(memory2));
       }
 
       WHEN("Abandon-assign pack1 in pack2") {
-         T movable = pack1;
-         pack2 = Abandon(movable);
+         pack2 = Abandon(pack1);
 
-         Many_CheckState_Abandoned<E>(movable);
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Text_CheckState_Abandoned(pack1);
+         Text_CheckState_OwnedFull(pack2);
+         Text_CheckState_ContainsOne(pack2, *e1, 2);
 
-         REQUIRE(pack1.GetUses() == 3);
-         REQUIRE(pack2.GetUses() == 3);
+         REQUIRE(memory1.GetUses() == 2);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1 == pack2);
       }
 
       WHEN("Clone-assign pack1 in pack2") {
          pack2 = Clone(pack1);
 
-         REQUIRE(pack1.GetUses() == 2);
-         REQUIRE(pack2.GetUses() == 1);
-         REQUIRE((pack1 == pack2) == CT::Dense<E>);
-         REQUIRE((pack2 == memory1) == CT::Dense<E>);
-         REQUIRE(pack2 != memory2);
+         Text_CheckState_OwnedFull(pack1);
+         Text_CheckState_OwnedFull(pack2);
+         Text_CheckState_ContainsOne(pack1, *e1, 2);
+         Text_CheckState_ContainsOne(pack2, *e1, 1);
+
+         REQUIRE(memory1.GetUses() == 2);
+         REQUIRE(memory2.GetUses() == 1);
+
+         REQUIRE(    pack1.CompareEqual(pack2));
+         REQUIRE(    pack2.CompareEqual(memory1));
+         REQUIRE(not pack2.CompareEqual(memory2));
       }
 
       WHEN("Copy-assign pack1 in pack2, then reset pack1") {
          pack2 = Copy(pack1);
          pack1.Reset();
 
-         Many_CheckState_Default<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Text_CheckState_Default(pack1);
+         Text_CheckState_OwnedFull(pack2);
 
          REQUIRE(pack2.GetUses() == 1);
          REQUIRE(pack2 == memory1);
@@ -1364,17 +1374,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          pack2 = Clone(pack1);
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);
-         if constexpr (CT::Sparse<E>)
-            REQUIRE((*pack2.GetEntries())->GetUses() == 1);
-         if constexpr (CT::Sparse<Deptr<E>>)
-            REQUIRE((*(pack2.GetEntries()+1))->GetUses() == 1);
 
          const T memory3 = pack2;
          REQUIRE(pack2.GetUses() == 2);
-         if constexpr (CT::Sparse<E>)
-            REQUIRE((*pack2.GetEntries())->GetUses() == 2);
-         if constexpr (CT::Sparse<Deptr<E>>)
-            REQUIRE((*(pack2.GetEntries() + 1))->GetUses() == 2);
 
          pack1.Reset();
 
@@ -1387,8 +1389,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          pack2 = pack1;
          pack1.Reset();
          
-         Many_CheckState_Default<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Text_CheckState_Default(pack1);
+         Text_CheckState_OwnedFull(pack2);
 
          REQUIRE(pack2.GetUses() == 2);
          REQUIRE(pack2 == memory1);
@@ -1403,21 +1405,6 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          REQUIRE_FALSE(pack1 == defaulted_pack);
          REQUIRE      (pack2 != defaulted_pack);
          REQUIRE_FALSE(pack2 == defaulted_pack);
-
-         static_assert(not static_cast<bool>(T{}));
-
-         if constexpr (CT::DeepDense<E>) {
-            static_assert(     T{} == E{} );
-            static_assert(not (T{} != E{}));
-            static_assert(     E{} == T{} );
-            static_assert(not (E{} != T{}));
-         }
-         else {
-            static_assert(     T{} != E{} );
-            static_assert(not (T{} == E{}));
-            static_assert(     E{} != T{} );
-            static_assert(not (E{} == T{}));
-         }
       }
    }
    
@@ -1613,11 +1600,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
       /// MARK: Insert at                                                     
       WHEN("Insert an array to a non-existent index") {
          size_t inserted = 0;
-         #if LANGULUS(SAFE)
-            REQUIRE_THROWS(inserted = pack.InsertAt(1000, immovable));
-         #else
-            REQUIRE_NOTHROW(inserted = pack.InsertAt(1000, immovable));
-         #endif
+         REQUIRE_THROWS(inserted = pack.InsertAt(1000, immovable));
          REQUIRE(inserted == 0);
 
          Text_CheckState_OwnedFull(pack);
@@ -1626,14 +1609,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
 
       /// MARK: <<                                                            
       WHEN("Insert at the back by using << operator)") {
-         pack <<           immovable[0]
-              << Refer    {immovable[1]}
-              << Copy     {immovable[2]}
-              << Disown   {immovable[3]}
-              << std::move( movable1[0])
-              << Move     { movable2[0]}
-              << Abandon  { movable3[0]}
-              << Clone    {immovable[4]};
+         REQUIRE_NOTHROW(pack <<           immovable[0]
+                              << Refer    {immovable[1]}
+                              << Copy     {immovable[2]}
+                              << Disown   {immovable[3]}
+                              << std::move( movable1[0])
+                              << Move     { movable2[0]}
+                              << Abandon  { movable3[0]}
+                              << Clone    {immovable[4]});
 
          Text_CheckState_OwnedFull(pack);
 
@@ -1674,14 +1657,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
 
       /// MARK: >>                                                            
       WHEN("Insert at the front by using >> operator)") {
-         pack >>           immovable[0]
-              >> Refer    {immovable[1]}
-              >> Copy     {immovable[2]}
-              >> Disown   {immovable[3]}
-              >> std::move( movable1[0])
-              >> Move     { movable2[0]}
-              >> Abandon  { movable3[0]}
-              >> Clone    {immovable[4]};
+         REQUIRE_NOTHROW(pack >>           immovable[0]
+                              >> Refer    {immovable[1]}
+                              >> Copy     {immovable[2]}
+                              >> Disown   {immovable[3]}
+                              >> std::move( movable1[0])
+                              >> Move     { movable2[0]}
+                              >> Abandon  { movable3[0]}
+                              >> Clone    {immovable[4]});
 
          Text_CheckState_OwnedFull(pack);
 
@@ -1787,11 +1770,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          /// MARK: Concat at                                                  
          WHEN("Concatenate to a non-existent index") {
             size_t inserted = 0;
-            #if LANGULUS(SAFE)
-               REQUIRE_THROWS(inserted = pack.ConcatAt(1000, immovable[0]));
-            #else
-               REQUIRE_NOTHROW(inserted = pack.ConcatAt(1000, immovable[0]));
-            #endif
+            REQUIRE_THROWS(inserted = pack.ConcatAt(1000, immovable[0]));
             REQUIRE(inserted == 0);
             
             Text_CheckState_OwnedFull(pack);

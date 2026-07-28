@@ -39,8 +39,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
-      template<CT::Container C>
-      static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
+      //template<CT::Container C>
+      //static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
       LglsComHeapMovable(friend);
       LglsComIndexedCommon(friend);
@@ -69,10 +69,7 @@ namespace Langulus::Anyness::Component
       ///   Some ideas were extracted from here:                              
       ///      https://arxiv.org/pdf/2501.02305                               
       template<CT::Container C>
-      constexpr auto BrowseTable(this C const& self, Count<C> index)
-      assumptious -> Count<C> {
-         LglsAssumeDev(not self.IsEmpty(),       "Container can't be empty");
-         LglsAssumeDev(index < self.GetCount(),  "Index out of bounds");
+      constexpr auto BrowseTable(this C const& self, Count<C> index) assumptious -> Count<C> {
          LglsAssumeDev(self.GetReserved(),       "Invalid reserve");
          LglsAssumeDev(self.GetHashTableInner(), "Invalid hash table");
 
@@ -99,8 +96,7 @@ namespace Langulus::Anyness::Component
       ///   @param index the index to simplify                                
       ///   @return a simple element offset into contiguous memory            
       template<CT::Container C, CT::Index INDEX>
-      constexpr auto SimplifyIndex(this C const& self, INDEX index)
-      assumptious -> Count<C> {
+      constexpr auto SimplifyIndex(this C const& self, INDEX index) -> Count<C> {
          LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
 
          if constexpr      (::std::same_as<INDEX, Index::Inner::All>)
@@ -127,19 +123,33 @@ namespace Langulus::Anyness::Component
             return self.GetIndexRandom();
          else if constexpr (::std::same_as<INDEX, Index::Inner::First>)
             return ThisCom::BrowseTable(0);
-         else if constexpr (::std::same_as<INDEX, Index::Inner::Last>)
-            return ThisCom::BrowseTable(self.GetCount() - 1);
-         else if constexpr (requires { index.index; }) {
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Last>) {
             const auto c = self.GetCount();
-            // If index is negative, wrap it around (if in range)       
-            if (index.index < 0)
-               return ThisCom::BrowseTable(c + index.index >= 0 ? c + index.index : CountMax<C>);
-            return ThisCom::BrowseTable(index.index >= c ? CountMax<C> : index.index);
-
+            LglsAssert(c > 0, "Can't get last index");
+            return ThisCom::BrowseTable(c - 1);
          }
-         else if constexpr (CT::Integer<INDEX>) {
-            // Using an integer index explicitly makes a statement      
-            // that you know what you're doing                          
+         else if constexpr (requires { index.index; }) {
+            // If index is negative, wrap it around (if in range)       
+            const auto c = self.GetCount();
+            if (index.index < 0) {
+               LglsAssert(c + index.index < c and c + index.index >= 0,
+                  "Integer index out of range");
+               return ThisCom::BrowseTable(c + index.index);
+            }
+
+            LglsAssert(index.index < c,
+               "Integer index out of range");
+            return ThisCom::BrowseTable(index.index);
+         }
+         else {
+            static_assert(CT::Integer<INDEX>, "Unsupported index type");
+
+            // Unsafe, works only on assumptions.                       
+            // Using an integer index explicitly makes a statement,     
+            // that you know what you're doing.                         
+            LglsAssert(static_cast<Count<C>>(index) <= self.GetCount(),
+               "Integer index out of range");
+
             if constexpr (CT::Signed<INDEX>) {
                LglsAssumeUser(index >= 0,
                   "Integer index is below zero, "
@@ -148,7 +158,6 @@ namespace Langulus::Anyness::Component
             }
             return ThisCom::BrowseTable(index);
          }
-         else static_assert(false, "Unsupported index type");
       }
 
       /// Get the offset, based on the provided value's hash. The offset is   

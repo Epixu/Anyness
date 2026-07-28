@@ -1145,11 +1145,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       /// MARK: Insert at                                                     
       WHEN("Insert an array to a non-existent index") {
          size_t inserted = 0;
-         #if LANGULUS(SAFE)
-            REQUIRE_THROWS(inserted = pack.InsertAt(1000, immovable));
-         #else
-            REQUIRE_NOTHROW(inserted = pack.InsertAt(1000, immovable));
-         #endif
+         REQUIRE_THROWS(inserted = pack.InsertAt(1000, immovable));
          REQUIRE(inserted == 0);
 
          // Residual type from the failed insertion remains.            

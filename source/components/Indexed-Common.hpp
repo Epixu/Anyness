@@ -41,6 +41,8 @@ namespace Langulus::Anyness::Component
       ///   @return a simple element offset into contiguous memory            
       template<CT::Container C, CT::Index INDEX>
       constexpr void AssertZeroIndex(this C const& self, INDEX index) {
+         (void) self;
+         (void) index;
          LglsAssumeDev(self.IsEmpty(),
             "Call this only when 'self' is empty inside *At method");
          if constexpr (requires { index.index; })

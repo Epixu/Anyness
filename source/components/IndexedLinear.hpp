@@ -35,8 +35,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using PickRange = Tmut<C, typename Deref<C>::PickRangeMut, typename Deref<C>::PickRange>;
 
-      template<CT::Container C>
-      static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
+      //template<CT::Container C>
+      //static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
       
       /// Convert an index to an offset.                                      
       /// Special indices will be contextualized.                             
@@ -44,8 +44,7 @@ namespace Langulus::Anyness::Component
       ///   @param index the index to simplify                                
       ///   @return a simple element offset into contiguous memory            
       template<CT::Container C, CT::Index INDEX>
-      constexpr auto SimplifyIndex(this C const& self, INDEX index)
-      assumptious -> Count<C> {
+      constexpr auto SimplifyIndex(this C const& self, INDEX index) -> Count<C> {
          //LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
          /*if (self.IsEmpty())
             return 0;*/
@@ -76,16 +75,22 @@ namespace Langulus::Anyness::Component
          else if constexpr (::std::same_as<INDEX, Index::Inner::First>)
             return 0;
          else if constexpr (::std::same_as<INDEX, Index::Inner::Last>) {
-            const auto count = self.GetCount();
-            return count ? count - 1 : CountMax<C>;
+            const auto c = self.GetCount();
+            LglsAssert(c > 0, "Can't get last index");
+            return c - 1;
          }
          else if constexpr (requires { index.index; }) {
-            const auto c = self.GetCount();
             // If index is negative, wrap it around (if in range)       
-            if (index.index < 0)
-               return c + index.index >= 0 ? c + index.index : CountMax<C>;
-            return index.index >= c ? CountMax<C> : index.index;
+            const auto c = self.GetCount();
+            if (index.index < 0) {
+               LglsAssert(c + index.index < c and c + index.index >= 0,
+                  "Integer index out of range");
+               return c + index.index;
+            }
 
+            LglsAssert(index.index < c,
+               "Integer index out of range");
+            return index.index;
          }
          else {
             static_assert(CT::Integer<INDEX>, "Unsupported index type");
@@ -93,7 +98,7 @@ namespace Langulus::Anyness::Component
             // Unsafe, works only on assumptions.                       
             // Using an integer index explicitly makes a statement,     
             // that you know what you're doing.                         
-            LglsAssumeUser(static_cast<Count<C>>(index) <= self.GetCount(),
+            LglsAssert(static_cast<Count<C>>(index) <= self.GetCount(),
                "Integer index out of range");
 
             if constexpr (CT::Signed<INDEX>) {
