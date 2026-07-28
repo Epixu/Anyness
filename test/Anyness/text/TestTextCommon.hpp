@@ -83,16 +83,40 @@ void Text_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness =
 template<CT::Container C> requires CT::NoIntent<C>
 void Text_CheckState_Default(const C& text, bool typed = false) {
    Many_CheckState_Default<char>(text, typed);
+
+   REQUIRE      (text == nullptr);
+   REQUIRE_FALSE(text != nullptr);
+   REQUIRE      (text == (char*)nullptr);
+   REQUIRE_FALSE(text != (char*)nullptr);
+   REQUIRE      (text == "");
+   REQUIRE_FALSE(text != "");
+   REQUIRE_FALSE(text == "no match");
 }
 
 template<CT::Container C> requires CT::NoIntent<C>
 void Text_CheckState_OwnedEmpty(const C& text) {
    Many_CheckState_OwnedEmpty<char>(text);
+
+   REQUIRE      (text == nullptr);
+   REQUIRE_FALSE(text != nullptr);
+   REQUIRE      (text == (char*)nullptr);
+   REQUIRE_FALSE(text != (char*)nullptr);
+   REQUIRE      (text == "");
+   REQUIRE_FALSE(text != "");
+   REQUIRE_FALSE(text == "no match");
 }
 
 template<CT::Container C> requires CT::NoIntent<C>
 void Text_CheckState_OwnedFull(const C& text) {
    Many_CheckState_OwnedFull<char>(text);
+
+   REQUIRE      (text != nullptr);
+   REQUIRE_FALSE(text == nullptr);
+   REQUIRE      (text != (char*)nullptr);
+   REQUIRE_FALSE(text == (char*)nullptr);
+   REQUIRE      (text != "");
+   REQUIRE_FALSE(text == "");
+   REQUIRE_FALSE(text == "no match");
 }
 
 template<CT::Container C> requires CT::NoIntent<C>

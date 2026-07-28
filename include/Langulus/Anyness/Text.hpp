@@ -147,7 +147,12 @@ namespace Langulus::Anyness
             using CHAR = TypeOf<IT>;
             static_assert(Same<CHAR, char>, "Type mismatch");
 
-            const auto count = ::std::char_traits<char>::length(source);
+            CHAR const* src = source;
+            CHAR const* const srcEnd = src + ExtentOf<IT>;
+            while (src < srcEnd and *src)
+               ++src;
+
+            const auto count = src - source;
             if (not count) {
                this->ConstructDefault();
                return;

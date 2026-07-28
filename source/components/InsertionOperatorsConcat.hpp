@@ -30,55 +30,68 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool InsertionOperatorsConcatEnabled = true;
 
-      /// Copy `lhs` and push `rhs` to the back                               
-      /*template<CT::ContainsMany LHS, CT::NotContainer RHS>
-      LHS operator + (this LHS const& lhs, RHS&& rhs) {
-         if constexpr (Same<TypeOf<LHS>, RHS>) {
-            LHS temp {Absorb, Copy {lhs}};
-            temp.Insert(LglsFwd(rhs));
-            return temp;
-         }
-         else {
-            static_assert(LHS::AttemptConvertOnInsert,
-               "Can't be concatenated - incompatible arguments");
-            static_assert(CT::Convertible<Deint<RHS>, LHS>,
-               "Can't be concatenated - not convertible to LHS");
-            LHS temp;
-            temp.Concat(lhs, Convert<LHS>(DeintCast(rhs)));
-            return temp;
-         }
-      }*/
-
-      /// Insert `rhs` at the back                                            
+      /// MARK: += element                                                    
+      /// Insert `rhs` at the back. Supports bounded arrays.                  
       template<CT::ContainsMany LHS, CT::NotContainer RHS>
       LHS& operator += (this LHS& lhs, RHS&& rhs) {
-         if constexpr (Same<TypeOf<LHS>, RHS>) {
+         using ITEM = DeextAll<Deint<RHS>>;
+
+         if constexpr (CT::Array<RHS>) {
+            if constexpr (requires { LHS {LglsFwd(rhs)}; }) {
+               // Some containers have bounded array constructors       
+               lhs.Concat(LHS {LglsFwd(rhs)});
+            }
+            else {
+               // Otherwise just insert/concatenate each array item     
+               if constexpr (Same<TypeOf<LHS>, ITEM>) {
+                  using I = IntentOf(rhs);
+                  for (auto& i : DeintCast(rhs))
+                     lhs.Insert(I::Nest(i));
+               }
+               else {
+                  static_assert(LHS::AttemptConvertOnInsert,
+                     "Can't be concatenated - incompatible arguments");
+                  static_assert(CT::Convertible<ITEM, LHS>,
+                     "Can't be concatenated - not convertible to LHS");
+
+                  for (auto& i : DeintCast(rhs))
+                     lhs.Concat(Convert<LHS>(i));
+               }
+            }
+         }
+         else if constexpr (Same<TypeOf<LHS>, ITEM>) {
             lhs.Insert(LglsFwd(rhs));
          }
          else {
             static_assert(LHS::AttemptConvertOnInsert,
                "Can't be concatenated - incompatible arguments");
-            static_assert(CT::Convertible<Deint<RHS>, LHS>,
+            static_assert(CT::Convertible<ITEM, LHS>,
                "Can't be concatenated - not convertible to LHS");
             lhs.Concat(Convert<LHS>(DeintCast(rhs)));
          }
          return lhs;
       }
 
-      /// Concatenate another container at the back, resulting in a new one   
-      ///   @attention only one side is allowed to be a serializer            
-      /*template<CT::ContainsMany LHS, CT::Container RHS>
-      LHS operator + (this LHS const& lhs, RHS&& rhs) {
-         LHS temp;
-         temp.Concat(LglsFwd(lhs), LglsFwd(rhs));
-         return temp;
-      }*/
-
-      /// Concatenate another container at the back, reusing this one         
-      ///   @attention only one side is allowed to be a serializer            
+      /// MARK: += self                                                       
+      /// Concatenate another container at the back, reusing this one.        
+      /// Supports bounded arrays.                                            
       template<CT::ContainsMany LHS, CT::Container RHS>
       LHS& operator += (this LHS& lhs, RHS&& rhs) {
-         lhs.Concat(LglsFwd(rhs));
+         using ITEM = DeextAll<Deint<RHS>>;
+
+         if constexpr (CT::Array<RHS>) {
+            using I = IntentOf(rhs);
+            for (auto& i : DeintCast(rhs)) {
+               if constexpr (Same<ITEM, LHS>)
+                  lhs.Concat(I::Nest(i));
+               else
+                  lhs.Insert(I::Nest(i));
+            }
+         }
+         else if constexpr (Same<ITEM, LHS>)
+            lhs.Concat(LglsFwd(rhs));
+         else
+            lhs.Insert(LglsFwd(rhs));
          return lhs;
       }
    };
@@ -89,7 +102,7 @@ namespace Langulus::Anyness::Component
 
 namespace Langulus::Anyness
 {
-   /// NonContainer + Container                                               
+   /// MARK: NonContainer + Container                                         
    template<CT::NotContainer LHS, CT::Container RHS>
    requires Com::HasInsertionOperatorsConcatEnabled<RHS>
    RHS operator + (LHS const& lhs, RHS const& rhs) {
@@ -108,7 +121,7 @@ namespace Langulus::Anyness
       return temp;
    }
    
-   /// Container + NonContainer                                               
+   /// MARK: Container + NonContainer                                         
    template<CT::Container LHS, CT::NotContainer RHS>
    requires Com::HasInsertionOperatorsConcatEnabled<LHS>
    LHS operator + (LHS const& lhs, RHS const& rhs) {
@@ -127,7 +140,7 @@ namespace Langulus::Anyness
       return temp;
    }
    
-   /// Container + Container                                                  
+   /// MARK: Container + Container                                            
    template<CT::Container LHS, CT::Container RHS>
    requires (Com::HasInsertionOperatorsConcatEnabled<LHS>
           or Com::HasInsertionOperatorsConcatEnabled<RHS>)

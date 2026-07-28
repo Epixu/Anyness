@@ -7,18 +7,20 @@
 ///                                                                           
 #include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
+#include "source/Component.hpp"
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
 //TODO char* std::string_view std::string std::array<char> Literal
 
 TEST_CASE_TEMPLATE("Test empty Text", TestType
+   , Types<Text, ScopedElement<char>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Text, ScopedElement<Text>>
    , Types<Text, ScopedElement<int>>
    , Types<Text, ScopedElement<Many>>
    , Types<Text, ScopedElement<RT>>
-   , Types<Text, ScopedElement<char>>
 
    , Types<Text, ScopedElement<Text*>>
    , Types<Text, ScopedElement<int*>>
@@ -159,6 +161,8 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
    static_assert(not requires (T pack)         { pack.GetDense(); });
    static_assert(    requires (T pack)         { {pack +   pack} -> ::std::same_as<T>;  });
    static_assert(    requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack +   item} -> ::std::same_as<T>;  });
+   static_assert(    requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
    static_assert(    requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
    static_assert(    requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
    static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
@@ -1111,6 +1115,187 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
          BenchmarkTextStd("Empty/Insert/Element/Front", 30, 100,
             T temp,              temp >> immovable[0],
             stdstr temp_std,     temp_std.emplace_front(immovable[0])
+         );
+      }
+
+      /// MARK: Concat array                                                  
+      if constexpr (CT::Text<E> and CT::Container<E>) {
+         WHEN("Concatenate to the back") {
+            size_t inserted = 0;
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back,           immovable[0]));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Refer    {immovable[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Copy     {immovable[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Disown   {immovable[3]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, std::move(movable1[0])));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Move     {movable2[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Abandon  {movable3[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Clone    {immovable[4]}));
+            REQUIRE(inserted == 16);
+
+            Text_CheckState_OwnedFull(pack);
+
+            if constexpr (CT::Container<E>) {
+               for (int i = 0; i < 5; ++i) {
+                  Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+               }
+            }
+
+            Text_CheckState_ContainsString(pack,"4950515254555653");
+
+            BenchmarkTextStd("Empty/Concat/Element/Back", 30, 100,
+               T temp,              temp.ConcatAt(Index::Back, immovable),
+               stdstr temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+            );
+         }
+
+         WHEN("Concatenate to the front") {
+            size_t inserted = 0;
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front,           immovable[0]));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Refer    {immovable[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Copy     {immovable[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Disown   {immovable[3]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, std::move(movable1[0])));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Move     {movable2[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Abandon  {movable3[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Clone    {immovable[4]}));
+            REQUIRE(inserted == 16);
+
+            Text_CheckState_OwnedFull(pack);
+
+            if constexpr (CT::Container<E>) {
+               for (int i = 0; i < 5; ++i) {
+                  Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+                  Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+               }
+            }
+
+            Text_CheckState_ContainsString(pack,"5356555452515049");
+
+            BenchmarkTextStd("Empty/Concat/Element/Front", 30, 100,
+               T temp,              temp.ConcatAt(Index::Front, darray1),
+               stdstr temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
+            );
+         }
+
+         /// MARK: Concat at                                                  
+         WHEN("Concatenate to a non-existent index") {
+            REQUIRE_THROWS(pack.ConcatAt(5, immovable[0]));
+            
+            Text_CheckState_Default(pack);
+         }
+      }
+
+      /// MARK: +=                                                            
+      WHEN("Concatenate array at the back by using += operator)") {
+         REQUIRE_NOTHROW(pack +=           immovable );
+         REQUIRE_NOTHROW(pack += Refer    {immovable});
+         REQUIRE_NOTHROW(pack += Copy     {immovable});
+         REQUIRE_NOTHROW(pack += Disown   {immovable});
+         REQUIRE_NOTHROW(pack += std::move( movable1));
+         REQUIRE_NOTHROW(pack += Move     { movable2});
+         REQUIRE_NOTHROW(pack += Abandon  { movable3});
+         REQUIRE_NOTHROW(pack += Clone    {immovable});
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack,
+               "12345"
+               "12345"
+               "12345"
+               "12345"
+               "6789:"
+               "6789:"
+               "6789:"
+               "12345"
+            );
+         }
+         else {
+            Text_CheckState_ContainsString(pack,
+               "4950515253"
+               "4950515253"
+               "4950515253"
+               "4950515253"
+               "5455565758"
+               "5455565758"
+               "5455565758"
+               "4950515253"
+            );
+         }
+
+         BenchmarkTextStd("Empty/+=/Array/Back", 30, 100,
+            T temp,              temp += immovable,
+            stdstr temp_std,     temp_std.emplace_back(immovable[0])
+         );
+      }
+
+      WHEN("Concatenate element the back by using += operator)") {
+         REQUIRE_NOTHROW(pack +=           immovable[0] );
+         REQUIRE_NOTHROW(pack += Refer    {immovable[1]});
+         REQUIRE_NOTHROW(pack += Copy     {immovable[2]});
+         REQUIRE_NOTHROW(pack += Disown   {immovable[3]});
+         REQUIRE_NOTHROW(pack += std::move( movable1[0]));
+         REQUIRE_NOTHROW(pack += Move     { movable2[0]});
+         REQUIRE_NOTHROW(pack += Abandon  { movable3[0]});
+         REQUIRE_NOTHROW(pack += Clone    {immovable[4]});
+
+         Text_CheckState_OwnedFull(pack);
+
+         if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i)
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
+            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
+         }
+
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+         }
+         else if constexpr (Same<E, RT>) {
+            Text_CheckState_ContainsString(pack,
+               "RT(copied)RT(copied)RT(copied)RT(copied)"
+               "RT(copied)RT(copied)RT(copied)RT(copied)"
+            );
+         }
+         else if constexpr (Same<E, char>) {
+            Text_CheckState_ContainsString(pack, "12346665");
+         }
+         else {
+            Text_CheckState_ContainsString(pack, "4950515254545453");
+         }
+
+         BenchmarkTextStd("Empty/+=/Element/Back", 30, 100,
+            T temp,              temp += immovable[0],
+            stdstr temp_std,     temp_std.emplace_back(immovable[0])
          );
       }
    }
