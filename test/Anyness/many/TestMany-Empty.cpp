@@ -748,19 +748,6 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
       /// MARK: Compare                                                       
       WHEN("Compared empty") {
-         static_assert(not static_cast<bool>(T{}));
-         static_assert(         T{} == T{});
-         static_assert(    not (T{} != T{}));
-         static_assert(         T{} == nullptr);
-         static_assert(     nullptr == T{});
-         static_assert(         T{} == "");
-         static_assert(          "" == T{});
-         static_assert(  T{nullptr} == T{nullptr});
-         static_assert(       T{""} == T{""});
-         static_assert(     nullptr == T{nullptr});
-         static_assert(       T{""} == "");
-         static_assert(          "" == T{""});
-
          T another_pack1;
          T another_pack2;
 

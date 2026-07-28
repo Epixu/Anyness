@@ -1021,7 +1021,26 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             REQUIRE_FALSE(a == defaulted_pack);
             REQUIRE      (a == same_pack);
             REQUIRE_FALSE(a != same_pack);
+            REQUIRE      (static_cast<bool>(a));
 
+            REQUIRE      (         a != nullptr    );
+            REQUIRE_FALSE(         a == nullptr    );
+            REQUIRE      (   nullptr != a          );
+            REQUIRE_FALSE(   nullptr == a          );
+            REQUIRE      (         a != ""         );
+            REQUIRE_FALSE(         a == ""         );
+            REQUIRE      (        "" != a          );
+            REQUIRE_FALSE(        "" == a          );
+
+            REQUIRE      (         a != T{nullptr} );
+            REQUIRE_FALSE(         a == T{nullptr} );
+            REQUIRE      (T{nullptr} != a          );
+            REQUIRE_FALSE(T{nullptr} == a          );
+            REQUIRE      (         a != T{""}      );
+            REQUIRE_FALSE(         a == T{""}      );
+            REQUIRE      (     T{""} != a          );
+            REQUIRE_FALSE(     T{""} == a          );
+   
             [[maybe_unused]] volatile bool dont_optimize = false;
             BenchmarkTextStd("Absorb/" + intent + "/operator==", 30, 100,
                (void) 0,                                    dont_optimize |= (a == same_pack),

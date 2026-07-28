@@ -616,13 +616,24 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
 
       /// MARK: Compare                                                       
       WHEN("Compared empty") {
+         static_assert(not static_cast<bool>(T{}));
+         static_assert(       T{} == T{}       );
+         static_assert(  not (T{} != T{})      );
+         static_assert(       T{} == nullptr   );
+         static_assert(   nullptr == T{}       );
+         static_assert(       T{} == ""        );
+         static_assert(        "" == T{}       );
+         static_assert(T{nullptr} == T{nullptr});
+         static_assert(     T{""} == T{""}     );
+         static_assert(   nullptr == T{nullptr});
+         static_assert(     T{""} == ""        );
+         static_assert(        "" == T{""}     );
+
          T another_pack1;
          T another_pack2;
 
          REQUIRE      (another_pack1 == another_pack2);
          REQUIRE_FALSE(another_pack1 != another_pack2);
-         static_assert(     T{} == T{} );
-         static_assert(not (T{} != T{}));
 
          //TODO compare against literals and stuff
          [[maybe_unused]] volatile bool dont_optimize = false;
