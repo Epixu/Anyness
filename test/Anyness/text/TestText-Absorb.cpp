@@ -841,12 +841,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             Text_CheckState_OwnedFull(a);
             Text_CheckState_DisownedFull(absorbed);
-            REQUIRE(absorbed.GetRaw() == a.GetRaw());
-            REQUIRE(absorbed.IsExact(a.GetType()));
-            REQUIRE(absorbed == a);
-            REQUIRE(absorbed.IsDeep() == a.IsDeep());
-            REQUIRE(absorbed.IsConstant() != a.IsConstant());
-            REQUIRE(absorbed.GetUnconstrainedState() == a.GetUnconstrainedState());
+            Text_Helper_TestSame(absorbed, a, false);
+            REQUIRE(absorbed.IsConstant());
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -861,14 +857,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          T absorbed{Disown {pack_disowned}};
          Text_CheckState_DisownedFull(pack_disowned);
          Text_CheckState_DisownedFull(absorbed);
-         REQUIRE(absorbed.GetRaw() == pack_disowned.GetRaw());
-         REQUIRE(absorbed.IsExact(pack_disowned.GetType()));
-         REQUIRE(absorbed == pack_disowned);
-         REQUIRE(absorbed.IsDeep() == pack_disowned.IsDeep());
-         REQUIRE(absorbed.IsConstant() == pack_disowned.IsConstant());
-         REQUIRE(absorbed.GetUnconstrainedState() == pack_disowned.GetUnconstrainedState());
+         Text_Helper_TestSame(absorbed, pack_disowned);
+         REQUIRE(absorbed.IsConstant());
          REQUIRE(absorbed.GetUses() == 3);
-      }
+   }
       
       WHEN("Absorbed by copy") {
          auto absorb_construct_copy = [&](T& a) {
@@ -876,7 +868,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             Text_CheckState_OwnedFull(absorbed);
             Text_CheckState_ContainsOne(absorbed, *originalElement);
-            //Text_CheckState_ContainsString(absorbed, "\"556\"");
 
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
@@ -1148,7 +1139,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkText("Absorb/Contains", 30,
+         BenchmarkText("Absorb/ContainsRange", 30,
             (void) 0, dont_optimize |= pack_referred1.ContainsRange(*element)
          );
       }
