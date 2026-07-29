@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestBytesCommon.hpp"
+#include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
@@ -17,6 +18,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    , Types<Bytes, ScopedElement<int>>
    , Types<Bytes, ScopedElement<Many>>
    , Types<Bytes, ScopedElement<RT>>
+   , Types<Bytes, ScopedElement<char>>
 
    , Types<Bytes, ScopedElement<Bytes*>>
    , Types<Bytes, ScopedElement<Text*>>
@@ -102,43 +104,13 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
    static_assert(    CT::ComparableEqual<T, T>);
    static_assert(    CT::ComparableEqual<T, Byte>);
-   static_assert(    CT::ComparableEqual<T, char>);
-   static_assert(    CT::ComparableEqual<T, wchar_t>);
-   static_assert(    CT::ComparableEqual<T, char8_t>);
-   static_assert(    CT::ComparableEqual<T, char16_t>);
-   static_assert(    CT::ComparableEqual<T, char32_t>);
    static_assert(    CT::ComparableEqual<T, ::std::array<Byte, 5>>);
-   static_assert(    CT::ComparableEqual<T, ::std::array<char, 5>>);
-   static_assert(    CT::ComparableEqual<T, ::std::array<wchar_t, 5>>);
-   static_assert(    CT::ComparableEqual<T, ::std::array<char8_t, 5>>);
-   static_assert(    CT::ComparableEqual<T, ::std::array<char16_t, 5>>);
-   static_assert(    CT::ComparableEqual<T, ::std::array<char32_t, 5>>);
-   static_assert(    CT::ComparableEqual<T, char*>);
-   static_assert(    CT::ComparableEqual<T, wchar_t*>);
-   static_assert(    CT::ComparableEqual<T, char8_t*>);
-   static_assert(    CT::ComparableEqual<T, char16_t*>);
-   static_assert(    CT::ComparableEqual<T, char32_t*>);
    static_assert(    CT::ComparableEqual<T, std::vector<Byte>>);
    static_assert(    CT::ComparableEqual<T, Literal<Byte,4>>);
 
    static_assert(    CT::Comparable<T, T>);
    static_assert(    CT::Comparable<T, Byte>);
-   static_assert(    CT::Comparable<T, char>);
-   static_assert(    CT::Comparable<T, wchar_t>);
-   static_assert(    CT::Comparable<T, char8_t>);
-   static_assert(    CT::Comparable<T, char16_t>);
-   static_assert(    CT::Comparable<T, char32_t>);
    static_assert(    CT::Comparable<T, ::std::array<Byte, 5>>);
-   static_assert(    CT::Comparable<T, ::std::array<char, 5>>);
-   static_assert(    CT::Comparable<T, ::std::array<wchar_t, 5>>);
-   static_assert(    CT::Comparable<T, ::std::array<char8_t, 5>>);
-   static_assert(    CT::Comparable<T, ::std::array<char16_t, 5>>);
-   static_assert(    CT::Comparable<T, ::std::array<char32_t, 5>>);
-   static_assert(    CT::Comparable<T, char*>);
-   static_assert(    CT::Comparable<T, wchar_t*>);
-   static_assert(    CT::Comparable<T, char8_t*>);
-   static_assert(    CT::Comparable<T, char16_t*>);
-   static_assert(    CT::Comparable<T, char32_t*>);
    static_assert(    CT::Comparable<T, std::vector<Byte>>);
    static_assert(    CT::Comparable<T, Literal<Byte,4>>);
 
@@ -156,18 +128,18 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    static_assert(    requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
    static_assert(    requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
    static_assert(    requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
-   static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
-   static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
    static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
    static_assert(    requires (T pack, E item) { pack.Insert(item); });
    static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
    static_assert(not requires (T pack, E item) { pack.Emplace(item); });
    static_assert(    requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
    static_assert(    requires (T pack)         { pack.Concat(pack); });
-   static_assert(    requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
-   static_assert(    requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
-   static_assert(    requires (T pack, E item) { pack.Merge(item); });
-   static_assert(    requires (T pack)         { pack.MergeRange(pack); });
+   static_assert(not requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
+   static_assert(not requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
+   static_assert(not requires (T pack, E item) { pack.Merge(item); });
+   static_assert(not requires (T pack)         { pack.MergeRange(pack); });
    static_assert(    requires (T pack, E item) { pack.Erase(item); });
    static_assert(    requires (T pack)         { pack.EraseAt(Index::Front); });
    static_assert(    requires (T pack)         { pack.Reserve(20); });
@@ -617,15 +589,6 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          static_assert(not static_cast<bool>(T{}));
          static_assert(       T{} == T{}       );
          static_assert(  not (T{} != T{})      );
-         static_assert(       T{} == nullptr   );
-         static_assert(   nullptr == T{}       );
-         static_assert(       T{} == ""        );
-         static_assert(        "" == T{}       );
-         static_assert(T{nullptr} == T{nullptr});
-         static_assert(     T{""} == T{""}     );
-         static_assert(   nullptr == T{nullptr});
-         static_assert(     T{""} == ""        );
-         static_assert(        "" == T{""}     );
 
          T another_pack1;
          T another_pack2;
@@ -704,25 +667,25 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          for (auto& it : pack) {
             (void) it;
             ++counter;
-            static_assert(Same<char, decltype(it)>);
+            static_assert(Same<Byte, decltype(it)>);
          }
 
          for (auto& it : ::std::as_const(pack)) {
             (void) it;
             ++counter;
-            static_assert(Same<char, decltype(it)>);
+            static_assert(Same<Byte, decltype(it)>);
          }
 
          for (auto& it : strategy) {
             (void) it;
             ++counter;
-            static_assert(Same<char, decltype(it)>);
+            static_assert(Same<Byte, decltype(it)>);
          }
 
          for (auto& it : strategyConst) {
             (void) it;
             ++counter;
-            static_assert(Same<char, decltype(it)>);
+            static_assert(Same<Byte, decltype(it)>);
          }
 
          REQUIRE(counter == 0);
@@ -887,7 +850,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, Text>) {
             REQUIRE(inserted == 4*5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "\"49\"\"50\"\"51\"\"52\"\"53\""
                "\"49\"\"50\"\"51\"\"52\"\"53\""
                "\"49\"\"50\"\"51\"\"52\"\"53\""
@@ -900,7 +863,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, RT>) {
             REQUIRE(inserted == 10*5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
@@ -913,7 +876,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, char>) {
             REQUIRE(inserted == 5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "12345"
                "12345"
                "12345"
@@ -926,7 +889,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else {
             REQUIRE(inserted == 2*5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "4950515253"
                "4950515253"
                "4950515253"
@@ -971,7 +934,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, Text>) {
             REQUIRE(inserted == 4*5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "\"49\"\"50\"\"51\"\"52\"\"53\""
                "\"54\"\"55\"\"56\"\"57\"\"58\""
                "\"54\"\"55\"\"56\"\"57\"\"58\""
@@ -984,7 +947,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, RT>) {
             REQUIRE(inserted == 10*5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
                "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
@@ -997,7 +960,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, char>) {
             REQUIRE(inserted == 5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "12345"
                "6789:"
                "6789:"
@@ -1010,7 +973,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else {
             REQUIRE(inserted == 2*5*8);
-            Bytes_CheckState_ContainsString(pack,
+            Bytes_CheckState_ContainsBytes(pack,
                "4950515253"
                "5455565758"
                "5455565758"

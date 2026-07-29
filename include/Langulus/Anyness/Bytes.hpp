@@ -24,6 +24,9 @@
 #include <source/components/IndexedLinear.hpp>
 #include <source/components/Iteration-ForEach.hpp>
 #include <source/components/Iteration-Range.hpp>
+#include <source/states/Disowned.hpp>
+#include <source/states/Compressed.hpp>
+#include <source/states/Encrypted.hpp>
 #include <Langulus/Utils/Byte.hpp>
 
 
@@ -34,6 +37,7 @@ namespace Langulus::Anyness
    namespace Inner
    {
       using BytesBase = Com::Container<
+         Com::State::Disowned<>,             // Allows disownment       
          Com::TypedStatic<DMeta, Byte>,      // Type-constrained        
          Com::HeapMovable<0, 0, HeapEntry<0, Byte*>>,
          Com::CountStack<>,                  // Variable count          
@@ -49,7 +53,9 @@ namespace Langulus::Anyness
          Com::Comparison<true>,              // Allows for comparison   
          Com::Conversion<>,                  // Allows conversion       
          Com::IterationForEach<>,            // ForEach iteration       
-         Com::IterationRange<>               // Range iteration       😊
+         Com::IterationRange<>,              // Range iteration       😊
+         Com::State::Compressed<>,           // Toggle compression      
+         Com::State::Encrypted<>             // Toggle encryption       
       >;
    }
    
@@ -68,65 +74,76 @@ namespace Langulus::Anyness
       constexpr Bytes() noexcept {
          this->ConstructDefault();
       }
-      constexpr Bytes(Bytes const& other) {
-         this->Absorb(Refer {other});
-      }
-      constexpr Bytes(Bytes&& other) noexcept {
-         this->Absorb(Move {other});
-      }
+
+      constexpr Bytes(nullptr_t) noexcept
+         : Bytes {} {}
+
+      constexpr Bytes(Bytes const& other)
+         : Bytes {Refer {other}} {}
+
+      constexpr Bytes(Bytes&& other) noexcept
+         : Bytes {Move  {other}} {}
+
       constexpr ~Bytes() noexcept {
          this->Destroy();
       }
       
+      /// Construction that absorbs the provided containers                   
+      template<class A1, class...AN>
+      constexpr Bytes(Inner::Absorb, A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0)
+            this->Absorb(LglsFwd(a1));
+         else {
+            this->ConstructDefault();
+            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+         }
+      }
+      
+      /// Construction that emplaces all arguments inside                     
+      template<class A1, class...AN>
+      constexpr Bytes(Inner::Piecewise, A1&& a1, AN&&...an) {
+         this->ConstructDefault();
+         this->Insert(LglsFwd(a1), LglsFwd(an)...);
+      }
+
       /// Construction from any kind of other bytes with intent               
       template<template<class> class I> requires CT::Intent<I<Bytes>>
       constexpr Bytes(I<Bytes>&& bytes) {
          this->Absorb(LglsFwd(bytes));
       }
 
-      /// Construction from any kind of POD value                             
-      template<CT::POD T> requires (not CT::Array<T>)
+      /// Construction from any kind of POD value.                            
+      /// Works for bounded arrays as well.                                   
+      template<class T> requires CT::POD<DeextAll<Deint<T>>>
       explicit constexpr Bytes(T&& source) {
-         this->SetHeapInner(static_cast<const void*>(&source));
-         this->SetCountInner(sizeof(T));
-         this->ResetHash();
-         this->SetAllocationInner(nullptr);
-
-         if constexpr (CT::Copied<T> or CT::Cloned<T>)
-            this->TakeOwnership();
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         else if constexpr (not CT::Disowned<T>){
-            this->SetAllocationInner(Allocator::Find(&DeintCast(source)));
-            this->Keep();
-         }
-         #endif
-      }
-
-      /// Construction from any kind of POD bounded array with intent         
-      template<CT::POD T> requires CT::Array<T>
-      explicit constexpr Bytes(T&& source) {
-         this->SetHeapInner(static_cast<const void*>(DeintCast(source)));
+         this->ResetState();
+         this->SetHeapInner(static_cast<const void*>(&DeintCast(source)));
          this->SetCountInner(sizeof(Deint<T>));
          this->ResetHash();
-         this->SetAllocationInner(nullptr);
 
+         // We may own this data                                        
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            if constexpr (CT::Disowned<T> or CT::Copied<T> or CT::Cloned<T>)
+               this->SetAllocationInner(nullptr);
+            else
+               this->FindAllocationInner();
+         #else
+            this->SetAllocationInner(nullptr);
+         #endif
+
+         // Take ownership if the intent requires it                    
          if constexpr (CT::Copied<T> or CT::Cloned<T>)
             this->TakeOwnership();
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         else if constexpr (not CT::Disowned<T>){
-            this->SetAllocationInner(Allocator::Find(DeintCast(source)));
-            this->Keep();
-         }
-         #endif
       }
 
-      /// Construction from constexpr POD bounded array                       
-      template<CT::POD T, size_t SIZE> requires CT::NoIntent<T>
-      explicit constexpr Bytes(const T(&source)[SIZE]) {
-         this->SetHeapInner(static_cast<const void*>(source));
-         this->SetCountInner(sizeof(source));
+      /// Construction from a byte                                            
+      ///   @attention this is an owning constructor                          
+      constexpr Bytes(Byte&& b) {
+         this->ResetState();
+         this->AllocateFresh(1);
+         *this->GetRawAs<Byte>() = b;
+         this->SetCountInner(1);
          this->ResetHash();
-         this->SetAllocationInner(nullptr);
       }
 
       /// Assignment                                                          
@@ -137,13 +154,36 @@ namespace Langulus::Anyness
          return this->AssignAbsorb(Move {other});
       }
       
+      /// Comparing against nullptr_t checks if text is empty                 
+      /*constexpr bool operator == (nullptr_t) const noexcept {
+         return this->IsEmpty();
+      }*/
+
+      /// Comparing against std containers with characters                    
+      /*constexpr bool operator == (const CT::TextRange auto& rhs) const noexcept {
+         return operator == (Text {Disown(rhs)});
+      }
+
       /// Comparison                                                          
+      constexpr auto operator <=> (CT::TextRange auto const& other) const noexcept -> ::std::partial_ordering {
+         return this->Compare(other);
+      }
+
       constexpr auto operator <=> (Bytes const& other) const noexcept -> ::std::partial_ordering {
+         return this->Compare(other);
+      }
+
+      constexpr bool operator == (Bytes const& other) const noexcept {
+         return this->CompareEqual(other);
+      }*/
+
+      /// Comparison                                                          
+      /*constexpr auto operator <=> (Bytes const& other) const noexcept -> ::std::partial_ordering {
          return this->Compare(other);
       }
       constexpr bool operator == (Bytes const& other) const noexcept {
          return this->CompareEqual(other);
-      }
+      }*/
 
       /// Conversion to standard string as a sequence of hex bytes            
       explicit operator ::std::string() const {

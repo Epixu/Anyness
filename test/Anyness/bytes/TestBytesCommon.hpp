@@ -80,51 +80,27 @@ void Bytes_Helper_TestSame(const LHS& lhs, const RHS& rhs, bool match_constness 
 
 template<CT::Container C> requires CT::NoIntent<C>
 void Bytes_CheckState_Default(const C& bytes, bool typed = false) {
-   Many_CheckState_Default<char>(bytes, typed);
-
-   REQUIRE      (bytes == nullptr);
-   REQUIRE_FALSE(bytes != nullptr);
-   REQUIRE      (bytes == (char*)nullptr);
-   REQUIRE_FALSE(bytes != (char*)nullptr);
-   REQUIRE      (bytes == "");
-   REQUIRE_FALSE(bytes != "");
-   REQUIRE_FALSE(bytes == "no match");
+   Many_CheckState_Default<Byte>(bytes, typed);
 }
 
 template<CT::Container C> requires CT::NoIntent<C>
 void Bytes_CheckState_OwnedEmpty(const C& bytes) {
-   Many_CheckState_OwnedEmpty<char>(bytes);
-
-   REQUIRE      (bytes == nullptr);
-   REQUIRE_FALSE(bytes != nullptr);
-   REQUIRE      (bytes == (char*)nullptr);
-   REQUIRE_FALSE(bytes != (char*)nullptr);
-   REQUIRE      (bytes == "");
-   REQUIRE_FALSE(bytes != "");
-   REQUIRE_FALSE(bytes == "no match");
+   Many_CheckState_OwnedEmpty<Byte>(bytes);
 }
 
 template<CT::Container C> requires CT::NoIntent<C>
 void Bytes_CheckState_OwnedFull(const C& bytes) {
-   Many_CheckState_OwnedFull<char>(bytes);
-
-   REQUIRE      (bytes != nullptr);
-   REQUIRE_FALSE(bytes == nullptr);
-   REQUIRE      (bytes != (char*)nullptr);
-   REQUIRE_FALSE(bytes == (char*)nullptr);
-   REQUIRE      (bytes != "");
-   REQUIRE_FALSE(bytes == "");
-   REQUIRE_FALSE(bytes == "no match");
+   Many_CheckState_OwnedFull<Byte>(bytes);
 }
 
 template<CT::Container C> requires CT::NoIntent<C>
 void Bytes_CheckState_DisownedFull(const C& bytes) {
-   Many_CheckState_DisownedFull<char>(bytes);
+   Many_CheckState_DisownedFull<Byte>(bytes);
 }
 
 template<CT::Container C> requires CT::NoIntent<C>
 void Bytes_CheckState_Abandoned(const C& bytes) {
-   Many_CheckState_Abandoned<char>(bytes);
+   Many_CheckState_Abandoned<Byte>(bytes);
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
@@ -142,9 +118,9 @@ void Text_CheckState_ContainsN(size_t n, const T& many, I&& e_scoped_with_intent
    Many_CheckState_ContainsN(n, many, LglsFwd(e_scoped_with_intent), uses);
 }*/
 
-template<CT::Container T, CT::Array I> requires CT::NoIntent<I>
-void Bytes_CheckState_ContainsString(const T& many, I&& e) {
-   constexpr size_t n = ExtentOf<I> - 1;
+template<CT::Container T> requires CT::NoIntent<T>
+void Bytes_CheckState_ContainsBytes(const T& many, ::std::vector<Byte> const& e) {
+   const size_t n = e.size();
 
    REQUIRE(many.GetCount() == n);
    REQUIRE(many.GetUses() == 1);
@@ -156,23 +132,23 @@ void Bytes_CheckState_ContainsString(const T& many, I&& e) {
    REQUIRE(index == n);
 
    REQUIRE(*many.Get() == e[0]);
-   REQUIRE(many.template As<char>() == e[0]);
+   REQUIRE(many.template As<Byte>() == e[0]);
 
    for (size_t i = 0; i < n; ++i) {
       REQUIRE(many.GetRaw()[i] == e[i]);
-      REQUIRE(many.template AsAt<char>(i) == e[i]);
-      REQUIRE(many.template GetRawAs<char>()[i] == e[i]);
+      REQUIRE(many.template AsAt<Byte>(i) == e[i]);
+      REQUIRE(many.template GetRawAs<Byte>()[i] == e[i]);
 
-      if constexpr (T::TypeErased) {
+      /*if constexpr (T::TypeErased) { //TODO Bytes::As should reinterpret_cast to anything desired!
          REQUIRE_THROWS(many.template As<float>(i) == 0.0f);
          REQUIRE_THROWS(many.template As<float*>(i) == nullptr);
-      }
+      }*/
    }
 }
 
 template<CT::Container T, class I> requires CT::NoIntent<T, I>
 void Bytes_CheckState_ContainsOne(T const& pack, I const& e, int uses = 1) {
-   if constexpr (CT::Character<I>) {
+   if constexpr (Same<I, Byte>) {
       REQUIRE(pack.GetCount() == 1);
       REQUIRE(pack.GetUses() == uses);
       REQUIRE(pack.GetReserved() >= pack.GetCount());
@@ -188,12 +164,12 @@ void Bytes_CheckState_ContainsOne(T const& pack, I const& e, int uses = 1) {
 
       for (size_t i = 0; i < converted.GetCount(); ++i) {
          REQUIRE(pack.GetRaw()[i] == converted[i]);
-         REQUIRE(pack.template GetRawAs<char>()[i] == converted[i]);
-         REQUIRE(pack.template As<char>() == converted[0]);
-         REQUIRE(pack.template AsAt<char>(i) == converted[i]);
+         REQUIRE(pack.template GetRawAs<Byte>()[i] == converted[i]);
+         REQUIRE(pack.template As<Byte>() == converted[0]);
+         REQUIRE(pack.template AsAt<Byte>(i) == converted[i]);
          REQUIRE(*pack.Get() == *converted.GetRaw());
-         REQUIRE(*pack.template Get<char>() == *converted.GetRaw());
-         REQUIRE(pack.template GetRawAs<char>()[i] == converted.GetRaw()[i]);
+         REQUIRE(*pack.template Get<Byte>() == *converted.GetRaw());
+         REQUIRE(pack.template GetRawAs<Byte>()[i] == converted.GetRaw()[i]);
       }
    }
 }
