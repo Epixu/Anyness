@@ -74,7 +74,7 @@ namespace Langulus::Anyness
    struct Text : Inner::TextBase {
       using CTTI_ReflectAs = Text;
       using CTTI_Text      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      using CTTI_MapsTo    = Types<Text, Bytes>;
       using CTTI_MapsFrom  = Types<
          bool, char, /*wchar_t, char8_t, char16_t, char32_t,*/
          int8_t, int16_t, int32_t, int64_t,

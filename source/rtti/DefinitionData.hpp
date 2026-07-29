@@ -180,9 +180,9 @@ namespace Langulus::RTTI
          using CTTI_ReflectAs = void;
 
          // Simple converter, encapsulating a static_cast.              
-         FBinary convert;//TODO force these to be const on the left hand side
+         FBinary convert = nullptr;//TODO force these to be const on the left hand side
          // A serializer if supported, also takes in a context.         
-         FSerialize serialize;
+         FSerialize serialize = nullptr;
       };
       
       using MemberList   = ::std::vector<Member>;

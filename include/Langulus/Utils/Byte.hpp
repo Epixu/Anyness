@@ -14,9 +14,12 @@ namespace Langulus
    ///                                                                        
    ///   A byte                                                               
    ///                                                                        
-   ///   std::byte is shitty, this one's better. It preserves arithmetic      
+   /// std::byte is shitty, this one's better. It preserves arithmetic        
    /// operations on the byte. These operations counteract integer promotion, 
-   /// the result is always truncated back down to a byte.                    
+   /// the result is always truncated back down to a byte. This means that    
+   /// this byte is significantly slower to operate with, but much safer.     
+   /// It's mostly useful on small scale byte operations. You can always      
+   /// reinterpret it as char/uint8_t/std::byte in loops if you prefer speed. 
    #pragma pack(push, 1)
    struct Byte {
       using Type          = uint8_t;
@@ -130,6 +133,9 @@ namespace Langulus
 
       constexpr auto operator <=> (const Byte&) const noexcept = default;
       constexpr bool operator ==  (const Byte&) const noexcept = default;
+
+      constexpr auto operator <=> (const uint8_t& r) const noexcept { return value <=> r; }
+      constexpr bool operator ==  (const uint8_t& r) const noexcept { return value ==  r; }
 
       /// Prefix operators                                                    
       constexpr Byte& operator ++ () noexcept { ++value; return *this; }

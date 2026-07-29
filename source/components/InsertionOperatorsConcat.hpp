@@ -141,6 +141,7 @@ namespace Langulus::Anyness
    }
    
    /// MARK: Container + Container                                            
+   ///   @attention when both sides are serializers, LHS takes priority       
    template<CT::Container LHS, CT::Container RHS>
    requires (Com::HasInsertionOperatorsConcatEnabled<LHS>
           or Com::HasInsertionOperatorsConcatEnabled<RHS>)
@@ -150,32 +151,29 @@ namespace Langulus::Anyness
          temp.Concat(lhs, rhs);
          return temp;
       }
-      else {
-         static_assert(CT::Serializer<LHS> xor CT::Serializer<RHS>, 
-            "Only one side can be a serializer - "
-            "which serializer takes precedence in this case? "
-            "You will have to manually convert desired side prior to adding "
-            "in order to disambiguate this situation."
-         );
+      else if constexpr (CT::Serializer<LHS>) {
+         LHS temp;
+         static_assert(LHS::AttemptConvertOnInsert,
+            "Can't be concatenated - incompatible arguments");
+         temp.Concat(lhs);
+         Langulus::Serialize(rhs, temp);
 
-         if constexpr (CT::Serializer<LHS>) {
-            LHS temp;
-            static_assert(LHS::AttemptConvertOnInsert,
-               "Can't be concatenated - incompatible arguments");
-            static_assert(CT::Convertible<RHS, LHS>,
-               "Can't be concatenated - not convertible to LHS");
-            temp.Concat(lhs, Convert<LHS>(rhs));
-            return temp;
-         }
-         else {
-            RHS temp;
-            static_assert(RHS::AttemptConvertOnInsert,
-               "Can't be concatenated - incompatible argument");
-            static_assert(CT::Convertible<LHS, RHS>,
-               "Can't be concatenated - not convertible to RHS");
-            temp.Concat(Convert<RHS>(lhs), rhs);
-            return temp;
-         }
+         /*static_assert(CT::Convertible<RHS, LHS>,
+            "Can't be concatenated - not convertible to LHS");
+         temp.Concat(lhs, Convert<LHS>(rhs));*/
+         return temp;
+      }
+      else {
+         RHS temp;
+         static_assert(RHS::AttemptConvertOnInsert,
+            "Can't be concatenated - incompatible argument");
+         Langulus::Serialize(lhs, temp);
+         temp.Concat(rhs);
+
+         /*static_assert(CT::Convertible<LHS, RHS>,
+            "Can't be concatenated - not convertible to RHS");
+         temp.Concat(Convert<RHS>(lhs), rhs);*/
+         return temp;
       }
    }
 }

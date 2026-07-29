@@ -118,10 +118,8 @@ void Text_CheckState_ContainsN(size_t n, const T& many, I&& e_scoped_with_intent
    Many_CheckState_ContainsN(n, many, LglsFwd(e_scoped_with_intent), uses);
 }*/
 
-template<CT::Container T> requires CT::NoIntent<T>
-void Bytes_CheckState_ContainsBytes(const T& many, ::std::vector<Byte> const& e) {
-   const size_t n = e.size();
-
+template<CT::Container T, size_t n> requires CT::NoIntent<T>
+void Bytes_CheckState_ContainsBytes(const T& many, uint8_t const(&e)[n]) {
    REQUIRE(many.GetCount() == n);
    REQUIRE(many.GetUses() == 1);
    REQUIRE(many.GetReserved() >= n);

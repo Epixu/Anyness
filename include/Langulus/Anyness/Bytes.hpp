@@ -66,8 +66,15 @@ namespace Langulus::Anyness
    #pragma pack(push, 4)
    struct Bytes : Inner::BytesBase {
       using CTTI_ReflectAs = Bytes;
-      using CTTI_MapsTo    = Text;
-      using CTTI_MapsFrom  = Types<RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta>;
+      using CTTI_MapsTo    = Types<Bytes, Text>;
+      using CTTI_MapsFrom  = Types<
+         bool, char, /*wchar_t, char8_t, char16_t, char32_t,*/
+         int8_t, int16_t, int32_t, int64_t,
+         uint8_t, uint16_t, uint32_t, uint64_t,
+         float, double,
+         Hash, Byte,
+         RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta
+      >;
 
       using CountType = Base::CountType;
 
@@ -154,6 +161,21 @@ namespace Langulus::Anyness
          return this->AssignAbsorb(Move {other});
       }
       
+      /// Construction from raw bytes data                                    
+      ///   @param data data to wrap, assumed valid                           
+      ///   @param count number of bytes inside 'data' to use                 
+      ///   @return the raw bytes wrapped inside a Bytes container            
+      static Bytes FromBytes(void const* data, size_t count) {
+         if (count == 0)
+            return {};
+
+         Bytes result;
+         result.EnableDisowned();
+         result.SetHeapInner(data);
+         result.SetCountInner(count);
+         return result;
+      }
+
       /// Comparing against nullptr_t checks if text is empty                 
       /*constexpr bool operator == (nullptr_t) const noexcept {
          return this->IsEmpty();
@@ -204,12 +226,56 @@ namespace Langulus::Anyness
          /// The context holds the header entries, that allow us to           
          /// serialize types, tags, consts and verbs across sessions.         
          struct Context {
+            enum BuiltInTypes {
+               Bool = 1,
+               I8, I16, I32, I64,
+               U8, U16, U32, U64,
+               Char, Byte, Half, Float, Double,
+               _Counter_
+            };
+
             template<class T>
             struct Bank {
                ::std::unordered_map<T, uint32_t> mDefinitions;
-               uint32_t mNextId = 1;
+               uint32_t mNextId = Same<T, RTTI::DMeta> ? BuiltInTypes::_Counter_ : 1;
 
                uint32_t Define(T&& meta) {
+                  // Built-in types are reserved, no need to serialize  
+                  // them.                                              
+                  if (not meta)
+                     return 0;
+                  
+                  if constexpr (Same<T, RTTI::DMeta>) {
+                     if (meta.IsSame(MetaDataOf<bool>()))
+                        return BuiltInTypes::Bool;
+                     else if (meta.IsSame(MetaDataOf<int8_t>()))
+                        return BuiltInTypes::I8;
+                     else if (meta.IsSame(MetaDataOf<int16_t>()))
+                        return BuiltInTypes::I16;
+                     else if (meta.IsSame(MetaDataOf<int32_t>()))
+                        return BuiltInTypes::I32;
+                     else if (meta.IsSame(MetaDataOf<int64_t>()))
+                        return BuiltInTypes::I64;
+                     else if (meta.IsSame(MetaDataOf<uint8_t>()))
+                        return BuiltInTypes::U8;
+                     else if (meta.IsSame(MetaDataOf<uint16_t>()))
+                        return BuiltInTypes::U16;
+                     else if (meta.IsSame(MetaDataOf<uint32_t>()))
+                        return BuiltInTypes::U32;
+                     else if (meta.IsSame(MetaDataOf<uint64_t>()))
+                        return BuiltInTypes::U64;
+                     else if (meta.IsSame(MetaDataOf<char>()))
+                        return BuiltInTypes::Char;
+                     else if (meta.IsSame(MetaDataOf<Byte>()))
+                        return BuiltInTypes::Byte;
+                     //else if (meta.IsSame(MetaDataOf<half>())) //TODO
+                     //   return BuiltInTypes::Half;
+                     else if (meta.IsSame(MetaDataOf<float>()))
+                        return BuiltInTypes::Float;
+                     else if (meta.IsSame(MetaDataOf<double>()))
+                        return BuiltInTypes::Double;
+                  }
+
                   auto found = mDefinitions.find(meta);
                   if (found != mDefinitions.end())
                      return found->second;
@@ -227,21 +293,209 @@ namespace Langulus::Anyness
          static constexpr bool CriticalFailure = true;
          static constexpr bool SkipElements = false;
 
-         static void BeginScope(const CT::Container auto& from, Bytes& to, Context* context) {
-            //TODO multidimensional containers like maps have multiple types
-            if constexpr (requires { from.GetType(); }) {
-               if (context) {
-                  const auto typeId = context->mDMetaBank.Define(from.GetType());
-                  to += typeId;
-               }
-               else to += from.GetType();
+         /// Flags used in the headbit                                        
+         enum Headbits : uint8_t {
+            // Skips an element, default initializes it if needed       
+            Skip = 0,
+
+            // Subsequent data is big endian                            
+            BigEndian = 1,
+
+            // A type ID is serialized for the next element, for each   
+            // individual dimension. The size of the ID starts at 8bit  
+            // and increases using Large16/Large32 flags.               
+            // The ID indexes a definition in the context, so this      
+            // is usually accompanied with the HasDependencies flag.    
+            Typed = 2,
+
+            // A 8bit state is serialized for the next element.         
+            // If accompanied with Large16/Large32, the size increases. 
+            Stateful = 4,
+
+            // Serializes count, assumed 1 if this flag is missing.     
+            // When Large16/Large32 are enabled, the size of the        
+            // counter increases.                                       
+            Multiple = 8,
+
+            // Signifies that state and count get more bits in order    
+            // to serialize more elements.                              
+            Large16 = 16,
+
+            // Signifies that state and count get even more bits in     
+            // order to serialize even more elements. Can be combined   
+            // with Large16 in order to jump up to 64 bits.             
+            Large32 = 32,
+
+            Large64 = Large16 | Large32,
+
+            // Signifies that the serialized data uses the context.     
+            HasDependencies = 64,
+
+            // Serializes the number of dimensions, otherwise assumed 1.
+            // Always of size 1 byte, for up to 256 dimensions.         
+            Multidimensional = 128
+         };
+
+         /// Serializes any container                                         
+         ///   @param from the container to serialize                         
+         ///   @param to where serialized bytes get appended                  
+         ///   @param context optional context for storing repeating patterns 
+         template<CT::Container C>
+         static void BeginScope(C const& from, Bytes& to, Context* context) {
+            if (not from.IsValid()) {
+               to += Headbits::Skip;
+               return;
             }
 
-            if constexpr (requires { from.GetState(); })
-               to += from.GetState();
+            // Write header                                             
+            /// @attention this is the biggest possible header size,    
+            ///    but this one in particular doesn't allocate space for
+            ///    more than two types!                                 
+            constexpr size_t max_dimensions = 2;
+            uint8_t header[1 + 1 + max_dimensions*8 + 8 + 8];
+            uint8_t& headbyte = header[0];
+            size_t progress = 1;
 
-            if constexpr (requires { from.GetCount(); })
-               to += from.GetCount();
+            if (std::endian::native == std::endian::big)
+               headbyte |= Headbits::BigEndian;
+
+            if (C::Dimensions::Count > 1) {
+               static_assert(C::Dimensions::Count <= max_dimensions,
+                  "Update max_dimensions for more dimensions. "
+                  "This is not set to max to save on stack memory"
+               );
+               headbyte |= Headbits::Multidimensional;
+               header[progress] = static_cast<uint8_t>(C::Dimensions::Count);
+               ++progress;
+            }
+
+            // First pass goes through all variable-sized counters and  
+            // populates the header flags before writing anything.      
+            if constexpr (requires { from.GetType(); }) {
+               Langulus::ForEach(typename C::Dimensions{}, [&]<Cid D> {
+                  LglsAssert(context,
+                     "Context is required for binary serialization of containers");
+
+                  headbyte |= Headbits::Typed;
+
+                  const uint64_t typeId = context->mDMetaBank.Define(from.template GetType<D>());
+                  if (typeId >= Context::BuiltInTypes::_Counter_)
+                     headbyte |= Headbits::HasDependencies;
+
+                  if (typeId < 256)
+                     ;
+                  else if (typeId < 65536)
+                     headbyte |= Headbits::Large16;
+                  else if (typeId < 4294967296)
+                     headbyte |= Headbits::Large32;
+                  else
+                     headbyte |= Headbits::Large64;
+               });
+            }
+
+            if constexpr (requires { from.GetUnconstrainedState(); }) {
+               const uint64_t s = from.GetUnconstrainedState();
+               if (s != 0) {
+                  headbyte |= Headbits::Stateful;
+
+                  if (s < 256)
+                     ;
+                  else if (s < 65536)
+                     headbyte |= Headbits::Large16;
+                  else if (s < 4294967296)
+                     headbyte |= Headbits::Large32;
+                  else
+                     headbyte |= Headbits::Large64;
+               }
+            }
+
+            if constexpr (requires { from.GetCount(); }) {
+               const uint64_t s = from.GetCount();
+               if (s != 1) {
+                  headbyte |= Headbits::Multiple;
+
+                  if (s < 256)
+                     ;
+                  else if (s < 65536)
+                     headbyte |= Headbits::Large16;
+                  else if (s < 4294967296)
+                     headbyte |= Headbits::Large32;
+                  else
+                     headbyte |= Headbits::Large64;
+               }
+            }
+
+            // Now write the data                                       
+            if constexpr (requires { from.GetType(); }) {
+               Langulus::ForEach(typename C::Dimensions{}, [&]<Cid D> {
+                  const uint64_t typeId = context->mDMetaBank.Define(from.template GetType<D>());
+                  if ((headbyte & Headbits::Large64) == Headbits::Large64) {
+                     memcpy(header + progress, &typeId, 8);
+                     progress += 8;
+                  }
+                  else if (headbyte & Headbits::Large32) {
+                     const uint32_t typeId32 = static_cast<uint32_t>(typeId);
+                     memcpy(header + progress, &typeId32, 4);
+                     progress += 4;
+                  }
+                  else if (headbyte & Headbits::Large16) {
+                     const uint16_t typeId16 = static_cast<uint16_t>(typeId);
+                     memcpy(header + progress, &typeId16, 2);
+                     progress += 2;
+                  }
+                  else {
+                     header[progress] = static_cast<uint8_t>(typeId);
+                     ++progress;
+                  }
+               });
+            }
+
+            if constexpr (requires { from.GetUnconstrainedState(); }) {
+               const uint64_t s = from.GetUnconstrainedState();
+               if ((headbyte & Headbits::Large64) == Headbits::Large64) {
+                  memcpy(header + progress, &s, 8);
+                  progress += 8;
+               }
+               else if (headbyte & Headbits::Large32) {
+                  const uint32_t s32 = static_cast<uint32_t>(s);
+                  memcpy(header + progress, &s32, 4);
+                  progress += 4;
+               }
+               else if (headbyte & Headbits::Large16) {
+                  const uint16_t s16 = static_cast<uint16_t>(s);
+                  memcpy(header + progress, &s16, 2);
+                  progress += 2;
+               }
+               else {
+                  header[progress] = static_cast<uint8_t>(s);
+                  ++progress;
+               }
+            }
+
+            if constexpr (requires { from.GetCount(); }) {
+               const uint64_t s = from.GetCount();
+               if ((headbyte & Headbits::Large64) == Headbits::Large64) {
+                  memcpy(header + progress, &s, 8);
+                  progress += 8;
+               }
+               else if (headbyte & Headbits::Large32) {
+                  const uint32_t s32 = static_cast<uint32_t>(s);
+                  memcpy(header + progress, &s32, 4);
+                  progress += 4;
+               }
+               else if (headbyte & Headbits::Large16) {
+                  const uint16_t s16 = static_cast<uint16_t>(s);
+                  memcpy(header + progress, &s16, 2);
+                  progress += 2;
+               }
+               else {
+                  header[progress] = static_cast<uint8_t>(s);
+                  ++progress;
+               }
+            }
+
+            // Finally, write the entire header to the stream           
+            to += Bytes::FromBytes(header, progress);
          }
          
          static void EndScope(const CT::Container auto&, Text&, Context*) {
@@ -268,19 +522,33 @@ namespace Langulus::Anyness
 
 namespace Langulus::CTTI
 {
-   /// A rule for serializing any deep container.                             
+   /// A rule for serializing any deep container, regardless of sparsity.     
    /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
-   /// as well as any templated equivalents.                                  
+   /// as well as any templated equivalents. Adds a header for each nested.   
+   /// deep container.                                                        
    template<CT::Deep C>
    struct SerializationRule<Anyness::Bytes, C> {
+      static_assert(Exact<DecvqAll<C>, C>,
+         "Strip all decorations on all indirections first");
+
       using S = SerializerOf<Anyness::Bytes>;
       using Context = typename S::Context;
       using Count = Anyness::Bytes::CountType;
       
-      static void Serialize(C const&, Anyness::Bytes&, Context*) requires CT::ContainsMany<C>;
-      static void Serialize(C const&, Anyness::Bytes&, Context*) requires CT::ContainsOne<C>;
+      static void Serialize(ConstAll<C&>, Anyness::Bytes&, Context*) requires CT::ContainsMany<Decay<C>>;
+      static void Serialize(ConstAll<C&>, Anyness::Bytes&, Context*) requires CT::ContainsOne<Decay<C>>;
    };
-   
+
+   /// Rule for serializing any container that isn't deep.                    
+   template<CT::Container C> requires (not CT::Deep<C>)
+   struct SerializationRule<Anyness::Bytes, C> {
+      static_assert(CT::Decayed<C>, "Strip all decorations first");
+      using S = SerializerOf<Anyness::Bytes>;
+      using Context = typename S::Context;
+
+      static void Serialize(ConstAll<C&>, Anyness::Bytes&, Context*);
+   };
+
    /// A rule for serializing meta data.                                      
    /// Will register it in the Context, and write it as an ID where needed.   
    template<>
