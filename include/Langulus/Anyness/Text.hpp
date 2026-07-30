@@ -74,15 +74,15 @@ namespace Langulus::Anyness
    struct Text : Inner::TextBase {
       using CTTI_ReflectAs = Text;
       using CTTI_Text      = Yes<>;
-      using CTTI_MapsTo    = Types<Text, Bytes>;
+      /*using CTTI_MapsTo    = Types<Text, Bytes>;
       using CTTI_MapsFrom  = Types<
-         bool, char, /*wchar_t, char8_t, char16_t, char32_t,*/
+         bool, char, wchar_t, char8_t, char16_t, char32_t,
          int8_t, int16_t, int32_t, int64_t,
          uint8_t, uint16_t, uint32_t, uint64_t,
          float, double,
          Hash, Byte,
          RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta
-      >;
+      >;*/
 
       using CountType = Base::CountType;
 
@@ -542,10 +542,10 @@ namespace Langulus::CT
 namespace Langulus::CTTI
 {
    // Mark all pointers as convertible to Text                                
-   template<CT::Sparse T>
+   /*template<CT::Sparse T>
    struct MapsFrom<T> {
       using To = Anyness::Text;
-   };
+   };*/
 
    /// A rule for serializing any deep container, regardless of sparsity.     
    /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
@@ -601,41 +601,102 @@ namespace Langulus::CTTI
       static void Serialize(const Anyness::Bytes&, Anyness::Text&, Context*);
    };*/
    
+   /// Map all pointers as convertible to text                                
+   template<CT::Sparse T>
+   struct ConverterFrom<T> {
+      static_assert(Exact<DecvqAll<T>, T>,
+         "Strip all decorations on all indirections first");
+
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(ConstAll<T&> from) {
+         if constexpr (CT::Complete<Deptr<T>>) {
+            if constexpr (CT::Character<Deptr<T>>)
+               return {from};
+            else
+               return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+         }
+         else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+      }
+   };
+
    /// Convert Bool -> Text                                                   
    template<>
-   struct Converter<bool, Anyness::Text> {
-      static constexpr auto Convert(bool const& from) -> Anyness::Text {
+   struct ConverterFrom<bool> {
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(bool const& from) noexcept {
          return from ? "yes" : "no";
       }
    };
 
+   /*template<>
+   struct Converter<bool, Anyness::Text> {
+      static constexpr auto Convert(bool const& from) -> Anyness::Text {
+         return from ? "yes" : "no";
+      }
+   };*/
+
    /// Convert Byte -> Text                                                   
    template<>
-   struct Converter<Byte, Anyness::Text> {
-      static constexpr auto Convert(Byte const& from) -> Anyness::Text {
+   struct ConverterFrom<Byte> {
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(Byte const& from) noexcept {
          return Anyness::Text::Hex(from);
       }
    };
 
+   /*template<>
+   struct Converter<Byte, Anyness::Text> {
+      static constexpr auto Convert(Byte const& from) -> Anyness::Text {
+         return Anyness::Text::Hex(from);
+      }
+   };*/
+
    /// Convert Hash -> Text                                                   
    template<>
-   struct Converter<Hash, Anyness::Text> {
-      static constexpr auto Convert(Hash const& from) -> Anyness::Text {
+   struct ConverterFrom<Hash> {
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(Hash const& from) noexcept {
          return Anyness::Text::Hex(from.value);
       }
    };
 
+   /*template<>
+   struct Converter<Hash, Anyness::Text> {
+      static constexpr auto Convert(Hash const& from) -> Anyness::Text {
+         return Anyness::Text::Hex(from.value);
+      }
+   };*/
+
    /// Convert Number -> Text                                                 
    template<CT::Number T>
+   struct ConverterFrom<T> {
+      static_assert(CT::Decayed<T>, "Strip all decorations first");
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(T const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+
+   /*template<CT::Number T>
    struct Converter<T, Anyness::Text> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
       static constexpr auto Convert(T const& from) -> Anyness::Text {
          return Anyness::Text::FromNumber(from);
       }
-   };
+   };*/
 
    /// Convert shared or standard pointer -> Text                             
-   template<CT::Sparse T>
+   /*template<CT::Sparse T>
    struct Converter<T, Anyness::Text> {
       static_assert(Exact<DecvqAll<T>, T>,
          "Strip all decorations on all indirections first");
@@ -649,37 +710,77 @@ namespace Langulus::CTTI
          }
          else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
       }
-   };
+   };*/
 
    /// Convert DMeta -> Text                                                  
    template<>
+   struct ConverterFrom<RTTI::DMeta> {
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(RTTI::DMeta const& from) noexcept {
+         return from.GetName();
+      }
+   };
+
+   /*template<>
    struct Converter<RTTI::DMeta, Anyness::Text> {
       static constexpr auto Convert(RTTI::DMeta const& from) -> Anyness::Text {
          return from.GetName();
       }
-   };
+   };*/
 
    /// Convert TMeta -> Text                                                  
    template<>
+   struct ConverterFrom<RTTI::TMeta> {
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(RTTI::TMeta const& from) noexcept {
+         return from.GetName();
+      }
+   };
+
+   /*template<>
    struct Converter<RTTI::TMeta, Anyness::Text> {
       static constexpr auto Convert(RTTI::TMeta const& from) -> Anyness::Text {
          return from.GetName();
       }
-   };
+   };*/
 
    /// Convert CMeta -> Text                                                  
    template<>
-   struct Converter<RTTI::CMeta, Anyness::Text> {
-      static constexpr auto Convert(RTTI::CMeta const& from) -> Anyness::Text {
+   struct ConverterFrom<RTTI::CMeta> {
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(RTTI::CMeta const& from) noexcept {
          return from.GetName();
       }
    };
 
+   /*template<>
+   struct Converter<RTTI::CMeta, Anyness::Text> {
+      static constexpr auto Convert(RTTI::CMeta const& from) -> Anyness::Text {
+         return from.GetName();
+      }
+   };*/
+
    /// Convert VMeta -> Text                                                  
    template<>
+   struct ConverterFrom<RTTI::VMeta> {
+      using To = Anyness::Text;
+
+      template<class TO>
+      static constexpr TO Convert(RTTI::VMeta const& from) noexcept {
+         return from.GetCppName();
+      }
+   };
+   
+   /*template<>
    struct Converter<RTTI::VMeta, Anyness::Text> {
       static constexpr auto Convert(RTTI::VMeta const& from) -> Anyness::Text {
          return from.GetCppName();
       }
-   };
+   };*/
 }

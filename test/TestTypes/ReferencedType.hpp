@@ -14,7 +14,7 @@
 /// Simple type for testing Referenced types                                  
 struct RT : Langulus::Referenced {
    using Text = Langulus::Anyness::Text;
-   using CTTI_MapsTo = Text;
+   //using CTTI_MapsTo = Text;
 
    int data;
    const char* t;
@@ -91,3 +91,44 @@ struct RT : Langulus::Referenced {
 };
 
 static_assert(not Langulus::CT::Deep<RT>);
+
+namespace Langulus::CTTI
+{
+   template<>
+   struct ConverterFrom<RT> {
+      using To = Anyness::Text;
+
+      /*template<class TO> // comes from explicit operator Text ()
+      static constexpr TO Convert(bool const& from) noexcept {
+         return from ? "yes" : "no";
+      }*/
+   };
+
+   template<>
+   struct ConverterFrom<RT> {
+      using To = Anyness::Bytes;
+
+      template<class TO>
+      static constexpr TO Convert(RT const& from) noexcept {
+         TO bytes;
+         bytes += from.data;
+         uint8_t mask = 0;
+         if (from.destroyed)
+            mask |= 1;
+         if (from.copied_in)
+            mask |= 2;
+         if (from.cloned_in)
+            mask |= 4;
+         if (from.copy_intent_in)
+            mask |= 8;
+         if (from.disown_intent_in)
+            mask |= 16;
+         if (from.moved_in)
+            mask |= 32;
+         if (from.moved_out)
+            mask |= 64;
+         bytes += mask;
+         return bytes;
+      }
+   };
+}

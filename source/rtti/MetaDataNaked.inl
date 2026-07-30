@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include "MetaData.hpp"
 
 
 namespace Langulus::RTTI::Inner
@@ -431,7 +432,7 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get morphisms from other types                                         
-   inline auto MetaDataNaked::GetMorphismsFrom()
+   /*inline auto MetaDataNaked::GetMorphismsFrom()
    const noexcept -> DefinitionData::MorphismList const& {
       if (not mDefinition) {
          static const DefinitionData::MorphismList fallback;
@@ -439,7 +440,7 @@ namespace Langulus::RTTI::Inner
       }
 
       return mDefinition->mCurrentBoundary.mMorphismsFrom;
-   }
+   }*/
    
    /// Get a specific coverter, if it exists.                                 
    /// This will check if this type has a morphism TO the desired type, or    
@@ -454,9 +455,9 @@ namespace Langulus::RTTI::Inner
       if (found != mDefinition->mCurrentBoundary.mMorphismsTo.end())
          return found->second;
 
-      found = other->mCurrentBoundary.mMorphismsFrom.find(mDefinition);
+      /*found = other->mCurrentBoundary.mMorphismsFrom.find(mDefinition);
       if (found != other->mCurrentBoundary.mMorphismsFrom.end())
-         return found->second;
+         return found->second;*/
       return {nullptr, nullptr};
    }
 }

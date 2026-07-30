@@ -41,7 +41,7 @@ namespace Langulus::Anyness
    struct TAny : Inner::TAnyBase<T> {
       using CTTI_ReflectAs = Any;
       using CTTI_Deep      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      //using CTTI_MapsTo    = Text;
 
       using Base = Inner::TAnyBase<T>;
       using DeepType = Any;

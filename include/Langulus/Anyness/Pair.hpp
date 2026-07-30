@@ -55,7 +55,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Pair;
       using CTTI_Deep      = Yes<>;
       using CTTI_Pair      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      //using CTTI_MapsTo    = Text;
 
       static constexpr bool ReferenceElements = true;
 

@@ -28,7 +28,7 @@ namespace
 {
    /// A type that is reflected, as convertible to Bytes                      
    struct Bytefiable {
-      using CTTI_MapsTo = Bytes;
+      //using CTTI_MapsTo = Bytes;
       explicit operator Bytes() {
          return Bytes("Bytefiable converted to Bytes");
       }
@@ -36,7 +36,7 @@ namespace
 
    /// A type that is reflected as convertible to Bytes                       
    struct BytefiableConst {
-      using CTTI_MapsTo = Bytes;
+      //using CTTI_MapsTo = Bytes;
       explicit operator Bytes() const {
          return Bytes("BytefiableConst converted to Bytes");
       }

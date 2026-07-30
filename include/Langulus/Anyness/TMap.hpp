@@ -53,7 +53,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes<>;
       using CTTI_Deep      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      //using CTTI_MapsTo    = Text;
 
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;

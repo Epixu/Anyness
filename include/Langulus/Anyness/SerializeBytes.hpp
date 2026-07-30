@@ -76,7 +76,7 @@ namespace Langulus::CTTI
       DC const& self = DenseCast(may_be_sparse);
       S::BeginScope(self, out, context);
 
-      if constexpr (CT::TypeErased<C>) {
+      if constexpr (CT::TypeErased<DC>) {
          //                                                             
          // Serialize a type-erased container                           
          const auto T = self.GetType();
