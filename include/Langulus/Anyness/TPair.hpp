@@ -95,7 +95,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = TPair;
       using CTTI_Deep      = Yes<>;
       using CTTI_Pair      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      //using CTTI_MapsTo    = Text;
 
       using Base           = Inner::TPairBase<K, V>;
       using DeepType       = Any;

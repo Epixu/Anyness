@@ -66,15 +66,15 @@ namespace Langulus::Anyness
    #pragma pack(push, 4)
    struct Bytes : Inner::BytesBase {
       using CTTI_ReflectAs = Bytes;
-      using CTTI_MapsTo    = Types<Bytes, Text>;
-      using CTTI_MapsFrom  = Types<
-         bool, char, /*wchar_t, char8_t, char16_t, char32_t,*/
+      //using CTTI_MapsTo    = Types<Bytes, Text>;
+      /*using CTTI_MapsFrom  = Types<
+         bool, char, wchar_t, char8_t, char16_t, char32_t,
          int8_t, int16_t, int32_t, int64_t,
          uint8_t, uint16_t, uint32_t, uint64_t,
          float, double,
          Hash, Byte,
          RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta
-      >;
+      >;*/
 
       using CountType = Base::CountType;
 
@@ -124,7 +124,10 @@ namespace Langulus::Anyness
       template<class T> requires CT::POD<DeextAll<Deint<T>>>
       explicit constexpr Bytes(T&& source) {
          this->ResetState();
-         this->SetHeapInner(static_cast<const void*>(&DeintCast(source)));
+         if constexpr (CT::Array<T>)
+            this->SetHeapInner(static_cast<const void*>( DeintCast(source)));
+         else
+            this->SetHeapInner(static_cast<const void*>(&DeintCast(source)));
          this->SetCountInner(sizeof(Deint<T>));
          this->ResetHash();
 

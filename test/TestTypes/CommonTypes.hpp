@@ -323,7 +323,7 @@ public:
    using CTTI_Abstract  = Yes<>;
    using CTTI_Bases     = ImplicitlyReflectedData;
    using CTTI_Verbs     = Verbs::Create;
-   using CTTI_MapsTo    = int;
+   //using CTTI_MapsTo    = int;
    using CTTI_Values    = No;
    using CTTI_MinAlloc  = Yes<1024>;
 
@@ -348,7 +348,7 @@ struct ConvertibleData : ImplicitlyReflectedData {
       : member {314} {}
 
    using CTTI_Bases     = ImplicitlyReflectedData;
-   using CTTI_MapsTo    = int;
+   //using CTTI_MapsTo    = int;
    using CTTI_Values    = No;
 };
 
@@ -416,7 +416,7 @@ struct PrivatelyDerived : private ImpureVirtual {
 
 /// MARK: Convertible                                                         
 struct ConvertibleToInt {
-   using CTTI_MapsTo = int;
+   //using CTTI_MapsTo = int;
 
    ConvertibleToInt(int inner = 666)
       : member{inner} {}
@@ -451,13 +451,13 @@ public:
 };
 
 struct ConvertibleFromIntInternallyMissingConverter {
-   using CTTI_MapsFrom = int;
+   //using CTTI_MapsFrom = int;
 };
 
 class ConvertibleFromIntInternally {
    int inner = 0;
 public:
-   using CTTI_MapsFrom = int;
+   //using CTTI_MapsFrom = int;
    static ConvertibleFromIntInternally Init(int i) { 
       ConvertibleFromIntInternally temp;
       temp.inner = i;
@@ -469,7 +469,7 @@ public:
 struct InheritedConvertibleFromInt1
    : ConvertibleFromIntInternally {};
 struct InheritedConvertibleFromInt1Disabled
-   : ConvertibleFromIntInternally { using CTTI_MapsFrom = void; };
+   : ConvertibleFromIntInternally { /*using CTTI_MapsFrom = void;*/ };
 struct InheritedConvertibleFromInt2
    : ConvertibleFromIntExternally {};
 struct InheritedConvertibleFromInt3
@@ -528,12 +528,12 @@ struct ConvertibleToIntExternally {
 };
 
 struct ConvertibleToIntInternallyMissingConverter {
-   using CTTI_MapsTo = int;
+   //using CTTI_MapsTo = int;
 };
 
 struct ConvertibleToIntInternally {
    ::std::string inner;
-   using CTTI_MapsTo = int;
+   //using CTTI_MapsTo = int;
 };
 
 /// Types that inherit convertible properties                                 
@@ -569,17 +569,27 @@ namespace Langulus::CTTI
 {
    /// These customizations need to appear as early as possible, in order     
    /// to be consistently reflected in all tests                              
-   template<>
+   /*template<>
    struct MapsTo<int> {
       using From = ::std::string;
-   };
+   };*/
 
    template<>
+   struct ConverterFrom<::std::string> {
+      using To = int;
+
+      template<class TO>
+      static constexpr TO Convert(::std::string const& from) noexcept {
+         return from == "the devil" ? 666 : -1;
+      }
+   };
+
+   /*template<>
    struct Converter<::std::string, int> {
       static constexpr auto Convert(::std::string const& from) -> int {
          return from == "the devil" ? 666 : -1;
       }
-   };
+   };*/
 
    template<>
    struct Named<::std::string> {
@@ -587,14 +597,24 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct MapsFrom<Pi> {
+   struct ConverterFrom<Pi> {
       using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
+
+      /*template<class TO>
+      static constexpr TO Convert(Pi const& from) noexcept {
+         return from == "the devil" ? 666 : -1;
+      }*/
    };
 
-   template<>
+   /*template<>
+   struct MapsFrom<Pi> {
+      using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
+   };*/
+
+   /*template<>
    struct MapsTo<ImplicitlyReflectedDataWithTraits> {
       using From = Pi;
-   };
+   };*/
 
    template<>
    struct NamedValue<Pi::ConflictingNumber> {
@@ -609,16 +629,30 @@ namespace Langulus::CTTI
       using Type = Langulus::Verbs::Create;
    };
 
-
    template<>
+   struct ConverterFrom<int> {
+      using To = Types<
+         ConvertibleFromIntExternally,
+         ConvertibleFromIntInternally/*,
+         ConvertibleFromIntExternallyMissingConverter*/ // shouldn't compile
+      >;
+
+      template<class TO> requires (not Same<TO, ConvertibleFromIntExternallyMissingConverter>)
+      static constexpr TO Convert(int const& from) noexcept {
+         return TO::Init(from);
+      }
+   };
+
+   /*template<>
    struct MapsTo<ConvertibleFromIntExternallyMissingConverter> {
       using From = int;
    };
    template<>
    struct MapsTo<ConvertibleFromIntExternally> {
       using From = int;
-   };
-   template<>
+   };*/
+
+   /*template<>
    struct Converter<int, ConvertibleFromIntExternally> {
       static constexpr auto Convert(int const& from) -> ConvertibleFromIntExternally {
          return ConvertibleFromIntExternally::Init(from);
@@ -629,29 +663,55 @@ namespace Langulus::CTTI
       static constexpr auto Convert(int const& from) -> ConvertibleFromIntInternally {
          return ConvertibleFromIntInternally::Init(from);
       }
-   };
-
+   };*/
 
    template<>
+   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter> {
+      using To = int;
+   };
+
+   template<>
+   struct ConverterFrom<ConvertibleToIntExternally> {
+      using To = int;
+
+      template<class TO>
+      static constexpr TO Convert(ConvertibleToIntExternally const& from) noexcept {
+         return from.inner.size();
+      }
+   };
+
+   template<>
+   struct ConverterFrom<ConvertibleToIntInternally> {
+      using To = int;
+
+      template<class TO>
+      static constexpr TO Convert(ConvertibleToIntInternally const& from) noexcept {
+         return from.inner.size();
+      }
+   };
+
+   /*template<>
    struct MapsFrom<ConvertibleToIntExternallyMissingConverter> {
       using To = int;
-   };
-   template<>
+   };*/
+   /*template<>
    struct MapsFrom<ConvertibleToIntExternally> {
       using To = int;
-   };
-   template<>
+   };*/
+
+   /*template<>
    struct Converter<ConvertibleToIntExternally, int> {
       static constexpr auto Convert(ConvertibleToIntExternally const& from) -> int {
          return from.inner.size();
       }
-   };
-   template<>
+   };*/
+
+   /*template<>
    struct Converter<ConvertibleToIntInternally, int> {
       static constexpr auto Convert(ConvertibleToIntInternally const& from) -> int {
          return from.inner.size();
       }
-   };
+   };*/
 }
 
 /// MARK: Empty                                                               

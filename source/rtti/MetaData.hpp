@@ -193,7 +193,7 @@ namespace Langulus::RTTI
          auto GetMembers()            const noexcept -> DefinitionData::MemberList const&;
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
-         auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
+         //auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphism(MetaDataStructured_XY) const noexcept -> DefinitionData::Morphism;
 
          IF_SAFE(LglsNoSideEffects explicit operator bool() const noexcept);
@@ -284,7 +284,7 @@ namespace Langulus::RTTI
          auto GetMembers()            const noexcept -> DefinitionData::MemberList const&;
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
-         auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
+         //auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphism(MetaDataNaked) const noexcept -> DefinitionData::Morphism;
       };
    }

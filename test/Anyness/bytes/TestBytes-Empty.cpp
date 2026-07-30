@@ -152,7 +152,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    static_assert(T::CountHeapProviders() == 1);
    
    GIVEN("Default-constructed container") {
-      const ScopedE element {555};
+      const ScopedE element {int32_t{555}};
       T pack;
       prevent_optimization(pack);
 
@@ -606,7 +606,6 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          REQUIRE      (another_pack1 == another_pack2);
          REQUIRE_FALSE(another_pack1 != another_pack2);
 
-         //TODO compare against literals and stuff
          [[maybe_unused]] volatile bool dont_optimize = false;
          BenchmarkBytesStd("Empty/operator==", 30, 100,
             (void) 0,            dont_optimize |= (another_pack1 == another_pack2),
@@ -621,12 +620,11 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          );
       }
 
-      if constexpr (CT::Character<E>) {
+      if constexpr (Same<E, Byte>) {
          /// MARK: Contains                                                   
-         WHEN("Contains character when empty") {
+         WHEN("Contains byte when empty") {
             REQUIRE_FALSE(pack.Contains(*element));
 
-            //TODO compare against literals and stuff
             [[maybe_unused]] volatile bool dont_optimize = false;
             BenchmarkBytesStd("Empty/Contains", 30, 100,
                (void) 0,            dont_optimize |= pack.Contains(*element),
@@ -637,10 +635,9 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
       if constexpr (CT::Container<E>) {
          /// MARK: ContainsRange                                              
-         WHEN("Contains substring when empty") {
+         WHEN("Contains byte range when empty") {
             REQUIRE_FALSE(pack.ContainsRange(*element));
 
-            //TODO compare against literals and stuff
             [[maybe_unused]] volatile bool dont_optimize = false;
             BenchmarkBytesStd("Empty/ContainsRange", 30, 100,
                (void) 0,            dont_optimize |= pack.ContainsRange(*element),
@@ -650,8 +647,8 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
       }
 
       if constexpr (Exact<E, Bytes>) {
-         WHEN("Given text that will be destroyed before the pack") {
-            Bytes owned_text {666};
+         WHEN("Given bytes that will be destroyed before the pack") {
+            Bytes owned_text {int32_t{666}};
             REQUIRE_NOTHROW(pack = owned_text);
          }
       }
@@ -814,8 +811,12 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    }
 
    GIVEN("Default-constructed container and a couple of arrays") {
-      const ScopedE darray1[5] {49, 50, 51, 52, 53};
-      const ScopedE darray2[5] {54, 55, 56, 57, 58};
+      const ScopedE darray1[5] {
+         int32_t{49}, int32_t{50}, int32_t{51}, int32_t{52}, int32_t{53}
+      };
+      const ScopedE darray2[5] {
+         int32_t{54}, int32_t{55}, int32_t{56}, int32_t{57}, int32_t{58}
+      };
 
       const E immovable[5] {
          *darray1[0], *darray1[1], *darray1[2], *darray1[3], *darray1[4]
@@ -913,31 +914,74 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            REQUIRE(inserted == 10*5*8);
-            Bytes_CheckState_ContainsBytes(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+               
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010
+            };
+            REQUIRE(inserted == sizeof(pattern));
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         else if constexpr (Same<E, char>) {
-            REQUIRE(inserted == 5*8);
-            Bytes_CheckState_ContainsBytes(pack,
-               "12345"
-               "12345"
-               "12345"
-               "12345"
-               "6789:"
-               "6789:"
-               "6789:"
-               "12345"
-            );
-         }
+         /*else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {
+               49, 50, 51, 52, 53,
+               49, 50, 51, 52, 53,
+               49, 50, 51, 52, 53,
+               49, 50, 51, 52, 53,
+               54, 55, 56, 57, 58,
+               54, 55, 56, 57, 58,
+               54, 55, 56, 57, 58,
+               49, 50, 51, 52, 53
+            };
+            REQUIRE(inserted == sizeof(pattern));
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }*/
          else {
             const uint8_t pattern[] = {
                49, 50, 51, 52, 53,
@@ -1040,19 +1084,60 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            REQUIRE(inserted == 10*5*8);
-            Bytes_CheckState_ContainsBytes(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010
+            };
+            REQUIRE(inserted == sizeof(pattern));
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         else if constexpr (Same<E, char>) {
+         /*else if constexpr (Same<E, char>) {
             REQUIRE(inserted == 5*8);
             Bytes_CheckState_ContainsBytes(pack,
                "12345"
@@ -1064,7 +1149,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
                "12345"
                "12345"
             );
-         }
+         }*/
          else {
             const uint8_t pattern[] = {
                49, 50, 51, 52, 53,
@@ -1138,14 +1223,21 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            Bytes_CheckState_ContainsString(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 53, 0b00000010
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         else if constexpr (Same<E, char>) {
+         /*else if constexpr (Same<E, char>) {
             Bytes_CheckState_ContainsString(pack, "12346665");
-         }
+         }*/
          else {
             const uint8_t pattern[] = {
                49, 50, 51, 52, 54, 54, 54, 53
@@ -1198,14 +1290,21 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            Bytes_CheckState_ContainsString(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               00, 00, 00, 53, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 49, 0b00000010
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         else if constexpr (Same<E, char>) {
+         /*else if constexpr (Same<E, char>) {
             Bytes_CheckState_ContainsString(pack, "56664321");
-         }
+         }*/
          else {
             const uint8_t pattern[] = {
               53, 54, 54, 54, 52, 51, 50, 49
@@ -1221,7 +1320,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
       }
 
       /// MARK: Concat array                                                  
-      if constexpr (CT::Text<E> and CT::Container<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Concatenate to the back") {
             size_t inserted = 0;
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back,           immovable[0]));
@@ -1232,20 +1331,28 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Move     {movable2[1]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Abandon  {movable3[2]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Clone    {immovable[4]}));
-            REQUIRE(inserted == 16);
 
             Bytes_CheckState_OwnedFull(pack);
 
-            if constexpr (CT::Container<E>) {
-               for (int i = 0; i < 5; ++i) {
-                  Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
-                  Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
-                  Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
-                  Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
-               }
+            for (int i = 0; i < 5; ++i) {
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
             }
 
-            Bytes_CheckState_ContainsString(pack,"4950515254555653");
+            const uint8_t pattern[] = {
+               00, 00, 00, 49,
+               00, 00, 00, 50,
+               00, 00, 00, 51,
+               00, 00, 00, 52,
+               00, 00, 00, 54,
+               00, 00, 00, 55, 
+               00, 00, 00, 56, 
+               00, 00, 00, 53
+            };
+            REQUIRE(inserted == sizeof(pattern));
+            Bytes_CheckState_ContainsBytes(pack, pattern);
 
             BenchmarkBytesStd("Empty/Concat/Element/Back", 30, 100,
                T temp,              temp.ConcatAt(Index::Back, immovable),
@@ -1267,16 +1374,25 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
             Bytes_CheckState_OwnedFull(pack);
 
-            if constexpr (CT::Container<E>) {
-               for (int i = 0; i < 5; ++i) {
-                  Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
-                  Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
-                  Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
-                  Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
-               }
+            for (int i = 0; i < 5; ++i) {
+               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
             }
 
-            Bytes_CheckState_ContainsString(pack,"5356555452515049");
+            const uint8_t pattern[] = {
+               00, 00, 00, 53,
+               00, 00, 00, 56, 
+               00, 00, 00, 55, 
+               00, 00, 00, 54,
+               00, 00, 00, 52,
+               00, 00, 00, 51,
+               00, 00, 00, 50,
+               00, 00, 00, 49
+            };
+            REQUIRE(inserted == sizeof(pattern));
+            Bytes_CheckState_ContainsBytes(pack, pattern);
 
             BenchmarkBytesStd("Empty/Concat/Element/Front", 30, 100,
                T temp,              temp.ConcatAt(Index::Front, darray1),
@@ -1319,18 +1435,58 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             //TODO pointers are always different
          }
          else if constexpr (Same<E, RT>) {
-            Bytes_CheckState_ContainsString(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 55, 0b00000010,
+               00, 00, 00, 56, 0b00000010,
+               00, 00, 00, 57, 0b00000010,
+               00, 00, 00, 58, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010,
+
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 53, 0b00000010
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         else if constexpr (Same<E, char>) {
+         /*else if constexpr (Same<E, char>) {
             Bytes_CheckState_ContainsString(pack,
                "12345"
                "12345"
@@ -1341,7 +1497,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
                "6789:"
                "12345"
             );
-         }
+         }*/
          else {
             const uint8_t pattern[] = {
                49, 50, 51, 52, 53,
@@ -1386,14 +1542,21 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             //TODO pointers are always different
          }
          else if constexpr (Same<E, RT>) {
-            Bytes_CheckState_ContainsString(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               00, 00, 00, 49, 0b00000010,
+               00, 00, 00, 50, 0b00000010,
+               00, 00, 00, 51, 0b00000010,
+               00, 00, 00, 52, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 54, 0b00000010,
+               00, 00, 00, 53, 0b00000010
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         else if constexpr (Same<E, char>) {
+         /*else if constexpr (Same<E, char>) {
             Bytes_CheckState_ContainsString(pack, "12346665");
-         }
+         }*/
          else {
             const uint8_t pattern[] = {
                49, 50, 51, 52, 54, 54, 54, 53

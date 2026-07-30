@@ -1122,6 +1122,7 @@ namespace Langulus::RTTI
    template<class T>
    void DefinitionData::FillMorphisms() {
       using MAPTO = MorphismsFrom<T>;
+      
       if constexpr (not CT::Void<MAPTO>) {
          ForEach(MAPTO{}, [this]<class TO_RAW>{
             using TO = CT::ReflectedAs<TO_RAW>;
@@ -1129,7 +1130,7 @@ namespace Langulus::RTTI
             auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
             Morphism morphism;
    
-            if constexpr (CT::Convertible<T, TO>) { //TODO figure this out - There are tons of Converters that just call Serialize. Why define converters in the first place???
+            if constexpr (CT::Convertible<T, TO>) {
                morphism.convert = [](void* from, void* to) {
                   auto fromT = static_cast<ConstAll<T*>>(from);
                   auto toT   = static_cast<TO*>(to);
@@ -1152,7 +1153,7 @@ namespace Langulus::RTTI
          });
       }
    
-      using MAPFROM = MorphismsTo<T>;
+      /*using MAPFROM = MorphismsTo<T>;
       if constexpr (not CT::Void<MAPFROM>) {
          ForEach(MAPFROM{}, [this]<class FROM_RAW>{
             using FROM = CT::ReflectedAs<FROM_RAW>;
@@ -1181,7 +1182,7 @@ namespace Langulus::RTTI
          
             mCurrentBoundary.mMorphismsFrom.emplace(source_type, morphism);
          });
-      }
+      }*/
    }
 
    /// Generate a member definition                                           

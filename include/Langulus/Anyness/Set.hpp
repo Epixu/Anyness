@@ -68,7 +68,7 @@ namespace Langulus::Anyness::Inner
       using CTTI_ReflectAs = Set;
       using CTTI_Set       = Yes<>;
       using CTTI_Deep      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      //using CTTI_MapsTo    = Text;
 
       using Base          = SetBase<SORTED>;
       using DeepType      = Many;

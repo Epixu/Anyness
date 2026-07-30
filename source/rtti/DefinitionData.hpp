@@ -275,7 +275,7 @@ namespace Langulus::RTTI
          
          // List of reflected converters                                
          MorphismList mMorphismsTo;
-         MorphismList mMorphismsFrom;
+         //MorphismList mMorphismsFrom;
       };
       
       // List of named values                                           

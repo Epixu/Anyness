@@ -79,7 +79,7 @@ namespace Langulus::Anyness
    struct Many : Inner::ManyBase {
       using CTTI_ReflectAs = Many;
       using CTTI_Deep      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      //using CTTI_MapsTo    = Text;
 
       using Base        = Inner::ManyBase;
       using DeepType    = Many;

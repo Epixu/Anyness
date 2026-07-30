@@ -216,12 +216,12 @@ namespace doctest
    /// MARK: {doctest}                                                        
    /// doctest stringifiers for _any_ container serializable to text.         
    /// This is used for all containers, inclusing sets, maps, pairs, handles..
-   template<Langulus::CT::Container T> requires Langulus::CT::Convertible<T, Langulus::Anyness::Text>
+   template<Langulus::CT::Container T>// requires Langulus::CT::Convertible<T, Langulus::Anyness::Text>
    struct StringMaker<T> {
       static String convert(T const& value) {
-         return toString(static_cast<::std::string>(
-            NameOf<T>() + "(" + ::Langulus::Convert<Langulus::Anyness::Text>(value) + ")"
-         ));
+         Langulus::Anyness::Text as_text;
+         ::Langulus::Serialize(value, as_text);
+         return toString(static_cast<::std::string>(NameOf<T>() + "(" + as_text + ")"));
       }
    };
 }

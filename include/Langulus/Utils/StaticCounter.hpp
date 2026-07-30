@@ -7,37 +7,52 @@
 ///                                                                           
 #pragma once
 
-/// Original code from:                                                       
-/// stackoverflow.com/questions/6166337/does-c-support-compile-time-counters  
-template<auto Id>
-struct counter {
-   using tag = counter;
+namespace Langulus
+{
+   namespace Inner
+   {
+      /// Original code from: stackoverflow.com/questions/6166337             
+      ///   @tparam UNIQUE a type that differentiates counters                
+      ///   @tparam N the current counter state                               
+      template<class UNIQUE, int N>
+      struct counter {
+         struct generator {
+            friend consteval bool is_defined(counter) {
+               return true;
+            }
+         };
 
-   struct generator {
-      friend consteval auto is_defined(tag) { return true; }
-   };
+         friend consteval bool is_defined(counter);
 
-   friend consteval auto is_defined(tag);
+         template<typename Tag = counter, bool = is_defined(Tag{})>
+         static consteval bool exists(int) {
+            return true;
+         }
 
-   template<typename Tag = tag, auto = is_defined(Tag{})>
-   static consteval auto exists(auto) {
-      return true;
+         static consteval bool exists(...) {
+            return generator(), false;
+         }
+      };
+
+      struct counter_tester;
    }
 
-   static consteval auto exists(...) {
-      return generator(), false;
+   /// Every time you call this you get a new integer for each translation    
+   /// unit                                                                   
+   ///   @attention resets between translation units                          
+   ///   @attention the order is undefined                                    
+   ///   @attention make sure you include all relevant uses to get the same   
+   ///              count                                                     
+   template<class UNIQUE, int N = 0, typename L = decltype([]{})>
+   consteval int unique_id() {
+      if constexpr (not Inner::counter<UNIQUE, N>::exists(N))
+         return N;
+      else
+         return unique_id<UNIQUE, N + 1>();
    }
-};
 
-template<auto Id = int{}, typename = decltype([]{})>
-consteval auto unique_id() {
-   if constexpr (not counter<Id>::exists(Id))
-      return Id;
-   else
-      return unique_id<Id + 1>();
+   static_assert(unique_id<Inner::counter_tester>() == 0);
+   static_assert(unique_id<Inner::counter_tester>() == 1);
+   static_assert(unique_id<Inner::counter_tester>() == 2);
+   static_assert(unique_id<Inner::counter_tester>() == 3);
 }
-
-static_assert(unique_id() == 0);
-static_assert(unique_id() == 1);
-static_assert(unique_id() == 2);
-static_assert(unique_id() == 3);

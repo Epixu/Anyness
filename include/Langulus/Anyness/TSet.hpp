@@ -49,7 +49,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Set;
       using CTTI_Set       = Yes<>;
       using CTTI_Deep      = Yes<>;
-      using CTTI_MapsTo    = Text;
+      //using CTTI_MapsTo    = Text;
 
       using Base           = Inner::TSetBase<T, SORT>;
       using DeepType       = Any;

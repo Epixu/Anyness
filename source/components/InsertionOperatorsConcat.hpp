@@ -48,6 +48,13 @@ namespace Langulus::Anyness::Component
                   for (auto& i : DeintCast(rhs))
                      lhs.Insert(I::Nest(i));
                }
+               else if constexpr (CT::Serializer<LHS>) {
+                  static_assert(LHS::AttemptConvertOnInsert,
+                     "Can't be concatenated - incompatible arguments");
+
+                  for (auto& i : DeintCast(rhs))
+                     Langulus::Serialize(i, lhs);
+               }
                else {
                   static_assert(LHS::AttemptConvertOnInsert,
                      "Can't be concatenated - incompatible arguments");
@@ -62,11 +69,18 @@ namespace Langulus::Anyness::Component
          else if constexpr (Same<TypeOf<LHS>, ITEM>) {
             lhs.Insert(LglsFwd(rhs));
          }
+         else if constexpr (CT::Serializer<LHS>) {
+            static_assert(LHS::AttemptConvertOnInsert,
+               "Can't be concatenated - incompatible arguments");
+
+            Langulus::Serialize(DeintCast(rhs), lhs);
+         }
          else {
             static_assert(LHS::AttemptConvertOnInsert,
                "Can't be concatenated - incompatible arguments");
             static_assert(CT::Convertible<ITEM, LHS>,
                "Can't be concatenated - not convertible to LHS");
+
             lhs.Concat(Convert<LHS>(DeintCast(rhs)));
          }
          return lhs;
@@ -107,8 +121,14 @@ namespace Langulus::Anyness
    requires Com::HasInsertionOperatorsConcatEnabled<RHS>
    RHS operator + (LHS const& lhs, RHS const& rhs) {
       RHS temp;
-      if constexpr (Same<LHS, TypeOf<RHS>>) {
+      if constexpr (Exact<LHS, TypeOf<RHS>>) {
          temp.Insert(lhs);
+         temp.Concat(rhs);
+      }
+      else if constexpr (CT::Serializer<RHS>) {
+         static_assert(RHS::AttemptConvertOnInsert,
+            "Can't be concatenated - incompatible arguments");
+         Langulus::Serialize(lhs, temp);
          temp.Concat(rhs);
       }
       else {
@@ -126,9 +146,15 @@ namespace Langulus::Anyness
    requires Com::HasInsertionOperatorsConcatEnabled<LHS>
    LHS operator + (LHS const& lhs, RHS const& rhs) {
       LHS temp;
-      if constexpr (Same<TypeOf<LHS>, RHS>) {
+      if constexpr (Exact<TypeOf<LHS>, RHS>) {
          temp.Concat(lhs);
          temp.Insert(rhs);
+      }
+      else if constexpr (CT::Serializer<LHS>) {
+         static_assert(LHS::AttemptConvertOnInsert,
+            "Can't be concatenated - incompatible arguments");
+         temp.Concat(lhs);
+         Langulus::Serialize(rhs, temp);
       }
       else {
          static_assert(LHS::AttemptConvertOnInsert,
@@ -146,7 +172,7 @@ namespace Langulus::Anyness
    requires (Com::HasInsertionOperatorsConcatEnabled<LHS>
           or Com::HasInsertionOperatorsConcatEnabled<RHS>)
    auto operator + (LHS const& lhs, RHS const& rhs) {
-      if constexpr (Same<LHS, RHS>) {
+      if constexpr (Exact<LHS, RHS>) {
          LHS temp;
          temp.Concat(lhs, rhs);
          return temp;

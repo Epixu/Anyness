@@ -762,7 +762,7 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get morphisms from other types                                         
-   TEMPLATE()
+   /*TEMPLATE()
    auto ME()::GetMorphismsFrom()
    const noexcept -> DefinitionData::MorphismList const& {
       const auto id = Base::GetID();
@@ -771,7 +771,7 @@ namespace Langulus::RTTI::Inner
 
       static const DefinitionData::MorphismList fallback;
       return fallback;
-   }
+   }*/
 
    /// Get a specific coverter, if it exists.                                 
    /// This will check if this type has a morphism TO the desired type, or    
@@ -790,9 +790,9 @@ namespace Langulus::RTTI::Inner
       if (found != dfrom->mCurrentBoundary.mMorphismsTo.end())
          return found->second;
 
-      found = dto->mCurrentBoundary.mMorphismsFrom.find(dfrom->mDecvqAll);
+      /*found = dto->mCurrentBoundary.mMorphismsFrom.find(dfrom->mDecvqAll);
       if (found != dto->mCurrentBoundary.mMorphismsFrom.end())
-         return found->second;
+         return found->second;*/
       return {nullptr, nullptr};
    }
 

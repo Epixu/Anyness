@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Langulus/CT/Serializer.hpp"
 #include "source/Component.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
@@ -785,8 +786,15 @@ namespace Langulus::Anyness::Component
       template<CT::ContainsMany C, /*CT::ContainsMany*/class A1> requires CT::NoIntent<A1>
       bool ContainsRange(this C const& self, A1 const& a1) {
          if constexpr (CONVERT) {
-            const C converted = Langulus::Convert<C>(a1);
-            return static_cast<bool>(self.FindRange(converted));
+            if constexpr (CT::Serializer<C>) {
+               C converted;
+               Langulus::Serialize(a1, converted);
+               return static_cast<bool>(self.FindRange(converted));
+            }
+            else {
+               const C converted = Langulus::Convert<C>(a1);
+               return static_cast<bool>(self.FindRange(converted));
+            }
          }
          else {
             static_assert(CT::Container<A1>, "Argument must be a container");
