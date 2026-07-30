@@ -862,7 +862,7 @@ namespace Langulus::Anyness
    };
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// MARK: Converters                                                       
    /// Convert Handle -> Text                                                 
@@ -906,4 +906,4 @@ namespace Langulus::CTTI
    struct Converter<Anyness::THandleEmergent<T>, Anyness::Text> {
       static constexpr auto Convert(Anyness::THandleEmergent<T> const&) -> Anyness::Text;
    };
-}
+}*/

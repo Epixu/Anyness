@@ -144,7 +144,7 @@ namespace Langulus::Anyness
    static_assert(CT::TypeErased<Pair>);
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// MARK: CTTI                                                             
    /// Convert Pair -> Text                                                   
@@ -152,4 +152,4 @@ namespace Langulus::CTTI
    struct Converter<Anyness::Pair, Anyness::Text> {
       static constexpr auto Convert(Anyness::Pair const&) -> Anyness::Text;
    };
-}
+}*/

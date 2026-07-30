@@ -216,7 +216,7 @@ namespace Langulus::Anyness
    using MapUnsorted = Inner::Map<StateValue::Disabled>;
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// MARK: CTTI                                                             
    /// Convert Map -> Text                                                    
@@ -224,4 +224,4 @@ namespace Langulus::CTTI
    struct Converter<Anyness::Inner::Map<SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::Inner::Map<SORT> const&) -> Anyness::Text;
    };
-}
+}*/

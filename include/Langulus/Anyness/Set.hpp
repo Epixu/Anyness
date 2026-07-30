@@ -173,7 +173,7 @@ namespace Langulus::Anyness
    using SetUnsorted = Inner::Set<StateValue::Disabled>;
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// MARK: CTTI                                                             
    /// Convert Set -> Text                                                    
@@ -181,4 +181,4 @@ namespace Langulus::CTTI
    struct Converter<Anyness::Inner::Set<SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::Inner::Set<SORT> const&) -> Anyness::Text;
    };
-}
+}*/

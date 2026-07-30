@@ -12,6 +12,7 @@
 #include <Langulus/Tag.hpp>
 #include <Langulus/CT/Members.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
+#include <Langulus/Anyness/SerializeBytes.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #include "TestTypes/PackedPointers.hpp"

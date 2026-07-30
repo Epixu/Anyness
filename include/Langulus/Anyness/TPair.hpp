@@ -234,7 +234,7 @@ namespace Langulus::Anyness
    TPair(K&&, V&&) -> TPair<TypeOf<Deint<K>>, TypeOf<Deint<V>>>;
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// MARK: CTTI                                                             
    /// Convert TPair -> Text                                                  
@@ -242,4 +242,4 @@ namespace Langulus::CTTI
    struct Converter<Anyness::TPair<K, V>, Anyness::Text> {
       static constexpr auto Convert(Anyness::TPair<K, V> const&) -> Anyness::Text;
    };
-}
+}*/

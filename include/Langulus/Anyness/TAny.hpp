@@ -128,7 +128,7 @@ namespace Langulus::Anyness
    TAny(Inner::Piecewise, T&&) -> TAny<Decvq<Deref<Deint<T>>>>;
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// MARK: CTTI                                                             
    /// Convert TAny -> Text                                                   
@@ -136,4 +136,4 @@ namespace Langulus::CTTI
    struct Converter<Anyness::TAny<T>, Anyness::Text> {
       static constexpr auto Convert(Anyness::TAny<T> const&) -> Anyness::Text;
    };
-}
+}*/

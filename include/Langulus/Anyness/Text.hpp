@@ -541,6 +541,12 @@ namespace Langulus::CT
 
 namespace Langulus::CTTI
 {
+   // Mark all pointers as convertible to Text                                
+   template<CT::Sparse T>
+   struct MapsFrom<T> {
+      using To = Anyness::Text;
+   };
+
    /// A rule for serializing any deep container, regardless of sparsity.     
    /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
    /// as well as any templated equivalents. It basically places scopes,      
@@ -559,22 +565,22 @@ namespace Langulus::CTTI
    };
 
    /// Rule for serializing Code to Text. Wraps it in {} symbols.             
-   template<>
-   struct SerializationRule<Anyness::Text, Anyness::Code> {
+   template<CT::Container C> requires (not CT::Deep<C>)
+   struct SerializationRule<Anyness::Text, C> {
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
-      static void Serialize(const Anyness::Code&, Anyness::Text&, Context*);
+      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*);
    };
    
    /// Rule for serializing Text to Text. Wraps it in "".                     
-   template<>
+   /*template<>
    struct SerializationRule<Anyness::Text, Anyness::Text> {
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
       static void Serialize(const Anyness::Text&, Anyness::Text&, Context*);
-   };
+   };*/
    
    /// Rule for serializing characters to Text. Wraps them in ''.             
    template<CT::Character C>
@@ -587,13 +593,13 @@ namespace Langulus::CTTI
    };
 
    /// Rule for serializing Bytes to Text. Prepends 0x.                       
-   template<>
+   /*template<>
    struct SerializationRule<Anyness::Text, Anyness::Bytes> {
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
       static void Serialize(const Anyness::Bytes&, Anyness::Text&, Context*);
-   };
+   };*/
    
    /// Convert Bool -> Text                                                   
    template<>
@@ -643,11 +649,6 @@ namespace Langulus::CTTI
          }
          else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
       }
-   };
-
-   template<CT::Sparse T>
-   struct MapsFrom<T> {
-      using To = Anyness::Text;
    };
 
    /// Convert DMeta -> Text                                                  

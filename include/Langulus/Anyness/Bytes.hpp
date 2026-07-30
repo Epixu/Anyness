@@ -61,7 +61,7 @@ namespace Langulus::Anyness
    
 
    ///                                                                        
-   /// A continuous byte container of variable size                           
+   /// A contiguous byte container of variable size                           
    ///                                                                        
    #pragma pack(push, 4)
    struct Bytes : Inner::BytesBase {
@@ -226,7 +226,7 @@ namespace Langulus::Anyness
          /// The context holds the header entries, that allow us to           
          /// serialize types, tags, consts and verbs across sessions.         
          struct Context {
-            enum BuiltInTypes {
+            enum class BuiltInTypes {
                Bool = 1,
                I8, I16, I32, I64,
                U8, U16, U32, U64,
@@ -236,10 +236,10 @@ namespace Langulus::Anyness
 
             template<class T>
             struct Bank {
-               ::std::unordered_map<T, uint32_t> mDefinitions;
-               uint32_t mNextId = Same<T, RTTI::DMeta> ? BuiltInTypes::_Counter_ : 1;
+               ::std::unordered_map<T, uint64_t> mDefinitions;
+               uint64_t mNextId = Same<T, RTTI::DMeta> ? static_cast<uint64_t>(BuiltInTypes::_Counter_) : 1;
 
-               uint32_t Define(T&& meta) {
+               uint64_t Define(T&& meta) {
                   // Built-in types are reserved, no need to serialize  
                   // them.                                              
                   if (not meta)
@@ -247,33 +247,33 @@ namespace Langulus::Anyness
                   
                   if constexpr (Same<T, RTTI::DMeta>) {
                      if (meta.IsSame(MetaDataOf<bool>()))
-                        return BuiltInTypes::Bool;
+                        return static_cast<uint64_t>(BuiltInTypes::Bool);
                      else if (meta.IsSame(MetaDataOf<int8_t>()))
-                        return BuiltInTypes::I8;
+                        return static_cast<uint64_t>(BuiltInTypes::I8);
                      else if (meta.IsSame(MetaDataOf<int16_t>()))
-                        return BuiltInTypes::I16;
+                        return static_cast<uint64_t>(BuiltInTypes::I16);
                      else if (meta.IsSame(MetaDataOf<int32_t>()))
-                        return BuiltInTypes::I32;
+                        return static_cast<uint64_t>(BuiltInTypes::I32);
                      else if (meta.IsSame(MetaDataOf<int64_t>()))
-                        return BuiltInTypes::I64;
+                        return static_cast<uint64_t>(BuiltInTypes::I64);
                      else if (meta.IsSame(MetaDataOf<uint8_t>()))
-                        return BuiltInTypes::U8;
+                        return static_cast<uint64_t>(BuiltInTypes::U8);
                      else if (meta.IsSame(MetaDataOf<uint16_t>()))
-                        return BuiltInTypes::U16;
+                        return static_cast<uint64_t>(BuiltInTypes::U16);
                      else if (meta.IsSame(MetaDataOf<uint32_t>()))
-                        return BuiltInTypes::U32;
+                        return static_cast<uint64_t>(BuiltInTypes::U32);
                      else if (meta.IsSame(MetaDataOf<uint64_t>()))
-                        return BuiltInTypes::U64;
+                        return static_cast<uint64_t>(BuiltInTypes::U64);
                      else if (meta.IsSame(MetaDataOf<char>()))
-                        return BuiltInTypes::Char;
+                        return static_cast<uint64_t>(BuiltInTypes::Char);
                      else if (meta.IsSame(MetaDataOf<Byte>()))
-                        return BuiltInTypes::Byte;
+                        return static_cast<uint64_t>(BuiltInTypes::Byte);
                      //else if (meta.IsSame(MetaDataOf<half>())) //TODO
-                     //   return BuiltInTypes::Half;
+                     //   return static_cast<uint64_t>(BuiltInTypes::Half;
                      else if (meta.IsSame(MetaDataOf<float>()))
-                        return BuiltInTypes::Float;
+                        return static_cast<uint64_t>(BuiltInTypes::Float);
                      else if (meta.IsSame(MetaDataOf<double>()))
-                        return BuiltInTypes::Double;
+                        return static_cast<uint64_t>(BuiltInTypes::Double);
                   }
 
                   auto found = mDefinitions.find(meta);
@@ -372,14 +372,14 @@ namespace Langulus::Anyness
             // First pass goes through all variable-sized counters and  
             // populates the header flags before writing anything.      
             if constexpr (requires { from.GetType(); }) {
-               Langulus::ForEach(typename C::Dimensions{}, [&]<Cid D> {
+               C::Dimensions::ForEach([&]<Cid D> {
                   LglsAssert(context,
                      "Context is required for binary serialization of containers");
 
                   headbyte |= Headbits::Typed;
 
                   const uint64_t typeId = context->mDMetaBank.Define(from.template GetType<D>());
-                  if (typeId >= Context::BuiltInTypes::_Counter_)
+                  if (typeId >= static_cast<uint64_t>(Context::BuiltInTypes::_Counter_))
                      headbyte |= Headbits::HasDependencies;
 
                   if (typeId < 256)
@@ -427,7 +427,7 @@ namespace Langulus::Anyness
 
             // Now write the data                                       
             if constexpr (requires { from.GetType(); }) {
-               Langulus::ForEach(typename C::Dimensions{}, [&]<Cid D> {
+               C::Dimensions::ForEach([&]<Cid D> {
                   const uint64_t typeId = context->mDMetaBank.Define(from.template GetType<D>());
                   if ((headbyte & Headbits::Large64) == Headbits::Large64) {
                      memcpy(header + progress, &typeId, 8);
@@ -498,20 +498,20 @@ namespace Langulus::Anyness
             to += Bytes::FromBytes(header, progress);
          }
          
-         static void EndScope(const CT::Container auto&, Text&, Context*) {
+         static void EndScope(const CT::Container auto&, Bytes&, Context*) {
             // noop
          }
          
-         static void Separate(const CT::Container auto&, Text&, Context*) {
+         static void Separate(const CT::Container auto&, Bytes&, Context*) {
             // noop
          }
          
-         static void Empty(RTTI::DMeta type, CountType i, Text&, Context*) {
+         static void Empty(RTTI::DMeta type, CountType i, Bytes&, Context*) {
             LglsError("Item #", i, " of type `", type.GetName(),
                "` was serialized to an empty `Bytes`");
          }
          
-         static void Error(RTTI::DMeta type, CountType i, Text&, Context*) {
+         static void Error(RTTI::DMeta type, CountType i, Bytes&, Context*) {
             LglsError("Item #", i, " of type `", type.GetName(),
                "` failed to convert to `Bytes`");
          }
@@ -526,7 +526,7 @@ namespace Langulus::CTTI
    /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
    /// as well as any templated equivalents. Adds a header for each nested.   
    /// deep container.                                                        
-   template<CT::Deep C>
+   /*template<CT::Deep C>
    struct SerializationRule<Anyness::Bytes, C> {
       static_assert(Exact<DecvqAll<C>, C>,
          "Strip all decorations on all indirections first");
@@ -536,13 +536,15 @@ namespace Langulus::CTTI
       using Count = Anyness::Bytes::CountType;
       
       static void Serialize(ConstAll<C&>, Anyness::Bytes&, Context*) requires CT::ContainsMany<Decay<C>>;
-      static void Serialize(ConstAll<C&>, Anyness::Bytes&, Context*) requires CT::ContainsOne<Decay<C>>;
-   };
+      //static void Serialize(ConstAll<C&>, Anyness::Bytes&, Context*) requires CT::ContainsOne<Decay<C>>;
+   };*/
 
    /// Rule for serializing any container that isn't deep.                    
-   template<CT::Container C> requires (not CT::Deep<C>)
+   template<class C> requires CT::Container<Decay<C>>
    struct SerializationRule<Anyness::Bytes, C> {
-      static_assert(CT::Decayed<C>, "Strip all decorations first");
+      static_assert(Exact<DecvqAll<C>, C>,
+         "Strip all decorations on all indirections first");
+
       using S = SerializerOf<Anyness::Bytes>;
       using Context = typename S::Context;
 

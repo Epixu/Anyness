@@ -181,7 +181,7 @@ namespace Langulus::Anyness
    using TMapUnsorted = TMap<K, V, StateValue::Disabled>;
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// MARK: CTTI                                                             
    /// Convert TMap -> Text                                                   
@@ -189,4 +189,4 @@ namespace Langulus::CTTI
    struct Converter<Anyness::TMap<K, V, SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::TMap<K, V, SORT> const&) -> Anyness::Text;
    };
-}
+}*/

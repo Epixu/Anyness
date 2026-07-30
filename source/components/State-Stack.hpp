@@ -79,8 +79,8 @@ namespace Langulus::Anyness::Component
       /// MARK: Public                                                        
       /// Get the current state of the container                              
       constexpr auto GetState(this auto const& self) noexcept
-      -> StateWrapper requires HasStates {
-         return self.GetStateInner();
+      -> StateType requires HasStates {
+         return self.GetStateInner().mState;
       }
 
       /// Get the relevant state when relaying one container to another.      
@@ -88,7 +88,7 @@ namespace Langulus::Anyness::Component
       /// tracking and disownment.                                            
       ///   @return the current unconstrained container state                 
       constexpr auto GetUnconstrainedState(this auto const& self) noexcept
-      -> StateWrapper requires HasStates {
+      -> StateType requires HasStates {
          StateWrapper r = self.GetStateInner();
          ForEach(StateList{}, [&r]<class S>{
             if constexpr (S::UID == StateUid::Typed
@@ -97,7 +97,7 @@ namespace Langulus::Anyness::Component
                r -= S {};
             }
          });
-         return r;
+         return r.mState;
       }
 
    protected:
@@ -186,7 +186,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if either contains state, or has stuff inserted      
       constexpr bool IsDefaultState(this auto const& self) noexcept { //TODO dimensions?
          if constexpr (HasStates)
-            return self.GetState().mState == GetDefaultState();
+            return self.GetState() == GetDefaultState();
          else
             return true;
       }

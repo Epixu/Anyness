@@ -1129,7 +1129,7 @@ namespace Langulus::RTTI
             auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
             Morphism morphism;
    
-            if constexpr (CT::Convertible<T, TO>) {
+            if constexpr (CT::Convertible<T, TO>) { //TODO figure this out - There are tons of Converters that just call Serialize. Why define converters in the first place???
                morphism.convert = [](void* from, void* to) {
                   auto fromT = static_cast<ConstAll<T*>>(from);
                   auto toT   = static_cast<TO*>(to);

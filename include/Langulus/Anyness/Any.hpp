@@ -137,11 +137,11 @@ namespace Langulus::Anyness
    };
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// Convert Any -> Text                                                    
    template<>
    struct Converter<Anyness::Any, Anyness::Text> {
       static constexpr auto Convert(Anyness::Any const&) -> Anyness::Text;
    };
-}
+}*/

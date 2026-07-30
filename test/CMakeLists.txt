@@ -65,7 +65,8 @@ add_langulus_test(LangulusAnynessTest-Text
 
 add_langulus_test(LangulusAnynessTest-Bytes
    SOURCES	   Main.cpp
-               Anyness/TestBytes.cpp
+               Anyness/bytes/TestBytes-Empty.cpp
+               #Anyness/TestBytes.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

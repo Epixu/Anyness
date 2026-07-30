@@ -166,11 +166,11 @@ namespace Langulus::Anyness
    using TSetUnsorted = TSet<T, StateValue::Disabled>;
 }
 
-namespace Langulus::CTTI
+/*namespace Langulus::CTTI
 {
    /// Convert TSet -> Text                                                   
    template<CT::NotVoid T, Anyness::StateValue SORT>
    struct Converter<Anyness::TSet<T, SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::TSet<T, SORT> const&) -> Anyness::Text;
    };
-}
+}*/
