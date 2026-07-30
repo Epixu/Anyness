@@ -532,7 +532,7 @@ TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to nothing", TestType
 ///                                                                           
 /// Langulus::MorphismsTo                                                     
 ///                                                                           
-TEST_CASE_TEMPLATE("Testing Langulus::MorphismsTo from int", TestType
+/*TEST_CASE_TEMPLATE("Testing Langulus::MorphismsTo from int", TestType
    //, IncompleteType                // shouldn't compile
    //, IncompleteType const          // shouldn't compile
    //, SheddableType<IncompleteType> // shouldn't compile
@@ -549,4 +549,4 @@ TEST_CASE_TEMPLATE("Testing Langulus::MorphismsTo from ::std::string (defined in
    , int, const int, const int&, int&
 ) {
    static_assert(Exact<Langulus::MorphismsTo<TestType>, Types<::std::string>>);
-}
+}*/

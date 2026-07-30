@@ -177,7 +177,9 @@ namespace Langulus::CT
    /// Check if 'FROM' is custom-convertible to all 'TO'                      
    template<class FROM, class...TO>
    concept ConvertibleCustom = PartialValidate<TO...> and (
-         CT::NotVoid<decltype(Inner::FindMorphism<DecvqAll<ShedDeref<FROM>>, DecvqAll<ShedDeref<TO>>, 0>())> and ...);
+         CT::NotVoid<decltype(Inner::FindMorphism<DecvqAll<ShedDeref<FROM>>,
+                                                  DecvqAll<ShedDeref<TO>>, 0>())>
+      and ...);
 
    /*template<class FROM, class...TO>
    concept ConvertibleCustom = PartialValidate<TO...> and (
