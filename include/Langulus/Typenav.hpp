@@ -159,13 +159,14 @@ namespace Langulus
 
          /// Extracts the inner type if T is marked as sheddable.             
          /// If T is not sheddable, just returns T as the type.               
+         ///   @attention strips _all_ sheddables                             
          template<class T>
          consteval auto ShedInner() {
             using ST = decltype(GetSheddedType<T>());
             if constexpr (ST::Empty)
                return Types<T> {};
             else
-               return ST {};
+               return ShedInner<typename ST::First>();
          };
       }
       
