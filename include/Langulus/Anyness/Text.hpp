@@ -74,15 +74,6 @@ namespace Langulus::Anyness
    struct Text : Inner::TextBase {
       using CTTI_ReflectAs = Text;
       using CTTI_Text      = Yes<>;
-      /*using CTTI_MapsTo    = Types<Text, Bytes>;
-      using CTTI_MapsFrom  = Types<
-         bool, char, wchar_t, char8_t, char16_t, char32_t,
-         int8_t, int16_t, int32_t, int64_t,
-         uint8_t, uint16_t, uint32_t, uint64_t,
-         float, double,
-         Hash, Byte,
-         RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta
-      >;*/
 
       using CountType = Base::CountType;
 
@@ -541,12 +532,6 @@ namespace Langulus::CT
 
 namespace Langulus::CTTI
 {
-   // Mark all pointers as convertible to Text                                
-   /*template<CT::Sparse T>
-   struct MapsFrom<T> {
-      using To = Anyness::Text;
-   };*/
-
    /// A rule for serializing any deep container, regardless of sparsity.     
    /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
    /// as well as any templated equivalents. It basically places scopes,      
@@ -573,15 +558,6 @@ namespace Langulus::CTTI
       static void Serialize(ConstAll<C&>, Anyness::Text&, Context*);
    };
    
-   /// Rule for serializing Text to Text. Wraps it in "".                     
-   /*template<>
-   struct SerializationRule<Anyness::Text, Anyness::Text> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static void Serialize(const Anyness::Text&, Anyness::Text&, Context*);
-   };*/
-   
    /// Rule for serializing characters to Text. Wraps them in ''.             
    template<CT::Character C>
    struct SerializationRule<Anyness::Text, C> {
@@ -591,15 +567,6 @@ namespace Langulus::CTTI
 
       static void Serialize(C const&, Anyness::Text&, Context*);
    };
-
-   /// Rule for serializing Bytes to Text. Prepends 0x.                       
-   /*template<>
-   struct SerializationRule<Anyness::Text, Anyness::Bytes> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static void Serialize(const Anyness::Bytes&, Anyness::Text&, Context*);
-   };*/
    
    /// Map all pointers as convertible to text                                
    template<CT::Sparse T>
@@ -632,13 +599,6 @@ namespace Langulus::CTTI
       }
    };
 
-   /*template<>
-   struct Converter<bool, Anyness::Text> {
-      static constexpr auto Convert(bool const& from) -> Anyness::Text {
-         return from ? "yes" : "no";
-      }
-   };*/
-
    /// Convert Byte -> Text                                                   
    template<>
    struct ConverterFrom<Byte> {
@@ -650,13 +610,6 @@ namespace Langulus::CTTI
       }
    };
 
-   /*template<>
-   struct Converter<Byte, Anyness::Text> {
-      static constexpr auto Convert(Byte const& from) -> Anyness::Text {
-         return Anyness::Text::Hex(from);
-      }
-   };*/
-
    /// Convert Hash -> Text                                                   
    template<>
    struct ConverterFrom<Hash> {
@@ -667,13 +620,6 @@ namespace Langulus::CTTI
          return Anyness::Text::Hex(from.value);
       }
    };
-
-   /*template<>
-   struct Converter<Hash, Anyness::Text> {
-      static constexpr auto Convert(Hash const& from) -> Anyness::Text {
-         return Anyness::Text::Hex(from.value);
-      }
-   };*/
 
    /// Convert Number -> Text                                                 
    template<CT::Number T>
@@ -687,31 +633,6 @@ namespace Langulus::CTTI
       }
    };
 
-   /*template<CT::Number T>
-   struct Converter<T, Anyness::Text> {
-      static_assert(CT::Decayed<T>, "Strip all decorations first");
-      static constexpr auto Convert(T const& from) -> Anyness::Text {
-         return Anyness::Text::FromNumber(from);
-      }
-   };*/
-
-   /// Convert shared or standard pointer -> Text                             
-   /*template<CT::Sparse T>
-   struct Converter<T, Anyness::Text> {
-      static_assert(Exact<DecvqAll<T>, T>,
-         "Strip all decorations on all indirections first");
-
-      static constexpr auto Convert(ConstAll<T&> from) -> Anyness::Text {
-         if constexpr (CT::Complete<Deptr<T>>) {
-            if constexpr (CT::Character<Deptr<T>>)
-               return {from};
-            else
-               return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
-         }
-         else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
-      }
-   };*/
-
    /// Convert DMeta -> Text                                                  
    template<>
    struct ConverterFrom<RTTI::DMeta> {
@@ -722,13 +643,6 @@ namespace Langulus::CTTI
          return from.GetName();
       }
    };
-
-   /*template<>
-   struct Converter<RTTI::DMeta, Anyness::Text> {
-      static constexpr auto Convert(RTTI::DMeta const& from) -> Anyness::Text {
-         return from.GetName();
-      }
-   };*/
 
    /// Convert TMeta -> Text                                                  
    template<>
@@ -741,13 +655,6 @@ namespace Langulus::CTTI
       }
    };
 
-   /*template<>
-   struct Converter<RTTI::TMeta, Anyness::Text> {
-      static constexpr auto Convert(RTTI::TMeta const& from) -> Anyness::Text {
-         return from.GetName();
-      }
-   };*/
-
    /// Convert CMeta -> Text                                                  
    template<>
    struct ConverterFrom<RTTI::CMeta> {
@@ -759,13 +666,6 @@ namespace Langulus::CTTI
       }
    };
 
-   /*template<>
-   struct Converter<RTTI::CMeta, Anyness::Text> {
-      static constexpr auto Convert(RTTI::CMeta const& from) -> Anyness::Text {
-         return from.GetName();
-      }
-   };*/
-
    /// Convert VMeta -> Text                                                  
    template<>
    struct ConverterFrom<RTTI::VMeta> {
@@ -776,11 +676,4 @@ namespace Langulus::CTTI
          return from.GetCppName();
       }
    };
-   
-   /*template<>
-   struct Converter<RTTI::VMeta, Anyness::Text> {
-      static constexpr auto Convert(RTTI::VMeta const& from) -> Anyness::Text {
-         return from.GetCppName();
-      }
-   };*/
 }
