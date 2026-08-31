@@ -15,6 +15,7 @@
 using namespace Langulus;
 using Anyness::TRef;
 
+static_assert(Langulus::CT::ConvertibleCustom<int, Langulus::Anyness::Text>);
 
 TEST_CASE_TEMPLATE("Shared pointer", TestType
    , Types<TRef<RT>,        ScopedElement<RT>>

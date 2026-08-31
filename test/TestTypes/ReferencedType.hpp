@@ -9,6 +9,7 @@
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Anyness/Text.hpp>
+#include <Langulus/Anyness/Bytes.hpp>
 
 
 /// Simple type for testing Referenced types                                  
@@ -132,3 +133,6 @@ namespace Langulus::CTTI
       }
    };
 }
+
+static_assert(Langulus::CT::ConvertibleCustom<RT, Langulus::Anyness::Text>);
+static_assert(Langulus::CT::ConvertibleCustom<RT, Langulus::Anyness::Bytes>);

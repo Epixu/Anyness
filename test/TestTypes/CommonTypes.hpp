@@ -523,6 +523,8 @@ struct BuiltinConvertibleToIntBecauseAggregate {
 };
 
 struct ConvertibleToIntExternallyMissingConverter {};
+static_assert(not std::is_convertible_v<ConvertibleToIntExternallyMissingConverter, int>);
+
 struct ConvertibleToIntExternally {
    ::std::string inner;
 };
@@ -633,11 +635,10 @@ namespace Langulus::CTTI
    struct ConverterFrom<int> {
       using To = Types<
          ConvertibleFromIntExternally,
-         ConvertibleFromIntInternally/*,
-         ConvertibleFromIntExternallyMissingConverter*/ // shouldn't compile
+         ConvertibleFromIntInternally
       >;
 
-      template<class TO> requires (not Same<TO, ConvertibleFromIntExternallyMissingConverter>)
+      template<class TO>
       static constexpr TO Convert(int const& from) noexcept {
          return TO::Init(from);
       }

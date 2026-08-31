@@ -484,7 +484,7 @@ TEST_CASE_TEMPLATE("Testing not CT::Convertible to int", TestType
    , InheritedConvertibleFromInt3&
    , BuiltinConvertibleToIntBecauseAggregate
 
-   , ConvertibleToIntExternallyMissingConverter
+   //, ConvertibleToIntExternallyMissingConverter // shouldn't compile
    , ConvertibleToIntInternallyMissingConverter
    , InheritedConvertibleToInt1
    , InheritedConvertibleToInt1Disabled
@@ -522,7 +522,7 @@ TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to nothing", TestType
    , InheritedConvertibleToInt4
    , InheritedConvertibleToInt5
    , InheritedConvertibleToInt6
-   , int, const int, const int&, int&
+   //, int, const int, const int&, int& // struct ConverterFrom<int> exists
    , float, float const, float const&, float&
    , bool, bool const, bool const&, bool&
 ) {

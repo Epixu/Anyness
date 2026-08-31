@@ -613,12 +613,12 @@ SCENARIO("A type reflected with all traits") {
    int converted = 1;
    meta.GetMorphismsTo().at(int_definition).convert(&instance, &converted);
    REQUIRE(converted == 664);
-   {
+   /*{
       Pi source;
       ImplicitlyReflectedDataWithTraits convertedFromPi1;
       //meta.GetMorphismsFrom().at(pi_definition).convert(&source, &convertedFromPi1);
       REQUIRE(convertedFromPi1.member == 314);
-   }
+   }*/
    {
       Pi source;
       ImplicitlyReflectedDataWithTraits convertedFromPi1;

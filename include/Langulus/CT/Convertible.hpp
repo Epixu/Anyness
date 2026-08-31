@@ -14,22 +14,6 @@
 
 namespace Langulus::CTTI
 {
-   /// Affects MorphismsFrom                                                  
-   /// Define with member `using To = <type or Types<...>>;`                  
-   //template<class T>
-   //struct MapsFrom;
-   
-   /// Affects MorphismsTo                                                    
-   /// Define with member `using From = <type or Types<...>>;`                
-   //template<class T>
-   //struct MapsTo;
-   
-   /// Custom converter that can be defined from outside types.               
-   /// Used as an alternative to custom constructors and cast operators,      
-   /// for the rare cases where you don't have control of either type.        
-   //template<class FROM, class TO>
-   //struct Converter;
-
    /// Defines morphisms. Each type you specialize ConverterFrom<X>, you get  
    /// a different unique_id() as well, so you can define converters from     
    /// multiple places in undefined order. These will be collected the first  
@@ -41,34 +25,21 @@ namespace Langulus::CTTI
 
 namespace Langulus::CT
 {
+   /// Check if 'FROM' is implicitly convertible to all 'TO'                  
+   template<class FROM, class...TO>
+   concept ConvertibleImplicit = PartialValidate<TO...> and (
+         std::is_convertible_v<DecvqAll<ShedDeref<FROM>>, DecvqAll<ShedDeref<TO>>>
+      and ...);
+
+   /// Check if 'FROM' is explicitly convertible to all 'TO'                  
+   ///   @attention this is also true if TO is aggregate containing FROM      
+   template<class FROM, class...TO>
+   concept ConvertibleExplicit = PartialValidate<TO...> and (
+         std::constructible_from<DecvqAll<ShedDeref<TO>>, DecvqAll<ShedDeref<FROM>>>
+      and ...);
+
    namespace Inner
    {
-      /// Helper function to extract reflected morphisms from others to T     
-      /*template<class T>
-      consteval auto GetMorphismsTo() {
-         static_assert(not Convoluted<T>, "Strip qualifiers first");
-         static_assert(not Reference<T>,  "Strip references first");
-         static_assert(not Sheddable<T>,  "Strip sheddables first");
-
-         if constexpr (CT::Complete<CTTI::MapsTo<T>>) {
-            // Checked externally, T doesn't have to be complete        
-            using LIST = typename CTTI::MapsTo<T>::From;
-            if constexpr (CT::Typelist<LIST>)
-               return LIST {};
-            else
-               return Types<LIST> {};
-         }
-         else if constexpr (requires { typename T::CTTI_MapsFrom; }) {
-            // Checked internally, T has to be a complete type          
-            using LIST = typename T::CTTI_MapsFrom;
-            if constexpr (CT::Typelist<LIST>)
-               return LIST {};
-            else
-               return Types<LIST> {};
-         }
-         else return NoTypes {};
-      };*/
-
       template<class T, int PROGRESS, class...PREV>
       constexpr auto GetMorphismsFromInner(Types<PREV...>&& prev) {
          static_assert(NotConvoluted<T>, "Strip qualifiers first");
@@ -117,18 +88,40 @@ namespace Langulus::CT
 
          using C = CTTI::ConverterFrom<FROM, std::integral_constant<int, PROGRESS>>;
          if constexpr (CT::Complete<C>) {
-            using Inner = C::To;
-            if constexpr (CT::Typelist<Inner>) {
-               if constexpr (Inner::template Contains<TO>)
+            using Inner = typename C::To;
+            if constexpr (not CT::Complete<Inner>) {
+               if constexpr (Same<TO, Inner>) {
+                  static_assert(
+                     requires(FROM const& f) { {C::template Convert<TO>(f)} -> ::std::same_as<TO>; },
+                     "Converter declared, but lacking implementation of Convert function"
+                  );
                   return C {};
-               else
-                  return FindMorphism<FROM, TO, PROGRESS + 1>();
+               }
+               else return FindMorphism<FROM, TO, PROGRESS + 1>();
+            }
+            else if constexpr (CT::Typelist<Inner>) {
+               if constexpr (Inner::template Contains<TO>) {
+                  static_assert(
+                     requires(FROM const& f) { {C::template Convert<TO>(f)} -> ::std::same_as<TO>; }
+                     or ConvertibleImplicit<FROM, TO>
+                     or ConvertibleExplicit<FROM, TO>,
+                     "Converter declared, but lacking implementation of Convert function"
+                  );
+                  return C {};
+               }
+               else return FindMorphism<FROM, TO, PROGRESS + 1>();
             }
             else {
-               if constexpr (Same<TO, Inner>)
+               if constexpr (Same<TO, Inner>) {
+                  static_assert(
+                     requires(FROM const& f) { {C::template Convert<TO>(f)} -> ::std::same_as<TO>; }
+                     or ConvertibleImplicit<FROM, TO>
+                     or ConvertibleExplicit<FROM, TO>,
+                     "Converter declared, but lacking implementation of Convert function"
+                  );
                   return C {};
-               else
-                  return FindMorphism<FROM, TO, PROGRESS + 1>();
+               }
+               else return FindMorphism<FROM, TO, PROGRESS + 1>();
             }
          }
       }
@@ -136,43 +129,9 @@ namespace Langulus::CT
       /// Helper function to extract reflected morphisms from T to other types
       template<class T>
       consteval auto GetMorphismsFrom() {
-         /*static_assert(not Convoluted<T>, "Strip qualifiers first");
-         static_assert(not Reference<T>,  "Strip references first");
-         static_assert(not Sheddable<T>,  "Strip sheddables first");*/
          return GetMorphismsFromInner<T, 0>(Types<>{});
-         
-         /*if constexpr (CT::Complete<CTTI::MapsFrom<T>>) {
-            // Checked externally, T doesn't have to be complete        
-            using LIST = typename CTTI::MapsFrom<T>::To;
-            if constexpr (CT::Typelist<LIST>)
-               return LIST {};
-            else
-               return Types<LIST> {};
-         }
-         else if constexpr (requires { typename T::CTTI_MapsTo; }) {
-            // Checked internally, T has to be a complete type          
-            using LIST = typename T::CTTI_MapsTo;
-            if constexpr (CT::Typelist<LIST>)
-               return LIST {};
-            else
-               return Types<LIST> {};
-         }
-         else return NoTypes {};*/
       };
    }
-
-   /// Check if 'FROM' is implicitly convertible to all 'TO'                  
-   template<class FROM, class...TO>
-   concept ConvertibleImplicit = PartialValidate<TO...> and (
-         std::is_convertible_v<DecvqAll<ShedDeref<FROM>>, DecvqAll<ShedDeref<TO>>>
-      and ...);
-
-   /// Check if 'FROM' is explicitly convertible to all 'TO'                  
-   ///   @attention this is also true if TO is aggregate containing FROM      
-   template<class FROM, class...TO>
-   concept ConvertibleExplicit = PartialValidate<TO...> and (
-         std::constructible_from<DecvqAll<ShedDeref<TO>>, DecvqAll<ShedDeref<FROM>>>
-      and ...);
 
    /// Check if 'FROM' is custom-convertible to all 'TO'                      
    template<class FROM, class...TO>

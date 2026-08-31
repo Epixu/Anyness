@@ -35,6 +35,7 @@ namespace Langulus
       };
 
       struct counter_tester;
+      struct counter_tester2;
    }
 
    /// Every time you call this you get a new integer for each translation    
@@ -55,4 +56,9 @@ namespace Langulus
    static_assert(unique_id<Inner::counter_tester>() == 1);
    static_assert(unique_id<Inner::counter_tester>() == 2);
    static_assert(unique_id<Inner::counter_tester>() == 3);
+
+   static_assert(unique_id<Inner::counter_tester2>() == 0);
+   static_assert(unique_id<Inner::counter_tester2>() == 1);
+   static_assert(unique_id<Inner::counter_tester2>() == 2);
+   static_assert(unique_id<Inner::counter_tester2>() == 3);
 }
