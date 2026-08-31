@@ -20,11 +20,29 @@ namespace Langulus::CT
          LiteralString<T> or (Array<T> and Character<TypeOf<T>>)
       ) and ...);
 
+   namespace Inner
+   {
+      template<class T>
+      consteval bool IsTextPointer() {
+         if constexpr (CT::Sparse<T>) {
+            using DT = Deptr<T>;
+            if constexpr (CT::Complete<DT>)
+               return Character<DT>;
+            else return ::std::same_as<DT, char>
+               or ::std::same_as<DT, wchar_t>
+               or ::std::same_as<DT, char8_t>
+               or ::std::same_as<DT, char16_t>
+               or ::std::same_as<DT, char32_t>;
+         }
+         else return false;
+      }
+   }
+
    /// Check if all T are string pointers, hopefully null-terminated.         
    /// This accounts for all character pointers that <do not have extents>.   
    template<class...T>
    concept TextPointer = PartialValidate<T...>
-       and ((Sparse<T> and Character<Deptr<T>>) and ...);
+       and (Inner::IsTextPointer<T>() and ...);
    
    /// Concept for any possible standard library representation of a string.  
    /// This includes not only std::string, but also any contiguous range      

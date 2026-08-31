@@ -601,7 +601,7 @@ SCENARIO("A type reflected with all traits") {
    REQUIRE(DMeta(int_definition).GetMorphismsFrom().size() == 1);
    static_assert(Exact<MorphismsTo<int>, Types<::std::string>>);*/
 
-   REQUIRE(DMeta(int_definition).GetMorphismsTo().size() == 0);
+   REQUIRE(DMeta(int_definition).GetMorphismsTo().size() == 2);
    //REQUIRE(DMeta(pi_definition).GetMorphismsFrom().size() == 0);
    REQUIRE(DMeta(pi_definition).GetMorphismsTo().size() == 2);
    REQUIRE(DMeta(pi_definition).GetMorphismsTo().at(imp_definition).convert != nullptr);
@@ -635,7 +635,7 @@ SCENARIO("A type reflected with all traits") {
       std::string source = "the devil";
       int convertedFromString = 0;
       auto stdmeta = MetaDataOf<std::string>();
-      REQUIRE(stdmeta.GetMorphismsTo().size() == 0);
+      REQUIRE(stdmeta.GetMorphismsTo().size() == 1);
       //REQUIRE(stdmeta.GetMorphismsFrom().size() == 0);
       REQUIRE(stdmeta.GetMorphism(int_definition).convert);
       stdmeta.GetMorphism(int_definition).convert(&source, &convertedFromString);

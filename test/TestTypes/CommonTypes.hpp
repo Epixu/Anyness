@@ -577,8 +577,8 @@ namespace Langulus::CTTI
    };*/
 
    template<>
-   struct ConverterFrom<::std::string> {
-      using To = int;
+   struct ConverterFrom<::std::string, Types<int>> {
+      //using To = int;
 
       template<class TO>
       static constexpr TO Convert(::std::string const& from) noexcept {
@@ -599,8 +599,8 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<Pi> {
-      using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
+   struct ConverterFrom<Pi, Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>> {
+      //using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
 
       /*template<class TO>
       static constexpr TO Convert(Pi const& from) noexcept {
@@ -632,16 +632,29 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<int> {
-      using To = Types<
+   struct ConverterFrom<int, Types<
+      ConvertibleFromIntExternally,
+      ConvertibleFromIntInternally
+   >> {
+      /*using To = Types<
          ConvertibleFromIntExternally,
          ConvertibleFromIntInternally
-      >;
+      >;*/
 
       template<class TO>
       static constexpr TO Convert(int const& from) noexcept {
          return TO::Init(from);
       }
+   };
+   
+   template<>
+   struct ConverterFrom<ImplicitlyReflectedDataWithTraits, Types<int>> {
+      //using To = int;
+   };
+
+   template<>
+   struct ConverterFrom<ConvertibleData, Types<int>> {
+      //using To = int;
    };
 
    /*template<>
@@ -667,13 +680,13 @@ namespace Langulus::CTTI
    };*/
 
    template<>
-   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter> {
-      using To = int;
+   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter, Types<int>> {
+      //using To = int;
    };
 
    template<>
-   struct ConverterFrom<ConvertibleToIntExternally> {
-      using To = int;
+   struct ConverterFrom<ConvertibleToIntExternally, Types<int>> {
+      //using To = int;
 
       template<class TO>
       static constexpr TO Convert(ConvertibleToIntExternally const& from) noexcept {
@@ -682,8 +695,8 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<ConvertibleToIntInternally> {
-      using To = int;
+   struct ConverterFrom<ConvertibleToIntInternally, Types<int>> {
+      //using To = int;
 
       template<class TO>
       static constexpr TO Convert(ConvertibleToIntInternally const& from) noexcept {

@@ -570,11 +570,12 @@ namespace Langulus::CTTI
    
    /// Map all pointers as convertible to text                                
    template<CT::Sparse T>
-   struct ConverterFrom<T> {
+   struct ConverterFrom<T, Types<Anyness::Text>> {
+      LANGULUS_MORPHISM(T, Types<Anyness::Text>);
       static_assert(Exact<DecvqAll<T>, T>,
          "Strip all decorations on all indirections first");
 
-      using To = Anyness::Text;
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(ConstAll<T&> from) {
@@ -590,8 +591,8 @@ namespace Langulus::CTTI
 
    /// Convert Bool -> Text                                                   
    template<>
-   struct ConverterFrom<bool> {
-      using To = Anyness::Text;
+   struct ConverterFrom<bool, Types<Anyness::Text>> {
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(bool const& from) noexcept {
@@ -601,8 +602,8 @@ namespace Langulus::CTTI
 
    /// Convert Byte -> Text                                                   
    template<>
-   struct ConverterFrom<Byte> {
-      using To = Anyness::Text;
+   struct ConverterFrom<Byte, Types<Anyness::Text>> {
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(Byte const& from) noexcept {
@@ -612,8 +613,8 @@ namespace Langulus::CTTI
 
    /// Convert Hash -> Text                                                   
    template<>
-   struct ConverterFrom<Hash> {
-      using To = Anyness::Text;
+   struct ConverterFrom<Hash, Types<Anyness::Text>> {
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(Hash const& from) noexcept {
@@ -623,9 +624,9 @@ namespace Langulus::CTTI
 
    /// Convert Number -> Text                                                 
    template<CT::Number T>
-   struct ConverterFrom<T> {
+   struct ConverterFrom<T, Types<Anyness::Text>> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
-      using To = Anyness::Text;
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(T const& from) noexcept {
@@ -635,8 +636,8 @@ namespace Langulus::CTTI
 
    /// Convert DMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::DMeta> {
-      using To = Anyness::Text;
+   struct ConverterFrom<RTTI::DMeta, Types<Anyness::Text>> {
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(RTTI::DMeta const& from) noexcept {
@@ -646,8 +647,8 @@ namespace Langulus::CTTI
 
    /// Convert TMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::TMeta> {
-      using To = Anyness::Text;
+   struct ConverterFrom<RTTI::TMeta, Types<Anyness::Text>> {
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(RTTI::TMeta const& from) noexcept {
@@ -657,8 +658,8 @@ namespace Langulus::CTTI
 
    /// Convert CMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::CMeta> {
-      using To = Anyness::Text;
+   struct ConverterFrom<RTTI::CMeta, Types<Anyness::Text>> {
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(RTTI::CMeta const& from) noexcept {
@@ -668,8 +669,8 @@ namespace Langulus::CTTI
 
    /// Convert VMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::VMeta> {
-      using To = Anyness::Text;
+   struct ConverterFrom<RTTI::VMeta, Types<Anyness::Text>> {
+      //using To = Anyness::Text;
 
       template<class TO>
       static constexpr TO Convert(RTTI::VMeta const& from) noexcept {
@@ -677,3 +678,6 @@ namespace Langulus::CTTI
       }
    };
 }
+
+static_assert(Langulus::unique_id<Langulus::Inner::counter_tester>() == 4);
+static_assert(Langulus::unique_id<Langulus::Inner::counter_tester2>() == 4);
