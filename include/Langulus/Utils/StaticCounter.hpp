@@ -38,13 +38,12 @@ namespace Langulus
       struct counter_tester2;
    }
 
-   /// Every time you call this you get a new integer for each translation    
-   /// unit                                                                   
+   /// Every time you call this you get a new integer at compile-time         
    ///   @attention resets between translation units                          
    ///   @attention the order is undefined                                    
    ///   @attention make sure you include all relevant uses to get the same   
    ///              count                                                     
-   template<class UNIQUE, int N = 0, typename L = decltype([]{})>
+   template<class UNIQUE, int N = 0, typename ODR_VIOLATION_PREVENTER = decltype([]{})>
    consteval int unique_id() {
       if constexpr (not Inner::counter<UNIQUE, N>::exists(N))
          return N;

@@ -140,6 +140,10 @@ namespace Langulus
       consteval bool operator == (Types const&) const noexcept {
          return true;
       }
+
+      explicit consteval operator bool () const noexcept {
+         return false;
+      }
    };
 
    using NoTypes = Types<>;
@@ -168,6 +172,10 @@ namespace Langulus
       static constexpr bool Contains = ::std::same_as<N, T>;
 
       consteval bool operator == (Types const&) const noexcept {
+         return true;
+      }
+
+      explicit consteval operator bool () const noexcept {
          return true;
       }
    };
@@ -208,6 +216,10 @@ namespace Langulus
                                     or (::std::same_as<N, TN> or ...);
 
       consteval bool operator == (Types const&) const noexcept {
+         return true;
+      }
+
+      explicit consteval operator bool () const noexcept {
          return true;
       }
    };

@@ -157,12 +157,13 @@ namespace Langulus::CTTI
          out += Serial::CloseByte;   
       }
       else {
-         if (item.IsEmpty())
+         static_assert(false, "Unhandled non-deep container");
+         /*if (item.IsEmpty()) // risk of infinite recursion
             return;
 
          Anyness::Text result;
          Serialize(item, result, context);
-         out += result;
+         out += result;*/
       }
    }
    

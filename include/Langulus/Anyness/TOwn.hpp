@@ -35,7 +35,9 @@ namespace Langulus::Anyness
    /// Mainly serves to transfer values and/or pointers on move.              
    template<CT::NotVoid T>
    struct TOwn : Inner::TOwnBase<T> {
-      using Base = Inner::TOwnBase<T>;
+      using CTTI_Deep      = Yes<>;
+
+      using Base           = Inner::TOwnBase<T>;
 
       constexpr  TOwn() noexcept {
          this->ConstructDefault();

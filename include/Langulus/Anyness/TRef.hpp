@@ -44,6 +44,8 @@ namespace Langulus::Anyness
    /// This container is similar in functionality to ::std::shared_ptr.       
    template<class T>
    struct TRef : Inner::TRefBase<T> {
+      using CTTI_Deep     = Yes<>;
+
       using Base          = Inner::TRefBase<T>;
       using Pick          = ConstAll<T>;
       using PickMut       = T;
