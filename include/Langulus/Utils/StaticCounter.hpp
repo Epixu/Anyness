@@ -6,7 +6,11 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include <Langulus/Core.hpp>
 #include <type_traits>
+
+LglsDisableWarningPush
+LglsDisableWarning_NonTemplateFriend
 
 namespace Langulus
 {
@@ -85,3 +89,5 @@ namespace Langulus
 
 #define LglsCounterForConcept(T) \
    std::integral_constant<int, ::Langulus::unique_id<T, decltype([]{})>()>
+
+LglsDisableWarningPop

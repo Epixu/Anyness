@@ -601,7 +601,7 @@ namespace Langulus::CTTI
    };
    
    /// Convert POD -> Bytes                                                   
-   template<CT::POD T>
+   template<CT::POD T> requires CT::Dense<T>
    struct ConverterFrom<T> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
       LANGULUS_MORPHISM(Anyness::Bytes);

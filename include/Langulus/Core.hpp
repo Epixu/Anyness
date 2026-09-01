@@ -439,6 +439,7 @@
    #define LglsDisableWarning(W)   __pragma(warning( disable : W ))
    #define LglsDisableWarning_SelfAssign
    #define LglsDisableWarning_UnusedLocalTypedef
+   #define LglsDisableWarning_NonTemplateFriend
 #else
    #define LglsNoSideEffects __attribute__((const))
    #define LglsPure __attribute__((pure))
@@ -464,9 +465,11 @@
    #if LANGULUS_COMPILER(CLANG)
       #define LglsDisableWarning_SelfAssign LglsDisableWarning(-Wself-assign-overloaded)
       #define LglsDisableWarning_UnusedLocalTypedef LglsDisableWarning(-Wunused-local-typedef)
+      #define LglsDisableWarning_NonTemplateFriend
    #else
       #define LglsDisableWarning_SelfAssign
       #define LglsDisableWarning_UnusedLocalTypedef
+      #define LglsDisableWarning_NonTemplateFriend LglsDisableWarning(-Wnon-template-friend)
    #endif
 #endif
 
