@@ -43,12 +43,12 @@ namespace Langulus
    ///   @attention the order is undefined                                    
    ///   @attention make sure you include all relevant uses to get the same   
    ///              count                                                     
-   template<class UNIQUE, int N = 0, typename ODR_VIOLATION_PREVENTER = decltype([]{})>
+   template<class UNIQUE, typename ODR_VIOLATION_PREVENTER = decltype([]{}), int N = 0>
    consteval int unique_id() {
       if constexpr (not Inner::counter<UNIQUE, N>::exists(N))
          return N;
       else
-         return unique_id<UNIQUE, N + 1>();
+         return unique_id<UNIQUE, ODR_VIOLATION_PREVENTER, N + 1>();
    }
 
    static_assert(unique_id<Inner::counter_tester>() == 0);
