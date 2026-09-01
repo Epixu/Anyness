@@ -8,6 +8,7 @@
 #pragma once
 #include <Langulus/Typenav.hpp>
 #include <Langulus/Tag.hpp>
+#include <Langulus/CT/Number.hpp>
 #include <string>
 
 using namespace Langulus;
@@ -638,11 +639,6 @@ namespace Langulus::CTTI
    template<>
    struct ConverterFrom<int> {
       LANGULUS_MORPHISM(ConvertibleFromIntExternally, ConvertibleFromIntInternally);
-
-      /*using To = Types<
-         ConvertibleFromIntExternally,
-         ConvertibleFromIntInternally
-      >;*/
 
       template<class TO>
       static constexpr TO Convert(int const& from) noexcept {

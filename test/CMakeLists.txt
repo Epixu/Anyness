@@ -31,6 +31,9 @@ add_langulus_test(LangulusAnynessTest-Common
                CT/TestAkin.cpp
                CT/TestAllocatable.cpp
                CT/TestBool.cpp
+               CT/TestInteger.cpp
+               CT/TestReal.cpp
+               CT/TestNumber.cpp
                CT/TestCharacter.cpp
                CT/TestContainer.cpp
                CT/TestConvertible.cpp

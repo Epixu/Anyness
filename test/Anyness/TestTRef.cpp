@@ -15,7 +15,12 @@
 using namespace Langulus;
 using Anyness::TRef;
 
-static_assert(Langulus::CT::ConvertibleCustom<int, Langulus::Anyness::Text>);
+static_assert(LglsCounter(int)::value == 2);
+using Ccc = CTTI::ConverterFrom<int, std::integral_constant<int, 0>>;
+static_assert(CT::Complete<Ccc>);
+static_assert(Same<typename Ccc::To, Types<Anyness::Text>>);
+static_assert(CT::Inner::FindMorphism<int, Anyness::Text, 0>() != -1);
+static_assert(CT::ConvertibleCustom<int, Anyness::Text>);
 
 TEST_CASE_TEMPLATE("Shared pointer", TestType
    , Types<TRef<RT>,        ScopedElement<RT>>

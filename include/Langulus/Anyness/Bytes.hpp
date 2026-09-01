@@ -602,25 +602,13 @@ namespace Langulus::CTTI
    
    /// Convert POD -> Bytes                                                   
    template<CT::POD T>
-   struct ConverterFrom<T, std::integral_constant<int, unique_id<T, decltype([]{})>()>> {
+   struct ConverterFrom<T> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
       LANGULUS_MORPHISM(Anyness::Bytes);
 
-      template<class TO>
+      /*template<class TO>
       static constexpr TO Convert(T const& from) noexcept {
          return Anyness::Bytes(from);
-      }
-   };
-
-   /// Convert Number -> Bytes                                                
-   template<CT::Number T>
-   struct ConverterFrom<T, std::integral_constant<int, unique_id<T, decltype([]{})>()>> {
-      static_assert(CT::Decayed<T>, "Strip all decorations first");
-      LANGULUS_MORPHISM(Anyness::Bytes);
-      
-      template<class TO>
-      static constexpr TO Convert(T const& from) noexcept {
-         return Anyness::Bytes(from);
-      }
+      }*/
    };
 }
