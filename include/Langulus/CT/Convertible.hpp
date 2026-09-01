@@ -18,7 +18,7 @@ namespace Langulus::CTTI
    /// define converters from multiple places in undefined order. These will  
    /// be collected the first time you reflect a type (once per boundary).    
    /// Make sure you include all relevant converters before type is used.     
-   template<class FROM, class UNIQUE = std::integral_constant<int, unique_id<FROM>()>>
+   template<class FROM, class UNIQUE = LglsCounterForConcept(FROM)>
    struct ConverterFrom;
 }
 
@@ -52,18 +52,23 @@ namespace Langulus::CT
             "Strip all decorations on all indirections first");
          
          using I = std::integral_constant<int, PROGRESS>;
-         if constexpr (requires { CTTI::ConverterFrom<T, I>{}; }) {
-            constexpr typename CTTI::ConverterFrom<T, I>::To to;
+         using M = CTTI::ConverterFrom<T, I>;
+         if constexpr (Complete<M>/* requires { CTTI::ConverterFrom<FROM, I>{}; }*/) {
+            constexpr typename M::To to;
             if constexpr (to) {
-               ForEach(to, []<class TO> {
-                  static_assert(NotConvoluted<TO>, "Strip qualifiers first");
-                  static_assert(NotReference<TO>,  "Strip references first");
-                  static_assert(NotSheddable<TO>,  "Strip sheddables first");
-                  static_assert(not Types<PREV...>::template Contains<TO>,
-                     "Morphism redefinition"
-                  );
-               });
-               return GetMorphismsFromInner<T, PROGRESS + 1>(prev + to);
+               if constexpr (prev.template Contains<typename M::To::First>)
+                  return prev;
+               else {
+                  ForEach(to, []<class TO> {
+                     static_assert(NotConvoluted<TO>, "Strip qualifiers first");
+                     static_assert(NotReference<TO>,  "Strip references first");
+                     static_assert(NotSheddable<TO>,  "Strip sheddables first");
+                     static_assert(not Types<PREV...>::template Contains<TO>,
+                        "Morphism redefinition"
+                     );
+                  });
+                  return GetMorphismsFromInner<T, PROGRESS + 1>(prev + to);
+               }
             }
             else return prev;
          }
@@ -71,7 +76,7 @@ namespace Langulus::CT
       }
 
       /// Find the ConverterFrom declaration that utilizes FROM -> TO         
-      template<class FROM, class TO, int PROGRESS>
+      template<class FROM, class TO, int PROGRESS, class PREV = Types<>>
       consteval int FindMorphism() {
          static_assert(NotConvoluted<FROM, TO>, "Strip qualifiers first");
          static_assert(NotReference<FROM, TO>,  "Strip references first");
@@ -80,13 +85,18 @@ namespace Langulus::CT
             "Strip all decorations on all indirections first");
 
          using I = std::integral_constant<int, PROGRESS>;
-         if constexpr (requires { CTTI::ConverterFrom<FROM, I>{}; }) {
-            constexpr typename CTTI::ConverterFrom<FROM, I>::To to;
+         using M = CTTI::ConverterFrom<FROM, I>;
+         if constexpr (Complete<M>/* requires { CTTI::ConverterFrom<FROM, I>{}; }*/) {
+            constexpr typename M::To to;
             if constexpr (to) {
-               if constexpr (to.template Contains<TO>)
-                  return PROGRESS;
-               else
-                  return FindMorphism<FROM, TO, PROGRESS + 1>();
+               if constexpr (::std::same_as<typename M::To, PREV>)
+                  return -1; // Converters defined using concepts produce duplicates, and that's a sign we've reached the end
+               else {
+                  if constexpr (to.template Contains<TO>)
+                     return PROGRESS;
+                  else
+                     return FindMorphism<FROM, TO, PROGRESS + 1, typename M::To>();
+               }
             }
             else return -1;
          }

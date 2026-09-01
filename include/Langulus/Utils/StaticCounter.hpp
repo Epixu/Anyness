@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include <type_traits>
 
 namespace Langulus
 {
@@ -36,6 +37,7 @@ namespace Langulus
 
       struct counter_tester;
       struct counter_tester2;
+      struct global_counter;
    }
 
    /// Every time you call this you get a new integer at compile-time         
@@ -60,4 +62,26 @@ namespace Langulus
    static_assert(unique_id<Inner::counter_tester2>() == 1);
    static_assert(unique_id<Inner::counter_tester2>() == 2);
    static_assert(unique_id<Inner::counter_tester2>() == 3);
+
+   static_assert(unique_id<Inner::counter_tester2, decltype([]{})>() == 4);
+   static_assert(unique_id<Inner::counter_tester2, decltype([]{})>() == 5);
+   static_assert(unique_id<Inner::counter_tester2, decltype([]{})>() == 6);
+   static_assert(unique_id<Inner::counter_tester2, decltype([]{})>() == 7);
 }
+
+/// Global counter, not associated with a type                                
+#define LglsGlobalCounter() \
+   std::integral_constant<int, ::Langulus::unique_id<::Langulus::global_counter>()>
+
+/// Counter that increases only for a specific type                           
+#define LglsCounter(T) \
+   std::integral_constant<int, ::Langulus::unique_id<T>()>
+
+/// When a template involves concepts, there is too much aggressive caching,  
+/// which screws default template arguments involving counters. These can     
+/// remedy the situation.                                                     
+#define LglsGlobalCounterForConcept() \
+   std::integral_constant<int, ::Langulus::unique_id<::Langulus::global_counter, decltype([]{})>()>
+
+#define LglsCounterForConcept(T) \
+   std::integral_constant<int, ::Langulus::unique_id<T, decltype([]{})>()>

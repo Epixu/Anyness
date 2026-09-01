@@ -583,9 +583,9 @@ namespace Langulus::CTTI
             if constexpr (CT::Character<Deptr<T>>)
                return {from};
             else
-               return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+               return Anyness::Text(NameOf<T>()) + Anyness::Text("(") + Anyness::Text::Hex<true>(from) + Anyness::Text(")");
          }
-         else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+         else return Anyness::Text(NameOf<T>()) + Anyness::Text("(") + Anyness::Text::Hex<true>(from) + Anyness::Text(")");
       }
    };
 
@@ -630,7 +630,7 @@ namespace Langulus::CTTI
 
    /// Convert Number -> Text                                                 
    template<CT::Number T>
-   struct ConverterFrom<T, std::integral_constant<int, unique_id<T, decltype([]{})>()>> {
+   struct ConverterFrom<T> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
       LANGULUS_MORPHISM(Anyness::Text);
 
@@ -639,6 +639,13 @@ namespace Langulus::CTTI
          return Anyness::Text::FromNumber(from);
       }
    };
+
+   /// Convert Literal -> Text                                                
+   /*template<CT::Literal T>
+   struct ConverterFrom<T> {
+      static_assert(CT::Decayed<T>, "Strip all decorations first");
+      LANGULUS_MORPHISM(Anyness::Text);
+   };*/
 
    /// Convert DMeta -> Text                                                  
    template<>
@@ -684,6 +691,3 @@ namespace Langulus::CTTI
       }
    };
 }
-
-static_assert(Langulus::unique_id<Langulus::Inner::counter_tester>() == 4);
-static_assert(Langulus::unique_id<Langulus::Inner::counter_tester2>() == 4);
