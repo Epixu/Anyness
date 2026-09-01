@@ -577,7 +577,9 @@ namespace Langulus::CTTI
    };*/
 
    template<>
-   struct ConverterFrom<::std::string, Types<int>> {
+   struct ConverterFrom<::std::string> {
+      LANGULUS_MORPHISM(int);
+
       //using To = int;
 
       template<class TO>
@@ -599,7 +601,9 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<Pi, Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>> {
+   struct ConverterFrom<Pi> {
+      LANGULUS_MORPHISM(ImplicitlyReflectedDataWithTraits, ConvertibleData);
+
       //using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
 
       /*template<class TO>
@@ -632,10 +636,9 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<int, Types<
-      ConvertibleFromIntExternally,
-      ConvertibleFromIntInternally
-   >> {
+   struct ConverterFrom<int> {
+      LANGULUS_MORPHISM(ConvertibleFromIntExternally, ConvertibleFromIntInternally);
+
       /*using To = Types<
          ConvertibleFromIntExternally,
          ConvertibleFromIntInternally
@@ -648,12 +651,16 @@ namespace Langulus::CTTI
    };
    
    template<>
-   struct ConverterFrom<ImplicitlyReflectedDataWithTraits, Types<int>> {
+   struct ConverterFrom<ImplicitlyReflectedDataWithTraits> {
+      LANGULUS_MORPHISM(int);
+
       //using To = int;
    };
 
    template<>
-   struct ConverterFrom<ConvertibleData, Types<int>> {
+   struct ConverterFrom<ConvertibleData> {
+      LANGULUS_MORPHISM(int);
+
       //using To = int;
    };
 
@@ -680,12 +687,16 @@ namespace Langulus::CTTI
    };*/
 
    template<>
-   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter, Types<int>> {
+   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter> {
+      LANGULUS_MORPHISM(int);
+
       //using To = int;
    };
 
    template<>
-   struct ConverterFrom<ConvertibleToIntExternally, Types<int>> {
+   struct ConverterFrom<ConvertibleToIntExternally> {
+      LANGULUS_MORPHISM(int);
+
       //using To = int;
 
       template<class TO>
@@ -695,7 +706,9 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<ConvertibleToIntInternally, Types<int>> {
+   struct ConverterFrom<ConvertibleToIntInternally> {
+      LANGULUS_MORPHISM(int);
+
       //using To = int;
 
       template<class TO>

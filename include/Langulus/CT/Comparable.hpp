@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include "Akin.hpp"
 #include "Convertible.hpp"
 #include <stdexcept>
 
@@ -142,7 +143,7 @@ namespace Langulus::CT
    template<class LHS, class...RHS>
    concept Comparable = PartialValidate<RHS...>
       and requires (const LHS& lhs, const RHS&...rhs) {
-         { ((lhs <=> rhs), ...) } -> ConvertibleToOneOf<::std::partial_ordering, Compared>;
+         { ((lhs <=> rhs), ...) } -> SameAsOneOf<::std::partial_ordering, Compared>;
       };
 
    /// Three-way comparison check for any LHS and RHS.                        

@@ -28,6 +28,8 @@
 #include <source/states/Compressed.hpp>
 #include <source/states/Encrypted.hpp>
 #include <Langulus/Utils/Byte.hpp>
+#include <Langulus/CT/POD.hpp>
+#include <Langulus/CT/Number.hpp>
 
 
 namespace Langulus::Anyness
@@ -596,5 +598,29 @@ namespace Langulus::CTTI
       using Count = Anyness::Bytes::CountType;
       
       static void Serialize(RTTI::VMeta const&, Anyness::Bytes&, Context*);
+   };
+   
+   /// Convert POD -> Bytes                                                   
+   template<CT::POD T>
+   struct ConverterFrom<T, std::integral_constant<int, unique_id<T, decltype([]{})>()>> {
+      static_assert(CT::Decayed<T>, "Strip all decorations first");
+      LANGULUS_MORPHISM(Anyness::Bytes);
+
+      template<class TO>
+      static constexpr TO Convert(T const& from) noexcept {
+         return Anyness::Bytes(from);
+      }
+   };
+
+   /// Convert Number -> Bytes                                                
+   template<CT::Number T>
+   struct ConverterFrom<T, std::integral_constant<int, unique_id<T, decltype([]{})>()>> {
+      static_assert(CT::Decayed<T>, "Strip all decorations first");
+      LANGULUS_MORPHISM(Anyness::Bytes);
+      
+      template<class TO>
+      static constexpr TO Convert(T const& from) noexcept {
+         return Anyness::Bytes(from);
+      }
    };
 }
