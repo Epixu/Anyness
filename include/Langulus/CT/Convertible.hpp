@@ -18,7 +18,7 @@ namespace Langulus::CTTI
    /// define converters from multiple places in undefined order. These will  
    /// be collected the first time you reflect a type (once per boundary).    
    /// Make sure you include all relevant converters before type is used.     
-   template<class FROM, class UNIQUE = LglsCounterForConcept(FROM)>
+   template<class FROM, class UNIQUE = LglsCounter(FROM)>
    struct ConverterFrom;
 }
 
@@ -56,9 +56,14 @@ namespace Langulus::CT
          if constexpr (Complete<M>/* requires { CTTI::ConverterFrom<FROM, I>{}; }*/) {
             constexpr typename M::To to;
             if constexpr (to) {
-               if constexpr (prev.template Contains<typename M::To::First>)
+               /*if constexpr (prev.template Contains<typename M::To::First>)
                   return prev;
-               else {
+               else {*/
+                  static_assert(not prev.template Contains<typename M::To::First>, 
+                     "Unfortunately, partial specialization of ConverterFrom using "
+                     "concepts is not allowed, because it doesn't play well with unique_id"
+                  );
+   
                   ForEach(to, []<class TO> {
                      static_assert(NotConvoluted<TO>, "Strip qualifiers first");
                      static_assert(NotReference<TO>,  "Strip references first");
@@ -68,7 +73,7 @@ namespace Langulus::CT
                      );
                   });
                   return GetMorphismsFromInner<T, PROGRESS + 1>(prev + to);
-               }
+               //}
             }
             else return prev;
          }
@@ -89,14 +94,19 @@ namespace Langulus::CT
          if constexpr (Complete<M>/* requires { CTTI::ConverterFrom<FROM, I>{}; }*/) {
             constexpr typename M::To to;
             if constexpr (to) {
-               if constexpr (::std::same_as<typename M::To, PREV>)
+               static_assert(not ::std::same_as<typename M::To, PREV>, 
+                  "Unfortunately, partial specialization of ConverterFrom using "
+                  "concepts is not allowed, because it doesn't play well with unique_id"
+               );
+
+               /*if constexpr (::std::same_as<typename M::To, PREV>)
                   return -1; // Converters defined using concepts produce duplicates, and that's a sign we've reached the end
-               else {
+               else {*/
                   if constexpr (to.template Contains<TO>)
                      return PROGRESS;
                   else
                      return FindMorphism<FROM, TO, PROGRESS + 1, typename M::To>();
-               }
+               //}
             }
             else return -1;
          }
@@ -154,12 +164,14 @@ namespace Langulus
    using MorphismsFrom = decltype(CT::Inner::GetMorphismsFrom<DecvqAll<Deref<T>>>());
       
    /// Convert from one type to another, utilizing CTTI definitions.          
-               /// This works even if no `CTTI::MapsTo` or `CTTI::MapsFrom` are defined,  //TODO remove this?
-               /// as long as the types involved have the required constructors and casts.
    ///   @attention assumes 'from' is constructed                             
-   ///   @attention does not utilize serialization directly, as this is the   
-   ///      lower level conversion routine. It's the other way around:        
-   ///      serialization uses this one as a fallback.                        
+   ///   @attention there is a major difference between conversion and        
+   ///      serialization. For example, you can't convert Text -> Text, as    
+   ///      the same type is never converter to itself. However, you can      
+   ///      serialize Text ~> Text, which will wrap the contents in quotes,   
+   ///      and produce a completely different string.                        
+   ///   @attention serialization uses conversion routines internally as      
+   ///      fallback, but these can be overriden with serialization rules.    
    template<class TO, class FROM>
    constexpr auto Convert(FROM const& from) -> TO {
       static_assert(CT::NotReference<TO, FROM>, "Strip references first");

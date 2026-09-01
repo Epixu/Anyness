@@ -63,6 +63,11 @@ namespace Langulus
    using SerializerOf = decltype(CT::Inner::GetSerializer<Shed<T>>());
 
    /// Serialize                                                              
+   ///   @attention there is a major difference between conversion and        
+   ///      serialization. For example, you can't convert Text -> Text, as    
+   ///      the same type is never converter to itself. However, you can      
+   ///      serialize Text ~> Text, which will wrap the contents in quotes,   
+   ///      and produce a completely different string.                        
    template<class FROM, CT::Serializer TO> requires CT::NoIntent<FROM, TO>
    auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
       using DFROM = DecvqAll<FROM>;

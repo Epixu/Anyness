@@ -572,7 +572,7 @@ namespace Langulus::CTTI
    
    /// Map all pointers as convertible to text                                
    template<CT::Sparse T>
-   struct ConverterFrom<T> {
+   struct ConverterFrom<T, std::integral_constant<int, 0>> {
       LANGULUS_MORPHISM(Anyness::Text);
       static_assert(Exact<DecvqAll<T>, T>,
          "Strip all decorations on all indirections first");
@@ -592,6 +592,12 @@ namespace Langulus::CTTI
    /// Convert std::string_view -> Text                                       
    template<>
    struct ConverterFrom<::std::string_view> {
+      LANGULUS_MORPHISM(Anyness::Text);
+   };
+
+   /// Convert Serial::Operator -> Text                                       
+   template<>
+   struct ConverterFrom<Serial::Operator> {
       LANGULUS_MORPHISM(Anyness::Text);
    };
 
@@ -629,13 +635,79 @@ namespace Langulus::CTTI
    };
 
    /// Convert Number -> Text                                                 
-   template<CT::Number T>
+   /*template<CT::Number T>
    struct ConverterFrom<T> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
       static constexpr TO Convert(T const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };*/
+
+   template<>
+   struct ConverterFrom<int8_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(int8_t const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+   template<>
+   struct ConverterFrom<int16_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(int16_t const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+   template<>
+   struct ConverterFrom<int32_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(int32_t const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+   template<>
+   struct ConverterFrom<int64_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(int64_t const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+
+   template<>
+   struct ConverterFrom<uint8_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(uint8_t const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+   template<>
+   struct ConverterFrom<uint16_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(uint16_t const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+   template<>
+   struct ConverterFrom<uint32_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(uint32_t const& from) noexcept {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+   template<>
+   struct ConverterFrom<uint64_t> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      template<class TO>
+      static constexpr TO Convert(uint64_t const& from) noexcept {
          return Anyness::Text::FromNumber(from);
       }
    };

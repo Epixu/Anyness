@@ -348,7 +348,7 @@ namespace Langulus::Anyness
          template<CT::Container C>
          static void BeginScope(C const& from, Bytes& to, Context* context) {
             if (not from.IsValid()) {
-               to += Headbits::Skip;
+               to += Bytes(Headbits::Skip);
                return;
             }
 
@@ -601,14 +601,57 @@ namespace Langulus::CTTI
    };
    
    /// Convert POD -> Bytes                                                   
-   template<CT::POD T> requires CT::Dense<T>
+   /*template<CT::POD T> requires CT::Dense<T>
    struct ConverterFrom<T> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
-      LANGULUS_MORPHISM(Anyness::Bytes);
+      LANGULUS_MORPHISM(Anyness::Bytes);*/
 
       /*template<class TO>
       static constexpr TO Convert(T const& from) noexcept {
          return Anyness::Bytes(from);
       }*/
+   /*};*/
+
+   template<>
+   struct ConverterFrom<Byte> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+   template<>
+   struct ConverterFrom<char> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+
+   template<>
+   struct ConverterFrom<int8_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+   template<>
+   struct ConverterFrom<int16_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+   template<>
+   struct ConverterFrom<int32_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+   template<>
+   struct ConverterFrom<int64_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+
+   template<>
+   struct ConverterFrom<uint8_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+   template<>
+   struct ConverterFrom<uint16_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+   template<>
+   struct ConverterFrom<uint32_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
+   };
+   template<>
+   struct ConverterFrom<uint64_t> {
+      LANGULUS_MORPHISM(Anyness::Bytes);
    };
 }
