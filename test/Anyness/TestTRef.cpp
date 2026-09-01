@@ -15,7 +15,7 @@
 using namespace Langulus;
 using Anyness::TRef;
 
-static_assert(LglsCounter(int)::value == 2);
+static_assert(LglsCounter(int)::value == 3);
 using Ccc = CTTI::ConverterFrom<int, std::integral_constant<int, 0>>;
 static_assert(CT::Complete<Ccc>);
 static_assert(Same<typename Ccc::To, Types<Anyness::Text>>);

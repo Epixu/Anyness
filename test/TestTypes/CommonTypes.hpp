@@ -451,26 +451,7 @@ public:
    }
 };
 
-struct ConvertibleFromIntInternallyMissingConverter {
-   //using CTTI_MapsFrom = int;
-};
-
-class ConvertibleFromIntInternally {
-   int inner = 0;
-public:
-   //using CTTI_MapsFrom = int;
-   static ConvertibleFromIntInternally Init(int i) { 
-      ConvertibleFromIntInternally temp;
-      temp.inner = i;
-      return temp;
-   }
-};
-
 /// Types that inherit convertible properties                                 
-struct InheritedConvertibleFromInt1
-   : ConvertibleFromIntInternally {};
-struct InheritedConvertibleFromInt1Disabled
-   : ConvertibleFromIntInternally { /*using CTTI_MapsFrom = void;*/ };
 struct InheritedConvertibleFromInt2
    : ConvertibleFromIntExternally {};
 struct InheritedConvertibleFromInt3
@@ -479,7 +460,6 @@ struct InheritedConvertibleFromInt4
    : BuiltinConvertibleFromIntViaExplicitConstructor {};
 
 /// Types that inherit convertible properties privately                       
-struct InheritedConvertibleFromInt1ButPrivate : private ConvertibleFromIntInternally {};
 struct InheritedConvertibleFromInt2ButPrivate : private BuiltinConvertibleFromIntViaConstructor {};
 struct InheritedConvertibleFromInt3ButPrivate : private BuiltinConvertibleFromIntViaExplicitConstructor {};
 struct InheritedConvertibleFromIntExternally : ConvertibleFromIntExternally {};
@@ -530,20 +510,7 @@ struct ConvertibleToIntExternally {
    ::std::string inner;
 };
 
-struct ConvertibleToIntInternallyMissingConverter {
-   //using CTTI_MapsTo = int;
-};
-
-struct ConvertibleToIntInternally {
-   ::std::string inner;
-   //using CTTI_MapsTo = int;
-};
-
 /// Types that inherit convertible properties                                 
-struct InheritedConvertibleToInt1
-   : ConvertibleToIntInternally {};
-struct InheritedConvertibleToInt1Disabled
-   : ConvertibleToIntInternally { using CTTI_MapsTo = void; };
 struct InheritedConvertibleToInt2
    : ConvertibleToIntExternally {};
 struct InheritedConvertibleToInt3
@@ -556,7 +523,6 @@ struct InheritedConvertibleToInt6
    : BuiltinConvertibleToIntViaExplicitOperatorMutable {};
 
 /// Types that inherit convertible properties privately                       
-struct InheritedConvertibleToInt1ButPrivate : private ConvertibleToIntInternally {};
 struct InheritedConvertibleToInt2ButPrivate : private BuiltinConvertibleToIntViaOperator {};
 struct InheritedConvertibleToInt3ButPrivate : private BuiltinConvertibleToIntViaExplicitOperator {};
 struct InheritedConvertibleToIntExternally : ConvertibleToIntExternally {};
@@ -581,8 +547,6 @@ namespace Langulus::CTTI
    struct ConverterFrom<::std::string> {
       LANGULUS_MORPHISM(int);
 
-      //using To = int;
-
       template<class TO>
       static constexpr TO Convert(::std::string const& from) noexcept {
          return from == "the devil" ? 666 : -1;
@@ -604,8 +568,6 @@ namespace Langulus::CTTI
    template<>
    struct ConverterFrom<Pi> {
       LANGULUS_MORPHISM(ImplicitlyReflectedDataWithTraits, ConvertibleData);
-
-      //using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
 
       /*template<class TO>
       static constexpr TO Convert(Pi const& from) noexcept {
@@ -638,7 +600,7 @@ namespace Langulus::CTTI
 
    template<>
    struct ConverterFrom<int> {
-      LANGULUS_MORPHISM(ConvertibleFromIntExternally, ConvertibleFromIntInternally);
+      LANGULUS_MORPHISM(ConvertibleFromIntExternally);
 
       template<class TO>
       static constexpr TO Convert(int const& from) noexcept {
@@ -649,15 +611,16 @@ namespace Langulus::CTTI
    template<>
    struct ConverterFrom<ImplicitlyReflectedDataWithTraits> {
       LANGULUS_MORPHISM(int);
-
-      //using To = int;
    };
 
    template<>
    struct ConverterFrom<ConvertibleData> {
       LANGULUS_MORPHISM(int);
+   };
 
-      //using To = int;
+   template<>
+   struct ConverterFrom<ConvertibleToInt> {
+      LANGULUS_MORPHISM(int);
    };
 
    /*template<>
@@ -685,30 +648,14 @@ namespace Langulus::CTTI
    template<>
    struct ConverterFrom<ConvertibleToIntExternallyMissingConverter> {
       LANGULUS_MORPHISM(int);
-
-      //using To = int;
    };
 
    template<>
    struct ConverterFrom<ConvertibleToIntExternally> {
       LANGULUS_MORPHISM(int);
 
-      //using To = int;
-
       template<class TO>
       static constexpr TO Convert(ConvertibleToIntExternally const& from) noexcept {
-         return from.inner.size();
-      }
-   };
-
-   template<>
-   struct ConverterFrom<ConvertibleToIntInternally> {
-      LANGULUS_MORPHISM(int);
-
-      //using To = int;
-
-      template<class TO>
-      static constexpr TO Convert(ConvertibleToIntInternally const& from) noexcept {
          return from.inner.size();
       }
    };

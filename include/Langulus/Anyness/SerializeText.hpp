@@ -151,7 +151,7 @@ namespace Langulus::CTTI
          const auto fromEnd = item.GetRawEnd();
          while (from != fromEnd) {
             ::fmt::format_to_n(temp.data(), 2, "{:02X}", from->value);
-            out += temp;
+            out += Anyness::Text(temp);
             ++from;
          }
          out += Serial::CloseByte;   
