@@ -27,9 +27,10 @@
 #include <source/states/Disowned.hpp>
 #include <source/states/Compressed.hpp>
 #include <source/states/Encrypted.hpp>
-#include <Langulus/Utils/Byte.hpp>
 #include <Langulus/CT/POD.hpp>
-#include <Langulus/CT/Number.hpp>
+#include <Langulus/CT/Convertible.hpp>
+#include <Langulus/CT/Serializer.hpp>
+#include <Langulus/Utils/Byte.hpp>
 
 
 namespace Langulus::Anyness
@@ -600,58 +601,19 @@ namespace Langulus::CTTI
       static void Serialize(RTTI::VMeta const&, Anyness::Bytes&, Context*);
    };
    
-   /// Convert POD -> Bytes                                                   
-   /*template<CT::POD T> requires CT::Dense<T>
-   struct ConverterFrom<T> {
-      static_assert(CT::Decayed<T>, "Strip all decorations first");
-      LANGULUS_MORPHISM(Anyness::Bytes);*/
-
-      /*template<class TO>
-      static constexpr TO Convert(T const& from) noexcept {
-         return Anyness::Bytes(from);
-      }*/
-   /*};*/
-
-   template<>
-   struct ConverterFrom<Byte> {
+   /// Convert dense PODs -> Bytes                                            
+   template<CT::POD T> requires CT::Dense<T>
+   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
+      static_assert(CT::Decayed<T>,
+         "Strip all decorations first");
       LANGULUS_MORPHISM(Anyness::Bytes);
    };
-   template<>
-   struct ConverterFrom<char> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-
-   template<>
-   struct ConverterFrom<int8_t> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-   template<>
-   struct ConverterFrom<int16_t> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-   template<>
-   struct ConverterFrom<int32_t> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-   template<>
-   struct ConverterFrom<int64_t> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-
-   template<>
-   struct ConverterFrom<uint8_t> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-   template<>
-   struct ConverterFrom<uint16_t> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-   template<>
-   struct ConverterFrom<uint32_t> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-   template<>
-   struct ConverterFrom<uint64_t> {
+   
+   /// Convert pointers -> Bytes                                              
+   template<CT::Sparse T>
+   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
+      static_assert(Exact<DecvqAll<T>, T>,
+         "Strip all decorations on all indirections first");
       LANGULUS_MORPHISM(Anyness::Bytes);
    };
 }

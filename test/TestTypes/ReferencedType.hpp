@@ -96,17 +96,12 @@ static_assert(not Langulus::CT::Deep<RT>);
 namespace Langulus::CTTI
 {
    template<>
-   struct ConverterFrom<RT> {
+   struct ConverterFrom<RT, LglsUniqueConverterIndex(RT)> {
       LANGULUS_MORPHISM(Anyness::Text);
-      
-      /*template<class TO> // comes from explicit operator Text ()
-      static constexpr TO Convert(bool const& from) noexcept {
-         return from ? "yes" : "no";
-      }*/
    };
 
    template<>
-   struct ConverterFrom<RT> {
+   struct ConverterFrom<RT, LglsUniqueConverterIndex(RT)> {
       LANGULUS_MORPHISM(Anyness::Bytes);
 
       template<class TO>

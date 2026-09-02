@@ -23,6 +23,7 @@ namespace Langulus
       static constexpr size_t Count = 0;
 
    protected:
+      template<auto...> friend struct Values;
       template<uint>
       static consteval auto AtInner() {
          static_assert(false, "Empty values");
@@ -66,6 +67,7 @@ namespace Langulus
       static constexpr size_t Count = 1;
 
    protected:
+      template<auto...> friend struct Values;
       template<uint I>
       static consteval auto AtInner() {
          static_assert(I == 0, "Index is out of value list bounds");
@@ -143,6 +145,7 @@ namespace Langulus
       static constexpr size_t Count = sizeof...(EN) + 2;
 
    protected:
+      template<auto...> friend struct Values;
       template<uint I>
       static consteval auto AtInner() {
          static_assert(I < Count, "Index is out of value list bounds");

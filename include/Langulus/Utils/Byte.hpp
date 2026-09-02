@@ -6,11 +6,11 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../Typenav.hpp"
+#include "../Literal.hpp"
+//#include "../Typenav.hpp"
 
 namespace Langulus
 {
-
    ///                                                                        
    ///   A byte                                                               
    ///                                                                        

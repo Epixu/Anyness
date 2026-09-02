@@ -222,12 +222,7 @@ namespace doctest
          Langulus::Anyness::Text as_text;
          ::Langulus::Serialize(value, as_text);
          return toString(
-            static_cast<::std::string>(
-                 Langulus::Anyness::Text(NameOf<T>())
-               + Langulus::Anyness::Text("(")
-               + as_text
-               + Langulus::Anyness::Text(")")
-            )
+            static_cast<::std::string>(NameOf<T>() + "(" + as_text + ")")
          );
       }
    };

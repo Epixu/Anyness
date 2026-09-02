@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Core.hpp"
-#include <ctime>
 
 #if LANGULUS_FEATURE(LOGGING)
 #include <fmt/format.h>
@@ -15,6 +14,7 @@
 #include <fmt/chrono.h>
 #include <array>
 #include <iomanip>
+#include <ctime>
 
 namespace Langulus::CT
 {
@@ -228,7 +228,6 @@ namespace Langulus::Logger
          fflush(stdout);
       }
    }
-#endif
    
    /// Generate hexadecimal string from a given value                         
    ///   @param from - the argument                                           
@@ -241,7 +240,8 @@ namespace Langulus::Logger
          ::fmt::format_to_n(to_bytes + i * 2, 2, fmt::runtime("{:02X}"), from_bytes[sizeof(from) - i - 1]);
       return result;
    }
-   
+#endif
+
    /// MARK: Raw logging                                                      
    /// A general new-line write function that continues the last style        
    template<class...T> LANGULUS(INLINED)
@@ -489,6 +489,7 @@ namespace Langulus::Logger
    struct Size {
       size_t bytes;
 
+      #if LANGULUS_FEATURE(LOGGING)
       ::std::string format() const {
          ::std::ostringstream oss;
          oss << ::std::setprecision(3);
@@ -500,7 +501,6 @@ namespace Langulus::Logger
          else if (bytes < 1'073'741'824LL)
             oss << (bytes * 1. / 1'048'576LL) << " MB";
          else if constexpr (sizeof(size_t) > 4) {
-            // ReSharper disable once CppDFAUnreachableCode             
             if (bytes < 1'099'511'627'776LL)
                oss << (bytes * 1. / 1'073'741'824LL) << " GB";
             else if (bytes < 1'125'899'906'842'624LL)
@@ -508,11 +508,11 @@ namespace Langulus::Logger
             else
                oss << (bytes * 1. / 1'125'899'906'842'624LL) << " PB";
          }
-         // ReSharper disable once CppDFAUnreachableCode                
          else oss << (bytes * 1. / 1'073'741'824LL) << " GB";
 
          return oss.str();
       }
+      #endif
    };
 
    /// Bytes only with integer                                                

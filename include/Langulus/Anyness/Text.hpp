@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Handle.hpp"
-#include "Langulus/Typenav.hpp"
+//#include "Langulus/Typenav.hpp"
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/IndexedLinear.hpp>
@@ -31,10 +31,11 @@
 #include <source/states/Encrypted.hpp>
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Number.hpp>
+#include <Langulus/CT/Convertible.hpp>
 #include <Langulus/CT/Serializer.hpp>
 #include <Langulus/Utils/Byte.hpp>
-#include <string_view>
-#include <type_traits>
+//#include <string_view>
+//#include <type_traits>
 
 
 namespace Langulus::Anyness
@@ -572,7 +573,7 @@ namespace Langulus::CTTI
    
    /// Map all pointers as convertible to text                                
    template<CT::Sparse T>
-   struct ConverterFrom<T, std::integral_constant<int, 0>> {
+   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
       LANGULUS_MORPHISM(Anyness::Text);
       static_assert(Exact<DecvqAll<T>, T>,
          "Strip all decorations on all indirections first");
@@ -583,27 +584,27 @@ namespace Langulus::CTTI
             if constexpr (CT::Character<Deptr<T>>)
                return {from};
             else
-               return Anyness::Text(NameOf<T>()) + Anyness::Text("(") + Anyness::Text::Hex<true>(from) + Anyness::Text(")");
+               return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
          }
-         else return Anyness::Text(NameOf<T>()) + Anyness::Text("(") + Anyness::Text::Hex<true>(from) + Anyness::Text(")");
+         else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
       }
    };
 
    /// Convert std::string_view -> Text                                       
    template<>
-   struct ConverterFrom<::std::string_view> {
+   struct ConverterFrom<::std::string_view, LglsUniqueConverterIndex(::std::string_view)> {
       LANGULUS_MORPHISM(Anyness::Text);
    };
 
    /// Convert Serial::Operator -> Text                                       
    template<>
-   struct ConverterFrom<Serial::Operator> {
+   struct ConverterFrom<Serial::Operator, LglsUniqueConverterIndex(Serial::Operator)> {
       LANGULUS_MORPHISM(Anyness::Text);
    };
 
    /// Convert Bool -> Text                                                   
    template<>
-   struct ConverterFrom<bool> {
+   struct ConverterFrom<bool, LglsUniqueConverterIndex(bool)> {
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
@@ -614,29 +615,29 @@ namespace Langulus::CTTI
 
    /// Convert Byte -> Text                                                   
    template<>
-   struct ConverterFrom<Byte> {
+   struct ConverterFrom<Langulus::Byte, LglsUniqueConverterIndex(Langulus::Byte)> {
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
-      static constexpr TO Convert(Byte const& from) noexcept {
+      static constexpr TO Convert(Langulus::Byte const& from) noexcept {
          return Anyness::Text::Hex(from);
       }
    };
 
    /// Convert Hash -> Text                                                   
    template<>
-   struct ConverterFrom<Hash> {
+   struct ConverterFrom<Langulus::Hash, LglsUniqueConverterIndex(Langulus::Hash)> {
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
-      static constexpr TO Convert(Hash const& from) noexcept {
+      static constexpr TO Convert(Langulus::Hash const& from) noexcept {
          return Anyness::Text::Hex(from.value);
       }
    };
 
    /// Convert Number -> Text                                                 
-   /*template<CT::Number T>
-   struct ConverterFrom<T> {
+   template<CT::Number T>
+   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
       static_assert(CT::Decayed<T>, "Strip all decorations first");
       LANGULUS_MORPHISM(Anyness::Text);
 
@@ -644,84 +645,11 @@ namespace Langulus::CTTI
       static constexpr TO Convert(T const& from) noexcept {
          return Anyness::Text::FromNumber(from);
       }
-   };*/
-
-   template<>
-   struct ConverterFrom<int8_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(int8_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
    };
-   template<>
-   struct ConverterFrom<int16_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(int16_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-   template<>
-   struct ConverterFrom<int32_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(int32_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-   template<>
-   struct ConverterFrom<int64_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(int64_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-
-   template<>
-   struct ConverterFrom<uint8_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(uint8_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-   template<>
-   struct ConverterFrom<uint16_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(uint16_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-   template<>
-   struct ConverterFrom<uint32_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(uint32_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-   template<>
-   struct ConverterFrom<uint64_t> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      template<class TO>
-      static constexpr TO Convert(uint64_t const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-
-   /// Convert Literal -> Text                                                
-   /*template<CT::Literal T>
-   struct ConverterFrom<T> {
-      static_assert(CT::Decayed<T>, "Strip all decorations first");
-      LANGULUS_MORPHISM(Anyness::Text);
-   };*/
 
    /// Convert DMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::DMeta> {
+   struct ConverterFrom<RTTI::DMeta, LglsUniqueConverterIndex(RTTI::DMeta)> {
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
@@ -732,7 +660,7 @@ namespace Langulus::CTTI
 
    /// Convert TMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::TMeta> {
+   struct ConverterFrom<RTTI::TMeta, LglsUniqueConverterIndex(RTTI::TMeta)> {
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
@@ -743,7 +671,7 @@ namespace Langulus::CTTI
 
    /// Convert CMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::CMeta> {
+   struct ConverterFrom<RTTI::CMeta, LglsUniqueConverterIndex(RTTI::CMeta)> {
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
@@ -754,12 +682,19 @@ namespace Langulus::CTTI
 
    /// Convert VMeta -> Text                                                  
    template<>
-   struct ConverterFrom<RTTI::VMeta> {
+   struct ConverterFrom<RTTI::VMeta, LglsUniqueConverterIndex(RTTI::VMeta)> {
       LANGULUS_MORPHISM(Anyness::Text);
 
       template<class TO>
       static constexpr TO Convert(RTTI::VMeta const& from) noexcept {
          return from.GetCppName();
       }
+   };
+   
+   /// Convert Literal -> Text                                                
+   template<CT::Literal T>
+   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
+      static_assert(CT::Decayed<T>, "Strip all decorations first");
+      LANGULUS_MORPHISM(Anyness::Text);
    };
 }
