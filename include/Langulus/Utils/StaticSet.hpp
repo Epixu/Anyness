@@ -2,6 +2,8 @@
 #include "../Literal.hpp"
 #include "Values.hpp"
 
+LglsDisableWarningPush
+LglsDisableWarning_NonTemplateFriend
 
 namespace Langulus
 {
@@ -132,3 +134,5 @@ namespace Langulus
    static_assert(::std::same_as<decltype(GetStaticSet<Inner::TestStaticSet2>()), StaticSet<Inner::TestStaticSet2, "int", "float", "bool">>);
    static_assert(GetStaticSetSize<Inner::TestStaticSet>() == 3);
 }
+
+LglsDisableWarningPop

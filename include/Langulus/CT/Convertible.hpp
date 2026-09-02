@@ -166,6 +166,7 @@ namespace Langulus
                "add a M::template Convert<DTO>, "
                "implicit constructor in TO, or implicit/explicit cast operator in FROM"
             );
+            return;
          }
       }
       else {
@@ -173,6 +174,7 @@ namespace Langulus
             "FROM can't be converted to TO - add CTTI::ConverterFrom, "
             "implicit constructor, or implicit/explicit cast operator"
          );
+         return;
       }
    }
 }
