@@ -5,11 +5,27 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
+#include <Langulus/Utils/Byte.hpp>
+#include <Langulus/Anyness/SerializeBytes.hpp>
+#include <Langulus/Anyness/SerializeText.hpp>
+
+
+using ccc1 = Langulus::CTTI::ConverterFrom<Langulus::Byte, ::std::integral_constant<int, 0>>;
+static_assert(Langulus::CT::Complete<ccc1>);
+static_assert(Langulus::Same<typename ccc1::To, Langulus::Types<Langulus::Anyness::Text>>);
+
+using ccc2 = Langulus::CTTI::ConverterFrom<Langulus::Byte, ::std::integral_constant<int, 1>>;
+static_assert(Langulus::CT::Complete<ccc2>);
+static_assert(Langulus::Same<typename ccc2::To, Langulus::Types<Langulus::Anyness::Bytes>>);
+
+static_assert(Langulus::CT::ConvertibleCustom<Langulus::Byte, Langulus::Anyness::Bytes>);
+
+using ccc3 = Langulus::CTTI::ConverterFrom<Langulus::Byte, ::std::integral_constant<int, 2>>;
+static_assert(not Langulus::CT::Complete<ccc3>);
+
 #include "TestBytesCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
-
 
 TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    // Elements are not allocated by the memory manager                  

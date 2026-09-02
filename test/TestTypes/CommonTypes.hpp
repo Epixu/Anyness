@@ -544,7 +544,7 @@ namespace Langulus::CTTI
    };*/
 
    template<>
-   struct ConverterFrom<::std::string> {
+   struct ConverterFrom<::std::string, LglsUniqueConverterIndex(::std::string)> {
       LANGULUS_MORPHISM(int);
 
       template<class TO>
@@ -566,7 +566,7 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<Pi> {
+   struct ConverterFrom<Pi, LglsUniqueConverterIndex(Pi)> {
       LANGULUS_MORPHISM(ImplicitlyReflectedDataWithTraits, ConvertibleData);
 
       /*template<class TO>
@@ -599,7 +599,7 @@ namespace Langulus::CTTI
    };
 
    template<>
-   struct ConverterFrom<int> {
+   struct ConverterFrom<int, LglsUniqueConverterIndex(int)> {
       LANGULUS_MORPHISM(ConvertibleFromIntExternally);
 
       template<class TO>
@@ -609,17 +609,17 @@ namespace Langulus::CTTI
    };
    
    template<>
-   struct ConverterFrom<ImplicitlyReflectedDataWithTraits> {
+   struct ConverterFrom<ImplicitlyReflectedDataWithTraits, LglsUniqueConverterIndex(ImplicitlyReflectedDataWithTraits)> {
       LANGULUS_MORPHISM(int);
    };
 
    template<>
-   struct ConverterFrom<ConvertibleData> {
+   struct ConverterFrom<ConvertibleData, LglsUniqueConverterIndex(ConvertibleData)> {
       LANGULUS_MORPHISM(int);
    };
 
    template<>
-   struct ConverterFrom<ConvertibleToInt> {
+   struct ConverterFrom<ConvertibleToInt, LglsUniqueConverterIndex(ConvertibleToInt)> {
       LANGULUS_MORPHISM(int);
    };
 
@@ -646,12 +646,12 @@ namespace Langulus::CTTI
    };*/
 
    template<>
-   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter> {
+   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter, LglsUniqueConverterIndex(ConvertibleToIntExternallyMissingConverter)> {
       LANGULUS_MORPHISM(int);
    };
 
    template<>
-   struct ConverterFrom<ConvertibleToIntExternally> {
+   struct ConverterFrom<ConvertibleToIntExternally, LglsUniqueConverterIndex(ConvertibleToIntExternally)> {
       LANGULUS_MORPHISM(int);
 
       template<class TO>

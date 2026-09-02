@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Typenav.hpp"
-#include "Langulus/IntentOf.hpp"
+#include "../IntentOf.hpp"
 
 
 namespace Langulus::CTTI
@@ -68,6 +68,8 @@ namespace Langulus
    ///      the same type is never converter to itself. However, you can      
    ///      serialize Text ~> Text, which will wrap the contents in quotes,   
    ///      and produce a completely different string.                        
+   ///      In other words: serialization is an indirection on top of         
+   ///      conversion.                                                       
    template<class FROM, CT::Serializer TO> requires CT::NoIntent<FROM, TO>
    auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
       using DFROM = DecvqAll<FROM>;

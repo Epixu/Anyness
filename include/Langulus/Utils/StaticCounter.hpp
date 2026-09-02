@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include <Langulus/Core.hpp>
+#include "../Core.hpp"
 #include <type_traits>
 
 LglsDisableWarningPush

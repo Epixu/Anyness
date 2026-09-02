@@ -322,7 +322,7 @@
 /// Utility macro that turns its argument to a string literal                 
 #define LANGULUS_STRINGIFY(x) LANGULUS_STRINGIFY_INNER(x)
 
-/// Macro that generates a literal with the function name, file, and line     
+/// Macro that generates a literal with the file and line                     
 #define LANGULUS_LOCATION() __FILE__ ":" LANGULUS_STRINGIFY(__LINE__)
 #define HERE() LANGULUS_LOCATION()
 
