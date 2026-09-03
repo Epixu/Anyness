@@ -27,7 +27,7 @@ namespace Langulus::CTTI
    ///      template using concepts. In those cases, use this workaround:     
    ///         template<CT::Sparse T>                                         
    ///         struct ConverterFrom<T, LglsUniqueConverterIndex(T)> { ... };  
-   template<class FROM, class UNIQUE/* = LglsUniqueConverterIndex(FROM)*/>
+   template<class FROM, class UNIQUE>
    struct ConverterFrom;
 }
 
@@ -79,7 +79,7 @@ namespace Langulus::CT
       }
 
       /// Find the ConverterFrom declaration that utilizes FROM -> TO         
-      template<class FROM, class TO, int PROGRESS = 0>
+      template<class FROM, class TO, int PROGRESS = 0, auto UNIQUE = []{}>
       consteval int FindMorphism() {
          static_assert(NotConvoluted<FROM, TO>, "Strip qualifiers first");
          static_assert(NotReference<FROM, TO>,  "Strip references first");
@@ -91,13 +91,13 @@ namespace Langulus::CT
 
          using I = ::std::integral_constant<int, PROGRESS>;
          using M = CTTI::ConverterFrom<FROM, I>;
-         if constexpr (Complete<M>) {
+         if constexpr (requires { M{}; } /*Complete<M>*/) {
             constexpr typename M::To to;
             static_assert(not M::To::Empty);
             if constexpr (to.template Contains<TO>)
                return PROGRESS;
             else
-               return FindMorphism<FROM, TO, PROGRESS + 1>();
+               return FindMorphism<FROM, TO, PROGRESS + 1, UNIQUE>();
          }
          else return -1;
       }
@@ -146,14 +146,14 @@ namespace Langulus
    ///   @attention serialization uses conversion routines internally as      
    ///      fallback, but these can be overriden with serialization rules.    
    ///      In other words: serialization is an indirection on top of convert 
-   template<class TO, class FROM>
+   template<class TO, class FROM, auto UNIQUE = []{}>
    constexpr auto Convert(FROM const& from) -> TO {
       static_assert(CT::NotReference<TO, FROM>, "Strip references first");
       static_assert(CT::NotSheddable<TO, FROM>, "Strip sheddables first");
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
 
-      constexpr int found = CT::Inner::FindMorphism<DFROM, DTO>();
+      constexpr int found = CT::Inner::FindMorphism<DFROM, DTO, 0, UNIQUE>();
       if constexpr (found >= 0) {
          using I = std::integral_constant<int, found>;
          using M = CTTI::ConverterFrom<DFROM, I>;

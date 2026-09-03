@@ -118,10 +118,38 @@ namespace Langulus::Anyness
 {
    /// MARK: NonContainer + Container                                         
    template<CT::NotContainer LHS, CT::Container RHS>
-   requires Com::HasInsertionOperatorsConcatEnabled<RHS>
+   requires (CT::NoIntent<LHS, RHS> and Com::HasInsertionOperatorsConcatEnabled<RHS>)
    RHS operator + (LHS const& lhs, RHS const& rhs) {
+      using ITEM = DeextAll<LHS>;
       RHS temp;
-      if constexpr (Exact<LHS, TypeOf<RHS>>) {
+
+      if constexpr (CT::Array<LHS>) {
+         if constexpr (requires { RHS {lhs}; }) {
+            // Some containers have bounded array constructors          
+            temp.Concat(RHS {lhs}, rhs);
+         }
+         else {
+            // Otherwise just insert/concatenate each array item        
+            for (auto& i : lhs) {
+               if constexpr (Same<TypeOf<RHS>, ITEM>)
+                  temp.Insert(i);
+               else if constexpr (CT::Serializer<RHS>) {
+                  static_assert(RHS::AttemptConvertOnInsert,
+                     "Can't be concatenated - incompatible arguments");
+                  Langulus::Serialize(i, temp);
+               }
+               else {
+                  static_assert(RHS::AttemptConvertOnInsert,
+                     "Can't be concatenated - incompatible arguments");
+                  static_assert(CT::Convertible<ITEM, RHS>,
+                     "Can't be concatenated - not convertible to RHS");
+                  temp.Concat(Convert<RHS>(i));
+               }
+            }
+            temp.Concat(rhs);
+         }
+      }
+      else if constexpr (Exact<ITEM, TypeOf<RHS>>) {
          temp.Insert(lhs);
          temp.Concat(rhs);
       }
@@ -134,7 +162,7 @@ namespace Langulus::Anyness
       else {
          static_assert(RHS::AttemptConvertOnInsert,
             "Can't be concatenated - incompatible argument");
-         static_assert(CT::Convertible<LHS, RHS>,
+         static_assert(CT::Convertible<ITEM, RHS>,
             "Can't be concatenated - not convertible to RHS");
          temp.Concat(Convert<RHS>(lhs), rhs);
       }
@@ -143,10 +171,38 @@ namespace Langulus::Anyness
    
    /// MARK: Container + NonContainer                                         
    template<CT::Container LHS, CT::NotContainer RHS>
-   requires Com::HasInsertionOperatorsConcatEnabled<LHS>
+   requires (CT::NoIntent<LHS, RHS> and Com::HasInsertionOperatorsConcatEnabled<LHS>)
    LHS operator + (LHS const& lhs, RHS const& rhs) {
+      using ITEM = DeextAll<RHS>;
       LHS temp;
-      if constexpr (Exact<TypeOf<LHS>, RHS>) {
+
+      if constexpr (CT::Array<RHS>) {
+         if constexpr (requires { LHS {rhs}; }) {
+            // Some containers have bounded array constructors          
+            temp.Concat(lhs, LHS {rhs});
+         }
+         else {
+            // Otherwise just insert/concatenate each array item        
+            temp.Concat(lhs);
+            for (auto& i : rhs) {
+               if constexpr (Same<TypeOf<LHS>, ITEM>)
+                  temp.Insert(i);
+               else if constexpr (CT::Serializer<LHS>) {
+                  static_assert(LHS::AttemptConvertOnInsert,
+                     "Can't be concatenated - incompatible arguments");
+                  Langulus::Serialize(i, temp);
+               }
+               else {
+                  static_assert(LHS::AttemptConvertOnInsert,
+                     "Can't be concatenated - incompatible arguments");
+                  static_assert(CT::Convertible<ITEM, LHS>,
+                     "Can't be concatenated - not convertible to RHS");
+                  temp.Concat(Convert<LHS>(i));
+               }
+            }
+         }
+      }
+      else if constexpr (Exact<TypeOf<LHS>, ITEM>) {
          temp.Concat(lhs);
          temp.Insert(rhs);
       }
@@ -159,7 +215,7 @@ namespace Langulus::Anyness
       else {
          static_assert(LHS::AttemptConvertOnInsert,
             "Can't be concatenated - incompatible arguments");
-         static_assert(CT::Convertible<RHS, LHS>,
+         static_assert(CT::Convertible<ITEM, LHS>,
             "Can't be concatenated - not convertible to LHS");
          temp.Concat(lhs, Convert<LHS>(rhs));
       }
@@ -183,10 +239,6 @@ namespace Langulus::Anyness
             "Can't be concatenated - incompatible arguments");
          temp.Concat(lhs);
          Langulus::Serialize(rhs, temp);
-
-         /*static_assert(CT::Convertible<RHS, LHS>,
-            "Can't be concatenated - not convertible to LHS");
-         temp.Concat(lhs, Convert<LHS>(rhs));*/
          return temp;
       }
       else {
@@ -195,10 +247,6 @@ namespace Langulus::Anyness
             "Can't be concatenated - incompatible argument");
          Langulus::Serialize(lhs, temp);
          temp.Concat(rhs);
-
-         /*static_assert(CT::Convertible<LHS, RHS>,
-            "Can't be concatenated - not convertible to RHS");
-         temp.Concat(Convert<RHS>(lhs), rhs);*/
          return temp;
       }
    }
