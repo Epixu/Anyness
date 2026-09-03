@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestAnyCommon.hpp"
-#include <Langulus/Anyness/SerializeText.hpp>
 
 
 SCENARIO("Converting Any/TAny") {
