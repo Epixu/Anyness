@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Handle.hpp"
-//#include "Langulus/Typenav.hpp"
+#include "Langulus/Typenav.hpp"
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/IndexedLinear.hpp>
@@ -508,6 +508,34 @@ namespace Langulus::Anyness
    }
 }
 
+namespace Langulus::CTTI
+{
+   /// Map all pointers as convertible to text                                
+   template<CT::Sparse T>
+   constexpr auto testtttttt222 = ::Langulus::GetStaticSetIndex<T, HERE()>();
+
+   template<CT::Sparse T>
+   struct ConverterFrom<T, ::std::integral_constant<int, testtttttt222<T>>> {
+      LANGULUS_MORPHISM(Anyness::Text);
+      static_assert(Exact<DecvqAll<T>, T>,
+         "Strip all decorations on all indirections first");
+
+      template<class TO>
+      static constexpr TO Convert(ConstAll<T&> from) {
+         if constexpr (CT::Complete<Deptr<T>>) {
+            if constexpr (CT::Character<Deptr<T>>)
+               return {from};
+            else
+               return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+         }
+         else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+      }
+   };
+   constexpr auto testtttttt1 = ::Langulus::GetStaticSetIndex<int*, HERE()>();
+   constexpr auto testtttttt2 = LglsUniqueConverterIndex(int*) {};
+   static_assert(CT::Complete<ConverterFrom<int*, ::std::integral_constant<int, 0>>>);
+}
+
 namespace Langulus::CT
 {
    namespace Inner
@@ -572,8 +600,8 @@ namespace Langulus::CTTI
    };
    
    /// Map all pointers as convertible to text                                
-   template<CT::Sparse T>
-   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
+   /*template<CT::Sparse T>
+   struct ConverterFrom<T, ::std::integral_constant<int, testtttttt222<T>>> {
       LANGULUS_MORPHISM(Anyness::Text);
       static_assert(Exact<DecvqAll<T>, T>,
          "Strip all decorations on all indirections first");
@@ -588,7 +616,7 @@ namespace Langulus::CTTI
          }
          else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
       }
-   };
+   };*/
 
    /// Convert std::string_view -> Text                                       
    template<>

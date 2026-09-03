@@ -8,10 +8,14 @@
 #pragma once
 #include "Akin.hpp"
 #include "../Typenav.hpp"
-#include "../Utils/StaticCounter.hpp"
+//#include "../Utils/StaticCounter.hpp"
 #include "../Utils/Types.hpp"
 #include "../Utils/StaticSet.hpp"
+#include <type_traits>
 
+
+#define LglsUniqueConverterIndex(T) \
+   ::std::integral_constant<int, ::Langulus::GetStaticSetIndex<T, HERE()>()>
 
 namespace Langulus::CTTI
 {
@@ -23,7 +27,7 @@ namespace Langulus::CTTI
    ///      template using concepts. In those cases, use this workaround:     
    ///         template<CT::Sparse T>                                         
    ///         struct ConverterFrom<T, LglsUniqueConverterIndex(T)> { ... };  
-   template<class FROM, class UNIQUE/* = LglsCounter(FROM)*/>         
+   template<class FROM, class UNIQUE/* = LglsUniqueConverterIndex(FROM)*/>
    struct ConverterFrom;
 }
 
@@ -166,7 +170,7 @@ namespace Langulus
                "add a M::template Convert<DTO>, "
                "implicit constructor in TO, or implicit/explicit cast operator in FROM"
             );
-            return;
+            return {};
          }
       }
       else {
@@ -174,10 +178,9 @@ namespace Langulus
             "FROM can't be converted to TO - add CTTI::ConverterFrom, "
             "implicit constructor, or implicit/explicit cast operator"
          );
-         return;
+         return {};
       }
    }
 }
 
 #define LANGULUS_MORPHISM(...) using To = Types<__VA_ARGS__>; static_assert(not To::Empty, "Empty morphisms not allowed")
-#define LglsUniqueConverterIndex(T) ::std::integral_constant<int, ::Langulus::GetStaticSetIndex<T, HERE()>()>
