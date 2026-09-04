@@ -600,20 +600,7 @@ namespace Langulus::CTTI
       
       static void Serialize(RTTI::VMeta const&, Anyness::Bytes&, Context*);
    };
-   
-   /// Convert dense PODs -> Bytes                                            
-   template<CT::POD T> requires CT::Dense<T>
-   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
-      static_assert(CT::Decayed<T>,
-         "Strip all decorations first");
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
-   
-   /// Convert pointers -> Bytes                                              
-   template<CT::Sparse T>
-   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
-      static_assert(Exact<DecvqAll<T>, T>,
-         "Strip all decorations on all indirections first");
-      LANGULUS_MORPHISM(Anyness::Bytes);
-   };
 }
+
+/// Convert POD -> Bytes (this includes pointers as well)                     
+LANGULUS_MORPHISM_CONCEPT(Langulus::CT::POD, Langulus::Anyness::Bytes);

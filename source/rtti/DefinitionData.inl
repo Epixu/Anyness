@@ -847,7 +847,7 @@ namespace Langulus::RTTI
       // Calculate the allocation table                                 
       auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
       definition.ReflectStandardSparse(CT::Mutable<T>, CT::Complete<Decay<T>>, CT::Complete<DenserT>, minElements);
-      definition.FillMorphisms<T>();
+      definition.FillMorphisms<DecvqAll<T>>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          LglsVerbose(
@@ -1092,7 +1092,7 @@ namespace Langulus::RTTI
       // Calculate the allocation table                                 
       auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
       definition.ReflectCustomSparse(CT::Mutable<T>, CT::Complete<Decay<T>>, minElements, sizeof(T));
-      definition.FillMorphisms<T>();
+      definition.FillMorphisms<DecvqAll<T>>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          LglsVerbose(
@@ -1121,68 +1121,33 @@ namespace Langulus::RTTI
    ///    pointers. Context is optional.                                      
    template<class T>
    void DefinitionData::FillMorphisms() {
-      using MAPTO = MorphismsFrom<T>;
-      
-      if constexpr (not CT::Void<MAPTO>) {
-         ForEach(MAPTO{}, [this]<class TO_RAW>{
-            using TO = CT::ReflectedAs<TO_RAW>;
+      ForEach(GatherMorphismsFrom<T>{}, [this]<class TO_RAW>{
+         using TO = CT::ReflectedAs<TO_RAW>;
 
-            auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
-            Morphism morphism;
-   
-            if constexpr (CT::Convertible<T, TO>) {
-               morphism.convert = [](void* from, void* to) {
-                  auto fromT = static_cast<ConstAll<T*>>(from);
-                  auto toT   = static_cast<TO*>(to);
-                  new (toT) TO {Langulus::Convert<TO>(*fromT)};
-               };
-            }
-            
-            if constexpr (CT::Serializer<TO>) {
-               // Destination type can act as a serializer, too         
-               using S = SerializerOf<TO>;
-               morphism.serialize = [](void const* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<ConstAll<T*>>(from);
-                  auto toT   = static_cast<TO*>(to);
-                  auto conT  = static_cast<typename S::Context*>(context);
-                  return Langulus::Serialize(*fromT, *toT, conT);
-               };
-            }
+         auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
+         Morphism morphism;
 
-            mCurrentBoundary.mMorphismsTo.emplace(destination_type, morphism);
-         });
-      }
-   
-      /*using MAPFROM = MorphismsTo<T>;
-      if constexpr (not CT::Void<MAPFROM>) {
-         ForEach(MAPFROM{}, [this]<class FROM_RAW>{
-            using FROM = CT::ReflectedAs<FROM_RAW>;
-
-            auto source_type = const_cast<DefinitionData*>(Reflect<FROM>());
-            Morphism morphism;
-
-            if constexpr (CT::Convertible<FROM, T>) {
-               morphism.convert = [](void* from, void* to) {
-                  auto fromT = static_cast<ConstAll<FROM*>>(from);
-                  auto toT   = static_cast<T*>(to);
-                  new (toT) T {Langulus::Convert<T>(*fromT)};
-               };
-            }
-            
-            if constexpr (CT::Serializer<T>) {
-               // Destination type can act as a serializer, too         
-               using S = SerializerOf<T>;
-               morphism.serialize = [](void const* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<ConstAll<FROM*>>(from);
-                  auto toT   = static_cast<T*>(to);
-                  auto conT  = static_cast<typename S::Context*>(context);
-                  return Langulus::Serialize(*fromT, *toT, conT);
-               };
-            }
+         if constexpr (CT::Inner::FindMorphism<T, TO>() >= 0 /*CT::Convertible<T, TO>*/) {
+            morphism.convert = [](void* from, void* to) {
+               auto fromT = static_cast<ConstAll<T*>>(from);
+               auto toT   = static_cast<TO*>(to);
+               new (toT) TO {Langulus::Convert<TO>(*fromT)};
+            };
+         }
          
-            mCurrentBoundary.mMorphismsFrom.emplace(source_type, morphism);
-         });
-      }*/
+         if constexpr (CT::Serializer<TO>) {
+            // Destination type can act as a serializer, too         
+            using S = SerializerOf<TO>;
+            morphism.serialize = [](void const* from, void* to, void* context) -> size_t {
+               auto fromT = static_cast<ConstAll<T*>>(from);
+               auto toT   = static_cast<TO*>(to);
+               auto conT  = static_cast<typename S::Context*>(context);
+               return Langulus::Serialize(*fromT, *toT, conT);
+            };
+         }
+
+         mCurrentBoundary.mMorphismsTo.emplace(destination_type, morphism);
+      });
    }
 
    /// Generate a member definition                                           

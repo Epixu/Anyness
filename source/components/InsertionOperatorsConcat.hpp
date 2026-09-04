@@ -58,7 +58,7 @@ namespace Langulus::Anyness::Component
                else {
                   static_assert(LHS::AttemptConvertOnInsert,
                      "Can't be concatenated - incompatible arguments");
-                  static_assert(CT::Convertible<ITEM, LHS>,
+                  static_assert(CT::Inner::FindMorphism<ITEM, LHS>() >= 0 /*CT::Convertible<ITEM, LHS>*/,
                      "Can't be concatenated - not convertible to LHS");
 
                   for (auto& i : DeintCast(rhs))
@@ -78,7 +78,7 @@ namespace Langulus::Anyness::Component
          else {
             static_assert(LHS::AttemptConvertOnInsert,
                "Can't be concatenated - incompatible arguments");
-            static_assert(CT::Convertible<ITEM, LHS>,
+            static_assert(CT::Inner::FindMorphism<ITEM, LHS>() >= 0 /*CT::Convertible<ITEM, LHS>*/,
                "Can't be concatenated - not convertible to LHS");
 
             lhs.Concat(Convert<LHS>(DeintCast(rhs)));
@@ -141,7 +141,7 @@ namespace Langulus::Anyness
                else {
                   static_assert(RHS::AttemptConvertOnInsert,
                      "Can't be concatenated - incompatible arguments");
-                  static_assert(CT::Convertible<ITEM, RHS>,
+                  static_assert(CT::Inner::FindMorphism<ITEM, RHS>() >= 0 /*CT::Convertible<ITEM, RHS>*/,
                      "Can't be concatenated - not convertible to RHS");
                   temp.Concat(Convert<RHS>(i));
                }
@@ -162,7 +162,7 @@ namespace Langulus::Anyness
       else {
          static_assert(RHS::AttemptConvertOnInsert,
             "Can't be concatenated - incompatible argument");
-         static_assert(CT::Convertible<ITEM, RHS>,
+         static_assert(CT::Inner::FindMorphism<ITEM, RHS>() >= 0 /*CT::Convertible<ITEM, RHS>*/,
             "Can't be concatenated - not convertible to RHS");
          temp.Concat(Convert<RHS>(lhs), rhs);
       }
@@ -195,7 +195,7 @@ namespace Langulus::Anyness
                else {
                   static_assert(LHS::AttemptConvertOnInsert,
                      "Can't be concatenated - incompatible arguments");
-                  static_assert(CT::Convertible<ITEM, LHS>,
+                  static_assert(CT::Inner::FindMorphism<ITEM, LHS>() >= 0 /*CT::Convertible<ITEM, LHS>*/,
                      "Can't be concatenated - not convertible to RHS");
                   temp.Concat(Convert<LHS>(i));
                }
@@ -215,7 +215,7 @@ namespace Langulus::Anyness
       else {
          static_assert(LHS::AttemptConvertOnInsert,
             "Can't be concatenated - incompatible arguments");
-         static_assert(CT::Convertible<ITEM, LHS>,
+         static_assert(CT::Inner::FindMorphism<ITEM, LHS>() >= 0 /*CT::Convertible<ITEM, LHS>*/,
             "Can't be concatenated - not convertible to LHS");
          temp.Concat(lhs, Convert<LHS>(rhs));
       }

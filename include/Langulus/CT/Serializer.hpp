@@ -70,7 +70,7 @@ namespace Langulus
    ///      and produce a completely different string.                        
    ///      In other words: serialization is an indirection on top of         
    ///      conversion.                                                       
-   template<class FROM, CT::Serializer TO, auto UNIQUE = []{}> requires CT::NoIntent<FROM, TO>
+   template<class FROM, CT::Serializer TO/*, auto UNIQUE = []{}*/> requires CT::NoIntent<FROM, TO>
    auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
@@ -85,7 +85,7 @@ namespace Langulus
          // appropriate converter.                                      
          static_assert(CT::Sparse<DFROM>, "If not complete, `FROM` needs to be sparse");
          (void) context;
-         to += Convert<DTO, FROM, UNIQUE>(from);
+         to += Convert<DTO, FROM/*, UNIQUE*/>(from);
       }
       else if constexpr (requires { CTTI::SerializationRule<DTO, DFROM>{}; } /*CT::Complete<CTTI::SerializationRule<DTO, DFROM>>*/) {
          // Custom rule exists                                          
@@ -94,7 +94,7 @@ namespace Langulus
       else {
          // No rule exists, just cast and concatenate, if possible      
          (void) context;
-         to += Convert<DTO, FROM, UNIQUE>(from);
+         to += Convert<DTO, FROM/*, UNIQUE*/>(from);
       }
       return to.GetCount() - initial;
    }

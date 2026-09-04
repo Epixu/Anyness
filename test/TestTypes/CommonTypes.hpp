@@ -534,57 +534,23 @@ struct CustomContainer {
    using CTTI_Container = Yes<>;
 };
 
+/// These customizations need to appear as early as possible, in order        
+/// to be consistently reflected in all tests:                                
+LANGULUS_MORPHISM_CUSTOM(std::string, { return from == "the devil" ? 666 : -1; }, int);
+LANGULUS_MORPHISM_CUSTOM(int, { return TO::Init(from); }, ConvertibleFromIntExternally);
+LANGULUS_MORPHISM(Pi, ImplicitlyReflectedDataWithTraits, ConvertibleData);
+LANGULUS_MORPHISM(ImplicitlyReflectedDataWithTraits, int);
+LANGULUS_MORPHISM(ConvertibleData, int);
+LANGULUS_MORPHISM(ConvertibleToInt, int);
+LANGULUS_MORPHISM(ConvertibleToIntExternallyMissingConverter, int);
+LANGULUS_MORPHISM_CUSTOM(ConvertibleToIntExternally, { return from.inner.size(); }, int);
 
 namespace Langulus::CTTI
 {
-   /// These customizations need to appear as early as possible, in order     
-   /// to be consistently reflected in all tests                              
-   /*template<>
-   struct MapsTo<int> {
-      using From = ::std::string;
-   };*/
-
-   template<>
-   struct ConverterFrom<::std::string, LglsUniqueConverterIndex(::std::string)> {
-      LANGULUS_MORPHISM(int);
-
-      template<class TO>
-      static constexpr TO Convert(::std::string const& from) noexcept {
-         return from == "the devil" ? 666 : -1;
-      }
-   };
-
-   /*template<>
-   struct Converter<::std::string, int> {
-      static constexpr auto Convert(::std::string const& from) -> int {
-         return from == "the devil" ? 666 : -1;
-      }
-   };*/
-
    template<>
    struct Named<::std::string> {
       static constexpr Literal Name = "string";
    };
-
-   template<>
-   struct ConverterFrom<Pi, LglsUniqueConverterIndex(Pi)> {
-      LANGULUS_MORPHISM(ImplicitlyReflectedDataWithTraits, ConvertibleData);
-
-      /*template<class TO>
-      static constexpr TO Convert(Pi const& from) noexcept {
-         return from == "the devil" ? 666 : -1;
-      }*/
-   };
-
-   /*template<>
-   struct MapsFrom<Pi> {
-      using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
-   };*/
-
-   /*template<>
-   struct MapsTo<ImplicitlyReflectedDataWithTraits> {
-      using From = Pi;
-   };*/
 
    template<>
    struct NamedValue<Pi::ConflictingNumber> {
@@ -598,91 +564,6 @@ namespace Langulus::CTTI
    struct Verbs<DMeta> {
       using Type = Langulus::Verbs::Create;
    };
-
-   template<>
-   struct ConverterFrom<int, LglsUniqueConverterIndex(int)> {
-      LANGULUS_MORPHISM(ConvertibleFromIntExternally);
-
-      template<class TO>
-      static constexpr TO Convert(int const& from) noexcept {
-         return TO::Init(from);
-      }
-   };
-   
-   template<>
-   struct ConverterFrom<ImplicitlyReflectedDataWithTraits, LglsUniqueConverterIndex(ImplicitlyReflectedDataWithTraits)> {
-      LANGULUS_MORPHISM(int);
-   };
-
-   template<>
-   struct ConverterFrom<ConvertibleData, LglsUniqueConverterIndex(ConvertibleData)> {
-      LANGULUS_MORPHISM(int);
-   };
-
-   template<>
-   struct ConverterFrom<ConvertibleToInt, LglsUniqueConverterIndex(ConvertibleToInt)> {
-      LANGULUS_MORPHISM(int);
-   };
-
-   /*template<>
-   struct MapsTo<ConvertibleFromIntExternallyMissingConverter> {
-      using From = int;
-   };
-   template<>
-   struct MapsTo<ConvertibleFromIntExternally> {
-      using From = int;
-   };*/
-
-   /*template<>
-   struct Converter<int, ConvertibleFromIntExternally> {
-      static constexpr auto Convert(int const& from) -> ConvertibleFromIntExternally {
-         return ConvertibleFromIntExternally::Init(from);
-      }
-   };
-   template<>
-   struct Converter<int, ConvertibleFromIntInternally> {
-      static constexpr auto Convert(int const& from) -> ConvertibleFromIntInternally {
-         return ConvertibleFromIntInternally::Init(from);
-      }
-   };*/
-
-   template<>
-   struct ConverterFrom<ConvertibleToIntExternallyMissingConverter, LglsUniqueConverterIndex(ConvertibleToIntExternallyMissingConverter)> {
-      LANGULUS_MORPHISM(int);
-   };
-
-   template<>
-   struct ConverterFrom<ConvertibleToIntExternally, LglsUniqueConverterIndex(ConvertibleToIntExternally)> {
-      LANGULUS_MORPHISM(int);
-
-      template<class TO>
-      static constexpr TO Convert(ConvertibleToIntExternally const& from) noexcept {
-         return from.inner.size();
-      }
-   };
-
-   /*template<>
-   struct MapsFrom<ConvertibleToIntExternallyMissingConverter> {
-      using To = int;
-   };*/
-   /*template<>
-   struct MapsFrom<ConvertibleToIntExternally> {
-      using To = int;
-   };*/
-
-   /*template<>
-   struct Converter<ConvertibleToIntExternally, int> {
-      static constexpr auto Convert(ConvertibleToIntExternally const& from) -> int {
-         return from.inner.size();
-      }
-   };*/
-
-   /*template<>
-   struct Converter<ConvertibleToIntInternally, int> {
-      static constexpr auto Convert(ConvertibleToIntInternally const& from) -> int {
-         return from.inner.size();
-      }
-   };*/
 }
 
 /// MARK: Empty                                                               

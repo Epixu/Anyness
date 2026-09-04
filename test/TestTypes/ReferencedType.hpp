@@ -93,41 +93,30 @@ struct RT : Langulus::Referenced {
 
 static_assert(not Langulus::CT::Deep<RT>);
 
-namespace Langulus::CTTI
-{
-   template<>
-   struct ConverterFrom<RT, LglsUniqueConverterIndex(RT)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-   };
-
-   template<>
-   struct ConverterFrom<RT, LglsUniqueConverterIndex(RT)> {
-      LANGULUS_MORPHISM(Anyness::Bytes);
-
-      template<class TO>
-      static constexpr TO Convert(RT const& from) noexcept {
-         TO bytes;
-         bytes += from.data;
-         uint8_t mask = 0;
-         if (from.destroyed)
-            mask |= 1;
-         if (from.copied_in)
-            mask |= 2;
-         if (from.cloned_in)
-            mask |= 4;
-         if (from.copy_intent_in)
-            mask |= 8;
-         if (from.disown_intent_in)
-            mask |= 16;
-         if (from.moved_in)
-            mask |= 32;
-         if (from.moved_out)
-            mask |= 64;
-         bytes += mask;
-         return bytes;
-      }
-   };
-}
+LANGULUS_MORPHISM(RT, Langulus::Anyness::Text);
+LANGULUS_MORPHISM_CUSTOM(RT, {
+      TO bytes;
+      bytes += from.data;
+      uint8_t mask = 0;
+      if (from.destroyed)
+         mask |= 1;
+      if (from.copied_in)
+         mask |= 2;
+      if (from.cloned_in)
+         mask |= 4;
+      if (from.copy_intent_in)
+         mask |= 8;
+      if (from.disown_intent_in)
+         mask |= 16;
+      if (from.moved_in)
+         mask |= 32;
+      if (from.moved_out)
+         mask |= 64;
+      bytes += mask;
+      return bytes;
+   },
+   Langulus::Anyness::Bytes
+);
 
 static_assert(Langulus::CT::ConvertibleCustom<RT, Langulus::Anyness::Text>);
 static_assert(Langulus::CT::ConvertibleCustom<RT, Langulus::Anyness::Bytes>);

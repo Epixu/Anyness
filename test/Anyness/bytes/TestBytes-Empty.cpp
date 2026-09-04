@@ -8,6 +8,7 @@
 #include "TestBytesCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
 
+
 TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    // Elements are not allocated by the memory manager                  
    , Types<Bytes, ScopedElement<Bytes>>

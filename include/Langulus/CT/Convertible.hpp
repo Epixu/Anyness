@@ -8,27 +8,25 @@
 #pragma once
 #include "Akin.hpp"
 #include "../Typenav.hpp"
-//#include "../Utils/StaticCounter.hpp"
 #include "../Utils/Types.hpp"
 #include "../Utils/StaticSet.hpp"
 #include <type_traits>
 
 
-#define LglsUniqueConverterIndex(T) \
-   ::std::integral_constant<int, ::Langulus::GetStaticSetIndex<T, HERE()>()>
-
 namespace Langulus::CTTI
 {
-   /// Defines morphism(s). Each time you specialize ConverterFrom<X>, you can
+   /// Defines morphism(s). Each time you specialize Morphism<X>, you can     
    /// define converters from multiple places in undefined order. These will  
    /// be collected the first time you reflect a type (once per boundary).    
    /// Make sure you include all relevant converters before type is used.     
-   ///   @attention the default UNIQUE identifier fails when you specialize   
-   ///      template using concepts. In those cases, use this workaround:     
-   ///         template<CT::Sparse T>                                         
-   ///         struct ConverterFrom<T, LglsUniqueConverterIndex(T)> { ... };  
-   template<class FROM, class UNIQUE>
-   struct ConverterFrom;
+   template<class FROM, int UNIQUE>
+   struct Morphism;
+
+   namespace Inner
+   {
+      template<class T>
+      struct MorphismSet;
+   }
 }
 
 namespace Langulus::CT
@@ -48,7 +46,7 @@ namespace Langulus::CT
 
    namespace Inner
    {
-      /// Gather all defined morphism from type T                             
+      /// Gather all defined CTTI::Morphism(s) from type T                    
       ///   @return a type list containing all declared conversions           
       template<class T, int PROGRESS = 0, class...PREV>
       constexpr auto GetMorphismsFrom(Types<PREV...>&& prev) {
@@ -60,11 +58,9 @@ namespace Langulus::CT
          static_assert((Exact<DecvqAll<PREV>, PREV> and ...),
             "Strip all decorations on all indirections first");
          
-         using I = ::std::integral_constant<int, PROGRESS>;
-         using M = CTTI::ConverterFrom<T, I>;
-         if constexpr (Complete<M>) {
+         using M = CTTI::Morphism<T, PROGRESS>;
+         if constexpr (requires { M{}; }) {
             constexpr typename M::To to;
-            static_assert(not M::To::Empty);
             ForEach(to, []<class TO> {
                static_assert(NotConvoluted<TO>, "Strip qualifiers first");
                static_assert(NotReference<TO>,  "Strip references first");
@@ -78,7 +74,10 @@ namespace Langulus::CT
          else return prev;
       }
 
-      /// Find the ConverterFrom declaration that utilizes FROM -> TO         
+      /// Find the CTTI::Morphism declaration that utilizes FROM -> TO        
+      ///   @attention each call to this function is a uniquely defined one,  
+      ///      and the result might change depending on the include-chain at  
+      ///      the point of instantiation.                                    
       template<class FROM, class TO, int PROGRESS = 0, auto UNIQUE = []{}>
       consteval int FindMorphism() {
          static_assert(NotConvoluted<FROM, TO>, "Strip qualifiers first");
@@ -89,15 +88,18 @@ namespace Langulus::CT
          static_assert(Exact<DecvqAll<TO>, TO>,
             "Strip all decorations on all indirections first in TO");
 
-         using I = ::std::integral_constant<int, PROGRESS>;
-         using M = CTTI::ConverterFrom<FROM, I>;
-         if constexpr (requires { M{}; } /*Complete<M>*/) {
+         using M = CTTI::Morphism<FROM, PROGRESS>;
+         if constexpr (requires { M{}; }) {
             constexpr typename M::To to;
-            static_assert(not M::To::Empty);
-            if constexpr (to.template Contains<TO>)
-               return PROGRESS;
-            else
-               return FindMorphism<FROM, TO, PROGRESS + 1, UNIQUE>();
+            if constexpr (to.template Contains<TO>) {
+               // Prioritize concrete specializations over concept ones 
+               constexpr int concrete = FindMorphism<FROM, TO, PROGRESS + 1, UNIQUE>();
+               if constexpr (concrete == -1)
+                  return PROGRESS;
+               else
+                  return concrete;
+            }
+            else return FindMorphism<FROM, TO, PROGRESS + 1, UNIQUE>();
          }
          else return -1;
       }
@@ -105,6 +107,9 @@ namespace Langulus::CT
 
    /// Check if 'FROM' is convertible to all 'TO', as per the Langulus        
    /// specification. Only such morphisms are reflected!                      
+   ///   @attention this concept might change at compile-time! This should be 
+   ///      detected by the compiler, so don't worry! If it happens, you can  
+   ///      fix it by including the same headers everywhere it is used.       
    template<class FROM, class...TO>
    concept ConvertibleCustom = PartialValidate<TO...> and (
          (Inner::FindMorphism<DecvqAll<ShedDeref<FROM>>,
@@ -113,6 +118,9 @@ namespace Langulus::CT
 
    /// Check if 'FROM' is convertible to all 'TO', as per C++ specification   
    ///   @attention this is also true if TO are aggregates _containing_ FROM  
+   ///   @attention this concept might change at compile-time! This should be 
+   ///      detected by the compiler, so don't worry! If it happens, you can  
+   ///      fix it by including the same headers everywhere it is used.       
    template<class FROM, class...TO>
    concept Convertible = PartialValidate<TO...>
        and ((ConvertibleImplicit<FROM, TO>
@@ -123,6 +131,9 @@ namespace Langulus::CT
    /// Check if 'FROM' is somehow convertible to one of 'TO', as per C++      
    /// specification                                                          
    ///   @attention this is also true if one of TO is aggregate of FROM       
+   ///   @attention this concept might change at compile-time! This should be 
+   ///      detected by the compiler, so don't worry! If it happens, you can  
+   ///      fix it by including the same headers everywhere it is used.       
    template<class FROM, class...TO>
    concept ConvertibleToOneOf = PartialValidate<TO...>
        and ((ConvertibleImplicit<FROM, TO>
@@ -135,7 +146,9 @@ namespace Langulus
 { 
    /// Get the reflected morphisms from T to other types, CT::Void if none    
    template<class T>
-   using MorphismsFrom = decltype(CT::Inner::GetMorphismsFrom<DecvqAll<Deref<T>>>(Types<>{}));
+   using GatherMorphismsFrom = decltype(
+      CT::Inner::GetMorphismsFrom<DecvqAll<Deref<T>>>(Types<>{})
+   );
       
    /// Convert from one type to another, utilizing CTTI definitions.          
    ///   @attention there is a major difference between conversion and        
@@ -146,41 +159,81 @@ namespace Langulus
    ///   @attention serialization uses conversion routines internally as      
    ///      fallback, but these can be overriden with serialization rules.    
    ///      In other words: serialization is an indirection on top of convert 
-   template<class TO, class FROM, auto UNIQUE = []{}>
+   template<class TO, class FROM/*, auto UNIQUE = []{}*/>
    constexpr auto Convert(FROM const& from) -> TO {
       static_assert(CT::NotReference<TO, FROM>, "Strip references first");
       static_assert(CT::NotSheddable<TO, FROM>, "Strip sheddables first");
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
 
-      constexpr int found = CT::Inner::FindMorphism<DFROM, DTO, 0, UNIQUE>();
-      if constexpr (found >= 0) {
-         using I = std::integral_constant<int, found>;
-         using M = CTTI::ConverterFrom<DFROM, I>;
-         
-         if constexpr (requires { {M::template Convert<DTO>(from)} -> ::std::same_as<DTO>; })
-            return M::template Convert<DTO>(from);
-         else if constexpr (CT::ConvertibleImplicit<DFROM, DTO>)
-            return DTO(from);
-         else if constexpr (CT::ConvertibleExplicit<DFROM, DTO>)
-            return DTO{static_cast<DTO>(DecvqAllCast(from))};
-         else {
-            static_assert(false,
-               "Despite a converter being declared, FROM can't be converted to TO - "
-               "add a M::template Convert<DTO>, "
-               "implicit constructor in TO, or implicit/explicit cast operator in FROM"
-            );
-            return {};
-         }
-      }
+      constexpr int found = CT::Inner::FindMorphism<DFROM, DTO, 0/*, UNIQUE*/>();
+      static_assert(found != -1,
+         "FROM can't be converted to TO - "
+         "define CTTI::Morphism<FROM> that converts it"
+      );
+
+      using M = CTTI::Morphism<DFROM, found>;
+      if constexpr (requires { {M::template Convert<DTO>(from)} -> ::std::same_as<DTO>; })
+         return M::template Convert<DTO>(from);
+      else if constexpr (CT::ConvertibleImplicit<DFROM, DTO>)
+         return DTO(from);
+      else if constexpr (CT::ConvertibleExplicit<DFROM, DTO>)
+         return DTO{static_cast<DTO>(DecvqAllCast(from))};
       else {
          static_assert(false,
-            "FROM can't be converted to TO - add CTTI::ConverterFrom, "
-            "implicit constructor, or implicit/explicit cast operator"
+            "Despite the appropriate CTTI::Morphism being defined, "
+            "FROM can't be converted to TO - "
+            "either define custom CTTI::Morphism<FROM>::Convert<TO>, "
+            "an implicit constructor in TO, "
+            "or an implicit/explicit cast operator in FROM"
          );
          return {};
       }
    }
 }
 
-#define LANGULUS_MORPHISM(...) using To = Types<__VA_ARGS__>; static_assert(not To::Empty, "Empty morphisms not allowed")
+#define LANGULUS_MORPHISM_CONCEPT(FROM, ...) \
+   namespace Langulus::CTTI { \
+      template<FROM T, int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<T>, HERE()>()) \
+      struct Morphism<T, UNIQUE> { \
+         static constexpr bool Conceptual = true; \
+         using To = Types<__VA_ARGS__>; \
+         static_assert(not To::Empty, "Empty morphisms not allowed"); \
+         static_assert(Exact<DecvqAll<T>, T>, "Strip all decorations on all indirections first"); \
+      }; \
+   }
+
+#define LANGULUS_MORPHISM_CONCEPT_CUSTOM(FROM, BODY, ...) \
+   namespace Langulus::CTTI { \
+      template<FROM T, int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<T>, HERE()>()) \
+      struct Morphism<T, UNIQUE> { \
+         static constexpr bool Conceptual = true; \
+         using To = Types<__VA_ARGS__>; \
+         static_assert(not To::Empty, "Empty morphisms not allowed"); \
+         static_assert(Exact<DecvqAll<T>, T>, "Strip all decorations on all indirections first"); \
+         template<class TO> \
+         static constexpr TO Convert(ConstAll<T&> from) BODY \
+      }; \
+   }
+
+#define LANGULUS_MORPHISM(FROM, ...) \
+   namespace Langulus::CTTI { \
+      template<int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<FROM>, HERE()>()) \
+      struct Morphism<FROM, UNIQUE> { \
+         using To = Types<__VA_ARGS__>; \
+         static_assert(not To::Empty, "Empty morphisms not allowed"); \
+         static_assert(Exact<DecvqAll<FROM>, FROM>, "Strip all decorations on all indirections first"); \
+      }; \
+   }
+
+#define LANGULUS_MORPHISM_CUSTOM(FROM, BODY, ...) \
+   namespace Langulus::CTTI { \
+      template<int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<FROM>, HERE()>()) \
+      struct Morphism<FROM, UNIQUE> { \
+         using To = Types<__VA_ARGS__>; \
+         static_assert(not To::Empty, "Empty morphisms not allowed"); \
+         static_assert(Exact<DecvqAll<FROM>, FROM>, "Strip all decorations on all indirections first"); \
+         template<class TO> \
+         static constexpr TO Convert(FROM const& from) BODY \
+      }; \
+   }

@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Akin.hpp"
-#include "Convertible.hpp"
+//#include "Convertible.hpp"
 #include <stdexcept>
 
 
@@ -136,7 +136,7 @@ namespace Langulus::CT
    template<class LHS, class...RHS>
    concept ComparableEqual = PartialValidate<RHS...>
       and requires (const LHS& lhs, const RHS&...rhs) {
-         { ((lhs == rhs), ...) } -> Convertible<bool>;
+         { ((lhs == rhs), ...) } -> ::std::same_as<bool>;
       };
 
    /// Three-way comparison check for any LHS and RHS                         
