@@ -13,8 +13,8 @@
 #include "Langulus/LoggerStateless.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
-#include <Langulus/Anyness/SerializeBytes.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
+#include <Langulus/Anyness/SerializeBytes.hpp>
 #include <ranges>
 #include <any>
 

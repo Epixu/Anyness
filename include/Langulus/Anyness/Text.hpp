@@ -570,131 +570,66 @@ namespace Langulus::CTTI
 
       static void Serialize(C const&, Anyness::Text&, Context*);
    };
-
-   /// Convert std::string_view -> Text                                       
-   template<>
-   struct ConverterFrom<::std::string_view, LglsUniqueConverterIndex(::std::string_view)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-   };
-
-   /// Convert Serial::Operator -> Text                                       
-   template<>
-   struct ConverterFrom<Serial::Operator, LglsUniqueConverterIndex(Serial::Operator)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-   };
-
-   /// Convert Bool -> Text                                                   
-   template<>
-   struct ConverterFrom<bool, LglsUniqueConverterIndex(bool)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(bool const& from) noexcept {
-         return from ? "yes" : "no";
-      }
-   };
-
-   /// Convert Byte -> Text                                                   
-   template<>
-   struct ConverterFrom<Langulus::Byte, LglsUniqueConverterIndex(Langulus::Byte)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(Langulus::Byte const& from) noexcept {
-         return Anyness::Text::Hex(from);
-      }
-   };
-
-   /// Convert Hash -> Text                                                   
-   template<>
-   struct ConverterFrom<Langulus::Hash, LglsUniqueConverterIndex(Langulus::Hash)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(Langulus::Hash const& from) noexcept {
-         return Anyness::Text::Hex(from.value);
-      }
-   };
-
-   /// Convert Number -> Text                                                 
-   template<CT::Number T>
-   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
-      static_assert(CT::Decayed<T>, "Strip all decorations first");
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(T const& from) noexcept {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
-
-   /// Convert DMeta -> Text                                                  
-   template<>
-   struct ConverterFrom<RTTI::DMeta, LglsUniqueConverterIndex(RTTI::DMeta)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(RTTI::DMeta const& from) noexcept {
-         return from.GetName();
-      }
-   };
-
-   /// Convert TMeta -> Text                                                  
-   template<>
-   struct ConverterFrom<RTTI::TMeta, LglsUniqueConverterIndex(RTTI::TMeta)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(RTTI::TMeta const& from) noexcept {
-         return from.GetName();
-      }
-   };
-
-   /// Convert CMeta -> Text                                                  
-   template<>
-   struct ConverterFrom<RTTI::CMeta, LglsUniqueConverterIndex(RTTI::CMeta)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(RTTI::CMeta const& from) noexcept {
-         return from.GetName();
-      }
-   };
-
-   /// Convert VMeta -> Text                                                  
-   template<>
-   struct ConverterFrom<RTTI::VMeta, LglsUniqueConverterIndex(RTTI::VMeta)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-
-      template<class TO>
-      static constexpr TO Convert(RTTI::VMeta const& from) noexcept {
-         return from.GetCppName();
-      }
-   };
-   
-   /// Convert Literal -> Text                                                
-   template<CT::Literal T>
-   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
-      static_assert(CT::Decayed<T>, "Strip all decorations first");
-      LANGULUS_MORPHISM(Anyness::Text);
-   };
-
-   /// Map all pointers as convertible to text                                
-   template<CT::Sparse T>
-   struct ConverterFrom<T, LglsUniqueConverterIndex(T)> {
-      LANGULUS_MORPHISM(Anyness::Text);
-      static_assert(Exact<DecvqAll<T>, T>,
-         "Strip all decorations on all indirections first");
-
-      template<class TO>
-      static constexpr TO Convert(ConstAll<T&> from) {
-         if constexpr (CT::Complete<Deptr<T>>) {
-            if constexpr (CT::Character<Deptr<T>>)
-               return {from};
-            else
-               return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
-         }
-         else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
-      }
-   };
 }
+
+/// Convert std::string_view -> Text                                          
+LANGULUS_MORPHISM(std::string_view, Langulus::Anyness::Text);
+
+/// Convert Serial::Operator -> Text                                          
+LANGULUS_MORPHISM(Langulus::Serial::Operator, Langulus::Anyness::Text);
+
+/// Convert bool -> Text                                                      
+LANGULUS_MORPHISM_CUSTOM(bool, { return from ? "yes" : "no"; }, 
+   Langulus::Anyness::Text
+);
+
+/// Convert Byte -> Text                                                      
+LANGULUS_MORPHISM_CUSTOM(Langulus::Byte, { return Anyness::Text::Hex(from); }, 
+   Langulus::Anyness::Text
+);
+
+/// Convert Hash -> Text                                                      
+LANGULUS_MORPHISM_CUSTOM(Langulus::Hash, { return Anyness::Text::Hex(from.value); }, 
+   Langulus::Anyness::Text
+);
+
+/// Convert Number -> Text                                                    
+LANGULUS_MORPHISM_CONCEPT_CUSTOM(Langulus::CT::Number, { return Anyness::Text::FromNumber(from); },
+   Langulus::Anyness::Text
+);
+
+/// Convert DMeta -> Text                                                     
+LANGULUS_MORPHISM_CUSTOM(Langulus::RTTI::DMeta, { return from.GetName(); }, 
+   Langulus::Anyness::Text
+);
+
+/// Convert TMeta -> Text                                                     
+LANGULUS_MORPHISM_CUSTOM(Langulus::RTTI::TMeta, { return from.GetName(); }, 
+   Langulus::Anyness::Text
+);
+
+/// Convert CMeta -> Text                                                     
+LANGULUS_MORPHISM_CUSTOM(Langulus::RTTI::CMeta, { return from.GetName(); }, 
+   Langulus::Anyness::Text
+);
+
+/// Convert VMeta -> Text                                                     
+LANGULUS_MORPHISM_CUSTOM(Langulus::RTTI::VMeta, { return from.GetCppName(); }, 
+   Langulus::Anyness::Text
+);
+
+/// Convert Literal -> Text                                                   
+LANGULUS_MORPHISM_CONCEPT(Langulus::CT::Literal, Langulus::Anyness::Text);
+
+/// Map all pointers as convertible to text                                   
+LANGULUS_MORPHISM_CONCEPT_CUSTOM(Langulus::CT::Sparse, {
+      if constexpr (CT::Complete<Deptr<T>>) {
+         if constexpr (CT::Character<Deptr<T>>)
+            return {from};
+         else
+            return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+      }
+      else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+   },
+   Langulus::Anyness::Text
+);

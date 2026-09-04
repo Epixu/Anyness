@@ -184,7 +184,7 @@ namespace fmt
    /// MARK: {fmt}                                                            
    /// Extend FMT to be capable of logging any Anyness container that is      
    /// convertible to Anyness::Text.                                          
-   template<::Langulus::CT::Container T> requires ::Langulus::CT::Convertible<T, ::Langulus::Anyness::Text>
+   template<::Langulus::CT::Container T>// requires (CT::Inner::FindMorphism<T, ::Langulus::Anyness::Text>() >= 0)// ::Langulus::CT::Convertible<T, ::Langulus::Anyness::Text>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {

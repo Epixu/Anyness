@@ -426,7 +426,7 @@ TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to nothing", TestType
    , InheritedConvertibleToInt4
    , InheritedConvertibleToInt5
    , InheritedConvertibleToInt6
-   //, int, const int, const int&, int& // struct ConverterFrom<int> exists
+   //, int, const int, const int&, int& // CTTI::Morphism<int> exists
    , float, float const, float const&, float&
    , bool, bool const, bool const&, bool&
 ) {

@@ -52,7 +52,7 @@ namespace Langulus::Anyness::Component
                return 1;
             }
             else {
-               static_assert(CT::Convertible<FROM, TO>, "Not convertible");
+               static_assert(CT::Inner::FindMorphism<FROM, TO>() >= 0 /*CT::Convertible<FROM, TO>*/, "Not convertible");
                out.Assign(Langulus::Convert<TO>(*self));
                return 1;
             }
@@ -112,7 +112,7 @@ namespace Langulus::Anyness::Component
             // to generate a well inlined routine for conversion        
             using TO   = TypeOf<OUT>;
             using FROM = TypeOf<C>;
-            static_assert(CT::Convertible<FROM, TO>, "Not convertible");
+            static_assert(CT::Inner::FindMorphism<FROM, TO>() >= 0 /*CT::Convertible<FROM, TO>*/, "Not convertible");
 
             if constexpr (Same<FROM, TO>)
                return out.Concat(self);
