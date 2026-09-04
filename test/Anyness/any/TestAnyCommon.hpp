@@ -8,11 +8,9 @@
 #pragma once
 #include "../../Main.hpp"
 #include "../../TestTypes/ScopedElement.hpp"
-#include "../../TestTypes/ReferencedType.hpp"
 #include "../../TestTypes/CommonTypes.hpp"
 #include "Langulus/Logger.hpp"
 #include "Langulus/LoggerStateless.hpp"
-#include "source/Component.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
 #include <Langulus/Anyness/SerializeBytes.hpp>
@@ -215,7 +213,7 @@ namespace doctest
    /// MARK: {doctest}                                                        
    /// doctest stringifiers for _any_ container serializable to text.         
    /// This is used for all containers, inclusing sets, maps, pairs, handles..
-   template<Langulus::CT::Container T>// requires Langulus::CT::Convertible<T, Langulus::Anyness::Text>
+   template<Langulus::CT::Container T>
    struct StringMaker<T> {
       static String convert(T const& value) {
          Langulus::Anyness::Text as_text;

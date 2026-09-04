@@ -7,10 +7,6 @@
 ///                                                                           
 #include "TestBytesCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
-#include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Utils/Byte.hpp>
-#include <Langulus/Anyness/SerializeBytes.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
 
 TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    // Elements are not allocated by the memory manager                  

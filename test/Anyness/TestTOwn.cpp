@@ -7,11 +7,7 @@
 ///                                                                           
 #include "../Main.hpp"
 #include <Langulus/Anyness/TOwn.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
-#include "../TestTypes/ReferencedType.hpp"
-#include "../TestTypes/ScopedElement.hpp"
 #include "handle/TestHandleCommon.hpp"
-#include "source/Container.hpp"
 
 using namespace Langulus;
 using Anyness::TOwn;

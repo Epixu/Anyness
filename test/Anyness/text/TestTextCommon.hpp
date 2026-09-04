@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "../many/TestManyCommon.hpp"
-#include "Langulus/CT/Character.hpp"
 #include <Langulus/Anyness/Text.hpp>
 #include <string>
 

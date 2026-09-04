@@ -8,8 +8,6 @@
 #include "../Main.hpp"
 #include "any/TestAnyCommon.hpp"
 #include "handle/TestHandleCommon.hpp"
-#include <Langulus/Anyness/Bytes.hpp>
-#include <Langulus/Anyness/SerializeBytes.hpp>
 
 using namespace Langulus;
 using Anyness::Bytes;

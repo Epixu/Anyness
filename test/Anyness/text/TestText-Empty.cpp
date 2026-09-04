@@ -7,8 +7,6 @@
 ///                                                                           
 #include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
-#include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
 
 //TODO char* std::string_view std::string std::array<char> Literal
 

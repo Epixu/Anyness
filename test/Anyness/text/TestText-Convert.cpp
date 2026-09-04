@@ -5,8 +5,7 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "TestManyCommon.hpp"
-#include <Langulus/Anyness/SerializeText.hpp>
+#include "TestTextCommon.hpp"
 
 
 SCENARIO("Converting Many/TMany") {

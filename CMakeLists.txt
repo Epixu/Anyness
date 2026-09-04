@@ -184,7 +184,7 @@ endif()
 
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
 target_include_directories(LangulusAnyness PUBLIC include)
-target_include_directories(LangulusAnyness PUBLIC .)
+target_include_directories(LangulusAnyness PUBLIC ./)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
 target_link_libraries(LangulusAnyness
     PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>

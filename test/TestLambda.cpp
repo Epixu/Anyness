@@ -8,7 +8,7 @@
 #include "Main.hpp"
 #include <Langulus/Lambda.hpp>
 #include <Langulus/CT/Noexcept.hpp>
-#include <concepts>
+//#include <concepts>
 
 using namespace Langulus;
 
