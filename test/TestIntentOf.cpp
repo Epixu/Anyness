@@ -5,7 +5,7 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#include "Langulus/Typenav.hpp"
+//#include "Langulus/Typenav.hpp"
 #include "Main.hpp"
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/MetaOf.hpp>

@@ -6,10 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "../Main.hpp"
-#include "any/TestAnyCommon.hpp"
-#include "handle/TestHandleCommon.hpp"
-#include <Langulus/Anyness/Text.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
 
 using namespace Langulus;
 using Anyness::Text;

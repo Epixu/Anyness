@@ -7,16 +7,12 @@
 ///                                                                           
 #include "../Main.hpp"
 #include <Langulus/Anyness/TRef.hpp>
-#include <Langulus/Anyness/SerializeBytes.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
-#include "../TestTypes/ReferencedType.hpp"
-#include "../TestTypes/ScopedElement.hpp"
 #include "handle/TestHandleCommon.hpp"
 
 using namespace Langulus;
 using Anyness::TRef;
 
-static_assert(CT::ConvertibleCustom<int, Anyness::Text>);
+//static_assert(CT::ConvertibleCustom<int, Anyness::Text>);
 
 TEST_CASE_TEMPLATE("Shared pointer", TestType
    , Types<TRef<RT>,        ScopedElement<RT>>

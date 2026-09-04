@@ -8,11 +8,6 @@
 #include "Main.hpp"
 #include "TestTypes/CommonTypes.hpp"
 #include <Langulus/MetaOf.hpp>
-#include <Langulus/Utils/Values.hpp>
-#include <Langulus/Tag.hpp>
-#include <Langulus/CT/Members.hpp>
-#include <Langulus/Anyness/SerializeBytes.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #include "TestTypes/PackedPointers.hpp"

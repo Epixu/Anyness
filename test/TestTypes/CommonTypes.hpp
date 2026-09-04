@@ -9,6 +9,7 @@
 #include <Langulus/Typenav.hpp>
 #include <Langulus/Tag.hpp>
 #include <Langulus/CT/Number.hpp>
+#include "ReferencedType.hpp"
 #include <string>
 
 using namespace Langulus;
@@ -991,3 +992,13 @@ static_assert(    ::std::is_copy_constructible_v<ForcefullyPod>);
 static_assert(    ::std::is_move_constructible_v<ForcefullyPod>);
 static_assert(not ::std::is_copy_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
 static_assert(not ::std::is_move_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
+
+
+using pptr8rt  = Langulus::Fractalloc::PackedPointer<RT, 2, 6, 0>;
+static_assert(sizeof(pptr8rt) == 1);
+
+using pptr16rt = Langulus::Fractalloc::PackedPointer<RT, 4, 4, 8>;
+static_assert(sizeof(pptr16rt) == 2);
+
+using pptr32rt = Langulus::Fractalloc::PackedPointer<RT>;
+static_assert(sizeof(pptr32rt) == 4);

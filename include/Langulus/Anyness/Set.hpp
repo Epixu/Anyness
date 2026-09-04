@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "source/Container.hpp"
+#include <source/Container.hpp>
 #include <source/components/Typed-Stack.hpp>
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Count-Stack.hpp>
@@ -14,7 +14,7 @@
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/OwnershipDeep-Heap.hpp>
 #include <source/components/Hash-Heap.hpp>
-#include <source/components/IndexedHash-Stack.hpp>
+#include <source/components/IndexedHash-Heap.hpp>
 #include <source/components/Merging.hpp>
 #include <source/components/MergingOperators.hpp>
 #include <source/components/Assignment.hpp>

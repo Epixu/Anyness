@@ -8,7 +8,7 @@
 #include "Main.hpp"
 #include <Langulus/Literal.hpp>
 #include <string>
-#include <string_view>
+//#include <string_view>
 
 using namespace Langulus;
 

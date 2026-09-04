@@ -7,8 +7,6 @@
 ///                                                                           
 #include "TestTextCommon.hpp"
 #include "../handle/TestHandleCommon.hpp"
-#include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Anyness/SerializeText.hpp>
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
