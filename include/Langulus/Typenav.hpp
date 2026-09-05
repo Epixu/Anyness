@@ -124,7 +124,7 @@ namespace Langulus
    template<class T>
    using Devq = ::std::remove_volatile_t<T>;
 
-   /// Remove an array extent from a type                                     
+   /// Remove the topmost array extent from a type                            
    ///   @attention will remove references as well                            
    template<class T>
    using Deext = ::std::remove_extent_t<Deref<T>>; //TODO Deext-ing a custom CT::Array should give the inner type!!!
@@ -583,7 +583,7 @@ namespace Langulus
 
    /// Removes all bounded array extents from a type.                         
    /// Removes references if type had extent.                                 
-   /// For example: `void**[6][6][6]` becomes `void**`.                       
+   /// For example: `void**(&)[6][6][6]` becomes `void**`.                    
    ///              `void*&` remains `void*&`.                                
    template<class T>
    using DeextAll = typename decltype(Inner::NestedDeext<T>())::First;
@@ -659,6 +659,34 @@ namespace Langulus
    }
 }
 
+/// Automatically populates the Langulus::CT namespace with the appropriate   
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
+/// Used to reduce boilerplate.                                               
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention use this macro in the global namespace                       
+///   @param NAME the name of the concept - must be the same as the trait in  
+///      Langulus::CTTI::NAME                                                 
+///   @param HOW how to filter the type when checking it. Use ShedDeref<T>    
+///      by default                                                           
+#define LANGULUS_CTTI_CONCEPT_INNER(NAME, HOW) \
+   namespace Langulus::CT { \
+      template<class...T> \
+      concept NAME = PartialValidate<T...> \
+          and (LANGULUS_CTTI_CHECK(HOW, NAME) and ...); \
+      template<class...T> \
+      concept Not##NAME = PartialValidate<T...> \
+          and ((not LANGULUS_CTTI_CHECK(HOW, NAME)) and ...); \
+   }
+
+/// Automatically populates the Langulus::CT namespace with the appropriate   
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
+/// Used to reduce boilerplate. Sheds all sheddables and dereferences.        
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention removes all sheddables and dereferences                      
+///   @attention use this macro in the global namespace                       
+#define LANGULUS_CTTI_CONCEPT(NAME) \
+   LANGULUS_CTTI_CONCEPT_INNER(NAME, ShedDeref<T>)
+
 /// MARK: CTTI Macros                                                         
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>.         
@@ -667,14 +695,7 @@ namespace Langulus
 ///   @attention will only shed references                                    
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(NAME) \
-   namespace Langulus::CT { \
-      template<class...T> \
-      concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(Deref<T>, NAME) and ...); \
-      template<class...T> \
-      concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(Deref<T>, NAME)) and ...); \
-   }
+   LANGULUS_CTTI_CONCEPT_INNER(NAME, Deref<T>)
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>.         
@@ -683,30 +704,7 @@ namespace Langulus
 ///   @attention will shed only references and cv qualifiers                  
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE_DECVQ(NAME) \
-   namespace Langulus::CT { \
-      template<class...T> \
-      concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(Decvq<Deref<T>>, NAME) and ...); \
-      template<class...T> \
-      concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(Decvq<Deref<T>>, NAME)) and ...); \
-   }
-
-/// Automatically populates the Langulus::CT namespace with the appropriate   
-/// concepts, based on the provided Langulus::CTTI::<structure name>.         
-/// Used to reduce boilerplate. Removes sheddables and references.            
-///   @attention types need to be complete only if we end up 'delving in'     
-///   @attention will shed all sheddables, as well as references after that   
-///   @attention use this macro in the global namespace                       
-#define LANGULUS_CTTI_CONCEPT(NAME) \
-   namespace Langulus::CT { \
-      template<class...T> \
-      concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(ShedDeref<T>, NAME) and ...); \
-      template<class...T> \
-      concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(ShedDeref<T>, NAME)) and ...); \
-   }
+   LANGULUS_CTTI_CONCEPT_INNER(NAME, Decvq<Deref<T>>)
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>.         
@@ -716,14 +714,17 @@ namespace Langulus
 ///      qualifiers after that                                                
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT_DECVQ(NAME) \
-   namespace Langulus::CT { \
-      template<class...T> \
-      concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(Decvq<ShedDeref<T>>, NAME) and ...); \
-      template<class...T> \
-      concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(Decvq<ShedDeref<T>>, NAME)) and ...); \
-   }
+   LANGULUS_CTTI_CONCEPT_INNER(NAME, Decvq<ShedDeref<T>>)
+
+/// Automatically populates the Langulus::CT namespace with the appropriate   
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
+/// Used to reduce boilerplate. Removes qualifiers and extents from argument. 
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention will shed all sheddables, as well as references, cv          
+///      qualifiers, and extents after that                                   
+///   @attention use this macro in the global namespace                       
+#define LANGULUS_CTTI_CONCEPT_DECVQE(NAME) \
+   LANGULUS_CTTI_CONCEPT_INNER(NAME, Decvq<DeextAll<ShedDeref<T>>>)
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>.         
@@ -733,14 +734,7 @@ namespace Langulus
 ///      and cv qualifiers after that                                         
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT_DECAY(NAME) \
-   namespace Langulus::CT { \
-      template<class...T> \
-      concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(Decay<T>, NAME) and ...); \
-      template<class...T> \
-      concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(Decay<T>, NAME)) and ...); \
-   }
+   LANGULUS_CTTI_CONCEPT_INNER(NAME, Decay<T>)
 
 LANGULUS_CTTI_CONCEPT(Null);
 LANGULUS_CTTI_CONCEPT(Enum);

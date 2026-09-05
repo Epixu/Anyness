@@ -24,7 +24,22 @@ TEST_CASE_TEMPLATE("Testing CT::Container types", TestType
    , CustomContainer
    , CustomContainer const
    , CustomContainer&
+   , CustomContainer[5]
+   , CustomContainer[5][5]
    , SheddableType<CustomContainer>
+   , Refer<CustomContainer>
+   , Move<CustomContainer>
+   , Copy<CustomContainer>
+   , Abandon<CustomContainer>
+   , Disown<CustomContainer>
+   , Clone<CustomContainer>
+   , SheddableType<CustomContainer[5]>
+   , Refer<CustomContainer[5]>
+   , Move<CustomContainer[5]>
+   , Copy<CustomContainer[5]>
+   , Abandon<CustomContainer[5]>
+   , Disown<CustomContainer[5]>
+   , Clone<CustomContainer[5]>
 ) {
    static_assert(CT::Container<TestType>);
 }
