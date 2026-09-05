@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestTextCommon.hpp"
-#include "../handle/TestHandleCommon.hpp"
 
 
 TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType

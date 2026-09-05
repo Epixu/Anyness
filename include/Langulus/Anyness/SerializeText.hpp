@@ -179,23 +179,23 @@ namespace Langulus::CTTI
    }
 }
 
+#if LANGULUS_FEATURE(LOGGING)
 namespace fmt
 {
    /// MARK: {fmt}                                                            
    /// Extend FMT to be capable of logging any Anyness container that is      
-   /// convertible to Anyness::Text.                                          
+   /// serializable to Anyness::Text.                                         
    template<::Langulus::CT::Container T>// requires (CT::Inner::FindMorphism<T, ::Langulus::Anyness::Text>() >= 0)// ::Langulus::CT::Convertible<T, ::Langulus::Anyness::Text>
    struct formatter<T> {
       template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
+      constexpr auto parse(CONTEXT& ctx) { return ctx.begin(); }
 
       template<class CONTEXT>
       auto format(T const& e, CONTEXT& ctx) const {
          try {
-            const auto to_text = ::Langulus::Convert<::Langulus::Anyness::Text>(e);
-            return format_to(ctx.out(), "{}", static_cast<::Langulus::Token>(to_text));
+            ::Langulus::Anyness::Text result;
+            ::Langulus::Serialize(e, result);
+            return format_to(ctx.out(), "{}", static_cast<::Langulus::Token>(result));
          }
          catch(...) {
             // Don't allow any exceptions to leak out of here           
@@ -204,3 +204,4 @@ namespace fmt
       }
    };
 }
+#endif

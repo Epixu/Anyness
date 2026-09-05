@@ -7,6 +7,7 @@
 ///                                                                           
 #include "TestPairCommon.hpp"
 
+
 namespace Langulus::Anyness
 {
    // Reuses definitions from TestPair-Empty.cpp. Reduces compile time. 

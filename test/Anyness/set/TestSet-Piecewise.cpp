@@ -7,6 +7,7 @@
 ///                                                                           
 #include "TestSetCommon.hpp"
 
+
 namespace Langulus::Anyness
 {
    // Reuses definitions from TestSet-Empty.cpp. Reduces compile time.  

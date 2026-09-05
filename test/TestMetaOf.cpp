@@ -7,11 +7,11 @@
 ///                                                                           
 #include "Main.hpp"
 #include "TestTypes/CommonTypes.hpp"
-#include <Langulus/MetaOf.hpp>
+#include "TestTypes/PackedPointers.hpp"
 
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   #include "TestTypes/PackedPointers.hpp"
-#endif
+#include <Langulus/MetaOf.hpp>
+#include <Langulus/Anyness/SerializeText.hpp>
+#include <Langulus/Anyness/SerializeBytes.hpp>
 
 
 ///                                                                           

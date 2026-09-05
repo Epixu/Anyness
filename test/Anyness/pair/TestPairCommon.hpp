@@ -7,8 +7,10 @@
 ///                                                                           
 #pragma once
 #include "../set/TestSetCommon.hpp"
+#include "../handle/TestHandlePairCommon.hpp"
 #include <Langulus/Anyness/Pair.hpp>
 #include <Langulus/Anyness/TPair.hpp>
+
 
 #if LANGULUS(BENCHMARK)
    /// MARK: Benchmarking                                                     

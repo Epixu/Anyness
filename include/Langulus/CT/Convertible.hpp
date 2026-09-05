@@ -9,7 +9,6 @@
 #include "Akin.hpp"
 #include "../Typenav.hpp"
 #include "../Utils/Types.hpp"
-#include "../Utils/StaticSet.hpp"
 #include <type_traits>
 
 
@@ -159,14 +158,14 @@ namespace Langulus
    ///   @attention serialization uses conversion routines internally as      
    ///      fallback, but these can be overriden with serialization rules.    
    ///      In other words: serialization is an indirection on top of convert 
-   template<class TO, class FROM/*, auto UNIQUE = []{}*/>
+   template<class TO, class FROM>
    constexpr auto Convert(FROM const& from) -> TO {
       static_assert(CT::NotReference<TO, FROM>, "Strip references first");
       static_assert(CT::NotSheddable<TO, FROM>, "Strip sheddables first");
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
 
-      constexpr int found = CT::Inner::FindMorphism<DFROM, DTO, 0/*, UNIQUE*/>();
+      constexpr int found = CT::Inner::FindMorphism<DFROM, DTO, 0>();
       static_assert(found != -1,
          "FROM can't be converted to TO - "
          "define CTTI::Morphism<FROM> that converts it"
@@ -191,6 +190,8 @@ namespace Langulus
       }
    }
 }
+
+#include "../Utils/StaticSet.hpp"
 
 #define LANGULUS_MORPHISM_CONCEPT(FROM, ...) \
    namespace Langulus::CTTI { \

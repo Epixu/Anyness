@@ -10,6 +10,7 @@
 #include <Langulus/Anyness/Text.hpp>
 #include <string>
 
+
 #if LANGULUS(BENCHMARK)
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkText(func, tolerance, my_init, my) { \

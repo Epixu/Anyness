@@ -7,11 +7,11 @@
 ///                                                                           
 #pragma once
 #include "../many/TestManyCommon.hpp"
-#include "source/Component.hpp"
 #include <Langulus/Anyness/Set.hpp>
 #include <Langulus/Anyness/TSet.hpp>
 #include <unordered_set>
 #include <set>
+
 
 #if LANGULUS(BENCHMARK)
    /// Perform a persistent benchmark across builds and verify performance    

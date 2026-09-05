@@ -11,6 +11,7 @@
 #include <Langulus/Anyness/TMany.hpp>
 #include <vector>
 
+
 #if LANGULUS(BENCHMARK)
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkMany(func, tolerance, my_init, my) { \

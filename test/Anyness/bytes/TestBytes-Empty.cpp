@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestBytesCommon.hpp"
-#include "../handle/TestHandleCommon.hpp"
 
 
 TEST_CASE_TEMPLATE("Test empty Bytes", TestType

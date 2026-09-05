@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "TestManyCommon.hpp"
-#include "../handle/TestHandleCommon.hpp"
 
 namespace Langulus::Anyness
 {

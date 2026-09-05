@@ -9,10 +9,7 @@
 #include <Langulus/Allocator.hpp>
 #include <Langulus/CT/Referenced.hpp>
 
-#if not LANGULUS_FEATURE(MANAGED_MEMORY)
-   #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
-#endif
-
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
 
 /// Packed pointers                                                           
 using pptr8  = Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>;
@@ -128,3 +125,5 @@ public:
    auto operator -> ()       -> Inner*       {return element.Unpack();}
    auto operator -> () const -> Inner const* {return element.Unpack();}*/
 };
+
+#endif

@@ -7,12 +7,13 @@
 ///                                                                           
 #pragma once
 #include "../pair/TestPairCommon.hpp"
+#include "../handle/TestHandlePairCommon.hpp"
 #include <Langulus/Anyness/Map.hpp>
 #include <Langulus/Anyness/TMap.hpp>
+#include <unordered_map>
+
 
 #if LANGULUS(BENCHMARK)
-   #include <unordered_map>
-
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkMap(func, tolerance, my_init, my) { \
       const auto token = ::std::string("Test/") + func + "(" + NameOf<E1>() + "," + NameOf<E2>() + ") |" + NameOf<T>() + "|"; \
