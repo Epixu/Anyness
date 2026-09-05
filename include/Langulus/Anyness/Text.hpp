@@ -34,6 +34,7 @@
 #include <Langulus/CT/Convertible.hpp>
 #include <Langulus/CT/Serializer.hpp>
 #include <Langulus/Utils/Byte.hpp>
+#include <type_traits>
 //#include <string_view>
 //#include <type_traits>
 

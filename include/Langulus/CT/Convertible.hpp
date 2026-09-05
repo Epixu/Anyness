@@ -193,6 +193,10 @@ namespace Langulus
 
 #include "../Utils/StaticSet.hpp"
 
+/// Defines a concept-based morphism from a type to as many other types.      
+/// The morphism will rely on available constructors and cast operators.      
+///   @attention use this macro in the global namespace                       
+///   @attention concept-based morphisms have lower priority than type-based  
 #define LANGULUS_MORPHISM_CONCEPT(FROM, ...) \
    namespace Langulus::CTTI { \
       template<FROM T, int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<T>, HERE()>()) \
@@ -204,6 +208,10 @@ namespace Langulus
       }; \
    }
 
+/// Defines a concept-based morphism from a type to as many other types.      
+/// You have to provide a custom conversion routine.                          
+///   @attention use this macro in the global namespace                       
+///   @attention concept-based morphisms have lower priority than type-based  
 #define LANGULUS_MORPHISM_CONCEPT_CUSTOM(FROM, BODY, ...) \
    namespace Langulus::CTTI { \
       template<FROM T, int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<T>, HERE()>()) \
@@ -217,6 +225,9 @@ namespace Langulus
       }; \
    }
 
+/// Defines a type-based morphism from a type to as many other types.         
+/// The morphism will rely on available constructors and cast operators.      
+///   @attention use this macro in the global namespace                       
 #define LANGULUS_MORPHISM(FROM, ...) \
    namespace Langulus::CTTI { \
       template<int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<FROM>, HERE()>()) \
@@ -227,6 +238,9 @@ namespace Langulus
       }; \
    }
 
+/// Defines a type-based morphism from a type to as many other types.         
+/// You have to provide a custom conversion routine.                          
+///   @attention use this macro in the global namespace                       
 #define LANGULUS_MORPHISM_CUSTOM(FROM, BODY, ...) \
    namespace Langulus::CTTI { \
       template<int UNIQUE> requires (UNIQUE == GetStaticSetIndex<Inner::MorphismSet<FROM>, HERE()>()) \
