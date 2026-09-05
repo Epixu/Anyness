@@ -7,7 +7,6 @@
 ///                                                                           
 #include "../Main.hpp"
 #include "any/TestAnyCommon.hpp"
-#include "handle/TestHandleCommon.hpp"
 
 using namespace Langulus;
 using Anyness::Bytes;

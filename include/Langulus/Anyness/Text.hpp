@@ -594,7 +594,9 @@ LANGULUS_MORPHISM_CUSTOM(Langulus::Hash, { return Anyness::Text::Hex(from.value)
 );
 
 /// Convert Number -> Text                                                    
-LANGULUS_MORPHISM_CONCEPT_CUSTOM(Langulus::CT::Number, { return Anyness::Text::FromNumber(from); },
+LANGULUS_MORPHISM_CONCEPT_CUSTOM(Langulus::CT::Number, {
+      return Anyness::Text::FromNumber(from);
+   },
    Langulus::Anyness::Text
 );
 
@@ -630,6 +632,20 @@ LANGULUS_MORPHISM_CONCEPT_CUSTOM(Langulus::CT::Sparse, {
             return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
       }
       else return NameOf<T>() + "(" + Anyness::Text::Hex<true>(from) + ")";
+   },
+   Langulus::Anyness::Text
+);
+
+/// Map all bounded arrays as convertible to text                             
+LANGULUS_MORPHISM_CONCEPT_CUSTOM(Langulus::CT::Array, {
+      if constexpr (CT::Character<Deext<T>>)
+         return {from};
+      else {
+         TO result;
+         for (auto& i : from)
+            Langulus::Serialize(i, result);
+         return result;
+      }
    },
    Langulus::Anyness::Text
 );

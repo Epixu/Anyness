@@ -403,18 +403,18 @@ TEST_CASE_TEMPLATE("Testing not CT::Convertible to int", TestType
 }
 
 ///                                                                           
-/// Langulus::MorphismsFrom                                                   
+/// Langulus::GatherMorphismsFrom                                             
 ///                                                                           
-TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to int", TestType
+TEST_CASE_TEMPLATE("Testing Langulus::GatherMorphismsFrom to int", TestType
    //, IncompleteType                // shouldn't compile
    //, IncompleteType const          // shouldn't compile
    //, SheddableType<IncompleteType> // shouldn't compile
    , ConvertibleToIntExternally
 ) {
-   static_assert(Exact<Langulus::MorphismsFrom<TestType>, Types<int>>);
+   static_assert(Exact<Langulus::GatherMorphismsFrom<TestType>, Types<int>>);
 }
 
-TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to nothing", TestType
+TEST_CASE_TEMPLATE("Testing Langulus::GatherMorphismsFrom to nothing", TestType
    //, IncompleteType                // shouldn't compile
    //, IncompleteType const          // shouldn't compile
    //, SheddableType<IncompleteType> // shouldn't compile
@@ -426,9 +426,6 @@ TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to nothing", TestType
    , InheritedConvertibleToInt4
    , InheritedConvertibleToInt5
    , InheritedConvertibleToInt6
-   //, int, const int, const int&, int& // CTTI::Morphism<int> exists
-   , float, float const, float const&, float&
-   , bool, bool const, bool const&, bool&
 ) {
-   static_assert(Exact<Langulus::MorphismsFrom<TestType>, Types<>>);
+   static_assert(Exact<Langulus::GatherMorphismsFrom<TestType>, Types<>>);
 }

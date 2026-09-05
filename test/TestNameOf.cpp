@@ -6,11 +6,8 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Main.hpp"
+#include "TestTypes/PackedPointers.hpp"
 #include <Langulus/NameOf.hpp>
-
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   #include "TestTypes/PackedPointers.hpp"
-#endif
 
 #if 0
    #include <Langulus/Logger.hpp>

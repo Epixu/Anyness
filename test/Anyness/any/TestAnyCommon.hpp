@@ -9,6 +9,8 @@
 #include "../../Main.hpp"
 #include "../../TestTypes/ScopedElement.hpp"
 #include "../../TestTypes/CommonTypes.hpp"
+#include "../../TestTypes/PackedPointers.hpp"
+#include "../handle/TestHandleCommon.hpp"
 #include "Langulus/Logger.hpp"
 #include "Langulus/LoggerStateless.hpp"
 #include <Langulus/Anyness/Any.hpp>
@@ -80,9 +82,6 @@ using namespace Anyness;
    #define BenchmarkAnyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
 #endif
 
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   #include "../../TestTypes/PackedPointers.hpp"
-#endif
 
 struct SizeSummary {
    size_t size = 0;

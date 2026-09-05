@@ -7,6 +7,7 @@
 ///                                                                           
 #include "TestManyCommon.hpp"
 
+
 namespace Langulus::Anyness
 {
    // Reuses definitions from TestMany-Empty.cpp. Reduces compile time.  

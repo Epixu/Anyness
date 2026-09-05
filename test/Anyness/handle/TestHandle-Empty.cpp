@@ -5,9 +5,7 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Langulus/Anyness/Handle.hpp>
 #include "../any/TestAnyCommon.hpp"
-#include "Langulus/Allocator.hpp"
 
 
 TEST_CASE_TEMPLATE("Test empty Handle/THandle", T

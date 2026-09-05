@@ -7,6 +7,7 @@
 ///                                                                           
 #include "TestAnyCommon.hpp"
 
+
 namespace Langulus::Anyness
 {
    // Reuses definitions from TestAny-Empty.cpp. Reduces compile time.  

@@ -7,9 +7,11 @@
 ///                                                                           
 //#include "Langulus/Typenav.hpp"
 #include "Main.hpp"
+#include "TestTypes/CommonTypes.hpp"
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/MetaOf.hpp>
-#include "TestTypes/CommonTypes.hpp"
+#include <Langulus/Anyness/SerializeText.hpp>
+#include <Langulus/Anyness/SerializeBytes.hpp>
 
 using namespace Langulus;
 
