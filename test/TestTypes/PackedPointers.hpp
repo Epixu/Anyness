@@ -8,6 +8,7 @@
 #pragma once
 #include <Langulus/Allocator.hpp>
 #include <Langulus/CT/Referenced.hpp>
+#include "ReferencedType.hpp"
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
 
@@ -125,5 +126,14 @@ public:
    auto operator -> ()       -> Inner*       {return element.Unpack();}
    auto operator -> () const -> Inner const* {return element.Unpack();}*/
 };
+
+using pptr8rt  = Langulus::Fractalloc::PackedPointer<RT, 2, 6, 0>;
+static_assert(sizeof(pptr8rt) == 1);
+
+using pptr16rt = Langulus::Fractalloc::PackedPointer<RT, 4, 4, 8>;
+static_assert(sizeof(pptr16rt) == 2);
+
+using pptr32rt = Langulus::Fractalloc::PackedPointer<RT>;
+static_assert(sizeof(pptr32rt) == 4);
 
 #endif
