@@ -229,8 +229,7 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.GetMembers().size() == 0);
    REQUIRE(meta.GetVerbs().size() == 0);
    REQUIRE(meta.GetBases().size() == 0);
-   REQUIRE(meta.GetMorphismsTo().size() == 1); // Pointers are always convertible to Text, even if incomplete
-   //REQUIRE(meta.GetMorphismsFrom().size() == 0);
+   REQUIRE(meta.GetMorphismsTo().size() == 2); // Pointers are always convertible to Text and Bytes
    REQUIRE(meta.GetMorphism(meta).convert == nullptr);
    REQUIRE(meta.GetMorphism(meta).serialize == nullptr);
    REQUIRE(meta.GetNamedValues().size() == 0);
@@ -592,17 +591,11 @@ SCENARIO("A type reflected with all traits") {
 
    REQUIRE(meta == imp_definition);
    REQUIRE(meta.GetMorphismsTo().at(int_definition).convert != nullptr);
-   /*REQUIRE(meta.GetMorphismsFrom().at(pi_definition).convert != nullptr);
-   REQUIRE(DMeta(int_definition).GetMorphismsFrom().size() == 1);
-   static_assert(Exact<MorphismsTo<int>, Types<::std::string>>);*/
-
-   REQUIRE(DMeta(int_definition).GetMorphismsTo().size() == 1); //TODO why 1???
-   //REQUIRE(DMeta(pi_definition).GetMorphismsFrom().size() == 0);
-   REQUIRE(DMeta(pi_definition).GetMorphismsTo().size() == 2);
+   REQUIRE(DMeta(int_definition).GetMorphismsTo().size() == 3);   // int -> Text; int -> Bytes; int -> ConvertibleFromIntExternally
+   REQUIRE(DMeta(pi_definition).GetMorphismsTo().size() == 3);    // Pi -> Bytes; Pi -> ImplicitlyReflectedDataWithTraits; Pi -> ConvertibleData
    REQUIRE(DMeta(pi_definition).GetMorphismsTo().at(imp_definition).convert != nullptr);
    REQUIRE(DMeta(pi_definition).GetMorphismsTo().at(cvt_definition).convert != nullptr);
-   //REQUIRE(DMeta(cvt_definition).GetMorphismsFrom().size() == 0);
-   REQUIRE(DMeta(cvt_definition).GetMorphismsTo().size() == 1);
+   REQUIRE(DMeta(cvt_definition).GetMorphismsTo().size() == 2);   // ConvertibleData -> Bytes; ConvertibleData -> int
    REQUIRE(DMeta(cvt_definition).GetMorphismsTo().at(int_definition).convert != nullptr);
 
    int converted = 1;

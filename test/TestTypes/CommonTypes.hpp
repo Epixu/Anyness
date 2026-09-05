@@ -10,6 +10,7 @@
 #include <Langulus/Tag.hpp>
 #include <Langulus/CT/Number.hpp>
 #include "ReferencedType.hpp"
+#include "PackedPointers.hpp"
 #include <string>
 
 using namespace Langulus;
@@ -320,6 +321,7 @@ public:
    using CTTI_Versioned = Version<2, 1>;
    //using CTTI_Deep      = Yes<>;
    using CTTI_Nullable  = Yes<>;
+   using CTTI_POD       = No;
    using CTTI_Pooled    = PooledBySize;
    using CTTI_Concrete  = ImplicitlyReflectedData;
    using CTTI_Abstract  = Yes<>;
@@ -337,6 +339,7 @@ public:
       &Self::sparseMember
    >;
 };
+static_assert(not CT::POD<ImplicitlyReflectedDataWithTraits>);
 
 struct ConvertibleData : ImplicitlyReflectedData {
    int member {664};
@@ -353,6 +356,7 @@ struct ConvertibleData : ImplicitlyReflectedData {
    //using CTTI_MapsTo    = int;
    using CTTI_Values    = No;
 };
+static_assert(CT::POD<ConvertibleData>);
 
 struct ConflictingName { using CTTI_Named = Yes<"MyType">;   };
 struct InvalidName1    { using CTTI_Named = Yes<"1MyType">;  };
@@ -873,13 +877,3 @@ static_assert(    ::std::is_copy_constructible_v<ForcefullyPod>);
 static_assert(    ::std::is_move_constructible_v<ForcefullyPod>);
 static_assert(not ::std::is_copy_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
 static_assert(not ::std::is_move_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)
-
-
-using pptr8rt  = Langulus::Fractalloc::PackedPointer<RT, 2, 6, 0>;
-static_assert(sizeof(pptr8rt) == 1);
-
-using pptr16rt = Langulus::Fractalloc::PackedPointer<RT, 4, 4, 8>;
-static_assert(sizeof(pptr16rt) == 2);
-
-using pptr32rt = Langulus::Fractalloc::PackedPointer<RT>;
-static_assert(sizeof(pptr32rt) == 4);
