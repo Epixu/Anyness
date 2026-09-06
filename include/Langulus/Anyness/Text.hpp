@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Handle.hpp"
-#include "Langulus/Typenav.hpp"
+//#include "Langulus/Typenav.hpp"
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Ownership-Stack.hpp>
 #include <source/components/IndexedLinear.hpp>
@@ -34,7 +34,7 @@
 #include <Langulus/CT/Convertible.hpp>
 #include <Langulus/CT/Serializer.hpp>
 #include <Langulus/Utils/Byte.hpp>
-#include <type_traits>
+//#include <type_traits>
 //#include <string_view>
 //#include <type_traits>
 
@@ -430,76 +430,6 @@ namespace Langulus::Anyness
       explicit operator ::std::string() const {
          return {this->GetRaw(), this->GetCount()};
       }
-
-      /// The presence of this structure makes Text a CT::Serializer          
-      struct CTTI_Serializer {
-         // Text serializer can be lossy to omit unnecessary details,   
-         // and you can configure how many elements to show by defining 
-         // LANGULUS_MAX_DEBUGGABLE_ELEMENTS.                           
-         #ifdef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
-            static constexpr CountType MaxIterations = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
-         #elif LANGULUS(DEBUG) or LANGULUS(SAFE)
-            static constexpr CountType MaxIterations = 32;
-         #else
-            static constexpr CountType MaxIterations = 8;
-         #endif
-
-         struct Context {};
-         
-         static constexpr bool CriticalFailure = false;
-         static constexpr bool SkipElements = true;
-
-         static void BeginScope(const CT::Container auto& from, Text& to, Context*) {
-            //TODO multidimensional containers like maps have multiple types
-            const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
-            if (scoped)
-               to += Serial::OpenScope;
-         }
-         
-         static void EndScope(const CT::Container auto& from, Text& to, Context*) {
-            //TODO multidimensional containers like maps have multiple types
-            const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
-            if (scoped)
-               to += Serial::CloseScope;
-         }
-         
-         static void Separate(const CT::Container auto& from, Text& to, Context*) {
-            if constexpr (requires { from.IsOrdered(); }) {
-               if constexpr (requires { from.IsOr(); })
-                  to += (from.IsOr() ? " or " : (from.IsOrdered() ? ", " : "; "));
-               else
-                  to += (from.IsOrdered() ? ", " : "; ");
-            }
-            else if constexpr (requires { from.IsOr(); })
-               to += (from.IsOr() ? " or " : ", ");
-            else 
-               to += ", ";
-         }
-         
-         static void Empty(RTTI::DMeta type, CountType i, Text& to, Context*) {
-            if constexpr (CriticalFailure) {
-               LglsError("Item #", i, " of type `", type.GetName(),
-                  "` was serialized to an empty `Text`");
-            }
-            else {
-               to += "/*";
-               to += type.GetName();
-               to += " -> empty Text*/";
-            }
-         }
-         
-         static void Error(RTTI::DMeta type, CountType i, Text& to, Context*) {
-            if constexpr (CriticalFailure) {
-               LglsError("Item #", i, " of type `", type.GetName(),
-                  "` failed to convert to `Text`");
-            }
-            else {
-               to += "/*";
-               to += type.GetName();
-               to += " -> Text failed*/";
-            }
-         }
-      };
    };
 
    struct Code : Text {};
@@ -532,45 +462,6 @@ namespace Langulus::CT
    template<class...T>
    concept Stringifiable = ((Inner::StringifiableByOperator<T>
                           or Inner::StringifiableByConstructor<T>) and ...);
-}
-
-namespace Langulus::CTTI
-{
-   /// A rule for serializing any deep container, regardless of sparsity.     
-   /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
-   /// as well as any templated equivalents. It basically places scopes,      
-   /// separators and state decorators, depending on the kind of container.   
-   template<CT::Deep C>
-   struct SerializationRule<Anyness::Text, C> {
-      static_assert(Exact<DecvqAll<C>, C>,
-         "Strip all decorations on all indirections first");
-
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-      using Count = Anyness::Text::CountType;
-      
-      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*) requires CT::ContainsMany<Decay<C>>;
-      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*) requires CT::ContainsOne<Decay<C>>;
-   };
-
-   /// Rule for serializing Code to Text. Wraps it in {} symbols.             
-   template<CT::Container C> requires (not CT::Deep<C>)
-   struct SerializationRule<Anyness::Text, C> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*);
-   };
-   
-   /// Rule for serializing characters to Text. Wraps them in ''.             
-   template<CT::Character C>
-   struct SerializationRule<Anyness::Text, C> {
-      static_assert(CT::Decayed<C>, "Strip all decorations first");
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static void Serialize(C const&, Anyness::Text&, Context*);
-   };
 }
 
 /// Convert std::string_view -> Text                                          
@@ -650,3 +541,5 @@ LANGULUS_MORPHISM_CONCEPT_CUSTOM(Langulus::CT::Array, {
    },
    Langulus::Anyness::Text
 );
+
+#include "SerializeText.hpp"

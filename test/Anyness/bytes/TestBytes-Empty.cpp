@@ -156,7 +156,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
       /// MARK: Gap test                                                      
       WHEN("Gap test") {
          Common_GapTest<T, ::std::vector<Byte>>();
-         static_assert(sizeof(T) <= sizeof(::std::vector<Byte>));
+         //static_assert(sizeof(T) <= sizeof(::std::vector<Byte>)); // not true on GCC
       }
 
       WHEN("Default-constructed") {

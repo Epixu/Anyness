@@ -245,6 +245,7 @@ namespace Langulus::Anyness
       LglsComHashStack(friend);
       LglsComHashHeap(friend);
       LglsComHashEmergent(friend);
+      LglsComDictionaryHeap(friend);
       LglsComComparison(friend);
       LglsComEmplacement(friend);
       LglsComAssignment(friend);

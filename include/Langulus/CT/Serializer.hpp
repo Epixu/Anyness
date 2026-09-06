@@ -12,9 +12,7 @@
 
 namespace Langulus::CTTI
 {
-   /// Can be used in two ways to satisfy CT::Serializer<T>:                  
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `struct CTTI_Serializer {...};` in T                   
+   /// Can be used to satisfy CT::Serializer<T>                               
    template<class T>
    struct Serializer;
 }
@@ -29,22 +27,15 @@ namespace Langulus::CT
          static_assert(not ::std::is_reference_v<T>,
             "Strip references first");
 
-         if constexpr (CT::Complete<CTTI::Serializer<T>>) {
-            // Checked externally, T doesn't have to be complete        
+         if constexpr (CT::Complete<CTTI::Serializer<T>>)
             return CTTI::Serializer<T> {};
-         }
-         else if constexpr (requires { typename T::CTTI_Serializer; }) {
-            // Checked internally, T has to be a complete type          
-            return typename T::CTTI_Serializer {};
-         }
-         else return NoTypes {};
       };
    }
 
    /// Check if all T are serializers                                         
    template<class...T>
    concept Serializer = PartialValidate<T...>
-       and ((not Void<decltype(Inner::GetSerializer<Shed<T>>())>) and ...);
+       and ((NotVoid<decltype(Inner::GetSerializer<Shed<T>>())>) and ...);
 }
 
 namespace Langulus::CTTI
@@ -59,8 +50,8 @@ namespace Langulus::CTTI
 namespace Langulus
 {
    /// Get the reflected serializer, CT::Void if none                         
-   template<class T>
-   using SerializerOf = decltype(CT::Inner::GetSerializer<Shed<T>>());
+   //template<class T>
+   //using SerializerOf = decltype(CT::Inner::GetSerializer<Shed<T>>());
 
    /// Serialize                                                              
    ///   @attention there is a major difference between conversion and        
@@ -71,10 +62,10 @@ namespace Langulus
    ///      In other words: serialization is an indirection on top of         
    ///      conversion.                                                       
    template<class FROM, CT::Serializer TO> requires CT::NoIntent<FROM, TO>
-   auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr) -> size_t {
+   auto Serialize(FROM const& from, TO& to, typename CTTI::Serializer<TO>::Context* context = nullptr) -> size_t {
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
-      const typename DTO::CountType initial = to.GetCount();
+      const auto initial = to.GetCount();
       
       if constexpr (not CT::Complete<Decay<DFROM>>) {
          // Some custom rules require the decayed type to be complete   
@@ -110,7 +101,7 @@ namespace Langulus::Serial
 
    /// Built-in operator properties.                                          
    /// These are tuned for Langulus::Code specification, but you can          
-   /// use your own in your custom CTTI_Serializer.                           
+   /// use your own in your custom CTTI::Serializer.                          
    constexpr Operator OpenScope      { "(" };
    constexpr Operator CloseScope     { ")" };
    constexpr Operator OpenScopeAlt   { "[" };

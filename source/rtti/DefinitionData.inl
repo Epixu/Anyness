@@ -1127,7 +1127,7 @@ namespace Langulus::RTTI
          auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
          Morphism morphism;
 
-         if constexpr (CT::Inner::FindMorphism<T, TO>() >= 0 /*CT::Convertible<T, TO>*/) {
+         if constexpr (CT::Inner::FindMorphism<T, TO>() >= 0) {
             morphism.convert = [](void* from, void* to) {
                auto fromT = static_cast<ConstAll<T*>>(from);
                auto toT   = static_cast<TO*>(to);
@@ -1137,7 +1137,7 @@ namespace Langulus::RTTI
          
          if constexpr (CT::Serializer<TO>) {
             // Destination type can act as a serializer, too         
-            using S = SerializerOf<TO>;
+            using S = CTTI::Serializer<TO>;
             morphism.serialize = [](void const* from, void* to, void* context) -> size_t {
                auto fromT = static_cast<ConstAll<T*>>(from);
                auto toT   = static_cast<TO*>(to);
