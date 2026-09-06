@@ -633,6 +633,10 @@ namespace Langulus::Anyness
       template<Cid = 0> struct Interpolation;
       #define LglsComInterpolation(modifier) \
          template<Cid> modifier struct Interpolation
+
+      template<class T, Cid = 0, Cid...> struct DictionaryHeap;
+      #define LglsComDictionaryHeap(modifier) \
+         template<class, Cid, Cid...> modifier struct DictionaryHeap
    }
    
    namespace Com = Component;

@@ -7,6 +7,7 @@
 ///                                                                           
 #include "DefinitionData.inl"
 
+
 namespace Langulus::RTTI
 {
    namespace

@@ -7,6 +7,10 @@
 ///                                                                           
 #pragma once
 #include "Text.hpp"
+#include <Langulus/CT/Serializer.hpp>
+//#include <Langulus/HashOf.hpp>
+
+/*#include "Text.hpp"
 #include "Bytes.hpp"
 #include "Any.hpp"
 #include "TAny.hpp"
@@ -17,11 +21,119 @@
 #include "Pair.hpp"
 #include "TPair.hpp"
 #include "Map.hpp"
-#include "TMap.hpp"
+#include "TMap.hpp"*/
 
 
 namespace Langulus::CTTI
 {
+   /// The presence of this structure makes Text a CT::Serializer             
+   template<>
+   struct Serializer<Anyness::Text> {
+      // Text serializer can be lossy to omit unnecessary details,      
+      // and you can configure how many elements to show by defining    
+      // LANGULUS_MAX_DEBUGGABLE_ELEMENTS.                              
+      #ifdef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
+         static constexpr size_t MaxIterations = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
+      #elif LANGULUS(DEBUG) or LANGULUS(SAFE)
+         static constexpr size_t MaxIterations = 32;
+      #else
+         static constexpr size_t MaxIterations = 8;
+      #endif
+
+      using T = Anyness::Text;
+
+      struct Context {};
+      
+      static constexpr bool CriticalFailure = false;
+      static constexpr bool SkipElements = true;
+
+      static void BeginScope(const CT::Container auto& from, T& to, Context*) {
+         //TODO multidimensional containers like maps have multiple types
+         const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
+         if (scoped)
+            to += Serial::OpenScope;
+      }
+      
+      static void EndScope(const CT::Container auto& from, T& to, Context*) {
+         //TODO multidimensional containers like maps have multiple types
+         const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
+         if (scoped)
+            to += Serial::CloseScope;
+      }
+      
+      static void Separate(const CT::Container auto& from, T& to, Context*) {
+         if constexpr (requires { from.IsOrdered(); }) {
+            if constexpr (requires { from.IsOr(); })
+               to += (from.IsOr() ? " or " : (from.IsOrdered() ? ", " : "; "));
+            else
+               to += (from.IsOrdered() ? ", " : "; ");
+         }
+         else if constexpr (requires { from.IsOr(); })
+            to += (from.IsOr() ? " or " : ", ");
+         else 
+            to += ", ";
+      }
+      
+      static void Empty(RTTI::DMeta type, size_t i, T& to, Context*) {
+         if constexpr (CriticalFailure) {
+            LglsError("Item #", i, " of type `", type.GetName(),
+               "` was serialized to an empty `Text`");
+         }
+         else {
+            to += "/*";
+            to += type.GetName();
+            to += " -> empty Text*/";
+         }
+      }
+      
+      static void Error(RTTI::DMeta type, size_t i, T& to, Context*) {
+         if constexpr (CriticalFailure) {
+            LglsError("Item #", i, " of type `", type.GetName(),
+               "` failed to convert to `Text`");
+         }
+         else {
+            to += "/*";
+            to += type.GetName();
+            to += " -> Text failed*/";
+         }
+      }
+   };
+
+   /// A rule for serializing any deep container, regardless of sparsity.     
+   /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
+   /// as well as any templated equivalents. It basically places scopes,      
+   /// separators and state decorators, depending on the kind of container.   
+   template<CT::Deep C>
+   struct SerializationRule<Anyness::Text, C> {
+      static_assert(Exact<DecvqAll<C>, C>,
+         "Strip all decorations on all indirections first");
+
+      using S = Serializer<Anyness::Text>;
+      using Context = typename S::Context;
+      
+      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*) requires CT::ContainsMany<Decay<C>>;
+      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*) requires CT::ContainsOne<Decay<C>>;
+   };
+
+   /// Rule for serializing Code to Text. Wraps it in {} symbols.             
+   template<CT::Container C> requires (not CT::Deep<C>)
+   struct SerializationRule<Anyness::Text, C> {
+      using S = Serializer<Anyness::Text>;
+      using Context = typename S::Context;
+
+      static void Serialize(ConstAll<C&>, Anyness::Text&, Context*);
+   };
+   
+   /// Rule for serializing characters to Text. Wraps them in ''.             
+   template<CT::Character C>
+   struct SerializationRule<Anyness::Text, C> {
+      static_assert(CT::Decayed<C>, "Strip all decorations first");
+      using S = Serializer<Anyness::Text>;
+      using Context = typename S::Context;
+
+      static void Serialize(C const&, Anyness::Text&, Context*);
+   };
+
    /// MARK: Serialize many                                                   
    /// A rule for serializing any deep container that contains multiple items.
    /// This includes Many, Map, Set, Neat etc...                              
@@ -185,7 +297,7 @@ namespace fmt
    /// MARK: {fmt}                                                            
    /// Extend FMT to be capable of logging any Anyness container that is      
    /// serializable to Anyness::Text.                                         
-   template<::Langulus::CT::Container T>// requires (CT::Inner::FindMorphism<T, ::Langulus::Anyness::Text>() >= 0)// ::Langulus::CT::Convertible<T, ::Langulus::Anyness::Text>
+   template<::Langulus::CT::Container T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) { return ctx.begin(); }

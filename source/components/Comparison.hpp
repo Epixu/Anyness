@@ -8,7 +8,6 @@
 #pragma once
 #include "../Container.hpp"
 #include "Langulus/CT/Serializer.hpp"
-#include "source/Component.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/Index.hpp>
