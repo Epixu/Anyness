@@ -182,9 +182,11 @@ namespace Langulus::Anyness
 
       /// Construction from any kind of POD value.                            
       /// Works for bounded arrays as well.                                   
+      ///   @attention non-owning constructor unless you use Copy/Clone intent
       template<class T> requires CT::POD<DeextAll<Deint<T>>>
       explicit constexpr Bytes(T&& source) {
          this->ResetState();
+         
          if constexpr (CT::Array<T>)
             this->SetHeapInner(static_cast<const void*>( DeintCast(source)));
          else
@@ -192,19 +194,22 @@ namespace Langulus::Anyness
          this->SetCountInner(sizeof(Deint<T>));
          this->ResetHash();
 
-         // We may own this data                                        
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Disowned<T> or CT::Copied<T> or CT::Cloned<T>)
-               this->SetAllocationInner(nullptr);
-            else
-               this->FindAllocationInner();
-         #else
+         if constexpr (CT::Copied<T> or CT::Cloned<T>) {
+            // Take ownership if the intent requires it                 
             this->SetAllocationInner(nullptr);
-         #endif
-
-         // Take ownership if the intent requires it                    
-         if constexpr (CT::Copied<T> or CT::Cloned<T>)
             this->TakeOwnership();
+         }
+         else {
+            // We may still own this data                               
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               if constexpr (CT::Disowned<T>)
+                  this->SetAllocationInner(nullptr);
+               else
+                  this->FindAllocationInner();
+            #else
+               this->SetAllocationInner(nullptr);
+            #endif
+         }
       }
 
       /// Construction from a byte                                            
@@ -226,6 +231,8 @@ namespace Langulus::Anyness
       }
       
       /// Construction from raw bytes data                                    
+      ///   @attention intent is ignored - this doesn't apply ownership, only 
+      ///      interfaces the data - you can TakeOwnership() after this call  
       ///   @param data data to wrap, assumed valid                           
       ///   @param count number of bytes inside 'data' to use                 
       ///   @return the raw bytes wrapped inside a Bytes container            

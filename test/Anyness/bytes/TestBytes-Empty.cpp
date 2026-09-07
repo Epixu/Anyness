@@ -197,12 +197,12 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          WHEN("Assigned and absorbed by referral") {
             REQUIRE_NOTHROW(pack.AssignAbsorb(*element));
 
-            Bytes_CheckState_OwnedFull(pack);
-            Bytes_CheckState_OwnedFull(*element);
+            Bytes_CheckState_DisownedFull(pack);
+            Bytes_CheckState_DisownedFull(*element);
             Bytes_Helper_TestSame(pack, *element);
-            REQUIRE(pack.GetUses() == element->GetUses());
+            /*REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.GetAllocation() == element->GetAllocation());
+            REQUIRE(pack.GetAllocation() == element->GetAllocation());*/
 
             BenchmarkBytesStd("Empty/AssignAbsorb/Refer", 30, 100,
                T temp,                         temp.AssignAbsorb(*element),

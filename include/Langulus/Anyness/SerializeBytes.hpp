@@ -22,6 +22,7 @@ namespace Langulus::CTTI
 
       static constexpr bool CriticalFailure = true;
       static constexpr bool SkipElements = false;
+      static constexpr size_t MaxDimensions = 2;
 
       /// Flags used in the headbit                                           
       enum Headbits : uint8_t {
@@ -73,7 +74,7 @@ namespace Langulus::CTTI
       template<CT::Container C>
       static void BeginScope(C const& from, T& to, Context* context) {
          if (not from.IsValid()) {
-            to += T(Headbits::Skip);
+            to += T (Headbits::Skip);
             return;
          }
 
@@ -81,17 +82,17 @@ namespace Langulus::CTTI
          /// @attention this is the biggest possible header size,       
          ///    but this one in particular doesn't allocate space for   
          ///    more than two types!                                    
-         constexpr size_t max_dimensions = 2;
-         uint8_t header[1 + 1 + max_dimensions*8 + 8 + 8];
+         uint8_t header[1 + 1 + MaxDimensions*8 + 8 + 8];
          uint8_t& headbyte = header[0];
+         headbyte = 0;
          size_t progress = 1;
 
          if (std::endian::native == std::endian::big)
             headbyte |= Headbits::BigEndian;
 
          if (C::Dimensions::Count > 1) {
-            static_assert(C::Dimensions::Count <= max_dimensions,
-               "Update max_dimensions for more dimensions. "
+            static_assert(C::Dimensions::Count <= MaxDimensions,
+               "Update MaxDimensions for more dimensions. "
                "This is not set to max to save on stack memory"
             );
             headbyte |= Headbits::Multidimensional;
@@ -182,45 +183,49 @@ namespace Langulus::CTTI
 
          if constexpr (requires { from.GetUnconstrainedState(); }) {
             const uint64_t s = from.GetUnconstrainedState();
-            if ((headbyte & Headbits::Large64) == Headbits::Large64) {
-               memcpy(header + progress, &s, 8);
-               progress += 8;
-            }
-            else if (headbyte & Headbits::Large32) {
-               const uint32_t s32 = static_cast<uint32_t>(s);
-               memcpy(header + progress, &s32, 4);
-               progress += 4;
-            }
-            else if (headbyte & Headbits::Large16) {
-               const uint16_t s16 = static_cast<uint16_t>(s);
-               memcpy(header + progress, &s16, 2);
-               progress += 2;
-            }
-            else {
-               header[progress] = static_cast<uint8_t>(s);
-               ++progress;
+            if (s != 0) {
+               if ((headbyte & Headbits::Large64) == Headbits::Large64) {
+                  memcpy(header + progress, &s, 8);
+                  progress += 8;
+               }
+               else if (headbyte & Headbits::Large32) {
+                  const uint32_t s32 = static_cast<uint32_t>(s);
+                  memcpy(header + progress, &s32, 4);
+                  progress += 4;
+               }
+               else if (headbyte & Headbits::Large16) {
+                  const uint16_t s16 = static_cast<uint16_t>(s);
+                  memcpy(header + progress, &s16, 2);
+                  progress += 2;
+               }
+               else {
+                  header[progress] = static_cast<uint8_t>(s);
+                  ++progress;
+               }
             }
          }
 
          if constexpr (requires { from.GetCount(); }) {
             const uint64_t s = from.GetCount();
-            if ((headbyte & Headbits::Large64) == Headbits::Large64) {
-               memcpy(header + progress, &s, 8);
-               progress += 8;
-            }
-            else if (headbyte & Headbits::Large32) {
-               const uint32_t s32 = static_cast<uint32_t>(s);
-               memcpy(header + progress, &s32, 4);
-               progress += 4;
-            }
-            else if (headbyte & Headbits::Large16) {
-               const uint16_t s16 = static_cast<uint16_t>(s);
-               memcpy(header + progress, &s16, 2);
-               progress += 2;
-            }
-            else {
-               header[progress] = static_cast<uint8_t>(s);
-               ++progress;
+            if (s != 1) {
+               if ((headbyte & Headbits::Large64) == Headbits::Large64) {
+                  memcpy(header + progress, &s, 8);
+                  progress += 8;
+               }
+               else if (headbyte & Headbits::Large32) {
+                  const uint32_t s32 = static_cast<uint32_t>(s);
+                  memcpy(header + progress, &s32, 4);
+                  progress += 4;
+               }
+               else if (headbyte & Headbits::Large16) {
+                  const uint16_t s16 = static_cast<uint16_t>(s);
+                  memcpy(header + progress, &s16, 2);
+                  progress += 2;
+               }
+               else {
+                  header[progress] = static_cast<uint8_t>(s);
+                  ++progress;
+               }
             }
          }
 

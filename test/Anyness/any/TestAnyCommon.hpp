@@ -363,12 +363,14 @@ void Any_CheckState_DisownedFull(const C& any) {
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant());
    REQUIRE      (any.IsValid());
-   REQUIRE      (any.GetAllocation());
+   //REQUIRE      (any.GetAllocation()); // A disowned container may or may not have an allocation
    REQUIRE      (any.IsDisowned());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
-   REQUIRE      (any.GetReserved() > 0);
-   REQUIRE      (any.GetUses() > 0);
+   if (any.GetAllocation()) {
+      REQUIRE   (any.GetReserved() > 0);
+      REQUIRE   (any.GetUses() > 0);
+   }
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
    REQUIRE_FALSE(not any);

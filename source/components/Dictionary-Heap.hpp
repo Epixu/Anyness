@@ -32,8 +32,8 @@ namespace Langulus::Anyness::Component
       static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the start of the hash table                                     
-      template<Cid SID = ID> requires Relevant<SID>
-      constexpr auto GetDictionary(this auto const& self) noexcept -> T const* {
+      template<Cid SID = ID, class C> requires Relevant<SID>
+      constexpr auto GetDictionary(this C&& self) noexcept -> Tmut<C, T*, T const*>{
          if (self.template GetAllocationInner<SID>())
             return ThisCom::GetDictionaryInner();
          return nullptr;
@@ -45,8 +45,7 @@ namespace Langulus::Anyness::Component
       constexpr auto* GetDictionaryInner(this auto&& self) noexcept {
          return self.template AccessHeap<DictionaryHeap, SID>();
       }
-
-      /// This method is called to erase the dictionary                       
+                  
       template<Cid SID = ID> requires Relevant<SID>
       constexpr void ResetDictionary(this auto& self) noexcept {
          *ThisCom::GetDictionaryInner() = T{};

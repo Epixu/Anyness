@@ -80,6 +80,16 @@ namespace Langulus
       }
       else if constexpr (requires { CTTI::SerializationRule<DTO, DFROM>{}; }) {
          // Custom rule exists                                          
+         if constexpr (requires { to.GetDictionary(); }) {
+            if (not context) {
+               context = to.GetDictionary();
+               if (not context) {
+                  to.Reserve(1);
+                  context = to.GetDictionary();
+               }
+            }
+         }
+
          CTTI::SerializationRule<DTO, DFROM>::Serialize(from, to, context);
       }
       else {
