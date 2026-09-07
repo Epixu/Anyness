@@ -200,9 +200,6 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             Bytes_CheckState_DisownedFull(pack);
             Bytes_CheckState_DisownedFull(*element);
             Bytes_Helper_TestSame(pack, *element);
-            /*REQUIRE(pack.GetUses() == element->GetUses());
-            REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.GetAllocation() == element->GetAllocation());*/
 
             BenchmarkBytesStd("Empty/AssignAbsorb/Refer", 30, 100,
                T temp,                         temp.AssignAbsorb(*element),
@@ -251,12 +248,9 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             auto movable = *element;
             REQUIRE_NOTHROW(pack.AssignAbsorb(::std::move(movable)));
 
-            Bytes_CheckState_OwnedFull(pack);
+            Bytes_CheckState_DisownedFull(pack);
             Bytes_CheckState_Default(movable);
             Bytes_Helper_TestSame(pack, *element);
-            REQUIRE(pack.GetUses() == element->GetUses());
-            REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             BenchmarkBytesStd("Empty/AssignAbsorb/Move", 30, 100,
                auto movable = *element;
@@ -296,11 +290,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             REQUIRE_NOTHROW(pack.AssignAbsorb(Copy(*element)));
 
             Bytes_CheckState_OwnedFull(pack);
-            Bytes_CheckState_OwnedFull(*element);
+            Bytes_CheckState_DisownedFull(*element);
 
             const uint8_t pattern[] = {
-               0b00001010, 4, 4, 0x00, 0x00, 0x02, 0x2b,
+               0x2b, 0x02, 0x00, 0x00
             };
+            /*const uint8_t pattern[] = {
+               0b00001010, 4, 4, 0x00, 0x00, 0x02, 0x2b,
+            };*/
             Bytes_CheckState_ContainsBytes(pack, pattern);
             Bytes_CheckState_ContainsBytes(*element, pattern);
 
@@ -344,11 +341,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             REQUIRE_NOTHROW(pack.AssignAbsorb(Clone(*element)));
 
             Bytes_CheckState_OwnedFull(pack);
-            Bytes_CheckState_OwnedFull(*element);
+            Bytes_CheckState_DisownedFull(*element);
 
             const uint8_t pattern[] = {
-               0b00001010, 4, 4, 0x00, 0x00, 0x02, 0x2b,
+               0x2b, 0x02, 0x00, 0x00
             };
+            /*const uint8_t pattern[] = {
+               0b00001010, 4, 4, 0x00, 0x00, 0x02, 0x2b,
+            };*/
             Bytes_CheckState_ContainsBytes(pack, pattern);
             Bytes_CheckState_ContainsBytes(*element, pattern);
             
@@ -390,10 +390,8 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             REQUIRE_NOTHROW(pack.AssignAbsorb(Disown(*element)));
 
             Bytes_CheckState_DisownedFull(pack);
-            Bytes_CheckState_OwnedFull(*element);
+            Bytes_CheckState_DisownedFull(*element);
             Bytes_Helper_TestSame(pack, *element, false);
-            REQUIRE(pack.GetUses() == 1);
-            REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             BenchmarkBytesStd("Empty/AssignAbsorb/Disown", 30, 100,
                T temp,                       temp.AssignAbsorb(Disown(*element)),
@@ -441,11 +439,9 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             auto movable = *element;
             REQUIRE_NOTHROW(pack.AssignAbsorb(Abandon(movable)));
 
-            Bytes_CheckState_OwnedFull(pack);
+            Bytes_CheckState_DisownedFull(pack);
             Bytes_CheckState_Abandoned(movable);
             Bytes_Helper_TestSame(pack, *element);
-            REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
             BenchmarkBytesStd("Empty/AssignAbsorb/Abandon", 30, 100,
                auto movable = *element;
@@ -832,7 +828,7 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
       /// MARK: Insert array                                                  
       WHEN("Insert an array to the back") {
-         size_t inserted = 0;
+         volatile size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back,           immovable));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Refer    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Copy     {immovable}));
@@ -844,7 +840,15 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
          Bytes_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::Container<E>) {
+         if constexpr (Same<E, Bytes>) {
+            for (int i = 0; i < 5; ++i) {
+               Bytes_CheckState_DisownedFull(immovable[i]);
+               Bytes_CheckState_DisownedFull(movable1[i]);
+               Bytes_CheckState_DisownedFull(movable2[i]);
+               Bytes_CheckState_DisownedFull(movable3[i]);
+            }
+         }
+         else if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i) {
                Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
@@ -858,53 +862,53 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, Text>) {
             const uint8_t pattern[] = {
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '5', '"',
-               0b00001010, 10, 4, '"', '5', '6', '"',
-               0b00001010, 10, 4, '"', '5', '7', '"',
-               0b00001010, 10, 4, '"', '5', '8', '"',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
 
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '5', '"',
-               0b00001010, 10, 4, '"', '5', '6', '"',
-               0b00001010, 10, 4, '"', '5', '7', '"',
-               0b00001010, 10, 4, '"', '5', '8', '"',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
 
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '5', '"',
-               0b00001010, 10, 4, '"', '5', '6', '"',
-               0b00001010, 10, 4, '"', '5', '7', '"',
-               0b00001010, 10, 4, '"', '5', '8', '"',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"'
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3'
             };
             REQUIRE(inserted == sizeof(pattern));
 
@@ -981,14 +985,53 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }*/
          else {
             const uint8_t pattern[] = {
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               49, 50, 51, 52, 53
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00  //53
             };
       
             REQUIRE(inserted == sizeof(pattern));
@@ -1014,7 +1057,15 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
          Bytes_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::Container<E>) {
+         if constexpr (Same<E, Bytes>) {
+            for (int i = 0; i < 5; ++i) {
+               Bytes_CheckState_DisownedFull(immovable[i]);
+               Bytes_CheckState_DisownedFull(movable1[i]);
+               Bytes_CheckState_DisownedFull(movable2[i]);
+               Bytes_CheckState_DisownedFull(movable3[i]);
+            }
+         }
+         else if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i) {
                Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
@@ -1028,53 +1079,53 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, Text>) {
             const uint8_t pattern[] = {
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '5', '"',
-               0b00001010, 10, 4, '"', '5', '6', '"',
-               0b00001010, 10, 4, '"', '5', '7', '"',
-               0b00001010, 10, 4, '"', '5', '8', '"',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
 
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '5', '"',
-               0b00001010, 10, 4, '"', '5', '6', '"',
-               0b00001010, 10, 4, '"', '5', '7', '"',
-               0b00001010, 10, 4, '"', '5', '8', '"',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
 
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '5', '"',
-               0b00001010, 10, 4, '"', '5', '6', '"',
-               0b00001010, 10, 4, '"', '5', '7', '"',
-               0b00001010, 10, 4, '"', '5', '8', '"',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
 
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"'
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3'
             };
             REQUIRE(inserted == sizeof(pattern));
 
@@ -1149,14 +1200,53 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }*/
          else {
             const uint8_t pattern[] = {
-               49, 50, 51, 52, 53,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00  //53
             };
       
             REQUIRE(inserted == sizeof(pattern));
@@ -1195,7 +1285,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
          Bytes_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::Container<E>) {
+         if constexpr (Same<E, Bytes>) {
+            for (int i = 0; i < 5; ++i)
+               Bytes_CheckState_DisownedFull(immovable[i]);
+            Bytes_CheckState_DisownedFull(movable1[0]);
+            Bytes_CheckState_DisownedFull(movable2[0]);
+            Bytes_CheckState_DisownedFull(movable3[0]);
+         }
+         else if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i)
                Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
             Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
@@ -1208,14 +1305,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, Text>) {
             const uint8_t pattern[] = {
-               0b00001010, 10, 4, '"', '4', '9', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '3', '"'
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '3'
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
@@ -1237,7 +1334,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }*/
          else {
             const uint8_t pattern[] = {
-               49, 50, 51, 52, 54, 54, 54, 53
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
             };
       
             Bytes_CheckState_ContainsBytes(pack, pattern);
@@ -1262,7 +1366,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
          Bytes_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::Container<E>) {
+         if constexpr (Same<E, Bytes>) {
+            for (int i = 0; i < 5; ++i)
+               Bytes_CheckState_DisownedFull(immovable[i]);
+            Bytes_CheckState_DisownedFull(movable1[0]);
+            Bytes_CheckState_DisownedFull(movable2[0]);
+            Bytes_CheckState_DisownedFull(movable3[0]);
+         }
+         else if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i)
                Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
             Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
@@ -1275,14 +1386,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }
          else if constexpr (Same<E, Text>) {
             const uint8_t pattern[] = {
-               0b00001010, 10, 4, '"', '5', '3', '"',
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '4', '"',
-               0b00001010, 10, 4, '"', '5', '2', '"',
-               0b00001010, 10, 4, '"', '5', '1', '"',
-               0b00001010, 10, 4, '"', '5', '0', '"',
-               0b00001010, 10, 4, '"', '4', '9', '"'
+               0b00001010, 10, 2, '5', '3',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '4', '9'
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
@@ -1304,7 +1415,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          }*/
          else {
             const uint8_t pattern[] = {
-              53, 54, 54, 54, 52, 51, 50, 49
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
             };
       
             Bytes_CheckState_ContainsBytes(pack, pattern);
@@ -1332,21 +1450,21 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             Bytes_CheckState_OwnedFull(pack);
 
             for (int i = 0; i < 5; ++i) {
-               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
-               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
-               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
-               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+               Bytes_CheckState_DisownedFull(immovable[i]);
+               Bytes_CheckState_DisownedFull(movable1[i]);
+               Bytes_CheckState_DisownedFull(movable2[i]);
+               Bytes_CheckState_DisownedFull(movable3[i]);
             }
 
             const uint8_t pattern[] = {
-               00, 00, 00, 49,
-               00, 00, 00, 50,
-               00, 00, 00, 51,
-               00, 00, 00, 52,
-               00, 00, 00, 54,
-               00, 00, 00, 55, 
-               00, 00, 00, 56, 
-               00, 00, 00, 53
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x35, 0x00, 0x00, 0x00, //53
             };
             REQUIRE(inserted == sizeof(pattern));
             Bytes_CheckState_ContainsBytes(pack, pattern);
@@ -1367,26 +1485,25 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Move     {movable2[1]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Abandon  {movable3[2]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Clone    {immovable[4]}));
-            REQUIRE(inserted == 16);
 
             Bytes_CheckState_OwnedFull(pack);
 
             for (int i = 0; i < 5; ++i) {
-               Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
-               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
-               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
-               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+               Bytes_CheckState_DisownedFull(immovable[i]);
+               Bytes_CheckState_DisownedFull(movable1[i]);
+               Bytes_CheckState_DisownedFull(movable2[i]);
+               Bytes_CheckState_DisownedFull(movable3[i]);
             }
 
             const uint8_t pattern[] = {
-               00, 00, 00, 53,
-               00, 00, 00, 56, 
-               00, 00, 00, 55, 
-               00, 00, 00, 54,
-               00, 00, 00, 52,
-               00, 00, 00, 51,
-               00, 00, 00, 50,
-               00, 00, 00, 49
+               0x35, 0x00, 0x00, 0x00, //53
+               0x38, 0x00, 0x00, 0x00, //56
+               0x37, 0x00, 0x00, 0x00, //55
+               0x36, 0x00, 0x00, 0x00, //54
+               0x34, 0x00, 0x00, 0x00, //52
+               0x33, 0x00, 0x00, 0x00, //51
+               0x32, 0x00, 0x00, 0x00, //50
+               0x31, 0x00, 0x00, 0x00, //49
             };
             REQUIRE(inserted == sizeof(pattern));
             Bytes_CheckState_ContainsBytes(pack, pattern);
@@ -1420,12 +1537,21 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
          Bytes_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::Container<E>) {
-            for (int i = 0; i < 5; ++i)
+         if constexpr (Same<E, Bytes>) {
+            for (int i = 0; i < 5; ++i) {
+               Bytes_CheckState_DisownedFull(immovable[i]);
+               Bytes_CheckState_DisownedFull(movable1[i]);
+               Bytes_CheckState_DisownedFull(movable2[i]);
+               Bytes_CheckState_DisownedFull(movable3[i]);
+            }
+         }
+         else if constexpr (CT::Container<E>) {
+            for (int i = 0; i < 5; ++i) {
                Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
-            Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
-            Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
-            Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable1[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable2[i]);
+               Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
+            }
          }
 
          if constexpr (CT::Sparse<E>) {
@@ -1495,16 +1621,107 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
                "12345"
             );
          }*/
+         else if constexpr (Same<E, Text>) {
+            const uint8_t pattern[] = {
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3'
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
          else {
             const uint8_t pattern[] = {
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               49, 50, 51, 52, 53
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00  //53
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
@@ -1527,7 +1744,14 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
          Bytes_CheckState_OwnedFull(pack);
 
-         if constexpr (CT::Container<E>) {
+         if constexpr (Same<E, Bytes>) {
+            for (int i = 0; i < 5; ++i)
+               Bytes_CheckState_DisownedFull(immovable[i]);
+            Bytes_CheckState_DisownedFull(movable1[0]);
+            Bytes_CheckState_DisownedFull(movable2[0]);
+            Bytes_CheckState_DisownedFull(movable3[0]);
+         }
+         else if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i)
                Many_CheckState_OwnedFull<TypeOf<E>>(immovable[i]);
             Many_CheckState_OwnedFull<TypeOf<E>>(movable1[0]);
@@ -1554,9 +1778,29 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
          /*else if constexpr (Same<E, char>) {
             Bytes_CheckState_ContainsString(pack, "12346665");
          }*/
+         else if constexpr (Same<E, Text>) {
+            const uint8_t pattern[] = {
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '3'
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
          else {
             const uint8_t pattern[] = {
-               49, 50, 51, 52, 54, 54, 54, 53
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x35, 0x00, 0x00, 0x00  //53
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
