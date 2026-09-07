@@ -129,6 +129,7 @@ namespace Langulus::Anyness
       }
 
       /// Construction from any kind of text that isn't an Anyness container  
+      ///   @attention non-owning constructor unless you use Copy/Clone intent
       template<CT::Text T> requires CT::NotContainer<T>
       constexpr Text(T&& text) {
          using I  = IntentOf(text);
@@ -159,7 +160,7 @@ namespace Langulus::Anyness
             // Bounded arrays and literals are always considered        
             // constexpr, thus no point in searching for their managed  
             // memory.                                                  
-            this->SetAllocationInner(nullptr);
+            this->SetAllocationInner(nullptr); //TODO hmm, not sure about that. maybe check if const?
          }
          else if constexpr (CT::TextPointer<IT>) {
             // Create from a null-terminated char pointer               

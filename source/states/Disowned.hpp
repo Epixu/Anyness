@@ -50,21 +50,21 @@ namespace Langulus::Anyness::Component::State
 
       /// Enable the dynamic disowned state                                   
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
-      auto EnableDisowned(this C&& self) noexcept -> C&& requires Dynamic {
+      constexpr auto EnableDisowned(this C&& self) noexcept -> C&& requires Dynamic {
          self.GetStateInner() += Disowned<V, ID, SHARED...> {};
          return LglsFwd(self);
       }
 
       /// Disable the dynamic disowned state                                  
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
-      auto DisableDisowned(this C&& self) noexcept -> C&& requires Dynamic {
+      constexpr auto DisableDisowned(this C&& self) noexcept -> C&& requires Dynamic {
          self.GetStateInner() -= Disowned<V, ID, SHARED...> {};
          return LglsFwd(self);
       }
       
       /// Enable the state when transferring using Disown intent              
       template<class SELF, CT::Disowned I> requires CT::Container<I>
-      void ConstructFrom(this SELF& self, I&&) noexcept {
+      constexpr void ConstructFrom(this SELF& self, I&&) noexcept {
          ThisCom::EnableDisowned();
       }
    };

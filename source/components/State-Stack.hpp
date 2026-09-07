@@ -137,6 +137,9 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if container is marked as disowned                            
+      ///   @attention this is triggered mainly by Disown intent. A container 
+      ///      can still be disowned, even if the state itself isn't enabled. 
+      ///      When there's no allocation, for example.                       
       ///   @return true if this container is marked as disowned              
       template<class C>
       constexpr bool IsDisowned(this C const& self) noexcept { //TODO dimensions?
@@ -144,33 +147,36 @@ namespace Langulus::Anyness::Component
             // Handles can't be disowned, they have exclusive rights    
             return false;
          }
-         else if constexpr (CanBeDisowned) {
-            // Disown state component exists in the container           
+         else {
             bool r = false;
-            ForEachConstOr(StateList{}, [&]<class S>{
-               if constexpr (S::UID == StateUid::Disowned) {
-                  if constexpr (S::Static) {
-                     if constexpr (S::Enable) {
-                        r = true;
-                        return true;
+
+            if constexpr (CanBeDisowned) {
+               // Disown state component exists in the container        
+               ForEachConstOr(StateList{}, [&]<class S>{
+                  if constexpr (S::UID == StateUid::Disowned) {
+                     if constexpr (S::Static) {
+                        if constexpr (S::Enable) {
+                           r = true;
+                           return true;
+                        }
+                        else return No{};
                      }
-                     else return No{};
+                     else {
+                        r |= self.GetStateInner() & S {};
+                        return No{};
+                     }
                   }
-                  else {
-                     r |= self.GetStateInner() & S {};
-                     return No{};
-                  }
-               }
-               else return No{};
-            });
-            return r;
+                  else return No{};
+               });
+            }
+
+            if constexpr (requires { self.GetAllocation(); }) {
+               // We can consider full containers without owned memory  
+               // to be disowned.                                       
+               return r or (not self.IsEmpty() and self.GetAllocation() == nullptr);
+            }
+            else return r;
          }
-         else if constexpr (requires { self.GetAllocation(); }) {
-            // We can consider full containers without owned memory     
-            // to be disowned.                                          
-            return not self.IsEmpty() and self.GetAllocation() == nullptr;
-         }
-         else return false;
       }
 
       /// Check if container has either created elements, or a relevant state 

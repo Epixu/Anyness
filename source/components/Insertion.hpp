@@ -805,11 +805,26 @@ namespace Langulus::Anyness::Component
    
          // Convert all arguments and then concatenate the results      
          C converted;
-         if constexpr (CT::Array<T>) {
-            for (size_t i = 0; i < ExtentOf<T>; ++i)
-               Langulus::Serialize(DeintCast(a)[i], converted);
+         if constexpr (requires { self.GetDictionary(); }) {
+            auto dictionary = self.GetDictionary();
+            if (not dictionary) {
+               self.Reserve(1);
+               dictionary = self.GetDictionary();
+            }
+
+            if constexpr (CT::Array<T>) {
+               for (size_t i = 0; i < ExtentOf<T>; ++i)
+                  Langulus::Serialize(DeintCast(a)[i], converted, dictionary);
+            }
+            else Langulus::Serialize(DeintCast(a), converted, dictionary);
          }
-         else Langulus::Serialize(DeintCast(a), converted);
+         else {
+            if constexpr (CT::Array<T>) {
+               for (size_t i = 0; i < ExtentOf<T>; ++i)
+                  Langulus::Serialize(DeintCast(a)[i], converted);
+            }
+            else Langulus::Serialize(DeintCast(a), converted);
+         }
 
          const size_t offset = converted.GetCount();
          ThisCom::ConcatAt(at, Abandon {converted});
