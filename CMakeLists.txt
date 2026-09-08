@@ -152,11 +152,14 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
         set(SIMDUTF_TESTS OFF)
         set(SIMDUTF_TOOLS OFF)
         set(SIMDUTF_ICONV OFF)
+        set(SIMDUTF_FUZZERS OFF)
+        set(SIMDUTF_BENCHMARKS OFF)
         fetch_external_module(
             simdutf
             GIT_REPOSITORY https://github.com/simdutf/simdutf.git
             GIT_TAG        f542909a257bb3a9947f8e9fcaaba68a3e1f3b8b # v9.0.0 with some missing header fixes
         )
+        set_target_properties(Continuous PROPERTIES EXCLUDE_FROM_ALL True)
     endif()
 endif()
 

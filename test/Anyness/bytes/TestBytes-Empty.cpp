@@ -968,21 +968,21 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         /*else if constexpr (Same<E, char>) {
+         else if constexpr (Same<E, char>) {
             const uint8_t pattern[] = {
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               49, 50, 51, 52, 53,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               54, 55, 56, 57, 58,
-               49, 50, 51, 52, 53
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x31, 0x32, 0x33, 0x34, 0x35
             };
             REQUIRE(inserted == sizeof(pattern));
 
             Bytes_CheckState_ContainsBytes(pack, pattern);
-         }*/
+         }
          else if constexpr (Same<E, int32_t>) {
             const uint8_t pattern[] = {
                0x31, 0x00, 0x00, 0x00, //49
@@ -1293,19 +1293,21 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
 
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         /*else if constexpr (Same<E, char>) {
-            REQUIRE(inserted == 5*8);
-            Bytes_CheckState_ContainsBytes(pack,
-               "12345"
-               "6789:"
-               "6789:"
-               "6789:"
-               "12345"
-               "12345"
-               "12345"
-               "12345"
-            );
-         }*/
+         else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35
+            };
+            REQUIRE(inserted == sizeof(pattern));
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
          else if constexpr (Same<E, int32_t>) {
             const uint8_t pattern[] = {
                0x31, 0x00, 0x00, 0x00, //49
@@ -1545,9 +1547,12 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         /*else if constexpr (Same<E, char>) {
-            Bytes_CheckState_ContainsString(pack, "12346665");
-         }*/
+         else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {
+               0x31, 0x32, 0x33, 0x34, 0x36, 0x36, 0x36, 0x35
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
          else if constexpr (Same<E, int32_t>) {
             const uint8_t pattern[] = {
                0x31, 0x00, 0x00, 0x00, //49
@@ -1651,9 +1656,12 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         /*else if constexpr (Same<E, char>) {
-            Bytes_CheckState_ContainsString(pack, "56664321");
-         }*/
+         else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {
+               0x35, 0x36, 0x36, 0x36, 0x34, 0x33, 0x32, 0x31 
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
          else if constexpr (Same<E, int32_t>) {
             const uint8_t pattern[] = {
                0x35, 0x00, 0x00, 0x00, //53
@@ -1875,18 +1883,19 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         /*else if constexpr (Same<E, char>) {
-            Bytes_CheckState_ContainsString(pack,
-               "12345"
-               "12345"
-               "12345"
-               "12345"
-               "6789:"
-               "6789:"
-               "6789:"
-               "12345"
-            );
-         }*/
+         else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x31, 0x32, 0x33, 0x34, 0x35
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
          else if constexpr (Same<E, Text>) {
             const uint8_t pattern[] = {
                0b00001010, 10, 2, '4', '9',
@@ -2093,9 +2102,12 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
             };
             Bytes_CheckState_ContainsBytes(pack, pattern);
          }
-         /*else if constexpr (Same<E, char>) {
-            Bytes_CheckState_ContainsString(pack, "12346665");
-         }*/
+         else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {
+               0x31, 0x32, 0x33, 0x34, 0x36, 0x36, 0x36, 0x35
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
          else if constexpr (Same<E, Text>) {
             const uint8_t pattern[] = {
                0b00001010, 10, 2, '4', '9',
