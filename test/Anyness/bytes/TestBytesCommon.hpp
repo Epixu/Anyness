@@ -9,6 +9,16 @@
 #include "../many/TestManyCommon.hpp"
 
 
+namespace doctest
+{
+   template<>
+   struct StringMaker<Langulus::Byte> {
+      static String convert(Langulus::Byte const& value) {
+         return toString(::std::to_string(value.value));
+      }
+   };
+}
+
 #if LANGULUS(BENCHMARK)
    /// Perform a persistent benchmark across build and verify performance     
    #define BenchmarkBytes(func, tolerance, my_init, my) { \
