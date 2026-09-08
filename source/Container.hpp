@@ -95,6 +95,8 @@ namespace Langulus::Anyness
       /// on a container's constness and type-erasedness, as well as member   
       /// types HandleType and HandleMutType. Guarantees to always result in  
       /// a handle. No-op if C is already a handle.                           
+      ///   @attention multidimensional containers should result in multi-    
+      ///      dimensional handles                                            
       template<CT::Container C> 
       consteval auto DecideHandleType() {
          static_assert(not CT::Sheddable<C>, "Strip sheddables first");
@@ -106,10 +108,23 @@ namespace Langulus::Anyness
          }
          else if constexpr (requires {typename C::HandleType; typename C::HandleMutType; }) {
             // Always prioritize custom handle types if defined         
-            return Types<Tmut<C, typename C::HandleMutType, typename C::HandleType>> {};
+            using mutbl = typename C::HandleMutType;
+            using immut = typename C::HandleType;
+            static_assert(C::Dimensions::Count == mutbl::Dimensions::Count, 
+               "Custom HandleMutType doesn't represent container dimensions properly!"
+            );
+            static_assert(C::Dimensions::Count == immut::Dimensions::Count, 
+               "Custom HandleType doesn't represent container dimensions properly!"
+            );
+            return Types<Tmut<C, mutbl, immut>> {};
          }
          else if constexpr (CT::TypeErased<C>) {
             // Type-erased handle                                       
+            static_assert(C::Dimensions::Count == 1, 
+               "Multidimensional containers should result in multidimensional handles! "
+               "Define HandleMutType and HandleType!"
+            );
+
             if constexpr (CT::Owned<C>)
                return Types<Tmut<C, HandleMut,         Handle>> {};
             else
@@ -117,6 +132,11 @@ namespace Langulus::Anyness
          }
          else {
             // Statically-typed handle                                  
+            static_assert(C::Dimensions::Count == 1, 
+               "Multidimensional containers should result in multidimensional handles! "
+               "Define HandleMutType and HandleType!"
+            );
+
             using T     = TypeOf<C>;
             using Inner = Tmut<C, T&, ConstAll<T&>>;
             if constexpr (CT::Owned<C>)
@@ -887,11 +907,11 @@ namespace Langulus::Anyness
       /// Get a handle to the first element(s). Very useful for internal use. 
       /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   
+      ///   @attention handle should encompass all dimensions                 
       ///   @tparam AS the handle type, or void to decide automatically       
-      ///   @tparam SID the shared heap entry ID                              
       ///   @return the handle to the first element. This element might not   
       ///      be initialized if C is discontiguous!                          
-      template<class AS = void, Cid SID = 0, CT::NotHandle C>
+      template<class AS = void, CT::NotHandle C>
       decltype(auto) GetHandle(this C&& self) {
          static_assert(CT::Handle<AS> or CT::Void<AS>,
             "Must be either a handle or void (which will use DecideHandle");
@@ -905,9 +925,8 @@ namespace Langulus::Anyness
       }
 
       /// No-op in case C is already a handle                                 
-      template<class = void, Cid SID = 0, CT::Handle C>
+      template<class = void, CT::Handle C>
       constexpr C&& GetHandle(this C&& self) noexcept {
-         static_assert(SID == 0);//TODO maybe not noop? what if we want to get the first subhandle from a pair-handle?
          return LglsFwd(self);
       }
       

@@ -130,50 +130,27 @@ namespace Langulus::Anyness::Component
             // Allocate new memory and set count, so that handle        
             // iteration is valid                                       
             if constexpr (CT::Contiguous<C>)
-               ThisCom::AllocateFresh(count > reserve ? count : reserve /*ThisCom::RequestHeap(count > reserve ? count : reserve)*/);
+               ThisCom::AllocateFresh(count > reserve ? count : reserve);
             else {
                const auto rhs_reserve = from.template GetReserved<Id::First>();
-               ThisCom::AllocateFresh(rhs_reserve > reserve ? rhs_reserve : reserve /*ThisCom::RequestHeap(rhs_reserve > reserve ? rhs_reserve : reserve)*/);
+               ThisCom::AllocateFresh(rhs_reserve > reserve ? rhs_reserve : reserve);
             }
 
             if_available(self.template SetCountInner<Id::First>(count));
-            auto dst = self.GetHandle().ForceMutable();
-            try {
-               from.template Apply<false>([&dst,&self,&from](auto const& src) {
-                  (void) self; (void) from;
 
-                  if constexpr (CT::Supported<decltype(src)>) {
-                     Id::ForEach([&dst,&src]<Cid D>{
-                        if constexpr (CT::Cloned<I>)
-                           dst.template EmplaceWithIntent<D>(Clone(src));
-                        else
-                           dst.template EmplaceWithIntent<D>(Refer(src));
-                     });
-
-                     if constexpr (not CT::Contiguous<C>) {
-                        // Copy hash table entry as well                
-                        const auto idx = dst - self.GetHandle();
-                        self.template GetHashTableInner<Id::First>()[idx]
-                            = from.template GetHashTableInner<Id::First>()[idx];
-                     }
-                  }
-                  ++dst;
-               });
+            // Copy/Clone items                                         
+            if constexpr (CT::TypeErased<C>) {
+               if  (self.template GetType<ENTRY0::Id>().IsPOD()
+               and (self.template GetType<ENTRYN::Id>().IsPOD() and ...))
+                  self.CopyOrCloneAllItemsBatched(from);
+               else
+                  self.template CopyOrCloneAllItemsOneByOne<CT::Cloned<I>>(from);
             }
-            catch (...) {
-               // Partial success                                       
-               auto n = dst - self.GetHandle();
-               if constexpr (not requires { self.template SetCountInner<Id::First>(1); }) {
-                  // Partial success is not allowed - we have to        
-                  // destroy everything we initialized                  
-                  while (n) {
-                     dst.Free();
-                     --dst;
-                     --n;
-                  }
-               }
-               ThisCom::PartialSuccess(n);
-               throw;
+            else {
+               if constexpr (CT::POD<TypeOf<C, ENTRY0::Id>, TypeOf<C, ENTRYN::Id>...>)
+                  self.CopyOrCloneAllItemsBatched(from);
+               else
+                  self.template CopyOrCloneAllItemsOneByOne<CT::Cloned<I>>(from);
             }
                      
             // Full success                                             
@@ -184,8 +161,8 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Move/Refer/Abandon/Disown other                          
-            // @attention this should never be reached, if I is stack   
-            //    allocated                                             
+            /// @attention this should never be reached if I is stack   
+            ///    allocated                                            
             ThisCom::SetHeapInner(from.template GetRaw<Id::First>());
 
             if constexpr (CT::Moved<I> and CT::OwnedStrong<I>) {
@@ -276,8 +253,6 @@ namespace Langulus::Anyness::Component
                // rounded to the closest power-of-two. Move heap footers
                // accordingly in such cases.                            
                self.RemapAllHeapRequests(request.mReserved);
-               /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
-               if_available(self.template SetReservedInner<SID>(request.mReserved));*/
                return;
             }
 
@@ -311,12 +286,6 @@ namespace Langulus::Anyness::Component
                            Id::ForEach([&]<Cid D>{
                               to.template EmplaceWithIntent<D>(Abandon(from));
                            });
-
-                           /*if constexpr (not CT::Contiguous<C>) { // no, this will be moved by TransferAllHeapRequests
-                              // Copy hash table entry as well          
-                              const auto idx = to - self.GetHandle();
-                              self.GetHashTableInner()[idx] = previous.GetHashTableInner()[idx];
-                           }*/
                         }
                         ++to;
                      });
@@ -338,9 +307,6 @@ namespace Langulus::Anyness::Component
                else previous.template SetCountInner<SID>(0);
                self.RemapAllHeapRequests(request.mReserved);
             }
-
-            /*if_available(self.template RemapLocalHeapRequests<SID>(request.mReserved));
-            if_available(self.template SetReservedInner<SID>(request.mReserved));*/
          }
       }
 
@@ -860,6 +826,75 @@ namespace Langulus::Anyness::Component
             if_available(self.DisableDisowned()); //TODO redundant?
             ThisCom::ConstructFrom(Copy(backup), newReserve);
          }
+      }
+
+      /// Transfer all items one by one, account for exceptions               
+      ///   @attention works on all relevant dimensions at once!              
+      ///   @attention can be used only for Copy/Clone intents!               
+      template<bool CLONE, CT::Container C>
+      void CopyOrCloneAllItemsOneByOne(this C& self, auto const& from) {
+         auto dst = self.GetHandle().ForceMutable();
+         try {
+            from.template Apply<false>([&dst,&self,&from](auto const& src) {
+               (void) self; (void) from;
+
+               if constexpr (CT::Supported<decltype(src)>) {
+                  Id::ForEach([&dst,&src]<Cid D>{
+                     if constexpr (CLONE)
+                        dst.template EmplaceWithIntent<D>(Clone(src));
+                     else
+                        dst.template EmplaceWithIntent<D>(Refer(src));
+                  });
+
+                  if constexpr (not CT::Contiguous<C>) {
+                     // Copy hash table entry as well                   
+                     const auto idx = dst - self.GetHandle();
+                     self.template GetHashTableInner<Id::First>()[idx]
+                        = from.template GetHashTableInner<Id::First>()[idx];
+                  }
+               }
+               ++dst;
+            });
+         }
+         catch (...) {
+            //TODO what if it throws while all dimensions except the first one are uninitialized??
+            //TODO badly designed!
+            // Partial success                                          
+            auto n = dst - self.GetHandle();
+            if constexpr (not requires { self.template SetCountInner<Id::First>(1); }) {
+               // Partial success is not allowed - we have to           
+               // destroy everything we initialized                     
+               while (n) {
+                  dst.Free();
+                  --dst;
+                  --n;
+               }
+            }
+            ThisCom::PartialSuccess(n);
+            throw;
+         }
+      }
+
+      /// Transfer all items one by one, account for exceptions               
+      ///   @attention works on all relevant dimensions at once!              
+      ///   @attention can be used only for Copy/Clone intents!               
+      ///   @attention source and destination should not overlap!             
+      ///   @attention assumes 'self' has been reserved                       
+      template<CT::Container C>
+      void CopyOrCloneAllItemsBatched(this C& self, auto const& from) {
+         Id::ForEach([&]<Cid D> {
+            auto dst = self.template GetSlice<D>().ForceMutable();
+            auto src = from.template GetSlice<D>();
+            memcpy(dst.GetRaw(), src.GetRaw(), src.GetBytesize());
+         });
+
+         //TODO just copy these along with elements in the above Id::ForEach
+         const size_t oldReserved = from.GetReserved();
+         const size_t newReserved = self.GetReserved();
+         Id::ForEach([&]<Cid D> {
+            self.template TransferLocalHeapRequests<D, false>(from, oldReserved, newReserved);
+         });
+         self.template TransferGlobalHeapRequests<false>(from, oldReserved, newReserved);
       }
    };
 
