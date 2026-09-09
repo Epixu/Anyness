@@ -23,6 +23,7 @@ namespace Langulus::Anyness
 {
    struct Many;
    struct Any;
+   struct HandleDisowned;
 }
 
 namespace Langulus::Flow
@@ -125,7 +126,7 @@ namespace Langulus::RTTI
       using FDescribe      = void (*)(void* self, const Anyness::Many& describe);
       using FCompare       = Compared (*)(const void* lhs, const void* rhs);
       using FCompareEqual  = bool (*)(const void* lhs, const void* rhs);
-      using FResolve       = Anyness::Any (*)(void* self);
+      using FResolve       = Anyness::HandleDisowned (*)(void* self);
       using FHash          = Hash (*)(void* self);
       using FReference     = int (*)(void* self, int modifier);
       using FDispatch      = bool (*)(void* self, Flow::Verb& verb);

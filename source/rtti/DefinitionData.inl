@@ -410,9 +410,9 @@ namespace Langulus::RTTI
       if constexpr (CT::Resolvable<T>) {
          // Generate a resolving function                               
          definition.mCurrentBoundary.mResolver =
-            [](void* at) {
+            [](void* at) -> Anyness::HandleDisowned {
                auto atT = static_cast<T*>(at);
-               return Anyness::Any {atT->GetResolved()};
+               return atT->GetResolved();
             };
       }
 

@@ -97,6 +97,17 @@
    #define IF_NOT_LANGULUS_STACKTRACE(a)  a
 #endif
 
+/// Forced type-erasure                                                       
+#ifdef LANGULUS_OPTION_FORCE_TYPE_ERASURE
+   #define LANGULUS_FORCE_TYPE_ERASURE() 1
+   #define IF_LANGULUS_FORCE_TYPE_ERASURE(a)      a
+   #define IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(a)  LANGULUS(NOOP)
+#else
+   #define LANGULUS_FORCE_TYPE_ERASURE() 0
+   #define IF_LANGULUS_FORCE_TYPE_ERASURE(a)      LANGULUS(NOOP)
+   #define IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(a)  a
+#endif
+
 /// Paranoid mode introduces overhead, but zeroes any freed memory            
 #ifdef LANGULUS_OPTION_PARANOIA
    #define LANGULUS_PARANOID() 1

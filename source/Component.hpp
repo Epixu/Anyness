@@ -187,9 +187,14 @@ namespace Langulus::CT
        and ((not ShedDeref<T>::ContainsMany) and ...);
    
    /// Check if listed types are type-erased containers                       
-   template<class...T>
-   concept TypeErased = Container<T...>
-       and ((ShedDeref<T>::TypeErased) and ...);
+   #if LANGULUS(FORCE_TYPE_ERASURE)
+      template<class...T>
+      concept TypeErased = Container<T...>;
+   #else
+      template<class...T>
+      concept TypeErased = Container<T...>
+         and ((ShedDeref<T>::TypeErased) and ...);
+   #endif
 
    /// Check if listed types are containers, and are indexed                  
    template<class...T>

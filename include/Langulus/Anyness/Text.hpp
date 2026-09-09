@@ -417,11 +417,11 @@ namespace Langulus::Anyness
       }
 
       /// Comparison                                                          
-      constexpr auto operator <=> (CT::TextRange auto const& other) const noexcept -> ::std::partial_ordering {
+      constexpr auto operator <=> (CT::TextRange auto const& other) const noexcept {
          return this->Compare(other);
       }
 
-      constexpr auto operator <=> (Text const& other) const noexcept -> ::std::partial_ordering {
+      constexpr auto operator <=> (Text const& other) const noexcept {
          return this->Compare(other);
       }
 

@@ -72,6 +72,7 @@ namespace Langulus::Anyness
          Com::IterationOperators<>
       >;
 
+#if not LANGULUS(FORCE_TYPE_ERASURE)
       /// Statically typed handle to a dense element held inside a container  
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
       using THandleEmbeddedDense = Com::Container<
@@ -173,6 +174,7 @@ namespace Langulus::Anyness
          Com::Assignment<>,
          Com::Comparison<>
       >;
+   #endif
    }
 
 
@@ -416,7 +418,7 @@ namespace Langulus::Anyness
       }
    };
 
-   
+#if not LANGULUS(FORCE_TYPE_ERASURE)
    /// MARK: THandle                                                          
    ///                                                                        
    /// When T is a reference, then element is embedded inside container       
@@ -860,4 +862,5 @@ namespace Langulus::Anyness
          return LglsFwd(self);
       }
    };
+#endif
 }

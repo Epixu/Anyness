@@ -108,7 +108,10 @@ namespace Langulus::Anyness::Component
       template<Cid D, class SELF, CT::Intent I> requires CT::Container<I>
       void SliceFrom(this SELF& self, I&& intent) {
          static_assert(CT::Disowned<I>);
-         ThisCom::SetEntriesInner(intent->template GetEntries<D>());
+         if constexpr (requires { intent->template GetEntries<D>(); })
+            ThisCom::SetEntriesInner(intent->template GetEntries<D>());
+         else
+            ThisCom::SetEntriesInner(nullptr);
       }
 
       /// Copy the pointer to the entries, and reference if we have to        
@@ -119,9 +122,12 @@ namespace Langulus::Anyness::Component
          using IT = Decvq<Deref<Deint<I>>>;
          decltype(auto) from = LglsFwd(intent.what);
 
-         ThisCom::SetEntriesInner(from.template GetEntries<ID>());
+         if constexpr (not requires { from.template GetEntries<ID>(); }) {
+            ThisCom::SetEntriesInner(nullptr);
+         }
+         else if constexpr ((STYLE & OnCreateAndDestroy) != 0) { 
+            ThisCom::SetEntriesInner(from.template GetEntries<ID>()); 
 
-         if constexpr ((STYLE & OnCreateAndDestroy) != 0) {
             if constexpr (CT::Referred<I> or (IT::OwnedDeep & OnCreateAndDestroy) == 0) {
                // Refer                                                 
                ThisCom::Keep();

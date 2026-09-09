@@ -171,15 +171,11 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, Cid SID = ID, CT::Container C>
-      requires (SID == ID and requires { typename Deref<C>::DeepType; })
-      auto GetResolved(this C&& self) {
-         using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
-         static_assert(CT::Container<D>, "D must result in a container type");
-         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
-
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      auto GetResolved(this C&& self) -> HandleDisowned {
          if (self.IsEmpty())
-            return D {};
+            return {};
+         
          if (not self.IsSparse())
             return ThisCom::template As<D>();
 
@@ -197,11 +193,8 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<class AS = void, Cid SID = ID, CT::Container C>
-      requires (SID == ID and requires { typename Deref<C>::DeepType; })
-      auto GetDense(this C&& self, size_t count = -1) {
-         using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
-         static_assert(CT::Container<D>, "D must result in a container type");
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned {
          LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
          if (not self.IsSparse() or count <= 0)
             return D {Absorb, Disown(self)};

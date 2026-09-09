@@ -112,10 +112,10 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<Cid SID = 0, class AS = void>
-      auto GetResolved(this auto&& self) {
+      template<Cid SID = 0>
+      auto GetResolved(this auto&& self) -> HandleDisowned {
          using C = typename Subcomponents::template At<SID>;
-         return self.C::template GetResolved<SID, AS>();
+         return self.C::template GetResolved<SID>();
       }
 
       /// Get first element, removing 'count' indirections                    
@@ -125,10 +125,10 @@ namespace Langulus::Anyness::Component
       ///      Using 'void' will default to C::DeepType.                      
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element for chosen dimension              
-      template<Cid SID = 0, class AS = void>
-      auto GetDense(this auto&& self, size_t count = -1) {
+      template<Cid SID = 0>
+      auto GetDense(this auto&& self, size_t count = -1) -> HandleDisowned {
          using C = typename Subcomponents::template At<SID>;
-         return self.C::template GetDense<SID, AS>(count);
+         return self.C::template GetDense<SID>(count);
       }
 
    protected:

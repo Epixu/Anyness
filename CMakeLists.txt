@@ -81,6 +81,11 @@ option(LANGULUS_OPTION_PROFILING
 option(LANGULUS_OPTION_STACKTRACE
     "Enables logging of stacktrace on errors and assumptions (currently not available on GCC 14.2+)" OFF)
 
+option(LANGULUS_OPTION_FORCE_TYPE_ERASURE
+    "Makes _all_ containers type-erased, even the templated ones! \
+Radically improves compilation time and memory usage, \
+but significantly penalizes performance at runtime" OFF)
+
 option(LANGULUS_OPTION_LOGGING              "Master logger switch" ON)
 option(LANGULUS_LOGGER_DISABLE_FATALERRORS  "Disables fatal error logging via Logger::Fatal()" OFF)
 option(LANGULUS_LOGGER_DISABLE_ERRORS       "Disables error logging via Logger::Error()" OFF)
@@ -231,6 +236,7 @@ reflect_option(LANGULUS_OPTION_MANAGED_MEMORY      "Managed memory enabled")
 reflect_option(LANGULUS_OPTION_MANAGED_REFLECTION  "Managed reflection enabled")
 reflect_option(LANGULUS_OPTION_MEMORY_STATISTICS   "Memory statistics enabled")
 reflect_option(LANGULUS_OPTION_SHARED_LIBRARIES    "Building shared libraries enabled")
+reflect_option(LANGULUS_OPTION_FORCE_TYPE_ERASURE  "Forced type-erasure enabled")
 
 reflect_option(LANGULUS_LOGGER_DISABLE_FATALERRORS "Logger: fatal errors disabled")
 reflect_option(LANGULUS_LOGGER_DISABLE_ERRORS      "Logger: regular errors disabled")

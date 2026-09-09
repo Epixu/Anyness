@@ -1073,13 +1073,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
       /// MARK: GetHandle                                                     
       WHEN("GetHandle is called on mutable container") {
          auto src_handle_default = src.GetHandle();
-         if constexpr (CT::Untyped<T>)
+         if constexpr (CT::TypeErased<T>)
             static_assert(::std::same_as<decltype(src_handle_default), Handle>);
          else
             static_assert(::std::same_as<decltype(src_handle_default), THandle<ConstAll<E&>>>);
 
          auto src_handle = src_handle_default.ForceMutable();
-         if constexpr (CT::Untyped<T>)
+         if constexpr (CT::TypeErased<T>)
             static_assert(::std::same_as<decltype(src_handle), HandleMut>);
          else
             static_assert(::std::same_as<decltype(src_handle), THandle<E&>>);
@@ -1236,6 +1236,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                dst_handle.SwapContents(src_handle);
          }
          
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
          THEN("Handle moved into a local handle") {
             THandle<E> local {Absorb, Move(src_handle)};
 
@@ -1385,6 +1386,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             for(int i = 0; i < 101; ++i)
                local.SwapContents(src_handle);
          }
+         #endif
       }
 
       WHEN("GetHandle is called on constant container") {
@@ -1394,7 +1396,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          while(handle.Get() != first_valid_element)
             ++handle;
 
-         if constexpr (CT::Untyped<T>)
+         if constexpr (CT::TypeErased<T>)
             static_assert(::std::same_as<decltype(handle), Handle>);
          else
             static_assert(::std::same_as<decltype(handle), THandle<ConstAll<E&>>>);

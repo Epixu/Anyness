@@ -140,13 +140,11 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
 
-         using TC   = LglsMutIf(C, TypeOf<C, SID>);
-         using TCP  = LglsMutIf(C, TC*);
-         using TH   = Tif<CT::Void<AS>, TC, AS>;
-         using THP  = LglsMutIf(C, TH*);
-         auto* heap = DecvqAllCast(ThisCom::template GetRaw<SID>());
-
          if constexpr (CT::TypeErased<C>) {
+            using TH   = Tif<CT::Void<AS>, void, AS>;
+            using THP  = LglsMutIf(C, TH*);
+            void* heap = DecvqAllCast(ThisCom::template GetRaw<SID>());
+      
             const auto T = self.template GetType<SID>();
             LglsAssumeDev((bool) T, "Block is not typed");
 
@@ -178,8 +176,7 @@ namespace Langulus::Anyness::Component
 
                   // We need to dereference. Supports packed pointers   
                   auto diff = indirections - IndirectsOf<TH>;
-                  using Deep = typename Deref<C>::DeepType;
-                  Deep denser = Disown(ThisCom::template GetDense<SID>(diff));
+                  auto denser = ThisCom::template GetDense<SID>(diff);
                   return static_cast<THP>(denser.GetRaw());
                }
                else {
@@ -191,6 +188,12 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
+            using TC   = LglsMutIf(C, TypeOf<C, SID>);
+            using TCP  = LglsMutIf(C, TC*);
+            using TH   = Tif<CT::Void<AS>, TC, AS>;
+            using THP  = LglsMutIf(C, TH*);
+            auto* heap = DecvqAllCast(ThisCom::template GetRaw<SID>());
+      
             // Casting to a desired static type                         
             if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
                // No difference in indirections                         
@@ -299,33 +302,34 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<Cid SID = Id::First, class AS = void, CT::Container C>
+      template<Cid SID = Id::First/*, class AS = void*/, CT::Container C>
       requires (CT::Contiguous<C> and Relevant<SID>)
-      auto GetResolved(this C&& self)
-      requires requires { typename Deref<C>::DeepType; } {
-         using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
+      auto GetResolved(this C&& self) -> HandleDisowned {
+         /*using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
-         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
+         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");*/
 
          if (self.template IsEmpty<SID>())
-            return D {};
+            return {};
+
+         auto h = HandleDisowned {Slice<SID>, self};
          if (not self.template IsSparse<SID>())
-            return ThisCom::template As<D, SID>();
+            return h;
 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
             const auto resolver = T.GetResolver();
             if (resolver)
-               return D {resolver(ThisCom::template GetDense<SID>().GetRaw())};
+               return resolver(h.GetDense().GetRaw());
             else
-               return ThisCom::template GetDense<SID, D>();
+               return h.GetDense();
          }
          else {
             using T = TypeOf<C, SID>;
             if constexpr (CT::Resolvable<T>)
-               return D {DenseCast(ThisCom::template Get<T, SID>()).GetResolved()};
+               return DenseCast(ThisCom::template Get<T, SID>()).GetResolved();
             else
-               return D {DenseCast(ThisCom::template Get<T, SID>())};
+               return DenseCast(ThisCom::template Get<T, SID>());
          }
       }
 
@@ -336,22 +340,15 @@ namespace Langulus::Anyness::Component
       ///      Using 'void' will default to C::DeepType.                      
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element for chosen dimension              
-      template<Cid SID = Id::First, class AS = void, CT::Contiguous C>
-      auto GetDense(this C&& self, size_t count = -1)
-      requires (Relevant<SID> and requires { typename Deref<C>::DeepType; }) {
-         using D = Tif<CT::Void<AS>, Deep<C>, AS>;
-         static_assert(CT::Container<D>, "D must result in a container type");
-         LglsAssert(not self.template IsEmpty<SID>(), "Can't GetDense from empty container");
+      template<Cid SID = Id::First, CT::Contiguous C> requires (Relevant<SID>)
+      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned {
+         if (self.template IsEmpty<SID>())
+            return {};
 
-         void* heap = ThisCom::template GetRawVoid<SID>();
-         if (not self.template IsSparse<SID>() or count <= 0) {
-            // Early return if nothing to do                            
-            D temp;
-            temp.SetTypeInner(self.template GetType<SID>());
-            temp.SetHeapInner(heap);
-            if_available(temp.SetCountInner(1));
-            return temp;
-         }
+         auto h = HandleDisowned {Slice<SID>, self};
+         if (not self.template IsSparse<SID>() or count <= 0)
+            return h;
+
 
          // Check if origin type is complete before attempting anything 
          if constexpr (CT::TypeErased<C>) {
@@ -375,7 +372,7 @@ namespace Langulus::Anyness::Component
 
          auto     T = self.template GetType<SID>();
          auto nextT = T.GetDeptr();
-
+         void* heap = ThisCom::template GetRawVoid<SID>();
          while (count and T.IsSparse()) {            
             if (nextT.IsSparse()) {
                // Pointer T -> Pointer nextT                            
@@ -386,14 +383,7 @@ namespace Langulus::Anyness::Component
             }
             else break;
          }
-         
-         // Pointer T** -> Pointer T* for example (partial deref)       
-         // or just Pointer T** -> Dense T (full deref)                 
-         D temp;
-         temp.SetTypeInner(nextT);
-         temp.SetHeapInner(UnpackPointer(T, nextT, heap));
-         if_available(temp.SetCountInner(1));
-         return temp;
+         return {Stackwise, nextT, UnpackPointer(T, nextT, heap)};
       }
 
    protected:
@@ -414,14 +404,16 @@ namespace Langulus::Anyness::Component
       /// Set the heap pointer, any data pointer will do                      
       template<Cid SID = Id::First, CT::Sparse P> requires Relevant<SID>
       constexpr void SetHeapInner(this auto& self, P heap) assumptious {
-         if constexpr (Exact<P, StackRequest>)
+         /*if constexpr (requires { ThisCom::GetHeapInner() = heap; })
             ThisCom::GetHeapInner() = heap;
          else if constexpr (CT::CustomPointer<P>)
             ThisCom::GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
          else {
-            static_assert(Same<StackRequest, DecvqAll<StackRequest>>);
-            ThisCom::GetHeapInner() = const_cast<StackRequest>(static_cast<DecvqAll<StackRequest>>(DecvqAllCast(heap)));
-         }
+            static_assert(Same<StackRequest, DecvqAll<StackRequest>>);*/
+            ThisCom::GetHeapInner() = static_cast<StackRequest>(
+               const_cast<void*>(static_cast<void const*>(heap))
+            );
+         //}
       }
 
       /// Reset the heap pointer to null                                      

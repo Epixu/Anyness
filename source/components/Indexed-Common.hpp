@@ -79,13 +79,11 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
 
-         using TC   = LglsMutIf(C, TypeOf<C, SID>);
-         using TCP  = LglsMutIf(C, TC*);
-         using TH   = Tif<CT::Void<AS>, TC, AS>;
-         using THP  = LglsMutIf(C, TH*);
-         auto* heap = DecvqAllCast(self.template GetRaw<SID>());
-
          if constexpr (CT::TypeErased<C>) {
+            using TH   = Tif<CT::Void<AS>, void, AS>;
+            using THP  = LglsMutIf(C, TH*);
+            void* heap = DecvqAllCast(self.template GetRaw<SID>());
+
             const auto T = self.template GetType<SID>();
             LglsAssumeDev((bool) T, "Block is not typed");
 
@@ -124,8 +122,7 @@ namespace Langulus::Anyness::Component
 
                   // We need to dereference. Supports packed pointers   
                   auto diff = indirections - IndirectsOf<TH>;
-                  using Deep = typename Deref<C>::DeepType;
-                  Deep denser = Disown(self.template GetDenseAt<SID>(LglsFwd(idx), diff));
+                  auto denser = self.template GetDenseAt<SID>(LglsFwd(idx), diff);
                   return static_cast<THP>(denser.GetRaw());
                }
                else {
@@ -138,6 +135,12 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
+            using TC   = LglsMutIf(C, TypeOf<C, SID>);
+            using TCP  = LglsMutIf(C, TC*);
+            using TH   = Tif<CT::Void<AS>, TC, AS>;
+            using THP  = LglsMutIf(C, TH*);
+            auto* heap = DecvqAllCast(self.template GetRaw<SID>());
+   
             const auto offset = self.SimplifyIndex(idx);
             heap += offset;
 
@@ -256,24 +259,23 @@ namespace Langulus::Anyness::Component
       /// Get Nth element after being resolved to the most concrete type.     
       ///   @param idx the index                                              
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, CT::Container C>
-      auto GetResolvedAt(this C&& self, CT::Index auto&&) {
-         using D = Tif<CT::Void<AS>, Deep<C>, AS>;
-         static_assert(CT::Container<D>, "D must result in a container type");
-         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
-
+      template<Cid SID = ID, CT::Container C> requires (Relevant<SID>)
+      auto GetResolvedAt(this C&& self, CT::Index auto&&) -> HandleDisowned {
          if (self.IsEmpty())
-            return D {};
+            return {};
+
+         HandleDisowned h {self};
+         h += self.SimplifyIndex(idx);
          if (not self.IsSparse())
-            return self.template GetItem<D>();
+            return h;
 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();
             const auto resolver = T.GetResolver();
             if (resolver)
-               return D {resolver(self.GetDense().GetRaw())};
+               return {resolver(h.GetDense().GetRaw())};
             else
-               return self.template GetDense<D>();
+               return h.GetDense();
 
          }
          else {
@@ -293,12 +295,10 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element for chosen dimension              
-      template<Cid SID = ID, class AS = void, CT::Container C>
-      auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1)
-      requires (Relevant<SID> and requires { typename Deref<C>::DeepType; }) {
-         using D = Tif<CT::Void<AS>, Deep<C>, AS>;
-         static_assert(CT::Container<D>, "D must result in a container type");
-         LglsAssert(not self.template IsEmpty<SID>(), "Can't GetDense from empty container");
+      template<Cid SID = ID, CT::Container C> requires (Relevant<SID>)
+      auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1) -> HandleDisowned {
+         if (self.IsEmpty())
+            return {};
 
          // Offset the heap                                             
          void* heap = DecvqAllCast(self.template GetRaw<SID>());
@@ -339,7 +339,6 @@ namespace Langulus::Anyness::Component
 
          auto     T = self.template GetType<SID>();
          auto nextT = T.GetDeptr();
-
          while (count and T.IsSparse()) {            
             if (nextT.IsSparse()) {
                // Pointer T -> Pointer nextT                            
@@ -350,14 +349,7 @@ namespace Langulus::Anyness::Component
             }
             else break;
          }
-         
-         // Pointer T** -> Pointer T* for example (partial deref)       
-         // or just Pointer T** -> Dense T (full deref)                 
-         D temp;
-         temp.SetTypeInner(nextT);
-         temp.SetHeapInner(UnpackPointer(T, nextT, heap));
-         if_available(temp.SetCountInner(1));
-         return temp;
+         return {Stackwise, nextT, UnpackPointer(T, nextT, heap)};
       }
 
       template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>

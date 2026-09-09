@@ -840,8 +840,11 @@ namespace Langulus::Anyness::Component
       static void InsertInner(H& to, T&& a) {
          using I  = IntentOf(a);
          using IT = DeextAll<Deint<T>>;
-         static_assert(not CONVERT or Same<TypeOf<H>, IT>,
-            "Use ConvertInsertInner instead");
+
+         if constexpr (CONVERT) {
+            LglsAssumeDev(to.template IsSame<IT>(),
+               "Use ConvertInsertInner instead");
+         }
 
          // Non-converting insertion                                    
          if constexpr (CT::Array<T>) {

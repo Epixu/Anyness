@@ -274,7 +274,7 @@ namespace Langulus::Anyness
       }
    };
 
-
+#if not LANGULUS(FORCE_TYPE_ERASURE)
    /// MARK: HE/HE                                                            
    ///                                                                        
    /// Statically typed emergent handles                                      
@@ -577,4 +577,5 @@ namespace Langulus::Anyness
 
    template<CT::Handle K, CT::Handle V>
    THandlePair(K&&, V&&) -> THandlePair<Decay<K>, Decay<V>>;
+#endif
 }

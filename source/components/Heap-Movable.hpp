@@ -835,7 +835,7 @@ namespace Langulus::Anyness::Component
 
          if (self.template IsEmpty<SID>()) {
             // Empty - do a fresh allocation                            
-            ThisCom::AllocateFresh(newReserve /*ThisCom::RequestHeap(newReserve)*/);
+            ThisCom::AllocateFresh(newReserve);
             return;
          }
          else {

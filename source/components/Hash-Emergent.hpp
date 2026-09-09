@@ -49,8 +49,10 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev((bool) T, "Can't hash untyped container");
             const auto hasher = T.GetHasher();
             LglsAssumeDev(hasher, "Not hashable");
+            void* const data = const_cast<void*>(
+               static_cast<void const*>(self.template GetRaw<SID>())
+            );
 
-            const auto data = const_cast<void*>(self.template GetRaw<SID>());
             if (self.template GetCount<SID>() == 1) {
                // Exactly one element means exactly one hash            
                return hasher(data);
