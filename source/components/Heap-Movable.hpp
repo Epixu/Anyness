@@ -905,7 +905,10 @@ namespace Langulus::Anyness::Component
          Id::ForEach([&]<Cid D> {
             auto dst = self.template GetSlice<D>().ForceMutable();
             auto src = from.template GetSlice<D>();
-            memcpy(dst.GetRaw(), src.GetRaw(), from.GetBytesize());
+            if constexpr (CT::Contiguous<C1>)
+               memcpy(dst.GetRaw(), src.GetRaw(), from.GetBytesize());
+            else
+               memcpy(dst.GetRaw(), src.GetRaw(), from.GetStride() * from.GetReserved());
          });
 
          //TODO just copy these along with elements in the above Id::ForEach if oldReserved and newReserved are the same

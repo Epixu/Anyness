@@ -128,7 +128,8 @@ namespace Langulus::Anyness
       }
 
       /// Construction from any kind of text that isn't an Anyness container  
-      ///   @attention non-owning constructor unless you use Copy/Clone intent
+      ///   @attention non-owning constructor unless you use Copy/Clone. Data 
+      ///      lifetime is _your_ responsibility, unless you use Copy/Clone.  
       template<CT::Text T> requires CT::NotContainer<T>
       constexpr Text(T&& text) {
          using I  = IntentOf(text);
@@ -250,13 +251,14 @@ namespace Langulus::Anyness
       
       /// Construction from all kinds of text, trim length to desired count   
       ///   @attention intent is ignored - this doesn't apply ownership, only 
-      ///      interfaces the data - you can TakeOwnership() after this call  
+      ///      interfaces the data - you can TakeOwnership() after this call. 
+      ///      Data lifetime is _your_ responsibility.                        
       ///   @attention count will shrink if a terminating character was found,
       ///      or if 'text' is a bounded array of smaller size                
       ///   @param text text to wrap, assumed valid                           
       ///   @param count number of characters inside 'text' to use            
       ///   @return the text wrapped inside a Text container                  
-      template<CT::Text T>
+      template<CT::Text T> requires CT::NoIntent<T>
       static Text FromText(T&& text, CountType count) {
          if (count == 0)
             return {};
@@ -273,7 +275,7 @@ namespace Langulus::Anyness
       ///      0 for no truncation. Will produce scientific notation for too  
       ///      big or too small numbers                                       
       ///   @return the text                                                  
-      template<CT::Number T>
+      template<CT::Number T> requires CT::NoIntent<T>
       static Text FromNumber(T&& number, int precision = 0) {
          Text result;
          using DT = Decay<T>;
@@ -362,7 +364,7 @@ namespace Langulus::Anyness
             LglsAssert(errorCode == ::std::errc(), "std::to_chars failure");
 
             const auto c = static_cast<CountType>(lastChar - temp);
-            result.AllocateFresh(c /*result.RequestHeap(c)*/);
+            result.AllocateFresh(c);
             memcpy(result.GetHeapInner(), temp, c);
             result.SetCountInner(c);
          }
@@ -375,19 +377,19 @@ namespace Langulus::Anyness
       /// Generate hexadecimal string from a given value                      
       ///   @param from - the argument                                        
       ///   @return the resulting text                                        
-      template<bool REVERSE = false>
-      static Text Hex(const auto& from) {
+      template<bool REVERSE = false, class T> requires CT::NoIntent<T>
+      static Text Hex(T const& from) {
          Text result;
-         result.AllocateFresh(sizeof(from) * 2);
+         result.AllocateFresh(sizeof(T) * 2);
          auto from_bytes = reinterpret_cast<const char*>(&from);
          auto to_bytes = result.GetRaw();
-         for (size_t i = 0; i < sizeof(from); ++i) {
+         for (size_t i = 0; i < sizeof(T); ++i) {
             if constexpr (REVERSE)
-               ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[sizeof(from) - (i + 1)]);
+               ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[sizeof(T) - (i + 1)]);
             else
                ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[i]);
          }
-         result.SetCountInner(sizeof(from) * 2);
+         result.SetCountInner(sizeof(T) * 2);
          return result;
       }
 

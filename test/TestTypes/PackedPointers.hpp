@@ -47,8 +47,10 @@ protected:
       if constexpr (CT::Dense<INNER>) {
          if constexpr (requires { new INNER (LglsFwd(arguments)...); })
             new (&place) INNER (LglsFwd(arguments)...);
-         else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
-            new (&place) INNER (INNER::FromNumber(LglsFwd(arguments)...));
+         else if constexpr (requires { new INNER (DeintCast(arguments)...); })
+            new (&place) INNER (DeintCast(arguments)...);
+         else if constexpr (requires { new INNER (INNER::FromNumber(DeintCast(arguments)...)); })
+            new (&place) INNER (INNER::FromNumber(DeintCast(arguments)...));
          else
             static_assert(false, "Unable to construct");
       }
@@ -56,7 +58,7 @@ protected:
          using NEXT_T = Deptr<INNER>;
 
          if constexpr (Same<NEXT_T, char> and IndirectsOf<T> > 0) {
-            ::std::string converted = ::std::to_string(LglsFwd(arguments)...);
+            ::std::string converted = ::std::to_string(DeintCast(arguments)...);
             *entry = Allocator::AllocatePacked<INNER>(
                Langulus::MetaDataOf<NEXT_T>(), pot_t(Langulus::Roof2(converted.size()+1)));
             place = (*entry)->GetBlockStartPackedAs<INNER>();
@@ -120,11 +122,6 @@ public:
    auto operator *  () const -> T const& {return *element;}
    auto operator -> ()       -> T*       {return  element;}
    auto operator -> () const -> T const* {return  element;}
-
-   /*auto operator *  ()       -> Type&        {return element;}
-   auto operator *  () const -> Type const&  {return element;}
-   auto operator -> ()       -> Inner*       {return element.Unpack();}
-   auto operator -> () const -> Inner const* {return element.Unpack();}*/
 };
 
 using pptr8rt  = Langulus::Fractalloc::PackedPointer<RT, 2, 6, 0>;

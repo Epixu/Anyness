@@ -36,7 +36,7 @@ protected:
          // Innermost dense indirection reached                         
          if constexpr (MANAGED) {
             if constexpr (Same<INNER, char> and IndirectsOf<T> > 0) {
-               ::std::string converted = ::std::to_string(LglsFwd(arguments)...);
+               ::std::string converted = ::std::to_string(DeintCast(arguments)...);
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
                   *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(converted.size()+1)));
                #else
@@ -57,23 +57,27 @@ protected:
 
                if constexpr (requires { new INNER (LglsFwd(arguments)...); })
                   new (place) INNER (LglsFwd(arguments)...);
-               else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
-                  new (place) INNER (INNER::FromNumber(LglsFwd(arguments)...));
+               else if constexpr (requires { new INNER (DeintCast(arguments)...); })
+                  new (place) INNER (DeintCast(arguments)...);
+               else if constexpr (requires { new INNER (INNER::FromNumber(DeintCast(arguments)...)); })
+                  new (place) INNER (INNER::FromNumber(DeintCast(arguments)...));
                else
                   static_assert(false, "Unable to construct");
             }
          }
          else {
             if constexpr (Same<INNER, char> and IndirectsOf<T> > 0) {
-               ::std::string converted = ::std::to_string(LglsFwd(arguments)...);
+               ::std::string converted = ::std::to_string(DeintCast(arguments)...);
                place = (char*) malloc(converted.size()+1);
                memcpy(place, converted.c_str(), converted.size()+1);
             }
             else {
                if constexpr (requires { new INNER (LglsFwd(arguments)...); })
                   place = new INNER (LglsFwd(arguments)...);
-               else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
-                  place = new INNER (INNER::FromNumber(LglsFwd(arguments)...));
+               else if constexpr (requires { new INNER (DeintCast(arguments)...); })
+                  place = new INNER (DeintCast(arguments)...);
+               else if constexpr (requires { new INNER (INNER::FromNumber(DeintCast(arguments)...)); })
+                  place = new INNER (INNER::FromNumber(DeintCast(arguments)...));
                else
                   static_assert(false, "Unable to construct");
             }

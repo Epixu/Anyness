@@ -137,8 +137,6 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
-         //LglsAssumeDev(not self.IsEmpty(),
-         //   "Can't keep anything in an empty container");
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
 
@@ -216,8 +214,6 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepStandardPointersEmergent(this C& self) assumptious {
-         //LglsAssumeDev(not self.IsEmpty(),
-         //   "Can't keep anything in an empty container");
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
 
@@ -252,7 +248,6 @@ namespace Langulus::Anyness::Component
                   referencer(ptr, 1);
                }
             }
-
          }
          else {
             //                                                          
@@ -299,8 +294,6 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
-         //LglsAssumeDev(not self.IsEmpty(),
-         //   "Can't keep anything in an empty container");
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
 
@@ -370,8 +363,6 @@ namespace Langulus::Anyness::Component
       ///   @attention works on one dimension at a time!                      
       template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       void KeepElementDeepCustomPointersEmergent(this C& self) assumptious {
-         //LglsAssumeDev(not self.IsEmpty(),
-         //   "Can't keep anything in an empty container");
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
 
@@ -976,11 +967,6 @@ namespace Langulus::Anyness::Component
                return;
          }
 
-         /*static_assert(not CT::Cloned<I>,
-            "EmplaceEntries shouldn't be called when cloning, "
-            "because it will overwrite/reference new allocations"
-         );*/ // Generally true on construction, but we want this to happen after assignment!
-
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
@@ -990,7 +976,6 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
-            //using H = TypeOf<I>;
             LglsAssumeDev(self.template IsSame<SID>(rhs.template GetType<SID>()),
                "Type mismatch", ": ", self.template GetType<SID>(),
                " is not same as ", rhs.template GetType<SID>()
@@ -1004,7 +989,7 @@ namespace Langulus::Anyness::Component
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (/*CT::OwnedDeepStrong<H> and*/ I::IsMoved()) {
+                  if constexpr (I::IsMoved()) {
                      // We are moving/abandoning, and we have to make   
                      // sure that source entries are zeroes, because    
                      // otherwise they will be dereferenced when H goes 
@@ -1029,7 +1014,7 @@ namespace Langulus::Anyness::Component
                // reference all elements.                               
                ThisCom::template KeepElementDeep<sought, SID>();
             }
-            else if constexpr (/*CT::OwnedDeepStrong<H> and*/ REF_INDIVIDUAL) {
+            else if constexpr (REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
                // are referenced (even if they have no corresponding    
                // entry), we need to zero the source pointers, so that  
@@ -1046,7 +1031,7 @@ namespace Langulus::Anyness::Component
                            "Can't move out from used memory");
                      #endif
                   }
-               memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
+                  memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
                }
             }
          }

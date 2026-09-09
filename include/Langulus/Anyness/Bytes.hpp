@@ -143,8 +143,8 @@ namespace Langulus::Anyness
          this->ConstructDefault();
       }
 
-      constexpr Bytes(nullptr_t) noexcept
-         : Bytes {} {}
+      /*constexpr Bytes(nullptr_t) noexcept
+         : Bytes {} {}*/
 
       constexpr Bytes(Bytes const& other)
          : Bytes {Refer {other}} {}
@@ -182,24 +182,33 @@ namespace Langulus::Anyness
 
       /// Construction from any kind of POD value.                            
       /// Works for bounded arrays as well.                                   
-      ///   @attention non-owning constructor unless you use Copy/Clone intent
+      ///   @attention non-owning constructor unless you use Copy/Clone. Data 
+      ///      lifetime is _your_ responsibility, unless you use Copy/Clone.  
       template<class T> requires CT::POD<DeextAll<Deint<T>>>
       explicit constexpr Bytes(T&& source) {
+         decltype(auto) data = DeintCast(source);
+         constexpr size_t bytesize = sizeof(Deint<T>);
          this->ResetState();
-         
-         if constexpr (CT::Array<T>)
-            this->SetHeapInner(static_cast<const void*>( DeintCast(source)));
-         else
-            this->SetHeapInner(static_cast<const void*>(&DeintCast(source)));
-         this->SetCountInner(sizeof(Deint<T>));
-         this->ResetHash();
 
          if constexpr (CT::Copied<T> or CT::Cloned<T>) {
             // Take ownership if the intent requires it                 
-            this->SetAllocationInner(nullptr);
-            this->TakeOwnership();
+            this->AllocateFresh(bytesize);
+            if constexpr (CT::Array<T>)
+               memcpy(this->GetRaw(),  data, bytesize);
+            else
+               memcpy(this->GetRaw(), &data, bytesize);
+
+            this->SetCountInner(bytesize);
          }
          else {
+            // Only interface data, reference if able to and if desired 
+            if constexpr (CT::Array<T>)
+               this->SetHeapInner(static_cast<const void*>( data));
+            else
+               this->SetHeapInner(static_cast<const void*>(&data));
+
+            this->SetCountInner(bytesize);
+
             // We may still own this data                               
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (CT::Disowned<T>)
@@ -210,15 +219,7 @@ namespace Langulus::Anyness
                this->SetAllocationInner(nullptr);
             #endif
          }
-      }
 
-      /// Construction from a byte                                            
-      ///   @attention this is an owning constructor                          
-      constexpr Bytes(Byte&& b) {
-         this->ResetState();
-         this->AllocateFresh(1);
-         *this->GetRawAs<Byte>() = b;
-         this->SetCountInner(1);
          this->ResetHash();
       }
 
@@ -231,19 +232,37 @@ namespace Langulus::Anyness
       }
       
       /// Construction from raw bytes data                                    
-      ///   @attention intent is ignored - this doesn't apply ownership, only 
-      ///      interfaces the data - you can TakeOwnership() after this call  
+      ///   @attention this doesn't apply ownership, only interfaces the data.
+      ///      You can TakeOwnership() after this call if you want.           
+      ///   @attention data lifetime is _your_ responsibility                 
       ///   @param data data to wrap, assumed valid                           
       ///   @param count number of bytes inside 'data' to use                 
       ///   @return the raw bytes wrapped inside a Bytes container            
-      static Bytes FromBytes(void const* data, size_t count) {
+      static Bytes FromBytes(void const* data, size_t count) noexcept {
          if (count == 0)
             return {};
 
          Bytes result;
-         result.EnableDisowned();
          result.SetHeapInner(data);
          result.SetCountInner(count);
+         return result;
+      }
+
+      /// Construction by interfacing POD data                                
+      ///   @attention intent is ignored - this doesn't apply ownership, only 
+      ///      interfaces the data - you can TakeOwnership() after this call  
+      ///   @attention data lifetime is _your_ responsibility                 
+      ///   @param data data to wrap, assumed valid, supports arrays          
+      ///   @param count number of bytes inside 'data' to use                 
+      ///   @return the raw bytes wrapped inside a Bytes container            
+      template<CT::NoIntent T> requires CT::POD<DeextAll<T>>
+      static Bytes FromPOD(T&& data) noexcept {
+         Bytes result;
+         if constexpr (CT::Array<T>)
+            result.SetHeapInner(static_cast<const void*>( data));
+         else
+            result.SetHeapInner(static_cast<const void*>(&data));
+         result.SetCountInner(sizeof(T));
          return result;
       }
 
