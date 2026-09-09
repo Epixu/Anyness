@@ -79,10 +79,8 @@ namespace Langulus::Anyness
    struct Many : Inner::ManyBase {
       using CTTI_ReflectAs = Many;
       using CTTI_Deep      = Yes<>;
-      //using CTTI_MapsTo    = Text;
-
-      using Base        = Inner::ManyBase;
-      using DeepType    = Many;
+      using Base           = Inner::ManyBase;
+      using DeepType       = Many;
 
       constexpr Many() noexcept {
          this->ConstructDefault();
@@ -169,12 +167,3 @@ namespace Langulus::Anyness
       using Com::Comparison<>::operator ==;
    };
 }
-
-/*namespace Langulus::CTTI
-{
-   /// Convert Many -> Text                                                   
-   template<>
-   struct Converter<Anyness::Many, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Many const&) -> Anyness::Text;
-   };
-}*/

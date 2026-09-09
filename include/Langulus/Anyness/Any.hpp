@@ -62,10 +62,8 @@ namespace Langulus::Anyness
    struct Any : Inner::AnyBase {
       using CTTI_ReflectAs = Any;
       using CTTI_Deep      = Yes<>;
-      //using CTTI_MapsTo    = Text;
-
-      using Base = Inner::AnyBase;
-      using DeepType = Any;
+      using Base           = Inner::AnyBase;
+      using DeepType       = Any;
 
       constexpr Any() noexcept {
          this->ConstructDefault();
@@ -136,12 +134,3 @@ namespace Langulus::Anyness
       using Com::Comparison<>::operator ==;
    };
 }
-
-/*namespace Langulus::CTTI
-{
-   /// Convert Any -> Text                                                    
-   template<>
-   struct Converter<Anyness::Any, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Any const&) -> Anyness::Text;
-   };
-}*/

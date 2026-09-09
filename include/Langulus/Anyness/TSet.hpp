@@ -49,11 +49,9 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Set;
       using CTTI_Set       = Yes<>;
       using CTTI_Deep      = Yes<>;
-      //using CTTI_MapsTo    = Text;
 
       using Base           = Inner::TSetBase<T, SORT>;
       using DeepType       = Any;
-
       using HandleType     = THandle<ConstAll<T&>>;
       using HandleMutType  = THandle<ConstAll<T&>>;
       using Pick           = ConstAll<T&>;
@@ -147,7 +145,6 @@ namespace Langulus::Anyness
       template<class A>
       constexpr auto CreateSwapper(A&& argument) assumptious {
          static_assert(Same<T, Deint<A>>, "Type mismatch");
-         //return TAny {Anyness::Piecewise, Copy {LglsFwd(argument)}};
          return TAny {Anyness::Piecewise, LglsFwd(argument)};
       }
       
@@ -165,12 +162,3 @@ namespace Langulus::Anyness
    template<CT::NotVoid T>
    using TSetUnsorted = TSet<T, StateValue::Disabled>;
 }
-
-/*namespace Langulus::CTTI
-{
-   /// Convert TSet -> Text                                                   
-   template<CT::NotVoid T, Anyness::StateValue SORT>
-   struct Converter<Anyness::TSet<T, SORT>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::TSet<T, SORT> const&) -> Anyness::Text;
-   };
-}*/

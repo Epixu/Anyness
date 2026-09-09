@@ -41,10 +41,8 @@ namespace Langulus::Anyness
    struct TAny : Inner::TAnyBase<T> {
       using CTTI_ReflectAs = Any;
       using CTTI_Deep      = Yes<>;
-      //using CTTI_MapsTo    = Text;
-
-      using Base = Inner::TAnyBase<T>;
-      using DeepType = Any;
+      using Base           = Inner::TAnyBase<T>;
+      using DeepType       = Any;
 
       constexpr TAny() noexcept {
          this->ConstructDefault();
@@ -127,13 +125,3 @@ namespace Langulus::Anyness
    template<CT::NotVoid T>
    TAny(Inner::Piecewise, T&&) -> TAny<Decvq<Deref<Deint<T>>>>;
 }
-
-/*namespace Langulus::CTTI
-{
-   /// MARK: CTTI                                                             
-   /// Convert TAny -> Text                                                   
-   template<class T>
-   struct Converter<Anyness::TAny<T>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::TAny<T> const&) -> Anyness::Text;
-   };
-}*/

@@ -222,17 +222,18 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get first element as a handle, or any desired wrapping type.        
-      /// Conversion or copying may occur, depending on type.                 
+      /// Conversion or copying may occur depending on type.                  
       ///   @attention will throw if incompatible type is provided            
       ///   @tparam AS the type we're wrapping in                             
-      ///   @tparam SID can be used to access specific dimension              
+      ///   @tparam SID can be used to access specific dimension. It is       
+      ///      irrelevant if AS is a handle.                                  
       ///   @return the element, as a reference if possible                   
       template<CT::NotVoid AS, Cid SID = Id::First, CT::Contiguous C> requires Relevant<SID>
       decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>)
-            return self.template GetHandle<AS, SID>();
+            return self.template GetHandle<AS>();
          else {
             // Access directly or wrapped in a container                
             if constexpr (CT::Pair<AS>) {

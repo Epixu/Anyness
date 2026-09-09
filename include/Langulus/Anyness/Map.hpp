@@ -71,15 +71,12 @@ namespace Langulus::Anyness::Inner
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes<>;
       using CTTI_Deep      = Yes<>;
-      //using CTTI_MapsTo    = Text;
-
       using Base           = MapBase<SORTED>;
       using DeepType       = Many;
-
-      using HandleType    = THandlePair<Handle, Handle>;
-      using HandleMutType = THandlePair<Handle, HandleMut>;
-      using Pick          = HandleType;
-      using PickMut       = HandleMutType;
+      using HandleType     = THandlePair<Handle, Handle>;
+      using HandleMutType  = THandlePair<Handle, HandleMut>;
+      using Pick           = HandleType;
+      using PickMut        = HandleMutType;
 
       static constexpr bool ReferenceElements = true;
 
@@ -215,13 +212,3 @@ namespace Langulus::Anyness
    using MapSorted   = Inner::Map<StateValue::Enabled>;
    using MapUnsorted = Inner::Map<StateValue::Disabled>;
 }
-
-/*namespace Langulus::CTTI
-{
-   /// MARK: CTTI                                                             
-   /// Convert Map -> Text                                                    
-   template<Anyness::StateValue SORT>
-   struct Converter<Anyness::Inner::Map<SORT>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Inner::Map<SORT> const&) -> Anyness::Text;
-   };
-}*/

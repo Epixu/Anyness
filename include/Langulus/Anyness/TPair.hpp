@@ -95,7 +95,6 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = TPair;
       using CTTI_Deep      = Yes<>;
       using CTTI_Pair      = Yes<>;
-      //using CTTI_MapsTo    = Text;
 
       using Base           = Inner::TPairBase<K, V>;
       using DeepType       = Any;
@@ -162,7 +161,7 @@ namespace Langulus::Anyness
          this->DeduceType(a1, a2);
          
          if constexpr (Inner::PairOnHeap<K, V>) {
-            this->AllocateFresh(1 /*this->RequestHeap(1)*/);
+            this->AllocateFresh(1);
             this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(FWDIntent(a1));
             this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(FWDIntent(a2));
          }
@@ -191,7 +190,7 @@ namespace Langulus::Anyness
          if constexpr (Inner::PairOnHeap<K, V>) {
             this->Reset();
             this->DeduceType(a1, a2);
-            this->AllocateFresh(1 /*this->RequestHeap(1)*/);
+            this->AllocateFresh(1);
             this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
             this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
          }
@@ -233,13 +232,3 @@ namespace Langulus::Anyness
    template<CT::Handle K, CT::Handle V>
    TPair(K&&, V&&) -> TPair<TypeOf<Deint<K>>, TypeOf<Deint<V>>>;
 }
-
-/*namespace Langulus::CTTI
-{
-   /// MARK: CTTI                                                             
-   /// Convert TPair -> Text                                                  
-   template<class K, class V>
-   struct Converter<Anyness::TPair<K, V>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::TPair<K, V> const&) -> Anyness::Text;
-   };
-}*/

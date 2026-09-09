@@ -53,11 +53,9 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes<>;
       using CTTI_Deep      = Yes<>;
-      //using CTTI_MapsTo    = Text;
 
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;
-
       using HandleType     = THandlePair<THandle<ConstAll<K&>>, THandle<ConstAll<V&>>>;
       using HandleMutType  = THandlePair<THandle<ConstAll<K&>>, THandle<V&>>;
       using Pick           = HandleType;
@@ -180,13 +178,3 @@ namespace Langulus::Anyness
    template<CT::NotVoid K, CT::NotVoid V>
    using TMapUnsorted = TMap<K, V, StateValue::Disabled>;
 }
-
-/*namespace Langulus::CTTI
-{
-   /// MARK: CTTI                                                             
-   /// Convert TMap -> Text                                                   
-   template<CT::NotVoid K, CT::NotVoid V, Anyness::StateValue SORT>
-   struct Converter<Anyness::TMap<K, V, SORT>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::TMap<K, V, SORT> const&) -> Anyness::Text;
-   };
-}*/

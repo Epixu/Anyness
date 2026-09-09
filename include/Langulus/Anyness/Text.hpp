@@ -78,8 +78,7 @@ namespace Langulus::Anyness
    struct Text : Inner::TextBase {
       using CTTI_ReflectAs = Text;
       using CTTI_Text      = Yes<>;
-
-      using CountType = Base::CountType;
+      using CountType      = Base::CountType;
 
       constexpr Text() noexcept {
          this->ConstructDefault();

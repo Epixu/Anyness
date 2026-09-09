@@ -55,7 +55,6 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Pair;
       using CTTI_Deep      = Yes<>;
       using CTTI_Pair      = Yes<>;
-      //using CTTI_MapsTo    = Text;
 
       static constexpr bool ReferenceElements = true;
 
@@ -91,7 +90,7 @@ namespace Langulus::Anyness
       constexpr Pair(NotTag auto&& a1, NotTag auto&& a2) {
          this->ResetState();
          this->DeduceType(a1, a2);
-         this->AllocateFresh(1 /*this->RequestHeap(1)*/);
+         this->AllocateFresh(1);
          this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
          this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
       }
@@ -115,7 +114,7 @@ namespace Langulus::Anyness
       constexpr Pair& Assign(auto&& a1, auto&& a2) {
          this->Reset();
          this->DeduceType(a1, a2);
-         this->AllocateFresh(1 /*this->RequestHeap(1)*/);
+         this->AllocateFresh(1);
          this->template EmplaceConstruct<0, Com::AllocationStrategy::DontAllocate>(LglsFwd(a1));
          this->template EmplaceConstruct<1, Com::AllocationStrategy::DontAllocate>(LglsFwd(a2));
          return *this;
@@ -143,13 +142,3 @@ namespace Langulus::Anyness
 
    static_assert(CT::TypeErased<Pair>);
 }
-
-/*namespace Langulus::CTTI
-{
-   /// MARK: CTTI                                                             
-   /// Convert Pair -> Text                                                   
-   template<>
-   struct Converter<Anyness::Pair, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Pair const&) -> Anyness::Text;
-   };
-}*/

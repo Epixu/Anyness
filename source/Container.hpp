@@ -905,12 +905,10 @@ namespace Langulus::Anyness
    public: // public because it is used from serialization routines
       /// MARK: GetHandle                                                     
       /// Get a handle to the first element(s). Very useful for internal use. 
-      /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   
       ///   @attention handle should encompass all dimensions                 
       ///   @tparam AS the handle type, or void to decide automatically       
-      ///   @return the handle to the first element. This element might not   
-      ///      be initialized if C is discontiguous!                          
+      ///   @return the handle to the first element                           
       template<class AS = void, CT::NotHandle C>
       decltype(auto) GetHandle(this C&& self) {
          static_assert(CT::Handle<AS> or CT::Void<AS>,
@@ -928,6 +926,30 @@ namespace Langulus::Anyness
       template<class = void, CT::Handle C>
       constexpr C&& GetHandle(this C&& self) noexcept {
          return LglsFwd(self);
+      }
+      
+      /// MARK: GetSlice                                                      
+      /// Get a handle to the first element(s) chosen dimension               
+      ///   @attention element might be uninitialized if C is discontiguous   
+      ///   @tparam AS the handle type, or void to decide automatically       
+      ///   @return the handle to the first element                           
+      template<Cid SID, class AS = void, CT::NotHandle C>
+      decltype(auto) GetSlice(this C&& self) {
+         static_assert(CT::Handle<AS> or CT::Void<AS>,
+            "Must be either a handle or void (which will use DecideSlice");
+         static_assert(not CT::Reference<AS>, "Strip references first");
+         static_assert(CT::Dense<AS>,         "Must be dense");
+
+         if constexpr (CT::Void<AS>)
+            return Deref<decltype(Fake<DecideHandle<C>>().template PickDimension<SID>())> {Slice<SID>, self};
+         else
+            return AS {Slice<SID>, self};
+      }
+
+      /// If C is already a handle, pick a slice from it                      
+      template<Cid SID, class = void, CT::Handle C>
+      decltype(auto) GetSlice(this C&& self) {
+         return self.template PickDimension<SID>();
       }
       
       /// MARK: Apply                                                         

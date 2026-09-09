@@ -164,10 +164,11 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get Nth element as a handle, or any desired wrapping type.          
-      /// Conversion or copying may occur, depending on type.                 
+      /// Conversion or copying may occur depending on type.                  
       ///   @attention will throw if incompatible type is provided            
       ///   @tparam AS the type we're wrapping in                             
-      ///   @tparam SID can be used to access specific dimension              
+      ///   @tparam SID can be used to access specific dimension. It is       
+      ///      irrelevant if AS is a handle.                                  
       ///   @param idx the index                                              
       ///   @return the element, as a reference if possible                   
       template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires Relevant<SID>
@@ -176,7 +177,7 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Handle<AS>) {
             const auto offset = self.SimplifyIndex(idx);
-            return self.template GetHandle<AS, SID>() + offset;
+            return self.template GetHandle<AS>() + offset;
          }
          else {
             // Access directly or wrapped in a container                

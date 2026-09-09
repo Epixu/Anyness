@@ -68,15 +68,13 @@ namespace Langulus::Anyness::Inner
       using CTTI_ReflectAs = Set;
       using CTTI_Set       = Yes<>;
       using CTTI_Deep      = Yes<>;
-      //using CTTI_MapsTo    = Text;
 
-      using Base          = SetBase<SORTED>;
-      using DeepType      = Many;
-
-      using HandleType    = Handle;
-      using HandleMutType = Handle;
-      using Pick          = Handle;
-      using PickMut       = Handle;
+      using Base           = SetBase<SORTED>;
+      using DeepType       = Many;
+      using HandleType     = Handle;
+      using HandleMutType  = Handle;
+      using Pick           = Handle;
+      using PickMut        = Handle;
 
       constexpr Set() noexcept {
          this->ConstructDefault();
@@ -160,7 +158,6 @@ namespace Langulus::Anyness::Inner
       template<class A>
       constexpr auto CreateSwapper(A&& argument) assumptious {
          LglsAssumeDev(this->template IsSame<Deint<A>>(), "Type mismatch");
-         //return TAny {Anyness::Piecewise, Copy {LglsFwd(argument)}};
          return TAny {Anyness::Piecewise, LglsFwd(argument)};
       }
    };
@@ -172,13 +169,3 @@ namespace Langulus::Anyness
    using SetSorted   = Inner::Set<StateValue::Enabled>;
    using SetUnsorted = Inner::Set<StateValue::Disabled>;
 }
-
-/*namespace Langulus::CTTI
-{
-   /// MARK: CTTI                                                             
-   /// Convert Set -> Text                                                    
-   template<Anyness::StateValue SORT>
-   struct Converter<Anyness::Inner::Set<SORT>, Anyness::Text> {
-      static constexpr auto Convert(Anyness::Inner::Set<SORT> const&) -> Anyness::Text;
-   };
-}*/

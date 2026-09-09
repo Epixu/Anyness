@@ -44,7 +44,6 @@ namespace Langulus::Anyness::Component
       static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
-      // MARK: Protected                                                
       LglsComIterationOperators(friend);
       LglsComReserveEmergent(friend);
       LglsComInsertion(friend);
@@ -62,11 +61,13 @@ namespace Langulus::Anyness::Component
 
       using Base = HeapReference<ENTRY0, ENTRYN...>;
       
+      /// MARK: ConstructDefault                                              
       /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {
          ThisCom::SetHeapInner(nullptr);
       }
       
+      /// MARK: SliceFrom                                                     
       /// Transfer from any kind of container, respecting intents.            
       /// Do it for a particular dimension.                                   
       ///   @param intent The intent and container to transfer from.          
@@ -76,6 +77,7 @@ namespace Langulus::Anyness::Component
          ThisCom::SetHeapInner(intent->template GetRaw<D>());
       }
 
+      /// MARK: ConstructFrom                                                 
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent The intent and container to transfer from.          
       ///   @param reserve Optional reserve override, which is taken into     
@@ -141,14 +143,17 @@ namespace Langulus::Anyness::Component
             // Copy/Clone items                                         
             if constexpr (CT::TypeErased<C>) {
                if  (self.template GetType<ENTRY0::Id>().IsPOD()
-               and (self.template GetType<ENTRYN::Id>().IsPOD() and ...))
-                  self.CopyOrCloneAllItemsBatched(from);
+               and (self.template GetType<ENTRYN::Id>().IsPOD() and ...)
+               and  self.template GetType<ENTRY0::Id>().IsDense()
+               and (self.template GetType<ENTRYN::Id>().IsDense() and ...))
+                  self.CloneAllItemsBatched(from);
                else
                   self.template CopyOrCloneAllItemsOneByOne<CT::Cloned<I>>(from);
             }
             else {
-               if constexpr (CT::POD<TypeOf<C, ENTRY0::Id>, TypeOf<C, ENTRYN::Id>...>)
-                  self.CopyOrCloneAllItemsBatched(from);
+               if constexpr (CT::POD   <TypeOf<C, ENTRY0::Id>, TypeOf<C, ENTRYN::Id>...>
+               and           CT::Dense <TypeOf<C, ENTRY0::Id>, TypeOf<C, ENTRYN::Id>...>)
+                  self.CloneAllItemsBatched(from);
                else
                   self.template CopyOrCloneAllItemsOneByOne<CT::Cloned<I>>(from);
             }
@@ -196,6 +201,7 @@ namespace Langulus::Anyness::Component
          }
       }
       
+      /// MARK: AllocateFresh                                                 
       /// Allocate a fresh allocation                                         
       ///   @attention works on all relevant dimensions at once               
       ///   @attention changes allocation, heap pointer and reserve count only
@@ -220,6 +226,7 @@ namespace Langulus::Anyness::Component
          if_available(self.ConstructHeapRequestGlobal());
       }
 
+      /// MARK: AllocateMore                                                  
       /// Allocate a number of elements, relying on the type of the container 
       ///   @attention assumes container is typed                             
       ///   @attention works on all relevant dimensions at once               
@@ -310,6 +317,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: AllocateLess                                                  
       /// Shrink the block, depending on currently reserved	elements.         
       /// Initialized elements on the back will be destroyed.                 
       /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
@@ -391,6 +399,7 @@ namespace Langulus::Anyness::Component
          #endif
       }
 
+      /// MARK: GetLocalHeap                                                  
       /// Helper function that navigates to the start of the local heap       
       /// footer of a given dimension and custom reserve count                
       template<Cid SID, CT::Container C>
@@ -422,6 +431,7 @@ namespace Langulus::Anyness::Component
          return to_footer;
       }
 
+      /// MARK: GetGlobalHeap                                                 
       /// Helper function that navigates to the start of the global heap      
       /// footer for a custom reserve count                                   
       template<CT::Container C>
@@ -449,6 +459,7 @@ namespace Langulus::Anyness::Component
          return to_footer;
       }
 
+      /// MARK: RemapGlobalHeapRequests                                       
       /// Remap global footer requests onto the new reserve                   
       ///   @attention since global heap footer is at the end of memory       
       ///      it should be moved before any other footer when enlarging, and 
@@ -517,6 +528,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: RemapLocalHeapRequests                                        
       /// Remap footer requests onto the new reserve                          
       ///   @param newReserved the newly reserved number of elements          
       ///   @attention works on one dimension at a time!                      
@@ -592,6 +604,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: TransferGlobalHeapRequests                                    
       /// Transfer global footer requests onto the new reserve and heap       
       ///   @attention since global heap footer is at the end of memory       
       ///      it should be moved before any other footer when enlarging, and 
@@ -600,7 +613,7 @@ namespace Langulus::Anyness::Component
       ///   @param newReserved the newly reserved number of elements          
       ///   @attention works on all relevant dimensions at once!              
       template<bool SHRINKING, CT::Container C>
-      void TransferGlobalHeapRequests(this C& self, C const& oldSelf, const size_t oldReserved, const size_t newReserved) {
+      void TransferGlobalHeapRequests(this C& self, CT::Container auto const& oldSelf, const size_t oldReserved, const size_t newReserved) {
          size_t from[C::template CountHeapFooterRequests<Id::First>() + 1];
          size_t to  [C::template CountHeapFooterRequests<Id::First>() + 1];
          size_t idx = 1;
@@ -647,6 +660,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: TransferLocalHeapRequests                                     
       /// Transfer footer requests onto the new reserve and heap              
       ///   @param newReserved the newly reserved number of elements          
       ///   @attention works on one dimension at a time!                      
@@ -654,7 +668,7 @@ namespace Langulus::Anyness::Component
       //TODO this will nullify a new hash table, but it doesn't call SetHashTableInner to move the pointer if kept on the stack!! 
       //TODO i've worked around this by using IndexedHashHeap instead of IndexedHashStack for sets and maps, for now
       template<Cid SID, bool SHRINKING, CT::Container C>
-      void TransferLocalHeapRequests(this C& self, C const& oldSelf, const size_t oldReserved, const size_t newReserved) {
+      void TransferLocalHeapRequests(this C& self, CT::Container auto const& oldSelf, const size_t oldReserved, const size_t newReserved) {
          [[maybe_unused]]
          const auto indirect = self.template GetIndirections<SID>();
 
@@ -709,6 +723,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: RemapAllHeapRequests                                          
       /// Move all bits and pieces of footer requests that need to move when  
       /// reserved count increases or decreases.                              
       ///   @attention works on all dimensions at once                        
@@ -741,12 +756,13 @@ namespace Langulus::Anyness::Component
          if_available(self.template SetReservedInner<Id::First>(newReserved));
       }
 
+      /// MARK: TransferAllHeapRequests                                       
       /// Move all bits and pieces of footer requests that need to move when  
       /// reserved count increases or decreases, after memory moves.          
       ///   @attention works on all dimensions at once                        
       ///   @attention changes the reserved count (if changeable)             
       template<CT::Container C>
-      void TransferAllHeapRequests(this C& self, C const& oldSelf, const size_t newReserved) {
+      void TransferAllHeapRequests(this C& self, CT::Container auto const& oldSelf, const size_t newReserved) {
          if constexpr (C::template CountHeapFooterRequests<Id::First>() > 0) {
             const auto oldReserved = self.template GetReserved<Id::First>();
             LglsAssumeDev(newReserved != oldReserved,
@@ -775,6 +791,7 @@ namespace Langulus::Anyness::Component
          if_available(self.template SetReservedInner<Id::First>(newReserved));
       }
 
+      /// MARK: PartialSuccess                                                
       /// Invoked to remedy the situation when element constructors throw     
       ///   @param n the number of elements that were actually initialized    
       template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
@@ -799,6 +816,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: BranchOut                                                     
       /// Branch out the current container by doing a shallow copy.           
       /// Happens when you try to modify a container with strong ownership    
       /// from somewhere else (when GetUses() > 1), or when container is      
@@ -828,6 +846,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: CopyOrCloneAllItemsOneByOne                                   
       /// Transfer all items one by one, account for exceptions               
       ///   @attention works on all relevant dimensions at once!              
       ///   @attention can be used only for Copy/Clone intents!               
@@ -875,26 +894,30 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// MARK: CloneAllItemsBatched                                          
       /// Transfer all items one by one, account for exceptions               
       ///   @attention works on all relevant dimensions at once!              
       ///   @attention can be used only for Copy/Clone intents!               
       ///   @attention source and destination should not overlap!             
       ///   @attention assumes 'self' has been reserved                       
-      template<CT::Container C>
-      void CopyOrCloneAllItemsBatched(this C& self, auto const& from) {
+      template<CT::Container C1, CT::Container C2>
+      void CloneAllItemsBatched(this C1& self, C2 const& from) {
          Id::ForEach([&]<Cid D> {
             auto dst = self.template GetSlice<D>().ForceMutable();
             auto src = from.template GetSlice<D>();
-            memcpy(dst.GetRaw(), src.GetRaw(), src.GetBytesize());
+            memcpy(dst.GetRaw(), src.GetRaw(), from.GetBytesize());
          });
 
-         //TODO just copy these along with elements in the above Id::ForEach
-         const size_t oldReserved = from.GetReserved();
-         const size_t newReserved = self.GetReserved();
-         Id::ForEach([&]<Cid D> {
-            self.template TransferLocalHeapRequests<D, false>(from, oldReserved, newReserved);
-         });
-         self.template TransferGlobalHeapRequests<false>(from, oldReserved, newReserved);
+         //TODO just copy these along with elements in the above Id::ForEach if oldReserved and newReserved are the same
+         if constexpr (C1::template CountHeapFooterRequests<Id::First>() > 0
+         and           C2::template CountHeapFooterRequests<Id::First>() > 0) {
+            const size_t oldReserved = from.GetReserved();
+            const size_t newReserved = self.GetReserved();
+            Id::ForEach([&]<Cid D> {
+               self.template TransferLocalHeapRequests<D, false>(from, oldReserved, newReserved);
+            });
+            self.template TransferGlobalHeapRequests<false>(from, oldReserved, newReserved);
+         }
       }
    };
 
