@@ -48,8 +48,14 @@ namespace Langulus::Anyness
       using Base          = Inner::TRefBase<T>;
       using Pick          = ConstAll<T>;
       using PickMut       = T;
-      using HandleType    = THandle<ConstAll<T> const&>;
-      using HandleMutType = THandle<T&>;
+      
+      #if not LANGULUS(FORCE_TYPE_ERASURE)
+         using HandleType    = THandle<ConstAll<T> const&>;
+         using HandleMutType = THandle<T&>;
+      #else
+         using HandleType    = Handle;
+         using HandleMutType = HandleMut;
+      #endif
 
       constexpr TRef() noexcept {
          this->ConstructDefault();

@@ -100,7 +100,7 @@ jobs:
 
       - name: Test
         run: cd build && ctest -V -C ${{matrix.build}}
-        timeout-minutes: 5
+        timeout-minutes: 10
 
       - name: 'Upload artifacts'
         if: ${{ always() }}

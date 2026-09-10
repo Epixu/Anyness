@@ -98,14 +98,20 @@ namespace Langulus::Anyness
 
       using Base           = Inner::TPairBase<K, V>;
       using DeepType       = Any;
-      using HandleType     = Tif<CT::NotReference<K, V>,
-         THandlePair<THandle        <ConstAll<K&>>, THandle        <ConstAll<V&>>>,
-         THandlePair<THandleEmergent<ConstAll<K&>>, THandleEmergent<ConstAll<V&>>>
-      >;
-      using HandleMutType  = Tif<CT::NotReference<K, V>,
-         THandlePair<THandle        <K&>,  THandle        <V&>>,
-         THandlePair<THandleEmergent<K&>,  THandleEmergent<V&>>
-      >;
+
+      #if not LANGULUS(FORCE_TYPE_ERASURE)
+         using HandleType    = Tif<CT::NotReference<K, V>,
+            THandlePair<THandle        <ConstAll<K&>>, THandle        <ConstAll<V&>>>,
+            THandlePair<THandleEmergent<ConstAll<K&>>, THandleEmergent<ConstAll<V&>>>
+         >;
+         using HandleMutType = Tif<CT::NotReference<K, V>,
+            THandlePair<THandle        <K&>,  THandle        <V&>>,
+            THandlePair<THandleEmergent<K&>,  THandleEmergent<V&>>
+         >;
+      #else
+         using HandleType    = THandlePair<Handle, Handle>;
+         using HandleMutType = THandlePair<HandleMut, HandleMut>;
+      #endif
 
       using Pick           = HandleType;
       using PickMut        = HandleMutType;

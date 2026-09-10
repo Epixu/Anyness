@@ -72,7 +72,13 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    #endif
 
    static_assert(    Exact<TypeOf<T>, Byte>);
-   static_assert(not CT::TypeErased<T>);
+
+   #if not LANGULUS(FORCE_TYPE_ERASURE)
+      static_assert(not CT::TypeErased<T>);
+      static_assert(::std::ranges::contiguous_range<T>);
+   #else
+      static_assert(    CT::TypeErased<T>);
+   #endif
 
    static_assert(CT::CopyConstructible<T>    );
    static_assert(CT::ReferConstructible<T>   );
@@ -112,7 +118,6 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
    static_assert(    CT::Comparable<T, Literal<Byte,4>>);
 
    static_assert(::std::ranges::range<T>);
-   static_assert(::std::ranges::contiguous_range<T>);
 
    static_assert(    requires (T pack)         { pack.Get(); });
    static_assert(    requires (T pack)         { pack.template As<Byte>(); });
@@ -787,14 +792,22 @@ TEST_CASE_TEMPLATE("Test empty Bytes", TestType
       /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto h = pack.GetHandle();
-         static_assert(::std::same_as<decltype(h), THandle<Byte&>>);
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+            static_assert(::std::same_as<decltype(h), THandle<Byte&>>);
+         #else
+            static_assert(::std::same_as<decltype(h), HandleMut>);
+         #endif
          Handle_CheckState_Default<Byte>(h);
       }
 
       WHEN("GetHandle is called on constant container") {
          T const pack_constant;
          auto h = pack_constant.GetHandle();
-         static_assert(::std::same_as<decltype(h), THandle<Byte const&>>);
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+            static_assert(::std::same_as<decltype(h), THandle<Byte const&>>);
+         #else
+            static_assert(::std::same_as<decltype(h), Handle>);
+         #endif
          Handle_CheckState_Default<Byte const>(h);
       }
    }

@@ -140,7 +140,7 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
 
-         if constexpr (CT::TypeErased<C>) {
+         IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C>) {)
             using TH   = Tif<CT::Void<AS>, void, AS>;
             using THP  = LglsMutIf(C, TH*);
             void* heap = DecvqAllCast(ThisCom::template GetRaw<SID>());
@@ -186,8 +186,8 @@ namespace Langulus::Anyness::Component
                   return static_cast<THP>(heap);
                }
             }
-         }
-         else {
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+         } else {
             using TC   = LglsMutIf(C, TypeOf<C, SID>);
             using TCP  = LglsMutIf(C, TC*);
             using TH   = Tif<CT::Void<AS>, TC, AS>;
@@ -214,11 +214,14 @@ namespace Langulus::Anyness::Component
                return static_cast<LglsMutIf(C, TH)>(heap);
             }
          }
+         #endif
       }
+
       template<CT::NotVoid AS>
       auto* GetKey(this auto&& self) requires Shared {
          return ThisCom::template Get<AS, 0>();
       }
+
       template<CT::NotVoid AS>
       auto* GetVal(this auto&& self) requires Shared {
          return ThisCom::template Get<AS, 1>();
@@ -249,7 +252,7 @@ namespace Langulus::Anyness::Component
                   ThisCom::template As<Decvq<Deref<AS2>>, SID + 1>()
                };
             }
-            else if constexpr (CT::TypeErased<C>) {
+            else IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C>)) {
                auto type = self.template GetType<SID>();
                auto requested = MetaDataOf<AS>();
                LglsAssert(type.Is(requested), 
@@ -261,6 +264,7 @@ namespace Langulus::Anyness::Component
                else
                   return ThisCom::template Get<Deptr<AS>, SID>();
             }
+            #if not LANGULUS(FORCE_TYPE_ERASURE)
             else {
                using T = TypeOf<C, SID>;
 
@@ -287,6 +291,7 @@ namespace Langulus::Anyness::Component
                   else return Decvq<AS> {Absorb, ThisCom::template As<H, SID>()};
                }
             }
+            #endif
          }
       }
 
@@ -303,32 +308,8 @@ namespace Langulus::Anyness::Component
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
       ///   @note defined in Handle.hpp because it requires HandleDisowned    
-      template<Cid SID = Id::First, CT::Contiguous C>
-      //requires Relevant<SID>
-      auto GetResolved(this C&& self) -> HandleDisowned; /*{
-         if (self.template IsEmpty<SID>())
-            return {};
-
-         HandleDisowned h {Slice<SID>, self};
-         if (not self.template IsSparse<SID>())
-            return h;
-
-         if constexpr (CT::TypeErased<C>) {
-            const auto T = self.template GetType<SID>();
-            const auto resolver = T.GetResolver();
-            if (resolver)
-               return resolver(h.GetDense().GetRaw());
-            else
-               return h.GetDense();
-         }
-         else {
-            using T = TypeOf<C, SID>;
-            if constexpr (CT::Resolvable<T>)
-               return DenseCast(ThisCom::template Get<T, SID>()).GetResolved();
-            else
-               return DenseCast(ThisCom::template Get<T, SID>());
-         }
-      }*/
+      template<Cid SID = Id::First, CT::Contiguous C> //requires Relevant<SID>
+      auto GetResolved(this C&& self) -> HandleDisowned;
 
       /// Get first element, removing 'count' indirections                    
       ///   @attention throws if type is incomplete and origin was reached    
@@ -337,50 +318,7 @@ namespace Langulus::Anyness::Component
       ///   @return the dense first element for chosen dimension              
       ///   @note defined in Handle.hpp because it requires HandleDisowned    
       template<Cid SID = Id::First, CT::Contiguous C>// requires Relevant<SID>
-      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned; /*{
-         if (self.template IsEmpty<SID>())
-            return {};
-
-         HandleDisowned h {Slice<SID>, self};
-         if (not self.template IsSparse<SID>() or count <= 0)
-            return h;
-
-
-         // Check if origin type is complete before attempting anything 
-         if constexpr (CT::TypeErased<C>) {
-            const auto T = self.template GetType<SID>();
-            if (count >= T.GetIndirections()) {
-               LglsAssert((bool) T.GetOrigin(),
-                  "Trying to interface incomplete data `", T,
-                  "` as dense"
-               );
-            }
-         }
-         else {
-            using T = TypeOf<C, SID>;
-            if (count >= IndirectsOf<T>) {
-               LglsAssert(CT::Complete<Decay<T>>,
-                  "Trying to interface incomplete data `", MetaDataOf<T>(),
-                  "` as dense"
-               );
-            }
-         }
-
-         auto     T = self.template GetType<SID>();
-         auto nextT = T.GetDeptr();
-         void* heap = ThisCom::template GetRawVoid<SID>();
-         while (count and T.IsSparse()) {            
-            if (nextT.IsSparse()) {
-               // Pointer T -> Pointer nextT                            
-               T.GetDereffer()(heap, &heap);
-               T = nextT;
-               nextT = T.GetDeptr();
-               --count;
-            }
-            else break;
-         }
-         return {Stackwise, nextT, UnpackPointer(T, nextT, heap)};
-      }*/
+      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned;
 
    protected:
       /// Get the heap pointer (inner)                                        

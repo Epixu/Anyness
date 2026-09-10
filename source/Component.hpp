@@ -17,28 +17,14 @@
 
 namespace Langulus::CTTI
 {
-   /// Affects CT::State<T>                                                   
+   /// Type traits for CT checks                                              
    template<class T> struct State;
-   
-   /// Affects CT::Component<T>                                               
    template<class T> struct Component;
-   
-   /// Affects CT::Container<T>                                               
    template<class T> struct Container;
-   
-   /// Affects CT::Map<T>                                                     
    template<class T> struct Map;
-   
-   /// Affects CT::Set<T>                                                     
    template<class T> struct Set;
-   
-   /// Affects CT::Pair<T>                                                    
    template<class T> struct Pair;
-
-   /// Affects CT::Handle<T>                                                  
    template<class T> struct Handle;
-
-   /// Affects CT::Iterator<T>                                                
    template<class T> struct Iterator;
 }
 
@@ -187,14 +173,9 @@ namespace Langulus::CT
        and ((not ShedDeref<T>::ContainsMany) and ...);
    
    /// Check if listed types are type-erased containers                       
-   #if LANGULUS(FORCE_TYPE_ERASURE)
-      template<class...T>
-      concept TypeErased = Container<T...>;
-   #else
-      template<class...T>
-      concept TypeErased = Container<T...>
-         and ((ShedDeref<T>::TypeErased) and ...);
-   #endif
+   template<class...T>
+   concept TypeErased = Container<T...>
+      and ((ShedDeref<T>::TypeErased) and ...);
 
    /// Check if listed types are containers, and are indexed                  
    template<class...T>

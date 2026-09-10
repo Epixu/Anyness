@@ -6,21 +6,19 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/Utils/Iterate-Handles.hpp>
+#include "Handle.hpp"
 #include <source/components/Heap-Immovable.hpp>
 #include <source/components/Ownership-Stack.hpp>
-#include <source/components/DeepOwnership-Heap.hpp>
+#include <source/components/OwnershipDeep-Heap.hpp>
 #include <source/components/Emplacement.hpp>
 #include <source/components/Removal.hpp>
 #include <source/components/Typed-Static.hpp>
 #include <source/components/Count-Stack.hpp>
-#include <source/components/Reserve-Heap.hpp>
-#include "THandle.hpp"
+#include <source/components/Reserve-Stack.hpp>
 
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// A statically-typed non-continuous container of variable size that      
    /// guarantees elements will never move from the memory they were first    
@@ -39,10 +37,16 @@ namespace Langulus::Anyness
    > {
       using PickDenseMut  = T&;
       using PickDense     = T const&;
-      using PickSparseMut = THandle<T&>;
-      using PickSparse    = THandle<T const&>;
+      
+      #if not LANGULUS(FORCE_TYPE_ERASURE)
+         using HandleTypeMut = THandle<T&>;
+         using HandleType    = THandle<T const&>;
+      #else
+         using HandleTypeMut = HandleMut;
+         using HandleType    = Handle;
+      #endif
+
       using Pick          = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
       using PickMut       = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
    };
-
-} // namespace Langulus::Anyness
+}

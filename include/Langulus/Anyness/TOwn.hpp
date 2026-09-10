@@ -36,7 +36,6 @@ namespace Langulus::Anyness
    template<CT::NotVoid T>
    struct TOwn : Inner::TOwnBase<T> {
       using CTTI_Deep      = Yes<>;
-
       using Base           = Inner::TOwnBase<T>;
 
       constexpr  TOwn() noexcept {

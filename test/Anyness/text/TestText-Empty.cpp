@@ -67,7 +67,13 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
    #endif
 
    static_assert(    Exact<TypeOf<T>, char>);
-   static_assert(not CT::TypeErased<T>);
+
+   #if not LANGULUS(FORCE_TYPE_ERASURE)
+      static_assert(not CT::TypeErased<T>);
+      static_assert(::std::ranges::contiguous_range<T>);
+   #else
+      static_assert(    CT::TypeErased<T>);
+   #endif
 
    static_assert(CT::CopyConstructible<T>    );
    static_assert(CT::ReferConstructible<T>   );
@@ -147,7 +153,6 @@ TEST_CASE_TEMPLATE("Test empty Text", TestType
    static_assert(    CT::Comparable<T, Literal<char32_t,4>>);
 
    static_assert(::std::ranges::range<T>);
-   static_assert(::std::ranges::contiguous_range<T>);
 
    static_assert(    requires (T pack)         { pack.Get(); });
    static_assert(    requires (T pack)         { pack.template As<char>(); });

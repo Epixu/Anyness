@@ -366,7 +366,7 @@ namespace Langulus::CTTI
       DC const& self = DenseCast(may_be_sparse);
       S::BeginScope(self, out, context);
 
-      if constexpr (CT::TypeErased<DC>) {
+      IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<DC>) {)
          //                                                             
          // Serialize a type-erased container                           
          const auto T = self.GetType();
@@ -378,14 +378,15 @@ namespace Langulus::CTTI
          self.Apply([&](auto const& item) {
             serializer(item.GetRaw(), &out, context);
          });
-      }
-      else {
+      #if not LANGULUS(FORCE_TYPE_ERASURE)
+      } else {
          //                                                             
          // Serialize a statically-typed container                      
          self.Apply([&](auto const& item) {
             Langulus::Serialize(*item, out, context);
          });
       }
+      #endif
 
       S::EndScope(self, out, context);
    }

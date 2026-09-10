@@ -84,7 +84,7 @@ option(LANGULUS_OPTION_STACKTRACE
 option(LANGULUS_OPTION_FORCE_TYPE_ERASURE
     "Makes _all_ containers type-erased, even the templated ones! \
 Radically improves compilation time and memory usage, \
-but significantly penalizes performance at runtime" OFF)
+but severely penalizes performance at runtime" OFF)
 
 option(LANGULUS_OPTION_LOGGING              "Master logger switch" ON)
 option(LANGULUS_LOGGER_DISABLE_FATALERRORS  "Disables fatal error logging via Logger::Fatal()" OFF)

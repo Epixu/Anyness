@@ -47,7 +47,7 @@ namespace Langulus::Anyness::Component
       using Id             = Values<ID>;
 
       static constexpr int  ComponentPrecedence = -3000;
-      static constexpr bool TypeErased = CT::Void<TYPE>;
+      static constexpr bool TypeErased = CT::Void<TYPE> or LANGULUS(FORCE_TYPE_ERASURE);
       /// @attention valid only if not TypeErased                             
       static constexpr bool Sparse = not TypeErased and CT::Sparse<TYPE>;
       /// @attention valid only if not TypeErased                             
@@ -64,10 +64,6 @@ namespace Langulus::Anyness::Component
                return ThisCom::GetTypeInner();
             else
                return MetaDataOf<TYPE>();
-            //META const& meta = ThisCom::GetTypeInner();
-            //if constexpr (not TypeErased)
-            //   const_cast<META&>(meta) = MetaDataOf<TYPE>();
-            //return meta;
          }
       }
 

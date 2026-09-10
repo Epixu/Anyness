@@ -30,11 +30,11 @@ namespace Langulus::Anyness
    extern template struct TAny<RT**>;
    extern template struct TAny<char**>;
 
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   extern template struct TAny<pptr8>;
-   extern template struct TAny<pptr16>;
-   extern template struct TAny<pptr32>;
-#endif
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      extern template struct TAny<pptr8>;
+      extern template struct TAny<pptr16>;
+      extern template struct TAny<pptr32>;
+   #endif
 }
 
 
@@ -978,7 +978,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                REQUIRE(instance == i666backup);
             REQUIRE(a.GetCount() == 1);
             REQUIRE(a.GetReserved() >= 1);
-            if constexpr (CT::Typed<T>) {
+
+            if constexpr (not CT::TypeErased<T>) {
                REQUIRE(*a == i666backup);
                if constexpr (CT::Handle<decltype(instance)>)
                   REQUIRE(&*a == &*instance);
@@ -1198,10 +1199,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       WHEN("GetHandle is called on mutable container") {
          auto src_handle = src.GetHandle();
 
-         if constexpr (CT::Untyped<T>)
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+            if constexpr (CT::TypeErased<T>)
+               static_assert(::std::same_as<decltype(src_handle), HandleMut>);
+            else
+               static_assert(::std::same_as<decltype(src_handle), THandle<E&>>);
+         #else
             static_assert(::std::same_as<decltype(src_handle), HandleMut>);
-         else
-            static_assert(::std::same_as<decltype(src_handle), THandle<E&>>);
+         #endif
 
          auto src_data   = src_handle.template Get<E>();
          AllocationPtr const* src_entries = nullptr;
@@ -1347,6 +1352,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                dst_handle.SwapContents(src_handle);
          }
          
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
          THEN("Handle moved into a local handle") {
             THandle<E> local {Absorb, Move(src_handle)};
 
@@ -1496,16 +1502,21 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             for(int i = 0; i < 101; ++i)
                local.SwapContents(src_handle);
          }
+         #endif
       }
 
       WHEN("GetHandle is called on constant container") {
          T const& pack_constant = src;
          auto handle = pack_constant.GetHandle();
 
-         if constexpr (CT::Untyped<T>)
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+            if constexpr (CT::TypeErased<T>)
+               static_assert(::std::same_as<decltype(handle), Handle>);
+            else
+               static_assert(::std::same_as<decltype(handle), THandle<ConstAll<E&>>>);
+         #else
             static_assert(::std::same_as<decltype(handle), Handle>);
-         else
-            static_assert(::std::same_as<decltype(handle), THandle<ConstAll<E&>>>);
+         #endif
 
          Handle_CheckState_OwnedFull<E const>(handle);
          

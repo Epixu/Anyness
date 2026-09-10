@@ -43,21 +43,7 @@ namespace Langulus::Anyness::Component
 
          // If OUT contains a single item, we can avoid inserting       
          // and concatenating, and just assigning every time.           
-         if constexpr (CT::Typed<C, OUT>) {
-            using TO = TypeOf<OUT>;
-            using FROM = TypeOf<C>;
-
-            if constexpr (Same<FROM, TO>) {
-               out.AssignAbsorb(self);
-               return 1;
-            }
-            else {
-               static_assert(CT::Inner::FindMorphism<FROM, TO>() >= 0 /*CT::Convertible<FROM, TO>*/, "Not convertible");
-               out.Assign(Langulus::Convert<TO>(*self));
-               return 1;
-            }
-         }
-         else {
+         IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C> or CT::TypeErased<OUT>) {)
             const auto TO = out.GetType();
             const auto FROM = self.GetType();
             if (FROM.IsSame(TO)) {
@@ -90,7 +76,22 @@ namespace Langulus::Anyness::Component
             }
 
             return 1;
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+         } else {
+            using TO = TypeOf<OUT>;
+            using FROM = TypeOf<C>;
+
+            if constexpr (Same<FROM, TO>) {
+               out.AssignAbsorb(self);
+               return 1;
+            }
+            else {
+               static_assert(CT::Convertible<FROM, TO> /*CT::Inner::FindMorphism<FROM, TO>() >= 0*/, "Not convertible");
+               out.Assign(Langulus::Convert<TO>(*self));
+               return 1;
+            }
          }
+         #endif
       }
 
       /// Convert block's contents to another block of contents, by iterating 
@@ -106,38 +107,7 @@ namespace Langulus::Anyness::Component
 
          // OUT can contain many items, so we always concatenate        
          // convertions to the back, preserving contents.               
-         if constexpr (CT::Typed<C, OUT>) {
-            //                                                          
-            // Both containers are statically-typed, so leverage it     
-            // to generate a well inlined routine for conversion        
-            using TO   = TypeOf<OUT>;
-            using FROM = TypeOf<C>;
-            static_assert(CT::Inner::FindMorphism<FROM, TO>() >= 0 /*CT::Convertible<FROM, TO>*/, "Not convertible");
-
-            if constexpr (Same<FROM, TO>)
-               return out.Concat(self);
-            else {
-               // Types are statically convertible                      
-               out.AllocateMore(out.GetCount() + self.GetCount());
-
-               auto from = self.GetRaw();
-               const auto fromEnd = from + self.GetCount();
-               auto to = out.GetRaw() + out.GetCount();
-               try {
-                  while (from != fromEnd) {
-                     new (to) TO {Langulus::Convert<TO>(*from)};
-                     ++to; ++from;
-                  }
-               }
-               catch (...) {
-                  // Partial success                                    
-                  auto n = from - self.GetRaw();
-                  out.PartialSuccess(out.GetCount() + n);
-                  throw;
-               }
-            }
-         }
-         else {
+         IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C> or CT::TypeErased<OUT>) {)
             //                                                          
             // One of the containers is type-erased                     
             const auto TO   = out.GetType();
@@ -167,7 +137,39 @@ namespace Langulus::Anyness::Component
                out.PartialSuccess(out.GetCount() + n);
                throw;
             }
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+         } else {
+            //                                                          
+            // Both containers are statically-typed, so leverage it     
+            // to generate a well inlined routine for conversion        
+            using TO   = TypeOf<OUT>;
+            using FROM = TypeOf<C>;
+            static_assert(CT::Convertible<FROM, TO> /*CT::Inner::FindMorphism<FROM, TO>() >= 0*/, "Not convertible");
+
+            if constexpr (Same<FROM, TO>)
+               return out.Concat(self);
+            else {
+               // Types are statically convertible                      
+               out.AllocateMore(out.GetCount() + self.GetCount());
+
+               auto from = self.GetRaw();
+               const auto fromEnd = from + self.GetCount();
+               auto to = out.GetRaw() + out.GetCount();
+               try {
+                  while (from != fromEnd) {
+                     new (to) TO {Langulus::Convert<TO>(*from)};
+                     ++to; ++from;
+                  }
+               }
+               catch (...) {
+                  // Partial success                                    
+                  auto n = from - self.GetRaw();
+                  out.PartialSuccess(out.GetCount() + n);
+                  throw;
+               }
+            }
          }
+         #endif
 
          out.SetCountInner(out.GetCount() + self.GetCount());
          out.SetHashInner(0);

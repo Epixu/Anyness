@@ -1403,7 +1403,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto src_handle = src.GetHandle();
-         static_assert(::std::same_as<decltype(src_handle), THandle<char&>>);
+
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+            static_assert(::std::same_as<decltype(src_handle), THandle<char&>>);
+         #else
+            static_assert(::std::same_as<decltype(src_handle), HandleMut>);
+         #endif
 
          auto src_data = src_handle.template Get<char>();
          REQUIRE(src_handle.template Get<char>() == src_data);
@@ -1469,6 +1474,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                dst_handle.SwapContents(src_handle);
          }
          
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
          THEN("Handle moved into a local handle") {
             THandle<char> local {Absorb, Move(src_handle)};
 
@@ -1554,6 +1560,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             for(int i = 0; i < 101; ++i)
                local.SwapContents(src_handle);
          }
+         #endif
       }
 
       WHEN("GetHandle is called on constant container") {

@@ -12,6 +12,7 @@
 #include <source/components/Multiprovider.hpp>
 #include <source/components/Multiown.hpp>
 #include <source/components/Multiown-Deep.hpp>
+#include <source/components/Reserve-Static.hpp>
 
 
 namespace Langulus::Anyness

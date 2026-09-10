@@ -56,8 +56,15 @@ namespace Langulus::Anyness
 
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;
-      using HandleType     = THandlePair<THandle<ConstAll<K&>>, THandle<ConstAll<V&>>>;
-      using HandleMutType  = THandlePair<THandle<ConstAll<K&>>, THandle<V&>>;
+
+      #if not LANGULUS(FORCE_TYPE_ERASURE)
+         using HandleType     = THandlePair<THandle<ConstAll<K&>>, THandle<ConstAll<V&>>>;
+         using HandleMutType  = THandlePair<THandle<ConstAll<K&>>, THandle<V&>>;
+      #else
+         using HandleType     = THandlePair<Handle, Handle>;
+         using HandleMutType  = THandlePair<Handle, HandleMut>;
+      #endif
+      
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 

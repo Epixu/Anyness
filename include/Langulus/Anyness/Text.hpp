@@ -422,7 +422,7 @@ namespace Langulus::Anyness
       }
 
       constexpr auto operator <=> (Text const& other) const noexcept -> ::std::partial_ordering {
-         return this->Compare(other);
+         return ToPartialOrdering(this->Compare(other));
       }
 
       constexpr bool operator == (Text const& other) const noexcept {

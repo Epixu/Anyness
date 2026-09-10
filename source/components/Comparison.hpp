@@ -7,12 +7,15 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "../rtti/MetaData.hpp"
 #include "Langulus/CT/Serializer.hpp"
+#include "source/Component.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Unfold.hpp>
+#include <Langulus/CT/Deep.hpp>
 #include <Langulus/IntentOf.hpp>
 
 #if 0 or LANGULUS_META_VERBOSITY_MASTER_SWITCH()
@@ -21,17 +24,6 @@
    #include <Langulus/Logger/NoVerbose.hpp>
 #endif
 
-
-/*namespace Langulus::CT
-{
-   /// Check if container's elements are comparable                           
-   ///   @attention type-erased elements are always insertable, but will fail 
-   ///      at runtime if not reflected as such                               
-   template<class C, class T1, class...TN>
-   concept RangeComparable = Container<C> and (
-      Untyped<C> or UnfoldComparable<TypeOf<C>, T1, TN...>
-   );
-}*/
 
 namespace Langulus::Anyness
 {
@@ -91,7 +83,7 @@ namespace Langulus::Anyness::Component
                Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
             );
 
-            if constexpr (CT::TypeErased<LHS, RHS>) {
+            IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<LHS> or CT::TypeErased<RHS>) {)
                //                                                       
                // Both containers are type-erased - all we can do is    
                // call the reflected comparison functions               
@@ -106,8 +98,8 @@ namespace Langulus::Anyness::Component
                if (not lhs_count)
                   return true;   // Both empty                          
 
-               const DMeta LT = lhs.template GetType<SID>();
-               const DMeta RT = rhs.template GetType<SID>();
+               const RTTI::DMeta LT = lhs.template GetType<SID>();
+               const RTTI::DMeta RT = rhs.template GetType<SID>();
                if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
                   LglsVerbose(Logger::Red, "Types differ (type-erased): ",
                      LT, " != ", RT);
@@ -186,8 +178,8 @@ namespace Langulus::Anyness::Component
                });
 
                return result;
-            }
-            else {
+            #if not LANGULUS(FORCE_TYPE_ERASURE)
+            } else {
                //                                                       
                // Both containers are statically-typed - leverage it by 
                // using static comparisons                              
@@ -286,6 +278,7 @@ namespace Langulus::Anyness::Component
                   }
                }
             }
+            #endif
          }
       }
       
@@ -303,7 +296,7 @@ namespace Langulus::Anyness::Component
             Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
          );
 
-         if constexpr (CT::TypeErased<LHS, RHS>) {
+         IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<LHS> or CT::TypeErased<RHS>) {)
             //                                                          
             // Both container are type-erased - all we can do is call   
             // the reflected comparison functions                       
@@ -318,8 +311,8 @@ namespace Langulus::Anyness::Component
             if (not lhs_count)
                return Compared::Equal;    // Both empty                 
 
-            const DMeta LT = lhs.GetType();
-            const DMeta RT = rhs.GetType();
+            const RTTI::DMeta LT = lhs.GetType();
+            const RTTI::DMeta RT = rhs.GetType();
             if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
                LglsVerbose(Logger::Red, "Types differ (type-erased): ",
                   LT, " != ", RT);
@@ -360,8 +353,8 @@ namespace Langulus::Anyness::Component
 
             LglsVerbose(Logger::Red, "Type not comparable (type-erased): ", LT);
             return Compared::Unordered;
-         }
-         else {
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+         } else {
             //                                                          
             // Both blocks are statically-typed - leverage it by using  
             // static comparisons                                       
@@ -423,6 +416,7 @@ namespace Langulus::Anyness::Component
                }
             }
          }
+         #endif
       }
 
       /// MARK: CompareOneEqual                                               
@@ -515,7 +509,7 @@ namespace Langulus::Anyness::Component
       constexpr auto CompareOneEx(this C const& self, const RT& rhs) {
          using RELEVANT = typename Id::template Intersect<typename RT::Dimensions>;
 
-         if constexpr (CT::TypeErased<C, RT>) {
+         IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C, RT>) {)
             if (self.template GetCount<RELEVANT::First>() != 1)
                return Compared::Unordered;
 
@@ -532,8 +526,8 @@ namespace Langulus::Anyness::Component
                return result == Compared::Equal or result == Compared::Equivalent;
             });
             return result;
-         }
-         else {
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+         } else {
             if (self.template GetCount<RELEVANT::First>() != 1)
                return ::std::partial_ordering::unordered;
             
@@ -546,6 +540,7 @@ namespace Langulus::Anyness::Component
             });
             return result;
          }
+         #endif
       }
 
       /// MARK: CompareHashes                                                 
@@ -958,7 +953,7 @@ namespace Langulus::Anyness::Component
                return *self.template Get<T, SID>() == *rhs.template Get<T, SID>();
             }
          }
-         else if constexpr (CT::TypeErased<C>) {
+         else IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C>)) {
             //                                                          
             // THIS is type-erased, do runtime type checks              
             LglsAssumeDev(self.template IsTyped<SID>(),
@@ -984,6 +979,7 @@ namespace Langulus::Anyness::Component
                }
             }
          }
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
          else {
             //                                                          
             // Both sides are statically typed                          
@@ -996,6 +992,7 @@ namespace Langulus::Anyness::Component
                   return *self.template GetAt<T, SID>(0) == rhs;
             }
          }
+         #endif
 
          return false;
       }
@@ -1023,7 +1020,7 @@ namespace Langulus::Anyness::Component
                return ToPartialOrdering(*self.template Get<T, SID>() <=> *rhs.template Get<T, SID>());
             }
          }
-         else if constexpr (CT::TypeErased<C>) {
+         else IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C>)) {
             //                                                          
             // THIS is type-erased, do runtime type checks              
             LglsAssumeDev(self.template IsTyped<SID>(),
@@ -1052,6 +1049,7 @@ namespace Langulus::Anyness::Component
             
             return Compared::Unordered;
          }
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
          else {
             //                                                          
             // Both sides are statically typed                          
@@ -1065,6 +1063,7 @@ namespace Langulus::Anyness::Component
             }
             else return ::std::partial_ordering::unordered;
          }
+         #endif
       }
    };
 }

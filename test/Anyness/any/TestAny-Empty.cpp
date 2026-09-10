@@ -141,12 +141,12 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       using stdany = ::std::any;
    #endif
 
-   if constexpr (CT::Untyped<T>) {
+   if constexpr (CT::TypeErased<T>) {
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
       static_assert(Exact<TypeOf<T>, void>);
-      static_assert(CT::TypeErased<T>);
+      static_assert(CT::Untyped<T>);
 
       static_assert(CT::CopyConstructible<T>);
       static_assert(CT::ReferConstructible<T>);
@@ -165,9 +165,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    else {
       // Statically-typed containers behave the same as their inner     
       // type                                                           
-      static_assert(    Exact<TypeOf<T>, E>);
-      static_assert(not CT::TypeErased<T>);
-      static_assert(    CT::Comparable<TypeOf<T>, E>);
+      static_assert(Exact<TypeOf<T>, E>);
+      static_assert(CT::Typed<T>);
+      static_assert(CT::Comparable<TypeOf<T>, E>);
 
       static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E>);
       static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E>);
@@ -183,52 +183,50 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       static_assert(CT::CloneAssignable<T>      == CT::CloneAssignable<E>);
       static_assert(CT::DisownAssignable<T>     == CT::DisownAssignable<E>);      
    }
-   
-   {
-      static_assert(    CT::Deep<T>);
-      static_assert(    CT::ContainsOne<T>);
-      static_assert(not CT::ContainsMany<T>);
-      static_assert(not CT::Handle<T>);
-      static_assert(    CT::HasVariableCount<T>);
-      static_assert(    CT::HeapAllocated<T>);
-      static_assert(    CT::OwnedDeep<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
-      static_assert(    CT::Owned<T>);
-      static_assert(    CT::OwnedStrong<T>);
-      static_assert(    CT::Comparable<T, T>);
-      static_assert(    CT::Comparable<T, E>);
-      static_assert(not ::std::ranges::range<T>);
 
-      static_assert(    requires (T pack)         { pack.Get(); });
-      static_assert(    requires (T pack)         { pack.template As<E>(); });
-      //static_assert(    requires (T pack)         { pack.GetDeep(); });
-      static_assert(    requires (T pack)         { pack.GetResolved(); });
-      static_assert(    requires (T pack)         { pack.GetDense(); });
-      static_assert(not requires (T pack)         { pack + pack; });
-      static_assert(    CT::TextRange<E> or not requires (T pack, E item){  pack + item; });
-      static_assert(not CT::TextRange<E> or     requires (T pack, E item){ {pack + item} -> CT::Text; });
-      static_assert(not requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-      static_assert(not requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
-      static_assert(not requires (T pack)         { pack.Concat(pack); });
-      static_assert(not requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
-      static_assert(not requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
-      static_assert(not requires (T pack, E item) { pack.Merge(item); });
-      static_assert(not requires (T pack)         { pack.MergeRange(pack); });
-      static_assert(not requires (T pack, E item) { pack.Erase(item); });
-      static_assert(not requires (T pack)         { pack.EraseAt(Index::Front); });
-      static_assert(not requires (T pack)         { pack.Reserve(20); });
-      static_assert(not requires (T pack)         { pack.EnableOr(); });
-      static_assert(not requires (T pack)         { pack.IsOr(); });
-      static_assert(not requires (T pack, E item) { pack.Find(item); });
-      static_assert(not requires (T pack)         { pack.ForEach([](const int&) {}); });
-      static_assert(not requires (T pack)         { pack.ForEachRev([](const int&) {}); });
-   }
+   static_assert(    CT::Deep<T>);
+   static_assert(    CT::ContainsOne<T>);
+   static_assert(not CT::ContainsMany<T>);
+   static_assert(not CT::Handle<T>);
+   static_assert(    CT::HasVariableCount<T>);
+   static_assert(    CT::HeapAllocated<T>);
+   static_assert(    CT::OwnedDeep<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
+   static_assert(    CT::Owned<T>);
+   static_assert(    CT::OwnedStrong<T>);
+   static_assert(    CT::Comparable<T, T>);
+   static_assert(    CT::Comparable<T, E>);
+   static_assert(not ::std::ranges::range<T>);
+
+   static_assert(    requires (T pack)         { pack.Get(); });
+   static_assert(    requires (T pack)         { pack.template As<E>(); });
+   //static_assert(    requires (T pack)         { pack.GetDeep(); });
+   static_assert(    requires (T pack)         { pack.GetResolved(); });
+   static_assert(    requires (T pack)         { pack.GetDense(); });
+   static_assert(not requires (T pack)         { pack + pack; });
+   static_assert(    CT::TextRange<E> or not requires (T pack, E item){  pack + item; });
+   static_assert(not CT::TextRange<E> or     requires (T pack, E item){ {pack + item} -> CT::Text; });
+   static_assert(not requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+   static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+   static_assert(not requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
+   static_assert(not requires (T pack)         { pack.Concat(pack); });
+   static_assert(not requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
+   static_assert(not requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
+   static_assert(not requires (T pack, E item) { pack.Merge(item); });
+   static_assert(not requires (T pack)         { pack.MergeRange(pack); });
+   static_assert(not requires (T pack, E item) { pack.Erase(item); });
+   static_assert(not requires (T pack)         { pack.EraseAt(Index::Front); });
+   static_assert(not requires (T pack)         { pack.Reserve(20); });
+   static_assert(not requires (T pack)         { pack.EnableOr(); });
+   static_assert(not requires (T pack)         { pack.IsOr(); });
+   static_assert(not requires (T pack, E item) { pack.Find(item); });
+   static_assert(not requires (T pack)         { pack.ForEach([](const int&) {}); });
+   static_assert(not requires (T pack)         { pack.ForEachRev([](const int&) {}); });
 
    static_assert(T::CountHeapProviders() == 1);
    //static_assert(T::template CountHeapFooterRequests<0>() == 1);
@@ -575,7 +573,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
 
-         if constexpr (CT::Typed<T>) {
+         if constexpr (not CT::TypeErased<T>) {
             REQUIRE(*pack == i666backup);
             if constexpr (CT::Handle<decltype(instance)>)
                REQUIRE(&*pack == &*instance);
@@ -752,10 +750,14 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       WHEN("GetHandle is called on mutable container") {
          auto h = pack.GetHandle();
 
-         if constexpr (CT::Untyped<T>)
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+            if constexpr (CT::Untyped<T>)
+               static_assert(::std::same_as<decltype(h), HandleMut>);
+            else
+               static_assert(::std::same_as<decltype(h), THandle<E&>>);
+         #else
             static_assert(::std::same_as<decltype(h), HandleMut>);
-         else
-            static_assert(::std::same_as<decltype(h), THandle<E&>>);
+         #endif
 
          Handle_CheckState_Default<E>(h);
       }
@@ -764,10 +766,14 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
          T const pack_constant;
          auto h = pack_constant.GetHandle();
 
-         if constexpr (CT::Untyped<T>)
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
+            if constexpr (CT::Untyped<T>)
+               static_assert(::std::same_as<decltype(h), Handle>);
+            else
+               static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
+         #else
             static_assert(::std::same_as<decltype(h), Handle>);
-         else
-            static_assert(::std::same_as<decltype(h), THandle<ConstAll<E&>>>);
+         #endif
 
          Handle_CheckState_Default<E const>(h);
       }

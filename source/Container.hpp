@@ -36,9 +36,13 @@ namespace Langulus::Anyness
    struct HandleMut;
    struct HandleDisowned;
    struct HandleDisownedMut;
-   template<class> struct THandle;
-   template<class> struct THandleEmergent;
-   template<class> struct THandleDisowned;
+
+   #if not LANGULUS(FORCE_TYPE_ERASURE)
+      template<class> struct THandle;
+      template<class> struct THandleEmergent;
+      template<class> struct THandleDisowned;
+   #endif
+   
    template<CT::Handle, CT::Handle> struct THandlePair;
 
    struct Any;
@@ -118,7 +122,7 @@ namespace Langulus::Anyness
             );
             return Types<Tmut<C, mutbl, immut>> {};
          }
-         else if constexpr (CT::TypeErased<C>) {
+         else IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C>)) {
             // Type-erased handle                                       
             static_assert(C::Dimensions::Count == 1, 
                "Multidimensional containers should result in multidimensional handles! "
@@ -130,6 +134,7 @@ namespace Langulus::Anyness
             else
                return Types<Tmut<C, HandleDisownedMut, HandleDisowned>> {};
          }
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
          else {
             // Statically-typed handle                                  
             static_assert(C::Dimensions::Count == 1, 
@@ -144,6 +149,7 @@ namespace Langulus::Anyness
             else
                return Types<THandleDisowned<Inner>> {};
          }
+         #endif
       }
 
       /// MARK: DecidePickType                                                
@@ -161,10 +167,11 @@ namespace Langulus::Anyness
             // Always prioritize custom pick types if defined           
             return Types<Tmut<C, typename C::PickMut, typename C::Pick>> {};
          }
-         else if constexpr (CT::TypeErased<C>) {
+         else IF_NOT_LANGULUS_FORCE_TYPE_ERASURE(if constexpr (CT::TypeErased<C>)) {
             // Type-erased containers always result in handle picks     
             return DecideHandleType<C>();
          }
+         #if not LANGULUS(FORCE_TYPE_ERASURE)
          else {
             // Statically-typed container - always prefer a reference,  
             // unless we're referencing an owned pointer                
@@ -174,6 +181,7 @@ namespace Langulus::Anyness
             else
                return Types<Tmut<C, T&, ConstAll<T&>>> {};
          }
+         #endif
       }
    }
 

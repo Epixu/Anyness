@@ -6,178 +6,182 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Langulus/CT/Deep.hpp"
-#include "Langulus/Core.hpp"
-#include "Langulus/Typenav.hpp"
-#include "source/Component.hpp"
+//#include "Langulus/Core.hpp"
+//#include "Langulus/Typenav.hpp"
+//#include "source/Component.hpp"
 #include "source/Container.hpp"
 #include <source/components/Typed-Stack.hpp>
-#include <source/components/Typed-Static.hpp>
 #include <source/components/Heap-Reference.hpp>
 #include <source/components/Count-Static.hpp>
-#include <source/components/Reserve-Emergent.hpp>
-#include <source/components/OwnershipDeep-Heap.hpp>
 #include <source/components/OwnershipDeep-Reference.hpp>
 #include <source/components/Hash-Emergent.hpp>
 #include <source/components/Assignment.hpp>
 #include <source/components/Emplacement.hpp>
 #include <source/components/Comparison.hpp>
 #include <source/components/Iteration-Operators.hpp>
-#include <source/components/Stack.hpp>
 
+
+namespace Langulus::Anyness::Inner
+{
+   using TypeErasedHandleMut = Com::Container<
+      Com::TypedStack<DMeta, void, true>,
+      Com::HeapReference<>,
+      Com::CountStatic<1u>,
+      Com::OwnershipDeepReference<Com::WeakOwnership>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+
+   using TypeErasedHandle = Com::Container<
+      Com::TypedStack<DMeta, void, true>,
+      Com::HeapReference<>,
+      Com::CountStatic<1u>,
+      Com::OwnershipDeepReference<Com::WeakOwnership>,
+      Com::HashEmergent<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+
+   using TypeErasedHandleMutDisowned = Com::Container<
+      Com::TypedStack<DMeta, void, true>,
+      Com::HeapReference<>,
+      Com::CountStatic<1u>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+
+   using TypeErasedHandleDisowned = Com::Container<
+      Com::TypedStack<DMeta, void, true>,
+      Com::HeapReference<>,
+      Com::CountStatic<1u>,
+      Com::HashEmergent<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+}
+
+#if not LANGULUS(FORCE_TYPE_ERASURE)
+#include <source/components/Typed-Static.hpp>
+#include <source/components/Stack.hpp>
+#include <source/components/Reserve-Emergent.hpp>
+#include <source/components/OwnershipDeep-Heap.hpp>
+#include <Langulus/CT/Deep.hpp>
+
+
+namespace Langulus::Anyness::Inner
+{
+   /// Statically typed handle to a dense element held inside a container     
+   template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
+   using THandleEmbeddedDense = Com::Container<
+      Com::TypedStatic<DMeta, Deref<T>>,
+      Com::HeapReference<HeapEntry<0, Deref<T>*>>,
+      Com::CountStatic<1u>,
+      Com::ReserveEmergent<>,
+      Com::OwnershipStack<Com::WeakOwnership>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+   
+   /// Statically typed handle to a sparse element held inside a container    
+   template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
+   using THandleEmbeddedSparse = Com::Container<
+      Com::TypedStatic<DMeta, Deref<T>>,
+      Com::HeapReference<HeapEntry<0, Deref<T>*>>,
+      Com::CountStatic<1u>,
+      Com::OwnershipDeepReference<Com::WeakOwnership>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+   
+   /// Statically typed handle to a dense element held inside a container     
+   template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
+   using THandleEmbeddedDenseEmergent = Com::Container<
+      Com::TypedStatic<DMeta, Deref<T>>,
+      Com::HeapReference<HeapEntry<0, Deref<T>*>>,
+      Com::CountStatic<1u>,
+      Com::ReserveEmergent<>,
+      Com::OwnershipEmergent<Com::WeakOwnership>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+
+   /// Statically typed handle to a sparse element held inside a container    
+   /// (with emergent deep ownership)                                         
+   template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
+   using THandleEmbeddedSparseEmergent = Com::Container<
+      Com::TypedStatic<DMeta, Deref<T>>,
+      Com::HeapReference<HeapEntry<0, Deref<T>*>>,
+      Com::CountStatic<1u>,
+      Com::OwnershipDeepEmergent<Com::WeakOwnership>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+   
+   /// Statically typed handle to a disowned element held inside container    
+   template<CT::Reference T> requires (CT::NotSheddable<T> and CT::NotHandle<T>)
+   using THandleDisownedEmbedded = Com::Container<
+      Com::TypedStatic<DMeta, Deref<T>>,
+      Com::HeapReference<HeapEntry<0, Deref<T>*>>,
+      Com::CountStatic<1u>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
+   >;
+   
+   /// Statically typed handle to a local dense value                         
+   /// (isomorphic to TOwn)                                                   
+   //TODO inherit TOwn from this?
+   template</*CT::NotReference*/class T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
+   using THandleLocalDense = Com::Container<
+      Com::TypedStatic<DMeta, Deref<T>>,
+      Com::Stack<T>,
+      Com::CountStatic<1u>,
+      Com::HashEmergent<>,
+      Com::Assignment<>,
+      Com::Emplacement<>,
+      Com::Comparison<>
+   >;
+   
+   /// Statically typed handle to a local sparse value.                       
+   ///   @attention this handle is local and has strong ownership!            
+   template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
+   using THandleLocalSparse = Com::Container<
+      Com::TypedStatic<DMeta, T>,
+      Com::HeapMovable<0, 0, HeapEntry<0, T*>>,
+      Com::CountStatic<1u>,
+      Com::ReserveEmergent<>,
+      Com::OwnershipStack<>,
+      Com::OwnershipDeepHeap<>,
+      Com::HashEmergent<>,
+      Com::Emplacement<>,
+      Com::Assignment<>,
+      Com::Comparison<>
+   >;
+}
+#endif
 
 namespace Langulus::Anyness
 {
-   namespace Inner
-   {
-      using TypeErasedHandleMut = Com::Container<
-         Com::TypedStack<DMeta, void, true>,
-         Com::HeapReference<>,
-         Com::CountStatic<1u>,
-         Com::OwnershipDeepReference<Com::WeakOwnership>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-
-      using TypeErasedHandleMutDisowned = Com::Container<
-         Com::TypedStack<DMeta, void, true>,
-         Com::HeapReference<>,
-         Com::CountStatic<1u>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-
-      using TypeErasedHandle = Com::Container<
-         Com::TypedStack<DMeta, void, true>,
-         Com::HeapReference<>,
-         Com::CountStatic<1u>,
-         Com::OwnershipDeepReference<Com::WeakOwnership>,
-         Com::HashEmergent<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-
-      using TypeErasedHandleDisowned = Com::Container<
-         Com::TypedStack<DMeta, void, true>,
-         Com::HeapReference<>,
-         Com::CountStatic<1u>,
-         Com::HashEmergent<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-
-#if not LANGULUS(FORCE_TYPE_ERASURE)
-      /// Statically typed handle to a dense element held inside a container  
-      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleEmbeddedDense = Com::Container<
-         Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<1u>,
-         Com::ReserveEmergent<>,
-         Com::OwnershipStack<Com::WeakOwnership>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-      
-      /// Statically typed handle to a sparse element held inside a container 
-      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleEmbeddedSparse = Com::Container<
-         Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<1u>,
-         Com::OwnershipDeepReference<Com::WeakOwnership>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-      
-      /// Statically typed handle to a dense element held inside a container  
-      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleEmbeddedDenseEmergent = Com::Container<
-         Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<1u>,
-         Com::ReserveEmergent<>,
-         Com::OwnershipEmergent<Com::WeakOwnership>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-
-      /// Statically typed handle to a sparse element held inside a container 
-      /// (with emergent deep ownership)                                      
-      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleEmbeddedSparseEmergent = Com::Container<
-         Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<1u>,
-         Com::OwnershipDeepEmergent<Com::WeakOwnership>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-      
-      /// Statically typed handle to a disowned element held inside container 
-      template<CT::Reference T> requires (CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleDisownedEmbedded = Com::Container<
-         Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<HeapEntry<0, Deref<T>*>>,
-         Com::CountStatic<1u>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>,
-         Com::IterationOperators<>
-      >;
-      
-      /// Statically typed handle to a local dense value                      
-      /// (isomorphic to TOwn)                                                
-      //TODO inherit TOwn from this?
-      template</*CT::NotReference*/class T> requires (CT::Dense<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleLocalDense = Com::Container<
-         Com::TypedStatic<DMeta, Deref<T>>,
-         Com::Stack<T>,
-         Com::CountStatic<1u>,
-         Com::HashEmergent<>,
-         Com::Assignment<>,
-         Com::Emplacement<>,
-         Com::Comparison<>
-      >;
-      
-      /// Statically typed handle to a local sparse value.                    
-      ///   @attention this handle is local and has strong ownership!         
-      template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T> and CT::NotHandle<T>)
-      using THandleLocalSparse = Com::Container<
-         Com::TypedStatic<DMeta, T>,
-         Com::HeapMovable<0, 0, HeapEntry<0, T*>>,
-         Com::CountStatic<1u>,
-         Com::ReserveEmergent<>,
-         Com::OwnershipStack<>,
-         Com::OwnershipDeepHeap<>,
-         Com::HashEmergent<>,
-         Com::Emplacement<>,
-         Com::Assignment<>,
-         Com::Comparison<>
-      >;
-   #endif
-   }
-
-
    /// MARK: HandleMut                                                        
    ///                                                                        
    /// A type-erased mutable handle with ownership.                           
@@ -867,6 +871,10 @@ namespace Langulus::Anyness
 
 
 /// Some components need to be aware of HandleDisowned                        
+#include <source/components/Heap-Reference.hpp>
+#include <source/components/Stack.hpp>
+
+
 namespace Langulus::Anyness::Component
 {
    /// A safe way to get the first sparse entry after being resolved to       

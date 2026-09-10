@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "Handle.hpp"
 #include <source/components/Typed-Stack.hpp>
 #include <source/components/Heap-Movable.hpp>
 #include <source/components/Ownership-Stack.hpp>
@@ -26,7 +27,6 @@
 #include <source/states/Encrypted.hpp>
 #include <source/states/Tracked.hpp>
 #include <source/states/Disowned.hpp>
-#include "Handle.hpp"
 
 
 namespace Langulus::Anyness::Inner
