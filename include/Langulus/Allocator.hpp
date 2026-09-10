@@ -45,6 +45,11 @@ namespace Langulus
          }
          return *static_cast<void const* const*>(ptrToPackedPtr);
       }
+
+      LANGULUS(INLINED)
+      void* UnpackPointer(RTTI::DMeta const& T, RTTI::DMeta const& nextT, void* ptrToPackedPtr) assumptious {
+         return const_cast<void*>(UnpackPointer(T, nextT, const_cast<void const*>(ptrToPackedPtr)));
+      }
    #else
       using Unmanaged::Allocation;
       using Unmanaged::Allocator;
@@ -59,6 +64,12 @@ namespace Langulus
       void const* UnpackPointer(RTTI::DMeta const&, RTTI::DMeta const&, void const* ptr) assumptious {
          LglsAssumeDevAndOptimize(ptr, "Invalid pointer");
          return *static_cast<void const* const*>(ptr);
+      }
+
+      LANGULUS(INLINED)
+      void* UnpackPointer(RTTI::DMeta const&, RTTI::DMeta const&, void* ptr) assumptious {
+         LglsAssumeDevAndOptimize(ptr, "Invalid pointer");
+         return *static_cast<void**>(ptr);
       }
    #endif
    

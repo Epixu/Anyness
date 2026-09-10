@@ -417,11 +417,11 @@ namespace Langulus::Anyness
       }
 
       /// Comparison                                                          
-      constexpr auto operator <=> (CT::TextRange auto const& other) const noexcept {
+      constexpr auto operator <=> (CT::TextRange auto const& other) const noexcept -> ::std::partial_ordering {
          return this->Compare(other);
       }
 
-      constexpr auto operator <=> (Text const& other) const noexcept {
+      constexpr auto operator <=> (Text const& other) const noexcept -> ::std::partial_ordering {
          return this->Compare(other);
       }
 
@@ -432,6 +432,9 @@ namespace Langulus::Anyness
       explicit operator ::std::string() const {
          return {this->GetRaw(), this->GetCount()};
       }
+
+      template<Cid> void GetResolved()         = delete;
+      template<Cid> void GetDense(size_t = -1) = delete;
    };
 
    struct Code : Text {};

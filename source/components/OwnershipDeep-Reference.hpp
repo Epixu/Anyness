@@ -122,12 +122,12 @@ namespace Langulus::Anyness::Component
          using IT = Decvq<Deref<Deint<I>>>;
          decltype(auto) from = LglsFwd(intent.what);
 
-         if constexpr (not requires { from.template GetEntries<ID>(); }) {
+         if constexpr (not requires { from.template GetEntries<ID>(); })
             ThisCom::SetEntriesInner(nullptr);
-         }
-         else if constexpr ((STYLE & OnCreateAndDestroy) != 0) { 
+         else 
             ThisCom::SetEntriesInner(from.template GetEntries<ID>()); 
 
+         if constexpr ((STYLE & OnCreateAndDestroy) != 0) {
             if constexpr (CT::Referred<I> or (IT::OwnedDeep & OnCreateAndDestroy) == 0) {
                // Refer                                                 
                ThisCom::Keep();

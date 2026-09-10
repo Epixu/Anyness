@@ -43,8 +43,8 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = true;
       static constexpr bool Reallocatable = false;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      /*template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;*/
 
    protected:
       LglsComIterationOperators(friend);
@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C>// requires Relevant<SID>
       constexpr auto GetRaw(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, StackRequest);
          if constexpr (SID == Id::First)
@@ -99,7 +99,7 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory as a different type          
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<class T, Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<class T, Cid SID = Id::First, CT::Container C>// requires Relevant<SID>
       constexpr auto GetRawAs(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, T*);
          return static_cast<Tcvq>(ThisCom::template GetRawVoid<SID>());
@@ -107,7 +107,7 @@ namespace Langulus::Anyness::Component
 
       /// Get a direct access to the initialized heap memory's end.           
       ///   @attention this makes sense only when heap is contiguous.         
-      template<Cid SID = Id::First, CT::Container C> requires (CT::Contiguous<C> and Relevant<SID>)
+      template<Cid SID = Id::First, CT::Contiguous C>// requires Relevant<SID>
       constexpr auto GetRawEnd(this C&& self) noexcept {
          if constexpr (CT::TypeErased<C>)
             return ThisCom::template GetRawAs<uint8_t, SID>() + self.template GetBytesize<SID>();
@@ -116,7 +116,7 @@ namespace Langulus::Anyness::Component
       }
     
       /// Get a direct access to the entire heap reserve's end.               
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C>// requires Relevant<SID>
       constexpr auto GetRawReserveEnd(this C&& self) noexcept {
          const auto reserved = self.template GetReserved<SID>();
          if constexpr (CT::TypeErased<C>)
@@ -135,7 +135,7 @@ namespace Langulus::Anyness::Component
       ///      type of the container, if statically typed                     
       ///   @tparam SID can be used to access specific dimension              
       ///   @return pointer to the first element of the desired dimension     
-      template<class AS = void, Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<class AS = void, Cid SID = Id::First, CT::Container C>// requires Relevant<SID>
       auto* Get(this C&& self) {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -231,7 +231,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID can be used to access specific dimension. It is       
       ///      irrelevant if AS is a handle.                                  
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = Id::First, CT::Contiguous C> requires Relevant<SID>
+      template<CT::NotVoid AS, Cid SID = Id::First, CT::Contiguous C>// requires Relevant<SID>
       decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
@@ -302,17 +302,14 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<Cid SID = Id::First/*, class AS = void*/, CT::Container C>
-      requires (CT::Contiguous<C> and Relevant<SID>)
-      auto GetResolved(this C&& self) -> HandleDisowned {
-         /*using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
-         static_assert(CT::Container<D>, "D must result in a container type");
-         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");*/
-
+      ///   @note defined in Handle.hpp because it requires HandleDisowned    
+      template<Cid SID = Id::First, CT::Contiguous C>
+      //requires Relevant<SID>
+      auto GetResolved(this C&& self) -> HandleDisowned; /*{
          if (self.template IsEmpty<SID>())
             return {};
 
-         auto h = HandleDisowned {Slice<SID>, self};
+         HandleDisowned h {Slice<SID>, self};
          if (not self.template IsSparse<SID>())
             return h;
 
@@ -331,21 +328,20 @@ namespace Langulus::Anyness::Component
             else
                return DenseCast(ThisCom::template Get<T, SID>());
          }
-      }
+      }*/
 
       /// Get first element, removing 'count' indirections                    
       ///   @attention throws if type is incomplete and origin was reached    
       ///   @tparam SID can be used to access specific dimension              
-      ///   @tparam AS specify the type we wrap the result in.                
-      ///      Using 'void' will default to C::DeepType.                      
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element for chosen dimension              
-      template<Cid SID = Id::First, CT::Contiguous C> requires (Relevant<SID>)
-      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned {
+      ///   @note defined in Handle.hpp because it requires HandleDisowned    
+      template<Cid SID = Id::First, CT::Contiguous C>// requires Relevant<SID>
+      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned; /*{
          if (self.template IsEmpty<SID>())
             return {};
 
-         auto h = HandleDisowned {Slice<SID>, self};
+         HandleDisowned h {Slice<SID>, self};
          if (not self.template IsSparse<SID>() or count <= 0)
             return h;
 
@@ -384,11 +380,11 @@ namespace Langulus::Anyness::Component
             else break;
          }
          return {Stackwise, nextT, UnpackPointer(T, nextT, heap)};
-      }
+      }*/
 
    protected:
       /// Get the heap pointer (inner)                                        
-      template<Cid SID = Id::First> requires Relevant<SID>
+      template<Cid SID = Id::First>// requires Relevant<SID>
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
          return self.template AccessStack<HeapReference>();
       }
@@ -396,13 +392,13 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C>// requires Relevant<SID>
       constexpr void* GetRawVoid(this C&& self) noexcept {
          return const_cast<void*>(static_cast<const void*>(ThisCom::template GetRaw<SID>()));
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      template<Cid SID = Id::First, CT::Sparse P> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Sparse P>// requires Relevant<SID>
       constexpr void SetHeapInner(this auto& self, P heap) assumptious {
          /*if constexpr (requires { ThisCom::GetHeapInner() = heap; })
             ThisCom::GetHeapInner() = heap;
@@ -417,7 +413,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Reset the heap pointer to null                                      
-      template<Cid SID = Id::First> requires Relevant<SID>
+      template<Cid SID = Id::First>// requires Relevant<SID>
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
          ThisCom::GetHeapInner() = nullptr;
       }
@@ -451,7 +447,7 @@ namespace Langulus::Anyness::Component
       /// This will allocate memory for relevant headers, footers, and types  
       /// across all dimensions used in this heap component.                  
       ///   @param reserve the number of elements to request                  
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C>// requires Relevant<SID>
       auto RequestHeap(this C const& self, size_t reserve) assumptious -> Request {
          if constexpr (CT::ContainsOne<C>) {
             LglsAssumeDev(reserve == 1,

@@ -311,6 +311,8 @@ namespace Langulus::Anyness
          return result;
       }
 
+      template<Cid> void GetResolved()         = delete;
+      template<Cid> void GetDense(size_t = -1) = delete;
    };
    #pragma pack(pop)
 }

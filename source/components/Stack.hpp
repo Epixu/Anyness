@@ -32,26 +32,26 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = -2000;
       
       /// Get a direct access to the stack memory                             
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr auto GetRaw(this auto&& self) noexcept {
          return &ThisCom::GetStackInner();
       }
 
       /// Get a direct access to the stack memory as a different type         
-      template<class AS, Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<class AS, Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr auto GetRawAs(this C&& self) noexcept {
          using AScvq = LglsMutIf(C, AS*);
          return static_cast<AScvq>(ThisCom::GetRaw());
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr auto GetRawEnd(this auto&& self) noexcept {
          return ThisCom::GetRaw() + 1;
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr auto GetRawReserveEnd(this auto&& self) noexcept {
          return ThisCom::GetRawEnd();
       }
@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
       ///      type of the container, if statically typed                     
       ///   @tparam SID can be used to access specific dimension              
       ///   @return pointer to the first element of the desired dimension     
-      template<class AS = void, Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<class AS = void, Cid SID = ID, CT::Container C>// requires (SID == ID)
       auto* Get(this C&& self) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -104,7 +104,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam AS the type we're wrapping in                             
       ///   @tparam SID can be used to access specific dimension              
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C>// requires (SID == ID)
       decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
@@ -171,19 +171,20 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
-      auto GetResolved(this C&& self) -> HandleDisowned {
+      ///   @note defined in Handle.hpp because it requires HandleDisowned    
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
+      auto GetResolved(this C&& self) -> HandleDisowned; /*{
          if (self.IsEmpty())
             return {};
          
          if (not self.IsSparse())
-            return ThisCom::template As<D>();
+            return {Slice<SID>, self};
 
          if constexpr (CT::Resolvable<T>)
-            return D {DenseCast(ThisCom::Get()).GetResolved()};
+            return DenseCast(ThisCom::Get()).GetResolved();
          else
-            return D {DenseCast(ThisCom::Get())};
-      }
+            return {Stackwise, self.template GetType<SID>().GetOrigin(), &DenseCast(ThisCom::Get())};
+      }*/
 
       /// Get the first contained element, removing 'count' indirections.     
       /// Available only if container has DeepType defined.                   
@@ -193,11 +194,14 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
-      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned {
-         LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
+      ///   @note defined in Handle.hpp because it requires HandleDisowned    
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
+      auto GetDense(this C&& self, size_t count = -1) -> HandleDisowned; /*{
+         if (self.IsEmpty())
+            return {};
+
          if (not self.IsSparse() or count <= 0)
-            return D {Absorb, Disown(self)};
+            return {Slice<SID>, self};
 
          // Check if origin type is complete before attempting anything 
          if (count >= IndirectsOf<T>) {
@@ -218,11 +222,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Pointer T -> Dense nextT                              
-               D temp {Absorb, Disown(self)};
-               temp.SetTypeInner(nextType);
-               temp.SetHeapInner(UnpackPointer(type, nextType, src));
-               if_available(temp.SetCountInner(1));
-               return temp;
+               return {Stackwise, nextType, UnpackPointer(type, nextType, src)};
             }
 
             type = nextType;
@@ -230,12 +230,12 @@ namespace Langulus::Anyness::Component
          }
          
          LglsError("Should never be reached");
-         return D {Absorb, Disown(self)};
-      }
+         return {};
+      }*/
 
    protected:
       /// Get a direct access to the stack memory                             
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr void* GetRawVoid(this auto&& self) noexcept {
          return const_cast<void*>(static_cast<const void*>(&ThisCom::GetStackInner()));
       }

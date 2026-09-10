@@ -864,3 +864,159 @@ namespace Langulus::Anyness
    };
 #endif
 }
+
+
+/// Some components need to be aware of HandleDisowned                        
+namespace Langulus::Anyness::Component
+{
+   /// A safe way to get the first sparse entry after being resolved to       
+   /// the most concrete type. Available only if container has DeepType.      
+   ///   @return the most concrete representation of the first item           
+   template<CT::HeapEntry ENTRY0, CT::HeapEntry...ENTRYN>
+   template<Cid SID, CT::Contiguous C>
+   auto HeapReference<ENTRY0, ENTRYN...>::GetResolved(this C&& self) -> HandleDisowned {
+      if (self.template IsEmpty<SID>())
+         return {};
+
+      if constexpr (CT::TypeErased<C>) {
+         const auto T = self.template GetType<SID>();
+         HandleDisowned h {Slice<SID>, self};
+         if (not T.IsSparse())
+            return h;
+      
+         const auto resolver = T.GetResolver();
+         if (resolver)
+            return resolver(h.GetDense().GetRaw());
+         else
+            return h.GetDense();
+      }
+      else {
+         using T = TypeOf<C, SID>;
+         if constexpr (CT::Dense<T>)
+            return {Slice<SID>, self};
+         else {
+            auto& dense_item = DenseCast(self.HeapReference<ENTRY0, ENTRYN...>::template Get<T, SID>());
+            if constexpr (CT::Resolvable<Decay<T>>)
+               return dense_item.GetResolved();
+            else
+               return {Stackwise, MetaDataOf<Decay<T>>(), &dense_item};
+         }
+      }
+   }
+
+   /// Get first element, removing 'count' indirections                       
+   ///   @attention throws if type is incomplete and origin was reached       
+   ///   @tparam SID can be used to access specific dimension                 
+   ///   @param count how many levels of indirection to remove?               
+   ///   @return the dense first element for chosen dimension                 
+   template<CT::HeapEntry ENTRY0, CT::HeapEntry...ENTRYN>
+   template<Cid SID, CT::Contiguous C>
+   auto HeapReference<ENTRY0, ENTRYN...>::GetDense(this C&& self, size_t count) -> HandleDisowned {
+      if (self.template IsEmpty<SID>())
+         return {};
+
+      HandleDisowned h {Slice<SID>, self};
+      if (not self.template IsSparse<SID>() or count <= 0)
+         return h;
+
+      // Check if origin type is complete before attempting anything    
+      if constexpr (CT::TypeErased<C>) {
+         const auto T = self.template GetType<SID>();
+         if (count >= T.GetIndirections()) {
+            LglsAssert((bool) T.GetOrigin(),
+               "Trying to interface incomplete data `", T,
+               "` as dense"
+            );
+         }
+      }
+      else {
+         using T = TypeOf<C, SID>;
+         if (count >= IndirectsOf<T>) {
+            LglsAssert(CT::Complete<Decay<T>>,
+               "Trying to interface incomplete data `", MetaDataOf<T>(),
+               "` as dense"
+            );
+         }
+      }
+
+      auto     T = self.template GetType<SID>();
+      auto nextT = T.GetDeptr();
+      void* heap = self.HeapReference<ENTRY0, ENTRYN...>::template GetRawVoid<SID>();
+      while (count and T.IsSparse()) {            
+         if (nextT.IsSparse()) {
+            // Pointer T -> Pointer nextT                               
+            T.GetDereffer()(heap, &heap);
+            T = nextT;
+            nextT = T.GetDeptr();
+            --count;
+         }
+         else break;
+      }
+      return {Stackwise, nextT, UnpackPointer(T, nextT, heap)};
+   }
+
+   /// A safe way to get the first sparse entry after being resolved to       
+   /// the most concrete type. Available only if container has DeepType.      
+   ///   @return the most concrete representation of the first item           
+   template<CT::NotVoid T, Cid ID>
+   template<Cid SID, CT::Container C>
+   auto Stack<T, ID>::GetResolved(this C&& self) -> HandleDisowned {
+      if (self.IsEmpty())
+         return {};
+      
+      if (not self.IsSparse())
+         return {Slice<SID>, self};
+
+      if constexpr (CT::Resolvable<T>)
+         return DenseCast(self.Stack<T, ID>::Get()).GetResolved();
+      else
+         return {Stackwise, self.template GetType<SID>().GetOrigin(), &DenseCast(self.Stack<T, ID>::Get())};
+   }
+
+   /// Get the first contained element, removing 'count' indirections.        
+   /// Available only if container has DeepType defined.                      
+   ///   @attention throws if type is incomplete and origin was reached       
+   ///   @tparam AS specify the type we wrap the result in.                   
+   ///      Using 'void' will choose C::DeepType.                             
+   ///   @param self deduced this                                             
+   ///   @param count how many levels of indirection to remove?               
+   ///   @return the dense first element                                      
+   template<CT::NotVoid T, Cid ID>
+   template<Cid SID, CT::Container C>
+   auto Stack<T, ID>::GetDense(this C&& self, size_t count) -> HandleDisowned {
+      if (self.IsEmpty())
+         return {};
+
+      if (not self.IsSparse() or count <= 0)
+         return {Slice<SID>, self};
+
+      // Check if origin type is complete before attempting anything    
+      if (count >= IndirectsOf<T>) {
+         LglsAssert(CT::Complete<Decay<T>>,
+            "Trying to interface incomplete data `", self.GetType(),
+            "` as dense"
+         );
+      }
+
+      void* src = DecvqAllCast(&self.Stack<T, ID>::GetStackInner());
+      auto type = self.GetType();
+      while (count and type.IsSparse()) {
+         auto nextType = type.GetDeptr();
+         
+         if (nextType.IsSparse()) {
+            // Pointer T -> Pointer nextT                               
+            type.GetDereffer()(src, &src);
+         }
+         else {
+            // Pointer T -> Dense nextT                                 
+            return {Stackwise, nextType, UnpackPointer(type, nextType, src)};
+         }
+
+         type = nextType;
+         --count;
+      }
+      
+      LglsError("Should never be reached");
+      return {};
+   }
+}

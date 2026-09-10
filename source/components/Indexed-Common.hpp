@@ -13,6 +13,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.IndexedCommon<ID, SHARED...>
+
    ///                                                                        
    /// Provides a common element access interface.                            
    /// Needs to be specialized, relying on a custom SimplifyIndex method.     
@@ -22,12 +26,12 @@ namespace Langulus::Anyness::Component
    struct IndexedCommon {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using Id = Values<ID, SHARED...>;
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr bool Shared = sizeof...(SHARED) > 0;
       static constexpr int  ComponentPrecedence = 0;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      /*template<Cid SID>
+      static constexpr bool Relevant = Id::template Contains<SID>;*/
 
    protected:
       template<CT::Container C>
@@ -58,9 +62,9 @@ namespace Langulus::Anyness::Component
       template<CT::Container C> requires (not Shared)
       decltype(auto) operator[] (this C&& self, CT::Index auto&& idx) assumptious {
          if constexpr (CT::TypeErased<C>)
-            return self.template AsAt<DecidePick<C>>(LglsFwd(idx));
+            return ThisCom::template AsAt<DecidePick<C>>(LglsFwd(idx));
          else
-            return *self.GetAt(LglsFwd(idx));
+            return *ThisCom::GetAt(LglsFwd(idx));
       }
 
       /// Get pointer to Nth element of a specific dimension.                 
@@ -74,7 +78,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam SID can be used to access specific dimension              
       ///   @param idx the index                                              
       ///   @return pointer to the chosen element                             
-      template<class AS = void, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<class AS = void, Cid SID = ID, CT::Container C>// requires Relevant<SID>
       auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -122,7 +126,7 @@ namespace Langulus::Anyness::Component
 
                   // We need to dereference. Supports packed pointers   
                   auto diff = indirections - IndirectsOf<TH>;
-                  auto denser = self.template GetDenseAt<SID>(LglsFwd(idx), diff);
+                  auto denser = ThisCom::template GetDenseAt<SID>(LglsFwd(idx), diff);
                   return static_cast<THP>(denser.GetRaw());
                }
                else {
@@ -174,7 +178,7 @@ namespace Langulus::Anyness::Component
       ///      irrelevant if AS is a handle.                                  
       ///   @param idx the index                                              
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C>// requires Relevant<SID>
       decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
@@ -190,8 +194,8 @@ namespace Langulus::Anyness::Component
                using AS1 = TypeOf<AS, 0>;
                using AS2 = TypeOf<AS, 1>;
                return AS {
-                  self.template AsAt<Decvq<Deref<AS1>>, SID + 0>(idx),
-                  self.template AsAt<Decvq<Deref<AS2>>, SID + 1>(idx)
+                  ThisCom::template AsAt<Decvq<Deref<AS1>>, SID + 0>(idx),
+                  ThisCom::template AsAt<Decvq<Deref<AS2>>, SID + 1>(idx)
                };
             }
             else if constexpr (CT::TypeErased<C>) {
@@ -202,9 +206,9 @@ namespace Langulus::Anyness::Component
 
                // Access directly                                       
                if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                  return *self.template GetAt<AS, SID>(LglsFwd(idx));
+                  return *ThisCom::template GetAt<AS, SID>(LglsFwd(idx));
                else
-                  return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
+                  return ThisCom::template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
             }
             else {
                using T = TypeOf<C, SID>;
@@ -212,9 +216,9 @@ namespace Langulus::Anyness::Component
                if constexpr (Akin<T, AS>) {
                   // Access directly                                    
                   if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *self.template GetAt<AS, SID>(LglsFwd(idx));
+                     return *ThisCom::template GetAt<AS, SID>(LglsFwd(idx));
                   else
-                     return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
+                     return ThisCom::template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
                }
                else if constexpr (CT::DeepDense<AS>) {
                   // Wrap in a container                                
@@ -222,13 +226,13 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
                      //TODO magic numbers here, use H::PickDimension?
                      if constexpr (SID == 0)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandle, 0>(LglsFwd(idx))};
+                        return Decvq<AS> {Absorb, ThisCom::template AsAt<typename H::KeyHandle, 0>(LglsFwd(idx))};
                      else if constexpr (SID == 1)
-                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandle, 1>(LglsFwd(idx))};
+                        return Decvq<AS> {Absorb, ThisCom::template AsAt<typename H::ValHandle, 1>(LglsFwd(idx))};
                      else
                         static_assert(false, "Unsupported SID");
                   }
-                  else return Decvq<AS> {Absorb, self.template AsAt<H, SID>(LglsFwd(idx))};
+                  else return Decvq<AS> {Absorb, ThisCom::template AsAt<H, SID>(LglsFwd(idx))};
                }
                else static_assert(false, "Type mismatch");
             }
@@ -237,11 +241,11 @@ namespace Langulus::Anyness::Component
       
       template<CT::NotVoid AS>
       decltype(auto) KeyAsAt(this auto&& self, CT::Index auto&& idx) requires Shared {
-         return self.template AsAt<AS, 0>(LglsFwd(idx));
+         return ThisCom::template AsAt<AS, 0>(LglsFwd(idx));
       }
       template<CT::NotVoid AS>
       decltype(auto) ValAsAt(this auto&& self, CT::Index auto&& idx) requires Shared {
-         return self.template AsAt<AS, 1>(LglsFwd(idx));
+         return ThisCom::template AsAt<AS, 1>(LglsFwd(idx));
       }
 
       /// Get Nth deep item using a deep index                                
@@ -259,31 +263,39 @@ namespace Langulus::Anyness::Component
       /// Get Nth element after being resolved to the most concrete type.     
       ///   @param idx the index                                              
       ///   @return the most concrete representation of the first item        
-      template<Cid SID = ID, CT::Container C> requires (Relevant<SID>)
-      auto GetResolvedAt(this C&& self, CT::Index auto&&) -> HandleDisowned {
+      template<Cid SID = ID, CT::Container C>// requires (Relevant<SID>)
+      auto GetResolvedAt(this C&& self, CT::Index auto&& idx) -> HandleDisowned {
          if (self.IsEmpty())
             return {};
 
-         HandleDisowned h {self};
-         h += self.SimplifyIndex(idx);
-         if (not self.IsSparse())
-            return h;
-
          if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
+            const auto T = self.template GetType<SID>();
+            HandleDisowned h {Slice<SID>, self};
+            h += self.SimplifyIndex(idx);
+            if (not T.IsSparse())
+               return h;
+      
             const auto resolver = T.GetResolver();
             if (resolver)
-               return {resolver(h.GetDense().GetRaw())};
+               return resolver(h.GetDense().GetRaw());
             else
                return h.GetDense();
 
          }
          else {
-            using T = TypeOf<C>;
-            if constexpr (CT::Resolvable<T>)
-               return D {DenseCast(self.template Get<T>()).GetResolved()};
-            else
-               return D {DenseCast(self.template Get<T>())};
+            using T = TypeOf<C, SID>;
+            if constexpr (CT::Dense<T>) {
+               HandleDisowned h {Slice<SID>, self};
+               h += self.SimplifyIndex(idx);
+               return h;
+            }
+            else {
+               auto& dense_item = DenseCast(ThisCom::template GetAt<T>(idx));
+               if constexpr (CT::Resolvable<Decay<T>>)
+                  return dense_item.GetResolved();
+               else
+                  return {Stackwise, MetaDataOf<Decay<T>>(), &dense_item};
+            }
          }
       }
 
@@ -295,9 +307,48 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element for chosen dimension              
-      template<Cid SID = ID, CT::Container C> requires (Relevant<SID>)
+      template<Cid SID = ID, CT::Container C>// requires (Relevant<SID>)
       auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1) -> HandleDisowned {
-         if (self.IsEmpty())
+      if (self.IsEmpty())
+         return {};
+
+      HandleDisowned h {Slice<SID>, self};
+      h += self.SimplifyIndex(idx);
+      auto T = h.GetType();
+      if (not T.IsSparse() or count <= 0)
+         return h;
+
+      // Check if origin type is complete before attempting anything    
+      if (count >= T.GetIndirections()) {
+         LglsAssert((bool) T.GetOrigin(),
+            "Trying to interface incomplete data `", T,
+            "` as dense"
+         );
+      }
+
+      void* src = h.GetRaw();//DecvqAllCast(h.GetRaw());
+      while (count and T.IsSparse()) {
+         auto nextT = T.GetDeptr();
+         if (nextT.IsSparse()) {
+            // Pointer T -> Pointer nextT                               
+            T.GetDereffer()(src, &src);
+         }
+         else {
+            // Pointer T -> Dense nextT                                 
+            return {Stackwise, nextT, UnpackPointer(T, nextT, src)};
+         }
+
+         T = nextT;
+         --count;
+      }
+      
+      LglsError("Should never be reached");
+      return {};
+   }
+
+
+
+         /*if (self.IsEmpty())
             return {};
 
          // Offset the heap                                             
@@ -339,7 +390,7 @@ namespace Langulus::Anyness::Component
 
          auto     T = self.template GetType<SID>();
          auto nextT = T.GetDeptr();
-         while (count and T.IsSparse()) {            
+         while (count and T.IsSparse()) {
             if (nextT.IsSparse()) {
                // Pointer T -> Pointer nextT                            
                T.GetDereffer()(heap, &heap);
@@ -349,10 +400,11 @@ namespace Langulus::Anyness::Component
             }
             else break;
          }
-         return {Stackwise, nextT, UnpackPointer(T, nextT, heap)};
-      }
+         return {Stackwise, nextT, UnpackPointer(T, nextT, heap)};*/
 
-      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
-      auto CastAt(this C const&, CT::Index auto&&) -> AS;
+      /*template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
+      auto CastAt(this C const&, CT::Index auto&&) -> AS;*/
    };
 }
+
+#undef ThisCom
