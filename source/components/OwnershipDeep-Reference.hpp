@@ -38,15 +38,15 @@ namespace Langulus::Anyness::Component
       using StackRequest = EntryPtr;
       using Id = typename OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...>::Id;
 
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
       static constexpr bool Shared   = sizeof...(SHARED) > 0;
 
       /// MARK: Public                                                        
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID>// requires Relevant<SID>
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
          if (self.template IsSparse<SID>())
@@ -56,7 +56,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID = ID, CT::Container C> requires (Relevant<SID> and CT::Indexed<C>)
+      template<Cid SID = ID, CT::Container C> requires (/*Relevant<SID> and*/ CT::Indexed<C>)
       auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
       -> Allocation const* const* {
          if (self.template IsSparse<SID>()) {
@@ -87,7 +87,7 @@ namespace Langulus::Anyness::Component
       LglsComIterationOperators(friend);
 
       /// Get the entry array (inner, unsafe)                                 
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID>// requires Relevant<SID>
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessStack<OwnershipDeepReference>();
       }

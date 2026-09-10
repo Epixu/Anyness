@@ -26,14 +26,14 @@ namespace Langulus::Anyness::Component
       using Id = Values<ID, SHARED...>;
 
       static constexpr int ComponentPrecedence = -1000;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Reserve type must be an unsigned integer");
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<Cid SID = ID, CT::Container C>// requires Relevant<SID>
       constexpr T GetReserved(this const C& self) noexcept {
          if constexpr (requires { self.template GetAllocation<SID>(); }) {
             const auto al = self.template GetAllocation<SID>();
@@ -71,7 +71,7 @@ namespace Langulus::Anyness::Component
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
       ///   @param reserve number of elements to reserve                      
-      template<Cid SID = ID, CT::ContainsMany C> requires Relevant<SID>
+      template<Cid SID = ID, CT::ContainsMany C>// requires Relevant<SID>
       C& Reserve(this C& self, const T reserve) {
          if (reserve < self.template GetCount<SID>())
             self.template AllocateLess<SID>(reserve);

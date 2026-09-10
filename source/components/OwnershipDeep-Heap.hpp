@@ -47,15 +47,15 @@ namespace Langulus::Anyness::Component
       using HeapRequest = PerDimension<PerElement<PerIndirection<AllocationPtr>>>;
       using Id = typename OwnershipDeepEmergent<STYLE, REF_INDIVIDUAL, ID, SHARED...>::Id;
 
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
       static constexpr bool Shared   = sizeof...(SHARED) > 0;
 
       /// MARK: Public                                                        
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
          if (self.template IsSparse<SID>() and self.template GetRaw<SID>()
@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID = ID, CT::Container C> requires (Relevant<SID> and CT::Indexed<C>)
+      template<Cid SID = ID, CT::Container C> requires (/*Relevant<SID> and*/ CT::Indexed<C>)
       auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
       -> Allocation const* const* {
          if constexpr (CT::TypeErased<C>) {
@@ -112,7 +112,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr auto GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessHeap<OwnershipDeepHeap, SID>();
       }
@@ -120,7 +120,7 @@ namespace Langulus::Anyness::Component
       /// This method is called upon allocation to nullify all entries for    
       /// a particular dimension.                                             
       ///   @attention works in one dimension at a time!                      
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<Cid SID = ID, CT::Container C> //requires Relevant<SID>
       constexpr void ConstructHeapRequestPerDimension(this C& self) noexcept {
          auto count = 0;
          if constexpr (CT::TypeErased<C>) {

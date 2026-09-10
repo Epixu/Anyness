@@ -36,26 +36,26 @@ namespace Langulus::Anyness::Component
 
       static constexpr uint Owned = STYLE;
       static constexpr int  ComponentPrecedence = 1000;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          /// Get the allocation by searching the memory manager               
-         template<Cid SID = ID> requires Relevant<SID>
+         template<Cid SID = ID> //requires Relevant<SID>
          auto GetAllocation(this auto const& self) noexcept -> AllocationPtr {
             return Allocator::Find(self.template GetRaw<SID>());
          }
       #else
          /// Always invalid allocation when managed memory is disabled.       
          /// Emergent containers without memory management can't reference.   
-         template<Cid SID = ID> requires Relevant<SID>
+         template<Cid SID = ID> //requires Relevant<SID>
          constexpr auto GetAllocation() const noexcept -> AllocationPtr {
             return nullptr;
          }
       #endif
 
       /// Get the memory reference count                                      
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       auto GetUses(this auto const& self) noexcept {
          auto a = self.template GetAllocation<SID>();
          return a ? a->GetUses() : 0;
@@ -67,7 +67,7 @@ namespace Langulus::Anyness::Component
       ///   @attention when emergent, this will copy data only if not owned   
       ///      by the memory manager.                                         
       template<Cid SID = ID, CT::Container C>
-      requires (CT::HeapAllocated<C> and Relevant<SID>)
+      requires (CT::HeapAllocated<C> /*and Relevant<SID>*/)
       void TakeOwnership(this C& self) {
          if (not self.template GetHeapInner<SID>() or not self.IsDisowned()
          /*or      self.template GetAllocation<SID>()*/)

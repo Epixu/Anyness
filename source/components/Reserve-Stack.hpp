@@ -26,11 +26,11 @@ namespace Langulus::Anyness::Component
       using StackRequest = T;
       using Id = typename ReserveEmergent<T, ID, SHARED...>::Id;
 
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID>// requires Relevant<SID>
       constexpr T GetReserved(this auto const& self) noexcept {
          return ThisCom::GetReservedInner();
       }
@@ -39,7 +39,7 @@ namespace Langulus::Anyness::Component
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
       ///   @param reserve number of elements to reserve                      
-      template<Cid SID = ID, CT::ContainsMany C> requires Relevant<SID>
+      template<Cid SID = ID, CT::ContainsMany C>// requires Relevant<SID>
       C& Reserve(this C& self, const T reserve) {
          if (reserve < self.template GetCount<SID>())
             self.template AllocateLess<SID>(reserve);
@@ -59,7 +59,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Set the number of reserved elements                                 
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID>// requires Relevant<SID>
       constexpr void SetReservedInner(this auto& self, T c) noexcept {
          ThisCom::GetReservedInner() = c;
       }

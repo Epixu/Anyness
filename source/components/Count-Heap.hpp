@@ -40,21 +40,21 @@ namespace Langulus::Anyness::Component
 
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Count type must be an unsigned integer");
 
       /// MARK: Public                                                        
       /// Check if there are no initialized elements                          
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr bool IsEmpty(this auto const& self) noexcept {
          return ThisCom::GetCountInner() == 0;
       }
 
       /// Get the number of initialized elements                              
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr T GetCount(this auto const& self) noexcept {
          return ThisCom::GetCountInner();
       }
@@ -78,13 +78,13 @@ namespace Langulus::Anyness::Component
       LglsComConversion(friend);
 
       /// Get count (inner)                                                   
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr auto& GetCountInner(this auto&& self) noexcept {
          return self.template AccessHeap<CountHeap>();
       }
       
       /// Set the number of initialized elements                              
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr void SetCountInner(this auto& self, T c) assumptious {
          LglsAssumeDev(self.template GetUses<SID>() == 1);
          ThisCom::GetCountInner() = c;
@@ -92,7 +92,7 @@ namespace Langulus::Anyness::Component
 
       /// Reset count (inner)                                                 
       ///   @attention doesn't destroy elements, only resets hash and count   
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr void ResetCount(this auto& self) assumptious {
          ThisCom::SetCountInner(0);
          if_available(self.template SetHashInner<SID>(1));

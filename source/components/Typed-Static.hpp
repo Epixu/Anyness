@@ -40,31 +40,31 @@ namespace Langulus::Anyness::Component
 
       /// MARK: Public                                                        
       /// Get the reflected type definition                                   
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       META GetType() const noexcept {
          return MetaOf<TYPE>();
       }
 
       /// Get the size of a single element of TYPE in bytes                   
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr size_t GetStride() const noexcept {
          return sizeof(TYPE);
       }
 
       /// Get the alignment of a single element of TYPE in bytes              
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr pot_t GetAlignment() const noexcept {
          return pot_t(alignof(TYPE));
       }
 
       /// Get the reflected type name                                         
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr auto GetName() const noexcept {
          return NameOf<TYPE>();
       }
 
       /// Statically typed containers are always typed                        
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr bool IsTyped() const noexcept {
          return true;
       }
@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @tparam T the type to compare against                             
       ///   @return true if origin types are the same                         
-      template<CT::NotVoid T, Cid SID = ID> requires (SID == ID)
+      template<CT::NotVoid T, Cid SID = ID>// requires (SID == ID)
       constexpr bool Is() const noexcept {
          return Akin<TYPE, T>;
       }
@@ -83,7 +83,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param type the type to check for                                 
       ///   @return true if this container has similar data                   
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       bool Is(META type) const noexcept {
          return GetType().Is(type);
       }
@@ -92,7 +92,7 @@ namespace Langulus::Anyness::Component
       /// This can potentially happen at compile-time.                        
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param other the type to check for                                
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr void AssertTypesAreAkin(C const& other) const {
          if constexpr (CT::TypeErased<C>) {
             auto t1 = GetType();
@@ -113,7 +113,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param other the type to check for                                
       ///   @return true if this container has similar data                   
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr bool Is(C const& other) const noexcept {
          if constexpr (CT::TypeErased<C>)
             return GetType().Is(other.GetType());
@@ -126,7 +126,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores only cv-qualifiers                             
       ///   @tparam T the type to compare against                             
       ///   @return true if data type is same as T                            
-      template<CT::NotVoid T, Cid SID = ID> requires (SID == ID)
+      template<CT::NotVoid T, Cid SID = ID>// requires (SID == ID)
       constexpr bool IsSame() const noexcept {
          return Same<TYPE, T>;
       }
@@ -135,7 +135,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores only cv-qualifiers                             
       ///   @param type the type to check for                                 
       ///   @return true if this block contains similar data                  
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       bool IsSame(META type) const noexcept {
          return GetType().IsSame(type);
       }
@@ -144,7 +144,7 @@ namespace Langulus::Anyness::Component
       /// This can potentially happen at compile-time.                        
       ///   @attention ignores only cv-qualifiers                             
       ///   @param other the container to check for                           
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr void AssertTypesAreSame(C const& other) const {
          if constexpr (CT::TypeErased<C>) {
             auto t1 = GetType();
@@ -165,7 +165,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores only cv-qualifiers                             
       ///   @param other the container to check for                           
       ///   @return true if this container has similar data                   
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr bool IsSame(C const& other) const noexcept {
          if constexpr (CT::TypeErased<C>)
             return GetType().IsSame(other.GetType());
@@ -177,7 +177,7 @@ namespace Langulus::Anyness::Component
       /// Always happens at compile-time.                                     
       ///   @tparam T the type to compare against                             
       ///   @return true if data type matches at least one type               
-      template<CT::NotVoid T, Cid SID = ID> requires (SID == ID)
+      template<CT::NotVoid T, Cid SID = ID>// requires (SID == ID)
       constexpr bool IsExact() const noexcept {
          return Exact<TYPE, T>;
       }
@@ -185,7 +185,7 @@ namespace Langulus::Anyness::Component
       /// Check if this type is exactly another                               
       ///   @param type the type to match                                     
       ///   @return true if data type matches type exactly                    
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       bool IsExact(META type) const noexcept {
          return GetType().IsExact(type);
       }
@@ -193,7 +193,7 @@ namespace Langulus::Anyness::Component
       /// Check if this type is exactly another container's type              
       /// This can potentially happen at compile-time                         
       ///   @param other the block to match                                   
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr void AssertTypesAreExact(C const& other) const {
          if constexpr (CT::TypeErased<C>) {
             auto t1 = GetType();
@@ -213,7 +213,7 @@ namespace Langulus::Anyness::Component
       /// This can potentially happen at compile-time                         
       ///   @param other the block to match                                   
       ///   @return true if data type matches type exactly                    
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr bool IsExact(C const& other) const noexcept {
          if constexpr (CT::TypeErased<C>)
             return GetType().IsExact(other.GetType());
@@ -223,14 +223,14 @@ namespace Langulus::Anyness::Component
 
       /// Check if container contains pointers                                
       ///   @return true if the block contains pointers                       
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr bool IsSparse() const noexcept {
          return CT::Sparse<TYPE>;
       }
 
       /// Get the number of indirections                                      
       /// int**** will result in 4; int* will result in 1, int results in 0.  
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr size_t GetIndirections() const noexcept {
          return IndirectsOf<TYPE>;
       }
@@ -238,21 +238,21 @@ namespace Langulus::Anyness::Component
       /// Check if contained data is constant                                 
       ///   @attention disowned containers are always constant                
       ///   @return true if the contents are constant                         
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr bool IsConstant(this auto const& self) noexcept {
          return CT::Constant<TYPE> or self.IsDisowned();
       }
 
       /// Check if container is made of other containers                      
       ///   @return true if the container is deep                             
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr bool IsDeep() const noexcept {
          return CT::Deep<TYPE>;
       }
       
       /// Check if container contains executable items                        
       ///   @return true if the container has at least one executable element 
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr bool IsExecutable(this C const& self) noexcept {
          if (self.template IsEmpty<SID>())
             return false;
@@ -271,17 +271,17 @@ namespace Langulus::Anyness::Component
       }
       
       /// Always returns true                                                 
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr bool IsTypeConstrained() const noexcept {
          return true;
       }
 
       /// Does nothing                                                        
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr void EnableTypeConstrained() const noexcept { }
 
       /// Can't disable type-constraint in a statically-typed container       
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       constexpr void DisableTypeConstrained() const noexcept {
          static_assert(false,
             "Can't disable type-constraint in a statically-typed container"
@@ -290,7 +290,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
-      template<Cid SID = ID, CT::Container C> requires (SID == ID)
+      template<Cid SID = ID, CT::Container C>// requires (SID == ID)
       constexpr size_t GetBytesize(this C const& self) noexcept {
          return sizeof(TYPE) * self.template GetCount<SID>();
       }
@@ -312,7 +312,7 @@ namespace Langulus::Anyness::Component
       /// This is still used if statically-typed - checks if types are        
       /// compatible in constructors and assigners                            
       ///   @tparam T the new type                                            
-      template<CT::NotVoid T, Cid SID = ID> requires (SID == ID)
+      template<CT::NotVoid T, Cid SID = ID>// requires (SID == ID)
       constexpr void SetType() {
          static_assert(CT::NotSheddable<T>, "Strip all sheddables first");
          static_assert(CT::NotReference<T>, "Strip all references first");
@@ -323,7 +323,7 @@ namespace Langulus::Anyness::Component
       /// compatible when arguments are type-erased. This particular override 
       /// doesn't benefit from compile-time checks.                           
       ///   @param type the new type                                          
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID>// requires (SID == ID)
       void SetType(META type) {
          LglsAssert(GetType().IsExact(type), "Type mismatch");
       }

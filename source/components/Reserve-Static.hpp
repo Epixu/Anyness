@@ -30,12 +30,12 @@ namespace Langulus::Anyness::Component
    struct ReserveStatic {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using ReserveType = decltype(SIZE);
-      using Id = Values<ID, SHARED...>;
+      using ReserveType    = decltype(SIZE);
+      using Id             = Values<ID, SHARED...>;
 
       static constexpr int  ComponentPrecedence = -1000;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       static_assert(SIZE > 0,
          "Can't have a container of zero or negative capacity");
@@ -43,7 +43,7 @@ namespace Langulus::Anyness::Component
          "Reserve type must be an unsigned integer");
    
       /// Get the number of reserved (maybe uninitialized) elements           
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<Cid SID = ID, CT::Container C>// requires Relevant<SID>
       constexpr auto GetReserved(this C const& self) noexcept -> ReserveType {
          if constexpr (requires { self.template GetAllocationInner<SID>(); })
             return self.template GetAllocationInner<SID>() ? SIZE : 0;

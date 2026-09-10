@@ -51,12 +51,12 @@ namespace Langulus::Anyness::Component
       static constexpr bool ReferenceElements = REF_INDIVIDUAL;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
       static constexpr int  ComponentPrecedence = 2000;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// MARK: Public                                                        
       /// Emergent deep ownership can't provide an array of entries           
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr auto GetEntries() const noexcept -> AllocationPtr const* {
          return nullptr;
       }
@@ -135,7 +135,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
-      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
@@ -212,7 +212,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void KeepElementDeepStandardPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
@@ -292,7 +292,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
-      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
@@ -361,7 +361,7 @@ namespace Langulus::Anyness::Component
       ///      enabled, regardless if an entry was found.                     
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void KeepElementDeepCustomPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsDisowned(),
             "Can't keep anything in a container without ownership");
@@ -425,7 +425,7 @@ namespace Langulus::Anyness::Component
       ///   @attention individuals will be referenced if REF_INDIVIDUAL is    
       ///      enabled, regardless if an entry was found.                     
       ///   @attention works on one dimension at a time!                      
-      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void KeepElementDeep(this C& self) assumptious {
          if constexpr (not requires { self.template GetEntriesInner<SID>(); }) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -456,7 +456,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state or entry            
       ///   @attention works on one dimension at a time!                      
-      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
@@ -614,7 +614,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state or entry            
       ///   @attention works on one dimension at a time!                      
-      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void DestroyElementDeepStandardPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
@@ -770,7 +770,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
-      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
@@ -856,7 +856,7 @@ namespace Langulus::Anyness::Component
       //TODO FORCE_DESTROY no longer required?
       ///   @attention doesn't change any container state                     
       ///   @attention works on one dimension at a time!                      
-      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void DestroyElementDeepCustomPointersEmergent(this C& self) assumptious {
          LglsAssumeDev(not self.IsEmpty(),
             "Can't destroy anything in an empty container");
@@ -928,7 +928,7 @@ namespace Langulus::Anyness::Component
    #endif
 
       //TODO FORCE_DESTROY no longer required?
-      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C> //requires Relevant<SID>
       void DestroyElementDeep(this C& self) assumptious {
          if constexpr (not requires { self.template GetEntriesInner<SID>(); }) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -958,7 +958,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
       template<Cid SID = ID, CT::Container C, CT::Intent I>
-      requires(Relevant<SID> and (CT::TypeErased<C> or CT::Sparse<TypeOf<C, SID>>))
+      requires(/*Relevant<SID> and*/ (CT::TypeErased<C> or CT::Sparse<TypeOf<C, SID>>))
       void EmplaceEntries(this C& self, I&& intent) {
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   

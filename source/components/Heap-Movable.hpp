@@ -40,8 +40,8 @@ namespace Langulus::Anyness::Component
       static constexpr uint InitialSize  = INITIAL_SIZE;
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
       static constexpr bool Reallocatable = true;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
       LglsComIterationOperators(friend);
@@ -206,7 +206,7 @@ namespace Langulus::Anyness::Component
       ///   @attention works on all relevant dimensions at once               
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> //requires Relevant<SID>
       void AllocateFresh(this C& self, size_t elements /*const Request& request*/) {
          const auto request = ThisCom::RequestHeap(elements);
 
@@ -231,7 +231,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes container is typed                             
       ///   @attention works on all relevant dimensions at once               
       ///   @param elements number of elements to allocate                    
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> //requires Relevant<SID>
       void AllocateMore(this C& self, Count<C> elements) {
          static_assert(not CT::Handle<C>, "Handles aren't allowed to reallocate");
          LglsAssumeDev(elements > self.template GetCount<SID>(), "Bad element count");
@@ -324,7 +324,7 @@ namespace Langulus::Anyness::Component
       /// allocations never move when shrinking.                              
       ///   @attention works on all relevant dimensions at once               
       ///   @param desiredReserve number of elements to reserve               
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> //requires Relevant<SID>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
          static_assert(not CT::Handle<C>,
             "Handles aren't allowed to reallocate");
@@ -794,7 +794,7 @@ namespace Langulus::Anyness::Component
       /// MARK: PartialSuccess                                                
       /// Invoked to remedy the situation when element constructors throw     
       ///   @param n the number of elements that were actually initialized    
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> //requires Relevant<SID>
       void PartialSuccess(this C& self, Count<C> n) {
          if constexpr (requires { self.template SetCountInner<SID>(1); }) {
             // Partial success is supported                             
@@ -824,7 +824,7 @@ namespace Langulus::Anyness::Component
       /// allocated anything yet.                                             
       ///   @param newReserve usually branching is accompanied by a resize,   
       ///      so specify it here                                             
-      template<Cid SID = Id::First, CT::Container C> requires Relevant<SID>
+      template<Cid SID = Id::First, CT::Container C> //requires Relevant<SID>
       void BranchOut(this C& self, Count<C> newReserve) {
          if (not self.IsDisowned() and self.template GetUses<SID>() == 1) {
             // No need to branch out - reuse the current allocation     

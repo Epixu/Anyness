@@ -31,11 +31,11 @@ namespace Langulus::Anyness::Component
       using StackRequest = AllocationPtr;
       using Id = typename OwnershipEmergent<STYLE, ID, SHARED...>::Id;
 
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       /// Get the allocation                                                  
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr auto GetAllocation(this auto const& self) noexcept {
          return ThisCom::GetAllocationInner();
       }
@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
       /// allocation, that is owned once only by this container.              
       ///   @attention if we already own the memory just Keep() it once       
       template<Cid SID = ID, CT::Container C>
-      requires (CT::HeapAllocated<C> and Relevant<SID>)
+      requires (CT::HeapAllocated<C> /*and Relevant<SID>*/)
       void TakeOwnership(this C& self) {
          auto rawData = self.template GetRaw<SID>();
          if (not rawData)
@@ -77,14 +77,14 @@ namespace Langulus::Anyness::Component
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr auto& GetAllocationInner(this auto&& self) noexcept {
          return self.template AccessStack<OwnershipStack>();
       }
       
       /// Set allocation (inner)                                              
       ///   @attention this will not dereference previous allocation          
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr void SetAllocationInner(this auto& self, Allocation const* a) noexcept {
          ThisCom::GetAllocationInner() = const_cast<Allocation*>(a);
       }
@@ -93,7 +93,7 @@ namespace Langulus::Anyness::Component
       /// pointer. If allocation wasn't found, it will be set to nullptr.     
       ///   @attention this will not dereference previous allocation          
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       void FindAllocationInner(this auto& self) noexcept {
          const auto heap = self.template GetRaw<SID>();
          if (not heap) {
@@ -116,7 +116,7 @@ namespace Langulus::Anyness::Component
    #endif
 
       /// Resets allocation and all of its derivatives                        
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr void ResetAllocationInner(this auto&& self) noexcept {
          ThisCom::SetAllocationInner(nullptr);
          if_available(self.template SetReservedInner<SID>(0));

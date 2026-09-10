@@ -41,8 +41,8 @@ namespace Langulus::Anyness::Component
 
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = COUNT > 1;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
       using CountType   = decltype(COUNT);
       using ReserveType = CountType;
@@ -58,13 +58,13 @@ namespace Langulus::Anyness::Component
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated - zero otherwise. If no heap component exists, then the   
       /// count is always COUNT.                                              
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr auto GetCount(this auto const& self) noexcept -> CountType {
          return ThisCom::template GetCountInner<SID>();
       }
       
       /// Check if empty                                                      
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr bool IsEmpty(this auto const& self) noexcept {
          return ThisCom::template GetCountInner<SID>() == CountType {0};
       }
@@ -84,7 +84,7 @@ namespace Langulus::Anyness::Component
       LglsComConversion(friend);
 
       /// Get count (inner)                                                   
-      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
+      template<Cid SID = ID, CT::Container C> //requires Relevant<SID>
       constexpr auto GetCountInner(this C const& self) noexcept -> CountType {
          if constexpr (CT::HasVariableCount<C>)
             return self.template GetRaw<SID>() ? COUNT : CountType {0};
@@ -124,7 +124,7 @@ namespace Langulus::Anyness::Component
 
       /// Reset count (inner)                                                 
       ///   @attention doesn't destroy elements, only resets hash and count   
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       constexpr void ResetCount(this auto& self) noexcept {
          if_available(self.template SetHeapInner<SID>(nullptr));
          if_available(self.template SetHashInner<SID>(1));

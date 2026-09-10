@@ -38,8 +38,8 @@ namespace Langulus::Anyness::Component
       static constexpr bool Reallocatable = true;
       static constexpr uint InitialSize   = INITIAL_SIZE;
       static constexpr uint GrowthFactor  = GROWTH_FACTOR;
-      template<Cid SID>
-      static constexpr bool Relevant = Id::template Contains<SID>;
+      //template<Cid SID>
+      //static constexpr bool Relevant = Id::template Contains<SID>;
 
    protected:
       using Byte = uint8_t;
