@@ -31,13 +31,14 @@ add_langulus_test(LangulusAnynessTest-Common
                CT/TestAkin.cpp
                CT/TestAllocatable.cpp
                CT/TestBool.cpp
-               CT/TestInteger.cpp
-               CT/TestReal.cpp
-               CT/TestNumber.cpp
                CT/TestCharacter.cpp
                CT/TestContainer.cpp
                CT/TestConvertible.cpp
                CT/TestDeep.cpp
+               CT/TestInteger.cpp
+               CT/TestNumber.cpp
+               CT/TestPOD.cpp
+               CT/TestReal.cpp
                CT/TestReflectAs.cpp
                CT/TestSuffix.cpp
                CT/TestUnfold.cpp
@@ -69,6 +70,7 @@ add_langulus_test(LangulusAnynessTest-Text
 add_langulus_test(LangulusAnynessTest-Bytes
    SOURCES	   Main.cpp
                Anyness/bytes/TestBytes-Empty.cpp
+               Anyness/bytes/TestBytes-Absorb.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

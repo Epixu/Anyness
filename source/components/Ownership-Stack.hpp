@@ -109,7 +109,7 @@ namespace Langulus::Anyness::Component
          else ThisCom::SetAllocationInner(nullptr);
       }
    #else
-      template<Cid SID = ID> requires Relevant<SID>
+      template<Cid SID = ID> //requires Relevant<SID>
       void FindAllocationInner(this auto& self) noexcept {
          ThisCom::SetAllocationInner(nullptr);
       }

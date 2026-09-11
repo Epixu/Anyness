@@ -143,9 +143,6 @@ namespace Langulus::Anyness
          this->ConstructDefault();
       }
 
-      /*constexpr Bytes(nullptr_t) noexcept
-         : Bytes {} {}*/
-
       constexpr Bytes(Bytes const& other)
          : Bytes {Refer {other}} {}
 
@@ -184,7 +181,7 @@ namespace Langulus::Anyness
       /// Works for bounded arrays as well.                                   
       ///   @attention non-owning constructor unless you use Copy/Clone. Data 
       ///      lifetime is _your_ responsibility, unless you use Copy/Clone.  
-      template<class T> requires CT::POD<DeextAll<Deint<T>>>
+      template<class T> requires CT::POD<Deint<T>>
       explicit constexpr Bytes(T&& source) {
          decltype(auto) data = DeintCast(source);
          constexpr size_t bytesize = sizeof(Deint<T>);
@@ -265,37 +262,6 @@ namespace Langulus::Anyness
          result.SetCountInner(sizeof(T));
          return result;
       }
-
-      /// Comparing against nullptr_t checks if text is empty                 
-      /*constexpr bool operator == (nullptr_t) const noexcept {
-         return this->IsEmpty();
-      }*/
-
-      /// Comparing against std containers with characters                    
-      /*constexpr bool operator == (const CT::TextRange auto& rhs) const noexcept {
-         return operator == (Text {Disown(rhs)});
-      }
-
-      /// Comparison                                                          
-      constexpr auto operator <=> (CT::TextRange auto const& other) const noexcept -> ::std::partial_ordering {
-         return this->Compare(other);
-      }
-
-      constexpr auto operator <=> (Bytes const& other) const noexcept -> ::std::partial_ordering {
-         return this->Compare(other);
-      }
-
-      constexpr bool operator == (Bytes const& other) const noexcept {
-         return this->CompareEqual(other);
-      }*/
-
-      /// Comparison                                                          
-      /*constexpr auto operator <=> (Bytes const& other) const noexcept -> ::std::partial_ordering {
-         return this->Compare(other);
-      }
-      constexpr bool operator == (Bytes const& other) const noexcept {
-         return this->CompareEqual(other);
-      }*/
 
       /// Conversion to standard string as a sequence of hex bytes            
       explicit operator ::std::string() const {

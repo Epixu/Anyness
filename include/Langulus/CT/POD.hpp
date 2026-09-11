@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Abstract.hpp"
+#include "Langulus/Typenav.hpp"
 
 
 namespace Langulus::CTTI
@@ -18,18 +19,19 @@ namespace Langulus::CTTI
    ///      so we make sure that ranges are never considered POD by default,  
    ///      otherwise an array containing one hash will result in a rehash    
    ///      instead of a reuse                                                
+   ///   @note extents are ignored by default                                 
    template<class T>
    struct POD {
       static constexpr bool Default = true;
-      static constexpr bool Enabled = not CT::Abstract<T> and (
-         CT::Sparse<T> or CT::Fundamental<T> or (
-                ::std::is_trivial_v<T>
-            and ::std::is_standard_layout_v<T>
-            and ::std::is_trivially_destructible_v<T>
-            and not ::std::ranges::range<T>
+      static constexpr bool Enabled = not CT::Abstract<DeextAll<T>> and (
+         CT::Sparse<DeextAll<T>> or CT::Fundamental<DeextAll<T>> or (
+                ::std::is_trivial_v<DeextAll<T>>
+            and ::std::is_standard_layout_v<DeextAll<T>>
+            and ::std::is_trivially_destructible_v<DeextAll<T>>
+            and not ::std::ranges::range<DeextAll<T>>
          )
       );
    };
 }
 
-LANGULUS_CTTI_CONCEPT_DECVQ(POD);
+LANGULUS_CTTI_CONCEPT_DECVQE(POD);

@@ -116,7 +116,10 @@ void Handle_CheckState_OwnedFull(const C& any, bool onTheStack = false) {
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
    REQUIRE_FALSE(not any);
-   REQUIRE      (any != C{});
+
+   if constexpr (C::CountHeapProviders() > 0) {
+      REQUIRE(any != C{}); // can be true for stack-based handles that are default-initialized to zero, when 'any' contains zero as well
+   }
 }
 
 /// MARK: DisownedFull                                                        

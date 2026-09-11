@@ -5,53 +5,59 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "TestTextCommon.hpp"
+#include "TestBytesCommon.hpp"
 
 
-TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
+TEST_CASE_TEMPLATE("Test absorb-constructed Bytes", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Text, ScopedElement<Text>>
-   , Types<Text, ScopedElement<int>>
-   , Types<Text, ScopedElement<Many>>
-   , Types<Text, ScopedElement<RT>>
-   , Types<Text, ScopedElement<char>>
+   , Types<Bytes, ScopedElement<Bytes>>
+   , Types<Bytes, ScopedElement<Text>>
+   , Types<Bytes, ScopedElement<int32_t>>
+   , Types<Bytes, ScopedElement<Many>>
+   , Types<Bytes, ScopedElement<RT>>
+   , Types<Bytes, ScopedElement<char>>
 
-   , Types<Text, ScopedElement<Text*>>
-   , Types<Text, ScopedElement<int*>>
-   , Types<Text, ScopedElement<Many*>>
-   , Types<Text, ScopedElement<RT*>>
-   , Types<Text, ScopedElement<char*>>
+   , Types<Bytes, ScopedElement<Bytes*>>
+   , Types<Bytes, ScopedElement<Text*>>
+   , Types<Bytes, ScopedElement<int32_t*>>
+   , Types<Bytes, ScopedElement<Many*>>
+   , Types<Bytes, ScopedElement<RT*>>
+   , Types<Bytes, ScopedElement<char*>>
 
-   , Types<Text, ScopedElement<Text**>>
-   , Types<Text, ScopedElement<int**>>
-   , Types<Text, ScopedElement<Many**>>
-   , Types<Text, ScopedElement<RT**>>
-   , Types<Text, ScopedElement<char**>>
+   , Types<Bytes, ScopedElement<Bytes**>>
+   , Types<Bytes, ScopedElement<Text**>>
+   , Types<Bytes, ScopedElement<int32_t**>>
+   , Types<Bytes, ScopedElement<Many**>>
+   , Types<Bytes, ScopedElement<RT**>>
+   , Types<Bytes, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Text, ScopedElement<Text,   true>>
-   , Types<Text, ScopedElement<int,    true>>
-   , Types<Text, ScopedElement<Many,   true>>
-   , Types<Text, ScopedElement<RT,     true>>
-   , Types<Text, ScopedElement<char,   true>>
+   , Types<Bytes, ScopedElement<Bytes,  true>>
+   , Types<Bytes, ScopedElement<Text,   true>>
+   , Types<Bytes, ScopedElement<int32_t,true>>
+   , Types<Bytes, ScopedElement<Many,   true>>
+   , Types<Bytes, ScopedElement<RT,     true>>
+   , Types<Bytes, ScopedElement<char,   true>>
 
-   , Types<Text, ScopedElement<Text*,  true>>
-   , Types<Text, ScopedElement<int*,   true>>
-   , Types<Text, ScopedElement<Many*,  true>>
-   , Types<Text, ScopedElement<RT*,    true>>
-   , Types<Text, ScopedElement<char*,  true>>
+   , Types<Bytes, ScopedElement<Bytes*, true>>
+   , Types<Bytes, ScopedElement<Text*,  true>>
+   , Types<Bytes, ScopedElement<int32_t*,true>>
+   , Types<Bytes, ScopedElement<Many*,  true>>
+   , Types<Bytes, ScopedElement<RT*,    true>>
+   , Types<Bytes, ScopedElement<char*,  true>>
 
-   , Types<Text, ScopedElement<Text**, true>>
-   , Types<Text, ScopedElement<int**,  true>>
-   , Types<Text, ScopedElement<Many**, true>>
-   , Types<Text, ScopedElement<RT**,   true>>
-   , Types<Text, ScopedElement<char**, true>>
+   , Types<Bytes, ScopedElement<Bytes**,true>>
+   , Types<Bytes, ScopedElement<Text**, true>>
+   , Types<Bytes, ScopedElement<int32_t**,true>>
+   , Types<Bytes, ScopedElement<Many**, true>>
+   , Types<Bytes, ScopedElement<RT**,   true>>
+   , Types<Bytes, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Text, ScopedElementPacked<pptr8>>
-   , Types<Text, ScopedElementPacked<pptr16>>
-   , Types<Text, ScopedElementPacked<pptr32>>
+   , Types<Bytes, ScopedElementPacked<pptr8>>
+   , Types<Bytes, ScopedElementPacked<pptr16>>
+   , Types<Bytes, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
@@ -62,68 +68,71 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
    [[maybe_unused]] constexpr bool Managed = ScopedE::Managed;
 
    #if LANGULUS(BENCHMARK)
-      using stdstr = ::std::string;
+      using stdbyt = ::std::vector<Byte>;
    #endif
 
    GIVEN("Piecewise-constructed container, assigned (refer), and then destroyed") {
-      const ScopedE element1{555};
-      const ScopedE element2{111};
+      const ScopedE element1{Clone(int32_t{555})};
+      const ScopedE element2{Clone(int32_t{111})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(*element2));
    }
 
    GIVEN("Piecewise-constructed container, assigned (refer using intent), and then destroyed") {
-      const ScopedE element1{555};
-      const ScopedE element2{111};
+      const ScopedE element1{Clone(int32_t{555})};
+      const ScopedE element2{Clone(int32_t{111})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(Refer(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (copied), and then destroyed") {
-      const ScopedE element1{555};
-      const ScopedE element2{111};
+      const ScopedE element1{Clone(int32_t{555})};
+      const ScopedE element2{Clone(int32_t{111})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(Copy(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (cloned), and then destroyed") {
-      const ScopedE element1{555};
-      const ScopedE element2{111};
+      const ScopedE element1{Clone(int32_t{555})};
+      const ScopedE element2{Clone(int32_t{111})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(Clone(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (move), and then destroyed") {
-      const ScopedE element1{555};
-      ScopedE element2{111};
+      const ScopedE element1{Clone(int32_t{555})};
+      ScopedE element2{Clone(int32_t{111})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(::std::move(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (move using intent), and then destroyed") {
-      const ScopedE element1{555};
-      ScopedE element2{112};
+      const ScopedE element1{Clone(int32_t{555})};
+      ScopedE element2{Clone(int32_t{112})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(Move(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (abandon), and then destroyed") {
-      const ScopedE element1{555};
-      ScopedE element2{112};
+      const ScopedE element1{Clone(int32_t{555})};
+      ScopedE element2{Clone(int32_t{112})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(Abandon(*element2)));
    }
 
    GIVEN("Piecewise-constructed container, assigned (disown), and then destroyed") {
-      const ScopedE element1{555};
-      const ScopedE element2{111};
+      const ScopedE element1{Clone(int32_t{555})};
+      const ScopedE element2{Clone(int32_t{111})};
       T piecewise1{Piecewise, *element1};
       REQUIRE_NOTHROW(piecewise1.Assign(Disown(*element2)));
    }
 
    GIVEN("Absorb-constructed container") {
-      const ScopedE originalElement {556};
-      const ScopedE element {555};
+      const ScopedE originalElement {Clone(int32_t{556})};
+      const ScopedE element         {Clone(int32_t{555})};
+
+      [[maybe_unused]] const uint8_t pattern556[] = {0x2c, 0x02, 0x00, 0x00};
+      [[maybe_unused]] const uint8_t pattern555[] = {0x2b, 0x02, 0x00, 0x00};
 
       T piecewise1{Piecewise, *originalElement};
       T piecewise2{Piecewise, *originalElement};
@@ -140,27 +149,27 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       T pack_disowned {Absorb,      Disown(piecewise1)};
 
       WHEN("Absorb-constructed") {
-         Text_CheckState_OwnedFull(pack_referred1);
-         Text_CheckState_OwnedFull(pack_referred2);
-         Text_CheckState_OwnedFull(pack_copied);
-         Text_CheckState_OwnedFull(pack_cloned);
-         Text_CheckState_OwnedFull(pack_moved1);
-         Text_CheckState_OwnedFull(pack_moved2);
-         Text_CheckState_OwnedFull(pack_abandoned);
-         Text_CheckState_DisownedFull(pack_disowned);
+         Bytes_CheckState_OwnedFull(pack_referred1);
+         Bytes_CheckState_OwnedFull(pack_referred2);
+         Bytes_CheckState_OwnedFull(pack_copied);
+         Bytes_CheckState_OwnedFull(pack_cloned);
+         Bytes_CheckState_OwnedFull(pack_moved1);
+         Bytes_CheckState_OwnedFull(pack_moved2);
+         Bytes_CheckState_OwnedFull(pack_abandoned);
+         Bytes_CheckState_DisownedFull(pack_disowned);
 
-         Text_CheckState_ContainsOne(pack_referred1, *originalElement, 3);
-         Text_CheckState_ContainsOne(pack_referred2, *originalElement, 3);
-         Text_CheckState_ContainsOne(pack_copied,    *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_cloned,    *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_moved1,    *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_abandoned, *originalElement, 1);
-         Text_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
+         Bytes_CheckState_ContainsOne(pack_referred1, *originalElement, 3);
+         Bytes_CheckState_ContainsOne(pack_referred2, *originalElement, 3);
+         Bytes_CheckState_ContainsOne(pack_copied,    *originalElement, 1);
+         Bytes_CheckState_ContainsOne(pack_cloned,    *originalElement, 1);
+         Bytes_CheckState_ContainsOne(pack_moved1,    *originalElement, 1);
+         Bytes_CheckState_ContainsOne(pack_abandoned, *originalElement, 1);
+         Bytes_CheckState_ContainsOne(pack_disowned,  *originalElement, 3);
 
-         BenchmarkTextStd("Empty/AbsorbConstructor", 30, 100,
+         BenchmarkBytesStd("Empty/AbsorbConstructor", 30, 100,
             T temp,                                   (new (&temp) T{Absorb, piecewise1}),
-            stdstr temp_std1 (1, *originalElement);
-            stdstr temp_std2,                         new (&temp_std2) stdstr {temp_std1}
+            stdbyt temp_std1 (1, *originalElement);
+            stdbyt temp_std2,                         new (&temp_std2) stdbyt {temp_std1}
          );
       }
 
@@ -172,12 +181,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
 
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
+            Bytes_CheckState_OwnedFull(a);
+            Bytes_CheckState_ContainsOne(a, *element);
 
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Refer", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Assign/Refer", 30, 100,
                a.Assign(*element),                 a.Assign(*originalElement),
-               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
+               stdbyt temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -194,51 +203,45 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto misabsorb_refer = [&](auto& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(*element));
 
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
+               Bytes_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
             misabsorb_refer(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
             misabsorb_refer(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
             misabsorb_refer(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
             misabsorb_refer(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
             misabsorb_refer(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
             misabsorb_refer(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
             misabsorb_refer(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
             misabsorb_refer(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
+
+            Bytes_CheckState_OwnedFull(pack_referred1);
+            Bytes_CheckState_OwnedFull(pack_referred2);
+            Bytes_CheckState_OwnedFull(pack_copied);
+            Bytes_CheckState_OwnedFull(pack_cloned);
+            Bytes_CheckState_OwnedFull(pack_moved1);
+            Bytes_CheckState_OwnedFull(pack_moved2);
+            Bytes_CheckState_OwnedFull(pack_abandoned);
+            Bytes_CheckState_DisownedFull(pack_disowned);
          }
       }
 
-      if constexpr (CT::Container<E> and CT::Text<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Assigned and absorbed by referral") {
             auto absorb_refer = [&](auto& a, [[maybe_unused]] const char* intent, int uses) {
                REQUIRE_NOTHROW(a.AssignAbsorb(*element));
 
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_OwnedFull(*element);
-               Text_Helper_TestSame(a, *element);
+               Bytes_CheckState_OwnedFull(a);
+               Bytes_CheckState_OwnedFull(*element);
+               Bytes_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == element->GetUses());
                REQUIRE(a.GetUses() == uses);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Refer", 30, 100,
+               BenchmarkBytesStd("Absorb/" + intent + "/AssignAbsorb/Refer", 30, 100,
                   a.AssignAbsorb(*element),                 a.AssignAbsorb(*originalElement),
-                  stdstr temp_std1 (1, *element);
-                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdbyt temp_std1 (1, *element);
+                  stdbyt temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -265,16 +268,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                Many_Helper_TestSame(movable, *element);
             }
 
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
+            Bytes_CheckState_OwnedFull(a);
+            Bytes_CheckState_ContainsOne(a, *element);
 
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Move", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Assign/Move", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
                a.Assign(Move(movable1)),                       a.Assign(Move(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               stdstr temp_std (1, ::std::move(movable1)),     temp_std[0] = ::std::move(movable2)
+               stdbyt temp_std (1, ::std::move(movable1)),     temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -292,55 +295,49 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                auto movable = *element;
                REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
 
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
+               Bytes_CheckState_ContainsOne(a, *originalElement, uses);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
                Many_Helper_TestSame(movable, *element);
             };
 
             misabsorb_move(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
             misabsorb_move(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
             misabsorb_move(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
             misabsorb_move(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
             misabsorb_move(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
             misabsorb_move(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
             misabsorb_move(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
             misabsorb_move(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
+
+            Bytes_CheckState_OwnedFull(pack_referred1);
+            Bytes_CheckState_OwnedFull(pack_referred2);
+            Bytes_CheckState_OwnedFull(pack_copied);
+            Bytes_CheckState_OwnedFull(pack_cloned);
+            Bytes_CheckState_OwnedFull(pack_moved1);
+            Bytes_CheckState_OwnedFull(pack_moved2);
+            Bytes_CheckState_OwnedFull(pack_abandoned);
+            Bytes_CheckState_DisownedFull(pack_disowned);
          }
       }
 
-      if constexpr (CT::Container<E> and CT::Text<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Assigned and absorbed by move") {
             auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent, int uses) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(::std::move(movable)));
 
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_Default(movable);
-               Text_Helper_TestSame(a, *element);
+               Bytes_CheckState_OwnedFull(a);
+               Bytes_CheckState_Default(movable);
+               Bytes_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == uses);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Move", 30, 100,
+               BenchmarkBytesStd("Absorb/" + intent + "/AssignAbsorb/Move", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
                   a.AssignAbsorb(Move(movable1)),          a.AssignAbsorb(Move(movable2)),
-                  stdstr movable1 (1, *element);
-                  stdstr movable2 (1, *originalElement),   movable1 = ::std::move(movable2)
+                  stdbyt movable1 (1, *element);
+                  stdbyt movable2 (1, *originalElement),   movable1 = ::std::move(movable2)
                );
             };
 
@@ -360,12 +357,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
+            Bytes_CheckState_OwnedFull(a);
+            Bytes_CheckState_ContainsOne(a, *element);
 
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Assign/Copy", 30, 100,
                a.Assign(Copy(*element)),           a.Assign(Copy(*originalElement)),
-               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
+               stdbyt temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -381,51 +378,46 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          WHEN("Assigned and misabsorbed by copy") {
             auto misabsorb_copy = [&](T& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
+               Bytes_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
             misabsorb_copy(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
             misabsorb_copy(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
             misabsorb_copy(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
             misabsorb_copy(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
             misabsorb_copy(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
             misabsorb_copy(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
             misabsorb_copy(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
             misabsorb_copy(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
+
+            Bytes_CheckState_OwnedFull(pack_referred1);
+            Bytes_CheckState_OwnedFull(pack_referred2);
+            Bytes_CheckState_OwnedFull(pack_copied);
+            Bytes_CheckState_OwnedFull(pack_cloned);
+            Bytes_CheckState_OwnedFull(pack_moved1);
+            Bytes_CheckState_OwnedFull(pack_moved2);
+            Bytes_CheckState_OwnedFull(pack_abandoned);
+            Bytes_CheckState_DisownedFull(pack_disowned);
          }
       }
 
-      if constexpr (CT::Container<E> and CT::Text<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Assigned and absorbed by copy") {
             auto absorb_copy = [&](T& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(Copy(*element)));
 
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_OwnedFull(*element);
-               Text_CheckState_ContainsString(a, "555");
-               Text_CheckState_ContainsString(*element, "555");
+               Bytes_CheckState_OwnedFull(a);
+               Bytes_CheckState_OwnedFull(*element);
+               Bytes_CheckState_ContainsBytes(*element, pattern555);
+               Bytes_CheckState_ContainsBytes(a,        pattern555);
+
                REQUIRE(a.GetUses() == 1);
                REQUIRE(a.GetAllocation() != element->GetAllocation());
 
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Copy", 30, 100,
+               BenchmarkBytesStd("Absorb/" + intent + "/AssignAbsorb/Copy", 30, 100,
                   a.AssignAbsorb(Copy(*element)),           a.AssignAbsorb(Copy(*originalElement)),
-                  stdstr temp_std1 (1, *element);
-                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdbyt temp_std1 (1, *element);
+                  stdbyt temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -445,12 +437,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
             if constexpr (CT::DeepDense<E>)
                Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
+            Bytes_CheckState_OwnedFull(a);
+            Bytes_CheckState_ContainsOne(a, *element);
 
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Assign/Clone", 30, 100,
                a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
-               stdstr temp_std (1, *element),      temp_std[0] = *originalElement
+               stdbyt temp_std (1, *element),      temp_std[0] = *originalElement
             );
          };
 
@@ -466,51 +458,46 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          WHEN("Assigned and misabsorbed by clone") {
             auto misabsorb_clone = [&](T& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
+               Bytes_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
             misabsorb_clone(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
             misabsorb_clone(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
             misabsorb_clone(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
             misabsorb_clone(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
             misabsorb_clone(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
             misabsorb_clone(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
             misabsorb_clone(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
             misabsorb_clone(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
+
+            Bytes_CheckState_OwnedFull(pack_referred1);
+            Bytes_CheckState_OwnedFull(pack_referred2);
+            Bytes_CheckState_OwnedFull(pack_copied);
+            Bytes_CheckState_OwnedFull(pack_cloned);
+            Bytes_CheckState_OwnedFull(pack_moved1);
+            Bytes_CheckState_OwnedFull(pack_moved2);
+            Bytes_CheckState_OwnedFull(pack_abandoned);
+            Bytes_CheckState_DisownedFull(pack_disowned);
          }
       }
 
-      if constexpr (CT::Container<E> and CT::Text<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Assigned and absorbed by clone") {
             auto absorb_clone = [&](T& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(Clone(*element)));
 
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_OwnedFull(*element);
-               Text_CheckState_ContainsString(a, "555");
-               Text_CheckState_ContainsString(*element, "555");
+               Bytes_CheckState_OwnedFull(a);
+               Bytes_CheckState_OwnedFull(*element);
+               Bytes_CheckState_ContainsBytes(*element, pattern555);
+            Bytes_CheckState_ContainsBytes(a,           pattern555);
+
                REQUIRE(a.GetUses() == 1);
                REQUIRE(a.GetAllocation() != element->GetAllocation());
 
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Clone", 30, 100,
+               BenchmarkBytesStd("Absorb/" + intent + "/AssignAbsorb/Clone", 30, 100,
                   a.AssignAbsorb(Clone(*element)),          a.AssignAbsorb(Clone(*originalElement)),
-                  stdstr temp_std1 (1, *element);
-                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdbyt temp_std1 (1, *element);
+                  stdbyt temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -528,12 +515,12 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          auto assign_disown = [&](T& a, [[maybe_unused]] const char* intent) {
             REQUIRE_NOTHROW(a.Assign(Disown(*element)));
 
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
+            Bytes_CheckState_OwnedFull(a);
+            Bytes_CheckState_ContainsOne(a, *element);
 
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Disown", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Assign/Disown", 30, 100,
                a.Assign(Disown(*element)),      a.Assign(Disown(*originalElement)),
-               stdstr temp_std (1, *element),   temp_std[0] = *originalElement
+               stdbyt temp_std (1, *element),   temp_std[0] = *originalElement
             );
          };
 
@@ -550,50 +537,44 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             auto misabsorb_disown = [&](T& a, int uses) {
                REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
                
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
+               Bytes_CheckState_ContainsOne(a, *originalElement, uses);
             };
 
             misabsorb_disown(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
             misabsorb_disown(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
             misabsorb_disown(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
             misabsorb_disown(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
             misabsorb_disown(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
             misabsorb_disown(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
             misabsorb_disown(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
             misabsorb_disown(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
+
+            Bytes_CheckState_OwnedFull(pack_referred1);
+            Bytes_CheckState_OwnedFull(pack_referred2);
+            Bytes_CheckState_OwnedFull(pack_copied);
+            Bytes_CheckState_OwnedFull(pack_cloned);
+            Bytes_CheckState_OwnedFull(pack_moved1);
+            Bytes_CheckState_OwnedFull(pack_moved2);
+            Bytes_CheckState_OwnedFull(pack_abandoned);
+            Bytes_CheckState_DisownedFull(pack_disowned);
          }
       }
 
-      if constexpr (CT::Container<E> and CT::Text<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Assigned and absorbed by disown") {
             auto absorb_disown = [&](T& a, [[maybe_unused]] const char* intent) {
                REQUIRE_NOTHROW(a.AssignAbsorb(Disown(*element)));
 
-               Text_CheckState_DisownedFull(a);
-               Text_CheckState_OwnedFull(*element);
-               Text_Helper_TestSame(a, *element, false);
+               Bytes_CheckState_DisownedFull(a);
+               Bytes_CheckState_OwnedFull(*element);
+               Bytes_Helper_TestSame(a, *element, false);
                REQUIRE(a.GetUses() == 1);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Disown", 30, 100,
+               BenchmarkBytesStd("Absorb/" + intent + "/AssignAbsorb/Disown", 30, 100,
                   a.AssignAbsorb(Disown(*element)),         a.AssignAbsorb(Disown(*originalElement)),
-                  stdstr temp_std1 (1, *element);
-                  stdstr temp_std2 (1, *originalElement),   temp_std1 = temp_std2
+                  stdbyt temp_std1 (1, *element);
+                  stdbyt temp_std2 (1, *originalElement),   temp_std1 = temp_std2
                );
             };
 
@@ -620,16 +601,16 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                Many_Helper_TestSame(movable, *element);
             }
             
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_ContainsOne(a, *element);
+            Bytes_CheckState_OwnedFull(a);
+            Bytes_CheckState_ContainsOne(a, *element);
 
-            BenchmarkTextStd("Absorb/" + intent + "/Assign/Abandon", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Assign/Abandon", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
                a.Assign(Abandon(movable1)),                   a.Assign(Abandon(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               stdstr temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
+               stdbyt temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -647,56 +628,50 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                auto movable = *element;
                REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
 
-               Text_CheckState_ContainsOne(a, *originalElement, uses);
+               Bytes_CheckState_ContainsOne(a, *originalElement, uses);
                Many_CheckState_OwnedFull<TypeOf<E>>(movable);
                Many_Helper_TestSame(movable, *element);
             };
 
             misabsorb_abandon(pack_referred1, 3);
-            Text_CheckState_OwnedFull(pack_referred1);
-
             misabsorb_abandon(pack_referred2, 3);
-            Text_CheckState_OwnedFull(pack_referred2);
-
             misabsorb_abandon(pack_copied,    1);
-            Text_CheckState_OwnedFull(pack_copied);
-
             misabsorb_abandon(pack_cloned,    1);
-            Text_CheckState_OwnedFull(pack_cloned);
-
             misabsorb_abandon(pack_moved1,    1);
-            Text_CheckState_OwnedFull(pack_moved1);
-
             misabsorb_abandon(pack_moved2,    1);
-            Text_CheckState_OwnedFull(pack_moved2);
-
             misabsorb_abandon(pack_abandoned, 1);
-            Text_CheckState_OwnedFull(pack_abandoned);
-
             misabsorb_abandon(pack_disowned,  3);
-            Text_CheckState_DisownedFull(pack_disowned);
+
+            Bytes_CheckState_OwnedFull(pack_referred1);
+            Bytes_CheckState_OwnedFull(pack_referred2);
+            Bytes_CheckState_OwnedFull(pack_copied);
+            Bytes_CheckState_OwnedFull(pack_cloned);
+            Bytes_CheckState_OwnedFull(pack_moved1);
+            Bytes_CheckState_OwnedFull(pack_moved2);
+            Bytes_CheckState_OwnedFull(pack_abandoned);
+            Bytes_CheckState_DisownedFull(pack_disowned);
          }
       }
 
-      if constexpr (CT::Container<E> and CT::Text<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Assigned and absorbed by abandon") {
             auto absorb_abandon = [&](T& a, [[maybe_unused]] const char* intent, int uses) {
                auto movable = *element;
                REQUIRE_NOTHROW(a.AssignAbsorb(Abandon(movable)));
 
-               Text_CheckState_OwnedFull(a);
-               Text_CheckState_Abandoned(movable);
-               Text_Helper_TestSame(a, *element);
+               Bytes_CheckState_OwnedFull(a);
+               Bytes_CheckState_Abandoned(movable);
+               Bytes_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == uses);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkTextStd("Absorb/" + intent + "/AssignAbsorb/Abandon", 30, 100,
+               BenchmarkBytesStd("Absorb/" + intent + "/AssignAbsorb/Abandon", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
                   a.AssignAbsorb(Abandon(movable1)),          a.AssignAbsorb(Abandon(movable2)),
-                  stdstr movable1 (1, *element);
-                  stdstr movable2 (1, *originalElement);
-                  stdstr temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
+                  stdbyt movable1 (1, *element);
+                  stdbyt movable2 (1, *originalElement);
+                  stdbyt temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
                );
             };
 
@@ -713,7 +688,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       WHEN("Ambigous assigned empty self") {
          auto assign_empty_self = [&](T& a) {
             REQUIRE_NOTHROW(a = T{});
-            Text_CheckState_Default(a);
+            Bytes_CheckState_Default(a);
          };
 
          assign_empty_self(pack_referred1);
@@ -734,7 +709,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             LglsDisableWarning_SelfAssign
                REQUIRE_NOTHROW(a = a);
             LglsDisableWarningPop
-            Text_Helper_TestSame(a, backup, not allow_change_in_constness);
+            Bytes_Helper_TestSame(a, backup, not allow_change_in_constness);
             REQUIRE(a.GetUses() == uses_before);
          };
 
@@ -753,8 +728,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             T absorbed1 {a};
             T absorbed2 {Refer {a}};
 
-            Text_Helper_TestSame(absorbed1, compare_against);
-            Text_Helper_TestSame(absorbed2, compare_against);
+            Bytes_Helper_TestSame(absorbed1, compare_against);
+            Bytes_Helper_TestSame(absorbed2, compare_against);
             REQUIRE(absorbed1.GetUses() == uses);
             REQUIRE(absorbed2.GetUses() == uses);
          };
@@ -774,9 +749,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             T backup = a;
             T absorbed {::std::move(a)};
 
-            Text_CheckState_Default(a);
-            Text_CheckState_OwnedFull(absorbed);
-            Text_Helper_TestSame(absorbed, backup);
+            Bytes_CheckState_Default(a);
+            Bytes_CheckState_OwnedFull(absorbed);
+            Bytes_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -795,9 +770,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             T backup = a;
             T absorbed {Move(a)};
 
-            Text_CheckState_Default(a);
-            Text_CheckState_OwnedFull(absorbed);
-            Text_Helper_TestSame(absorbed, backup);
+            Bytes_CheckState_Default(a);
+            Bytes_CheckState_OwnedFull(absorbed);
+            Bytes_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -816,9 +791,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             T backup = a;
             T absorbed {Abandon {a}};
 
-            Text_CheckState_Abandoned(a);
-            Text_CheckState_OwnedFull(absorbed);
-            Text_Helper_TestSame(absorbed, backup);
+            Bytes_CheckState_Abandoned(a);
+            Bytes_CheckState_OwnedFull(absorbed);
+            Bytes_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == uses);
          };
 
@@ -836,9 +811,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          auto absorb_construct_disown = [&](T& a, int uses) {
             T absorbed {Disown {a}};
 
-            Text_CheckState_OwnedFull(a);
-            Text_CheckState_DisownedFull(absorbed);
-            Text_Helper_TestSame(absorbed, a, false);
+            Bytes_CheckState_OwnedFull(a);
+            Bytes_CheckState_DisownedFull(absorbed);
+            Bytes_Helper_TestSame(absorbed, a, false);
             REQUIRE(absorbed.IsConstant());
             REQUIRE(absorbed.GetUses() == uses);
          };
@@ -852,9 +827,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          absorb_construct_disown(pack_abandoned, 1);
 
          T absorbed{Disown {pack_disowned}};
-         Text_CheckState_DisownedFull(pack_disowned);
-         Text_CheckState_DisownedFull(absorbed);
-         Text_Helper_TestSame(absorbed, pack_disowned);
+         Bytes_CheckState_DisownedFull(pack_disowned);
+         Bytes_CheckState_DisownedFull(absorbed);
+         Bytes_Helper_TestSame(absorbed, pack_disowned);
          REQUIRE(absorbed.IsConstant());
          REQUIRE(absorbed.GetUses() == 3);
    }
@@ -863,8 +838,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          auto absorb_construct_copy = [&](T& a) {
             T absorbed {Copy {a}};
 
-            Text_CheckState_OwnedFull(absorbed);
-            Text_CheckState_ContainsOne(absorbed, *originalElement);
+            Bytes_CheckState_OwnedFull(absorbed);
+            Bytes_CheckState_ContainsOne(absorbed, *originalElement);
 
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
@@ -872,28 +847,22 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          };
 
          absorb_construct_copy(pack_referred1);
-         Text_CheckState_OwnedFull(pack_referred1);
-
          absorb_construct_copy(pack_referred2);
-         Text_CheckState_OwnedFull(pack_referred2);
-
          absorb_construct_copy(pack_copied);
-         Text_CheckState_OwnedFull(pack_copied);
-
          absorb_construct_copy(pack_cloned);
-         Text_CheckState_OwnedFull(pack_cloned);
-
          absorb_construct_copy(pack_moved1);
-         Text_CheckState_OwnedFull(pack_moved1);
-
          absorb_construct_copy(pack_moved2);
-         Text_CheckState_OwnedFull(pack_moved2);
-
          absorb_construct_copy(pack_abandoned);
-         Text_CheckState_OwnedFull(pack_abandoned);
-
          absorb_construct_copy(pack_disowned);
-         Text_CheckState_DisownedFull(pack_disowned);
+
+         Bytes_CheckState_OwnedFull(pack_referred1);
+         Bytes_CheckState_OwnedFull(pack_referred2);
+         Bytes_CheckState_OwnedFull(pack_copied);
+         Bytes_CheckState_OwnedFull(pack_cloned);
+         Bytes_CheckState_OwnedFull(pack_moved1);
+         Bytes_CheckState_OwnedFull(pack_moved2);
+         Bytes_CheckState_OwnedFull(pack_abandoned);
+         Bytes_CheckState_DisownedFull(pack_disowned);
       }
       
       WHEN("Absorbed by clone") {
@@ -901,11 +870,11 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             T absorbed {Clone {a}};
 
             if (uses == 0)
-               Text_CheckState_DisownedFull(a);
+               Bytes_CheckState_DisownedFull(a);
             else
-               Text_CheckState_OwnedFull(a);
+               Bytes_CheckState_OwnedFull(a);
 
-            Text_CheckState_OwnedFull(absorbed);
+            Bytes_CheckState_OwnedFull(absorbed);
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetUses() == 1);
          };
@@ -923,17 +892,17 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       /// MARK: Clear                                                         
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent, int uses = 1) {
-            BenchmarkTextStd("Absorb/" + intent + "/Clear", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Clear", 30, 100,
                T temp = a,                         temp.Clear(),
-               stdstr temp_std (1, *element),      temp_std.clear()
+               stdbyt temp_std (1, *element),      temp_std.clear()
             );
 
             REQUIRE_NOTHROW(a.Clear());
 
             if (uses != 1)
-               Text_CheckState_Default(a, true);
+               Bytes_CheckState_Default(a, true);
             else
-               Text_CheckState_OwnedEmpty(a);
+               Bytes_CheckState_OwnedEmpty(a);
          };
 
          clear_full(pack_referred1, "Refer", 3);
@@ -947,14 +916,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       /// MARK: Reset                                                         
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkTextStd("Absorb/" + intent + "/Reset", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/Reset", 30, 100,
                T temp = a,                         temp.Reset(),
-               stdstr temp_std (1, *element),      temp_std.clear()
+               stdbyt temp_std (1, *element),      temp_std.clear()
             );
 
             REQUIRE_NOTHROW(a.Reset());
 
-            Text_CheckState_Default(a);
+            Bytes_CheckState_Default(a);
          };
 
          reset_full(pack_referred1, "Refer");
@@ -966,7 +935,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       }
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      if constexpr (Same<E, char>) {
+      if constexpr (Same<E, Byte>) {
          WHEN("Reset, and then immediately allocated again") {
             auto reset_and_reallocate = [&](T& a) {
                const auto memory = a.GetRaw();
@@ -989,57 +958,31 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
 
       /// MARK: Compare                                                       
       WHEN("Compared") {
-         ScopedE e1 {1};
+         ScopedE e1 {Clone{int32_t{1}}};
          T another_pack1 {Piecewise, *e1};
          T defaulted_pack;
 
          auto compared_full = [&](T& a, [[maybe_unused]] const char* intent) {
             T same_pack {a};
 
-            if constexpr (Same<E, RT>) {
-               // RT serializes to the same text regardless inner int   
-               REQUIRE      (a == another_pack1);
-               REQUIRE_FALSE(a != another_pack1);
-            }
-            else {
-               REQUIRE      (a != another_pack1);
-               REQUIRE_FALSE(a == another_pack1);
-            }
-
+            REQUIRE      (a != another_pack1);
+            REQUIRE_FALSE(a == another_pack1);
             REQUIRE      (a != defaulted_pack);
             REQUIRE_FALSE(a == defaulted_pack);
             REQUIRE      (a == same_pack);
             REQUIRE_FALSE(a != same_pack);
             REQUIRE      (static_cast<bool>(a));
-
-            REQUIRE      (         a != nullptr    );
-            REQUIRE_FALSE(         a == nullptr    );
-            REQUIRE      (   nullptr != a          );
-            REQUIRE_FALSE(   nullptr == a          );
-            REQUIRE      (         a != ""         );
-            REQUIRE_FALSE(         a == ""         );
-            REQUIRE      (        "" != a          );
-            REQUIRE_FALSE(        "" == a          );
-
-            REQUIRE      (         a != T{nullptr} );
-            REQUIRE_FALSE(         a == T{nullptr} );
-            REQUIRE      (T{nullptr} != a          );
-            REQUIRE_FALSE(T{nullptr} == a          );
-            REQUIRE      (         a != T{""}      );
-            REQUIRE_FALSE(         a == T{""}      );
-            REQUIRE      (     T{""} != a          );
-            REQUIRE_FALSE(     T{""} == a          );
    
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkTextStd("Absorb/" + intent + "/operator==", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/operator==", 30, 100,
                (void) 0,                                    dont_optimize |= (a == same_pack),
-               const stdstr a_std (1, *element);
-               const stdstr another_pack1_std (1, *e1),     dont_optimize |= (a_std == another_pack1_std)
+               const stdbyt a_std (1, *element);
+               const stdbyt another_pack1_std (1, *e1),     dont_optimize |= (a_std == another_pack1_std)
             );
-            BenchmarkTextStd("Absorb/" + intent + "/operator!=", 30, 100,
+            BenchmarkBytesStd("Absorb/" + intent + "/operator!=", 30, 100,
                (void) 0,                                    dont_optimize |= (a != same_pack),
-               const stdstr a_std (1, *element);
-               const stdstr another_pack1_std (1, *e1),     dont_optimize |= (a_std != another_pack1_std)
+               const stdbyt a_std (1, *element);
+               const stdbyt another_pack1_std (1, *e1),     dont_optimize |= (a_std != another_pack1_std)
             );
          };
 
@@ -1056,29 +999,21 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          auto contains_full = [&](auto& a) {
             if constexpr (CT::Sparse<E>) {
                //TODO pointers are always different
-               REQUIRE_FALSE(a.Contains('?'));
             }
-            else if constexpr (Same<E, Text>) {
-               REQUIRE      (a.Contains('5'));
-               REQUIRE      (a.Contains('6'));
-               REQUIRE_FALSE(a.Contains('?'));
-            }
-            else if constexpr (Same<E, RT>) {
-               REQUIRE      (a.Contains('R'));
-               REQUIRE      (a.Contains('T'));
-               REQUIRE      (a.Contains('('));
-               REQUIRE      (a.Contains(')'));
-               REQUIRE_FALSE(a.Contains('?'));
-            }
-            else if constexpr (Same<E, char>) {
-               REQUIRE      (a.Contains(','));
-               REQUIRE_FALSE(a.Contains('?'));
-            }
-            else {
-               REQUIRE      (a.Contains('5'));
-               REQUIRE      (a.Contains('6'));
-               REQUIRE_FALSE(a.Contains('?'));
-            }
+            else if constexpr (Same<E, Text>)
+               REQUIRE(a.Contains('5'));
+            else if constexpr (Same<E, RT>)
+               REQUIRE(a.Contains(uint8_t{0}));
+            else if constexpr (Same<E, char>)
+               REQUIRE(a.Contains(uint8_t{0x2c}));
+            else if constexpr (Same<E, int32_t>)
+               REQUIRE(a.Contains(uint8_t{0x02}));
+            else if constexpr (Same<E, Many>)
+               REQUIRE(a.Contains(uint8_t{0x2c}));
+            else
+               REQUIRE(a.Contains(uint8_t{11}));
+      
+            REQUIRE_FALSE(a.Contains(uint8_t{0b10101010}));
          };
 
          contains_full(pack_referred1);
@@ -1091,7 +1026,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkText("Absorb/Contains", 30,
+         BenchmarkBytes("Absorb/Contains", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
          );
       }
@@ -1102,28 +1037,39 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             if constexpr (CT::Sparse<E>) {
                //TODO pointers are always different
             }
+            else if constexpr (Same<E, Text>) {
+               const uint8_t pattern[] = {10, 3, '5'};
+               REQUIRE(a.ContainsRange(pattern));
+               REQUIRE_FALSE(a.ContainsRange("")); // serialized as a single 0 byte
+            }
             else if constexpr (Same<E, RT>) {
-               REQUIRE      (a.ContainsRange("RT("));
-               REQUIRE_FALSE(a.ContainsRange("int"));
-               REQUIRE_FALSE(a.ContainsRange(""));
+               const uint8_t pattern[] = {0x02, 0x00, 0x00};
+               REQUIRE(a.ContainsRange(pattern));
+               REQUIRE(a.ContainsRange("")); // serialized as a single 0 byte
             }
             else if constexpr (Same<E, char>) {
-               REQUIRE      (a.ContainsRange(","));
-               REQUIRE_FALSE(a.ContainsRange("?"));
-               REQUIRE_FALSE(a.ContainsRange(""));
+               const uint8_t pattern[] = {0x2c};
+               REQUIRE(a.ContainsRange(pattern));
+               REQUIRE_FALSE(a.ContainsRange("")); // serialized as a single 0 byte
+            }
+            else if constexpr (Same<E, int32_t>) {
+               const uint8_t pattern[] = {0x02, 0x00, 0x00};
+               REQUIRE(a.ContainsRange(pattern));
+               REQUIRE(a.ContainsRange("")); // serialized as a single 0 byte
+            }
+            else if constexpr (Same<E, Many>) {
+               const uint8_t pattern[] = {0x2c, 0x02, 0x00, 0x00};
+               REQUIRE(a.ContainsRange(pattern));
+               REQUIRE(a.ContainsRange("")); // serialized as a single 0 byte
             }
             else {
-               REQUIRE      (a.ContainsRange("55"));
-               REQUIRE      (a.ContainsRange("556"));
-               REQUIRE      (a.ContainsRange("56"));
-               REQUIRE      (a.ContainsRange("6"));
-               REQUIRE      (a.ContainsRange("5"));
-               REQUIRE_FALSE(a.ContainsRange("?"));
-               REQUIRE_FALSE(a.ContainsRange("57"));
-               REQUIRE_FALSE(a.ContainsRange("557"));
-               REQUIRE_FALSE(a.ContainsRange("5578"));
-               REQUIRE_FALSE(a.ContainsRange(""));
+               const uint8_t pattern[] = {0b00001010, 11, 4, 0x2c, 0x02};
+               REQUIRE(a.ContainsRange(pattern));
+               REQUIRE(a.ContainsRange("")); // serialized as a single 0 byte
             }
+      
+            const uint8_t pattern[] = {0x01, 0x02, 0x03, 0x04};
+            REQUIRE_FALSE(a.ContainsRange(pattern));
          };
 
          contains_full(pack_referred1);
@@ -1136,7 +1082,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkText("Absorb/ContainsRange", 30,
+         BenchmarkBytes("Absorb/ContainsRange", 30,
             (void) 0, dont_optimize |= pack_referred1.ContainsRange(*element)
          );
       }
@@ -1163,7 +1109,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             for (auto& it : pack) {
                (void) it;
                ++counter;
-               static_assert(Same<char, decltype(it)>);
+               static_assert(Same<Byte, decltype(it)>);
             }
             REQUIRE(counter == pack.GetCount());
 
@@ -1171,7 +1117,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             for (auto& it : ::std::as_const(pack)) {
                (void) it;
                ++counter;
-               static_assert(Same<char, decltype(it)>);
+               static_assert(Same<Byte, decltype(it)>);
             }
             REQUIRE(counter == pack.GetCount());
 
@@ -1179,7 +1125,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             for (auto& it : strategy) {
                (void) it;
                ++counter;
-               static_assert(Same<char, decltype(it)>);
+               static_assert(Same<Byte, decltype(it)>);
             }
             REQUIRE(counter == pack.GetCount());
 
@@ -1187,7 +1133,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             for (auto& it : strategyConst) {
                (void) it;
                ++counter;
-               static_assert(Same<char, decltype(it)>);
+               static_assert(Same<Byte, decltype(it)>);
             }
             REQUIRE(counter == pack.GetCount());
          };
@@ -1223,7 +1169,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             for (auto& it : strategy) {
                (void) it;
                ++counter;
-               static_assert(Exact<char, decltype(it)>);
+               static_assert(Exact<Byte, decltype(it)>);
             }
             REQUIRE(counter == pack.GetCount());
 
@@ -1231,7 +1177,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             for (auto& it : strategyConst) {
                (void) it;
                ++counter;
-               static_assert(Exact<char const, decltype(it)>);
+               static_assert(Exact<Byte const, decltype(it)>);
             }
             REQUIRE(counter == pack.GetCount());
          };
@@ -1363,14 +1309,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          for (auto& it : strategy) {
             (void) it;
             ++counter;
-            static_assert(Exact<char*, decltype(it.template Get<0>())>);
-            static_assert(Exact<char*, decltype(it.template Get<1>())>);
-            static_assert(Exact<char*, decltype(it.template Get<2>())>);
-            static_assert(Exact<char*, decltype(it.template Get<3>())>);
-            static_assert(Exact<char*, decltype(it.template Get<4>())>);
-            static_assert(Exact<char*, decltype(it.template Get<5>())>);
-            static_assert(Exact<char*, decltype(it.template Get<6>())>);
-            static_assert(Exact<char*, decltype(it.template Get<7>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<0>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<1>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<2>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<3>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<4>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<5>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<6>())>);
+            static_assert(Exact<Byte*, decltype(it.template Get<7>())>);
          }
          REQUIRE(counter == pack_referred1.GetCount());
 
@@ -1378,91 +1324,130 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          for (auto& it : strategyConst) {
             (void) it;
             ++counter;
-            static_assert(Exact<char const*, decltype(it.template Get<0>())>);
-            static_assert(Exact<char*,       decltype(it.template Get<1>())>);
-            static_assert(Exact<char const*, decltype(it.template Get<2>())>);
-            static_assert(Exact<char*,       decltype(it.template Get<3>())>);
-            static_assert(Exact<char const*, decltype(it.template Get<4>())>);
-            static_assert(Exact<char*,       decltype(it.template Get<5>())>);
-            static_assert(Exact<char const*, decltype(it.template Get<6>())>);
-            static_assert(Exact<char const*, decltype(it.template Get<7>())>);
+            static_assert(Exact<Byte const*, decltype(it.template Get<0>())>);
+            static_assert(Exact<Byte*,       decltype(it.template Get<1>())>);
+            static_assert(Exact<Byte const*, decltype(it.template Get<2>())>);
+            static_assert(Exact<Byte*,       decltype(it.template Get<3>())>);
+            static_assert(Exact<Byte const*, decltype(it.template Get<4>())>);
+            static_assert(Exact<Byte*,       decltype(it.template Get<5>())>);
+            static_assert(Exact<Byte const*, decltype(it.template Get<6>())>);
+            static_assert(Exact<Byte const*, decltype(it.template Get<7>())>);
          }
          REQUIRE(counter == pack_referred1.GetCount());
       }
    }
 
    GIVEN("Two absorb-constructed containers") {
-      const ScopedE e556 {556};
-      const ScopedE e66  {66};
+      const ScopedE e556 {Clone{int32_t{556}}};
+      const ScopedE e66  {Clone{int32_t{66 }}};
 
       T piecewise1{Piecewise, *e556};
       T piecewise2{Piecewise, *e66};
       T src {Absorb, Abandon(piecewise1)};
       T dst {Absorb, Abandon(piecewise2)};
+   
+      const auto check_dst = [&dst]([[maybe_unused]] bool swapped = false) {
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+            (void) dst;
+         }
+         else if constexpr (Same<E, Text>) {
+            const uint8_t pattern[] = {0b00001010, 10, 2, '6', '6'};
+            Bytes_CheckState_ContainsBytes(dst, pattern);
+         }
+         else if constexpr (Same<E, RT>) {
+            const uint8_t pattern[] = {static_cast<uint8_t>(swapped ? 0x2c : 0x42), 0x00, 0x00, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(dst, pattern);
+         }
+         else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {static_cast<uint8_t>(swapped ? 0x2c : 0x42)};
+            Bytes_CheckState_ContainsBytes(dst, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {static_cast<uint8_t>(swapped ? 0x2c : 0x42), 0x00, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(dst, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {0b00000010, 4, 0x42, 0x00, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(dst, pattern);
+         }
+         else {
+            const uint8_t pattern[] = {0b00001010, 11, 4, 0x42, 0x00, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(dst, pattern);
+         }
+      };
+      
+      const auto check_src = [&src]([[maybe_unused]] bool swapped = false) {
+         if constexpr (CT::Sparse<E>) {
+            //TODO pointers are always different
+            (void) src;
+         }
+         else if constexpr (Same<E, Text>) {
+            const uint8_t pattern[] = {0b00001010, 10, 3, '5', '5', '6'};
+            Bytes_CheckState_ContainsBytes(src, pattern);
+         }
+         else if constexpr (Same<E, RT>) {
+            const uint8_t pattern[] = {static_cast<uint8_t>(swapped ? 0x42 : 0x2c), 0x02, 0x00, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(src, pattern);
+         }
+         else if constexpr (Same<E, char>) {
+            const uint8_t pattern[] = {static_cast<uint8_t>(swapped ? 0x42 : 0x2c)};
+            Bytes_CheckState_ContainsBytes(src, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {static_cast<uint8_t>(swapped ? 0x42 : 0x2c), 0x02, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(src, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {0b00000010, 4, 0x2c, 0x02, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(src, pattern);
+         }
+         else {
+            const uint8_t pattern[] = {0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00};
+            Bytes_CheckState_ContainsBytes(src, pattern);
+         }
+      };
 
+      check_dst();
+      check_src();
+      
       /// MARK: Handles                                                       
       WHEN("GetHandle is called on mutable container") {
          auto src_handle = src.GetHandle();
-         static_assert(::std::same_as<decltype(src_handle), THandle<char&>>);
-
-         auto src_data = src_handle.template Get<char>();
-         REQUIRE(src_handle.template Get<char>() == src_data);
-         Handle_CheckState_OwnedFull<char>(src_handle);
+         static_assert(::std::same_as<decltype(src_handle), THandle<Byte&>>);
+         auto src_data = src_handle.template Get<Byte>();
+         REQUIRE(src_handle.template Get<Byte>() == src_data);
+         Handle_CheckState_OwnedFull<Byte>(src_handle);
 
          auto dst_handle = dst.GetHandle();
-         auto dst_data   = dst_handle.template Get<char>();
-         REQUIRE(dst_handle.template Get<char>() == dst_data);
-         Handle_CheckState_OwnedFull<char>(dst_handle);
+         auto dst_data   = dst_handle.template Get<Byte>();
+         REQUIRE(dst_handle.template Get<Byte>() == dst_data);
+         Handle_CheckState_OwnedFull<Byte>(dst_handle);
 
          REQUIRE(dst_data != src_data);
 
          THEN("Handle assigned to another container") {
             REQUIRE_NOTHROW(dst_handle.Assign(Move(src_handle)));
 
-            Handle_CheckState_OwnedFull<char>(src_handle);
-            Handle_CheckState_OwnedFull<char>(dst_handle);
+            Handle_CheckState_OwnedFull<Byte>(src_handle);
+            Handle_CheckState_OwnedFull<Byte>(dst_handle);
 
-            Text_CheckState_ContainsOne(src, *e556);
-
-            if constexpr (CT::Sparse<E>)
-               ; //TODO
-            else if constexpr (Same<E, char>)
-               Text_CheckState_ContainsString(dst, ",");
-            else if constexpr (Same<E, RT>)
-               Text_CheckState_ContainsString(dst, "RT(unknown)");
-            else if constexpr (Same<E, Text>)
-               Text_CheckState_ContainsString(dst, "\"66\"");
-            else
-               Text_CheckState_ContainsString(dst, "56");
+            Bytes_CheckState_ContainsOne(src, *e556);
+            check_dst(true);
+            check_src();
          }
          
          THEN("Handle is swapped with another container's handle") {
             REQUIRE_NOTHROW(dst_handle.SwapContents(src_handle));
 
-            Handle_CheckState_OwnedFull<char>(src_handle);
-            Handle_CheckState_OwnedFull<char>(dst_handle);
+            Handle_CheckState_OwnedFull<Byte>(src_handle);
+            Handle_CheckState_OwnedFull<Byte>(dst_handle);
 
-            REQUIRE(src_handle.template Get<char>() == src_data);
-            REQUIRE(dst_handle.template Get<char>() == dst_data);
+            REQUIRE(src_handle.template Get<Byte>() == src_data);
+            REQUIRE(dst_handle.template Get<Byte>() == dst_data);
 
-            if constexpr (CT::Sparse<E>)
-               ; //TODO
-            else if constexpr (Same<E, char>) {
-               Text_CheckState_ContainsString(src, "B");
-               Text_CheckState_ContainsString(dst, ",");
-            }
-            else if constexpr (Same<E, RT>) {
-               Text_CheckState_ContainsString(src, "RT(unknown)");
-               Text_CheckState_ContainsString(dst, "RT(unknown)");
-            }
-            else if constexpr (Same<E, Text>) {
-               Text_CheckState_ContainsString(src, "\"556\"");
-               Text_CheckState_ContainsString(dst, "\"66\"");
-            }
-            else {
-               Text_CheckState_ContainsOne(src, "656");
-               Text_CheckState_ContainsOne(dst, "56");
-            }
+            check_dst(true);
+            check_src(true);
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
@@ -1470,85 +1455,94 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          }
          
          THEN("Handle moved into a local handle") {
-            THandle<char> local {Absorb, Move(src_handle)};
+            THandle<Byte> local {Absorb, Move(src_handle)};
 
-            Handle_CheckState_OwnedFull<char>(src_handle);
-            Handle_CheckState_OwnedFull<char>(local);
-            REQUIRE(src_handle.template Get<char>() == src_data);
-            REQUIRE(local.template Get<char>() != src_data);
+            Handle_CheckState_OwnedFull<Byte>(src_handle);
+            Handle_CheckState_OwnedFull<Byte>(local);
+            REQUIRE(src_handle.template Get<Byte>() == src_data);
+            REQUIRE(local.template Get<Byte>() != src_data);
 
-            if constexpr (CT::Sparse<E>)
-               ; //TODO
-            else if constexpr (Same<E, char>) {
-               Text_CheckState_ContainsString(src, ",");
-               REQUIRE(*local.template Get<char>() == ',');
+            check_src();
+
+            if constexpr (CT::Sparse<E>) {
+               //TODO pointers are always different
             }
-            else if constexpr (Same<E, RT>) {
-               Text_CheckState_ContainsString(src, "RT(unknown)");
-               REQUIRE(*local.template Get<char>() == 'R');
-            }
-            else if constexpr (Same<E, Text>) {
-               Text_CheckState_ContainsString(src, "\"556\"");
-               REQUIRE(*local.template Get<char>() == '"');
-            }
-            else {
-               Text_CheckState_ContainsString(src, "556");
-               REQUIRE(*local.template Get<char>() == '5');
-            }
+            else if constexpr (Same<E, Text>)
+               REQUIRE(*local.template Get<Byte>() == 0b00001010);
+            else if constexpr (Same<E, RT>)
+               REQUIRE(*local.template Get<Byte>() == 0x2c);
+            else if constexpr (Same<E, char>)
+               REQUIRE(*local.template Get<Byte>() == 0x2c);
+            else if constexpr (Same<E, int32_t>)
+               REQUIRE(*local.template Get<Byte>() == 0x2c);
+            else if constexpr (Same<E, Many>)
+               REQUIRE(*local.template Get<Byte>() == 0b00000010);
+            else
+               REQUIRE(*local.template Get<Byte>() == 0b00001010);
          }
 
          THEN("Handle is swapped with local handle, and then back to container") {
-            THandle<char> local = '1';
+            THandle<Byte> local = Byte {0b10101010};
+            REQUIRE(*local.template Get<Byte>() == 0b10101010);
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
-            auto local_data = local.template Get<char>();
+            auto local_data = local.template Get<Byte>();
 
-            Handle_CheckState_OwnedFull<char>(src_handle);
-            Handle_CheckState_OwnedFull<char>(local);
-            REQUIRE(src_handle.template Get<char>() == src_data);
+            Handle_CheckState_OwnedFull<Byte>(src_handle);
+            Handle_CheckState_OwnedFull<Byte>(local);
+            REQUIRE(src_handle.template Get<Byte>() == src_data);
             REQUIRE(local_data);
             REQUIRE(local_data != src_data);
 
-            if constexpr (CT::Sparse<E>)
-               ; //TODO
-            else if constexpr (Same<E, char>) {
-               Text_CheckState_ContainsString(src, "1");
-               REQUIRE(*local.template Get<char>() == ',');
+            if constexpr (CT::Sparse<E>) {
+               //TODO pointers are always different
             }
-            else if constexpr (Same<E, RT>) {
-               Text_CheckState_ContainsString(src, "1T(unknown)");
-               REQUIRE(*local.template Get<char>() == 'R');
+            else if constexpr (Same<E, Text>)
+               REQUIRE(*local.template Get<Byte>() == 0b00001010);
+            else if constexpr (Same<E, RT>)
+               REQUIRE(*local.template Get<Byte>() == 0x2c);
+            else if constexpr (Same<E, char>)
+               REQUIRE(*local.template Get<Byte>() == 0x2c);
+            else if constexpr (Same<E, int32_t>)
+               REQUIRE(*local.template Get<Byte>() == 0x2c);
+            else if constexpr (Same<E, Many>)
+               REQUIRE(*local.template Get<Byte>() == 0b00000010);
+            else
+               REQUIRE(*local.template Get<Byte>() == 0b00001010);
+
+            if constexpr (CT::Sparse<E>) {
+               //TODO pointers are always different
             }
             else if constexpr (Same<E, Text>) {
-               Text_CheckState_ContainsString(src, "1556\"");
-               REQUIRE(*local.template Get<char>() == '"');
+               const uint8_t pattern[] = {0b10101010, 10, 3, '5', '5', '6'};
+               Bytes_CheckState_ContainsBytes(src, pattern);
+            }
+            else if constexpr (Same<E, RT>) {
+               const uint8_t pattern[] = {0b10101010, 0x02, 0x00, 0x00, 0x00};
+               Bytes_CheckState_ContainsBytes(src, pattern);
+            }
+            else if constexpr (Same<E, char>) {
+               const uint8_t pattern[] = {0b10101010};
+               Bytes_CheckState_ContainsBytes(src, pattern);
+            }
+            else if constexpr (Same<E, int32_t>) {
+               const uint8_t pattern[] = {0b10101010, 0x02, 0x00, 0x00};
+               Bytes_CheckState_ContainsBytes(src, pattern);
+            }
+            else if constexpr (Same<E, Many>) {
+               const uint8_t pattern[] = {0b10101010, 4, 0x2c, 0x02, 0x00, 0x00};
+               Bytes_CheckState_ContainsBytes(src, pattern);
             }
             else {
-               Text_CheckState_ContainsString(src, "156");
-               REQUIRE(*local.template Get<char>() == '5');
+               const uint8_t pattern[] = {0b10101010, 11, 4, 0x2c, 0x02, 0x00, 0x00};
+               Bytes_CheckState_ContainsBytes(src, pattern);
             }
-
+      
             REQUIRE_NOTHROW(local.SwapContents(src_handle));
-            REQUIRE(src_handle.template Get<char>() == src_data);
-            REQUIRE(local.template Get<char>() == local_data);
+            REQUIRE(src_handle.template Get<Byte>() == src_data);
+            REQUIRE(local.template Get<Byte>() == local_data);
 
-            if constexpr (CT::Sparse<E>)
-               ; //TODO
-            else if constexpr (Same<E, char>) {
-               Text_CheckState_ContainsString(src, ",");
-               REQUIRE(*local.template Get<char>() == '1');
-            }
-            else if constexpr (Same<E, RT>) {
-               Text_CheckState_ContainsString(src, "RT(unknown)");
-               REQUIRE(*local.template Get<char>() == '1');
-            }
-            else if constexpr (Same<E, Text>) {
-               Text_CheckState_ContainsString(src, "\"556\"");
-               REQUIRE(*local.template Get<char>() == '1');
-            }
-            else {
-               Text_CheckState_ContainsString(src, "556");
-               REQUIRE(*local.template Get<char>() == '1');
-            }
+            check_src();
+            REQUIRE(*local.template Get<Byte>() == 0b10101010);
 
             // We should be able to do this indefinitely                
             for(int i = 0; i < 101; ++i)
@@ -1559,15 +1553,27 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
       WHEN("GetHandle is called on constant container") {
          T const& pack_constant = src;
          auto h = pack_constant.GetHandle();
-         static_assert(::std::same_as<decltype(h), THandle<char const&>>);
+         static_assert(::std::same_as<decltype(h), THandle<Byte const&>>);
 
-         Handle_CheckState_OwnedFull<char const>(h);
+         Handle_CheckState_OwnedFull<Byte const>(h);
       }
    }
    
    GIVEN("Absorbed container and a couple of arrays") {
-      const ScopedE darray1[5] {49, 50, 51, 52, 53};
-      const ScopedE darray2[5] {54, 55, 56, 57, 58};
+      const ScopedE darray1[5] {
+         Clone(int32_t{49}), 
+         Clone(int32_t{50}), 
+         Clone(int32_t{51}), 
+         Clone(int32_t{52}), 
+         Clone(int32_t{53})
+      };
+      const ScopedE darray2[5] {
+         Clone(int32_t{54}),
+         Clone(int32_t{55}),
+         Clone(int32_t{56}),
+         Clone(int32_t{57}),
+         Clone(int32_t{58})
+      };
 
       const E immovable[5] {
          *darray1[0], *darray1[1], *darray1[2], *darray1[3], *darray1[4]
@@ -1582,23 +1588,24 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          *darray2[0], *darray2[1], *darray2[2], *darray2[3], *darray2[4]
       };
 
-      const ScopedE e556 {556};
+      const ScopedE e556 {Clone{int32_t{556}}};
       T piecewise1{Piecewise, *e556};
       T pack {Absorb, Abandon(piecewise1)};
 
       /// MARK: Insert array                                                  
       WHEN("Insert an array to the back") {
+         const size_t previous_count = pack.GetCount();
          volatile size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back,           immovable));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Refer    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Copy     {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Disown   {immovable}));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, std::move(movable1)));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Move     {movable2}));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Abandon  {movable3}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, std::move( movable1)));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Move     { movable2}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Abandon  { movable3}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Back, Clone    {immovable}));
 
-         Text_CheckState_OwnedFull(pack);
+         Bytes_CheckState_OwnedFull(pack);
 
          if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i) {
@@ -1608,81 +1615,326 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                Many_CheckState_OwnedFull<TypeOf<E>>(movable3[i]);
             }
          }
-
+         
          if constexpr (CT::Sparse<E>) {
             //TODO pointers are always different
          }
          else if constexpr (Same<E, Text>) {
-            REQUIRE(inserted == 4*5*8);
-            Text_CheckState_ContainsString(pack,
-               "\"556\"\"49\"\"50\"\"51\"\"52\"\"53\""
-                      "\"49\"\"50\"\"51\"\"52\"\"53\""
-                      "\"49\"\"50\"\"51\"\"52\"\"53\""
-                      "\"49\"\"50\"\"51\"\"52\"\"53\""
-                      "\"54\"\"55\"\"56\"\"57\"\"58\""
-                      "\"54\"\"55\"\"56\"\"57\"\"58\""
-                      "\"54\"\"55\"\"56\"\"57\"\"58\""
-                      "\"49\"\"50\"\"51\"\"52\"\"53\""
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 10, 3, '5', '5', '6',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3'
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            REQUIRE(inserted == 10*5*8);
-            Text_CheckState_ContainsString(pack,
-               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, 0x00,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, char>) {
-            REQUIRE(inserted == 5*8);
-            Text_CheckState_ContainsString(pack,
-               ",12345"
-                "12345"
-                "12345"
-                "12345"
-                "6789:"
-                "6789:"
-                "6789:"
-                "12345"
-            );
+            const uint8_t pattern[] = {
+               0x2c,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x31, 0x32, 0x33, 0x34, 0x35
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, //556
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00  //53
+            };
+      
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {
+               0b00000010, 4, 0x2c, 0x02, 0x00, 0x00, //556
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00  //53
+            };
+      
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else {
-            REQUIRE(inserted == 2*5*8);
-            Text_CheckState_ContainsString(pack,
-               "5564950515253"
-                  "4950515253"
-                  "4950515253"
-                  "4950515253"
-                  "5455565758"
-                  "5455565758"
-                  "5455565758"
-                  "4950515253"
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00, //556
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00  //53
+            };
+      
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
 
-         BenchmarkTextStd("Absorb/Insert/Array/Back", 30, 100,
+         BenchmarkBytesStd("Absorb/Insert/Array/Back", 30, 100,
             T temp,              temp.InsertAt(Index::Back, immovable),
-            stdstr temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+            stdbyt temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
          );
       }
 
       WHEN("Insert an array to the front") {
-         size_t inserted = 0;
+         const size_t previous_count = pack.GetCount();
+         volatile size_t inserted = 0;
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front,           immovable));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Refer    {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Copy     {immovable}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Disown   {immovable}));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, std::move(movable1)));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Move     {movable2}));
-         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Abandon  {movable3}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, std::move( movable1)));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Move     { movable2}));
+         REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Abandon  { movable3}));
          REQUIRE_NOTHROW(inserted += pack.InsertAt(Index::Front, Clone    {immovable}));
 
-         Text_CheckState_OwnedFull(pack);
+         Bytes_CheckState_OwnedFull(pack);
 
          if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i) {
@@ -1697,61 +1949,305 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             //TODO pointers are always different
          }
          else if constexpr (Same<E, Text>) {
-            REQUIRE(inserted == 4*5*8);
-            Text_CheckState_ContainsString(pack,
-               "\"49\"\"50\"\"51\"\"52\"\"53\""
-               "\"54\"\"55\"\"56\"\"57\"\"58\""
-               "\"54\"\"55\"\"56\"\"57\"\"58\""
-               "\"54\"\"55\"\"56\"\"57\"\"58\""
-               "\"49\"\"50\"\"51\"\"52\"\"53\""
-               "\"49\"\"50\"\"51\"\"52\"\"53\""
-               "\"49\"\"50\"\"51\"\"52\"\"53\""
-               "\"49\"\"50\"\"51\"\"52\"\"53\"\"556\""
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 3, '5', '5', '6'
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            REQUIRE(inserted == 10*5*8);
-            Text_CheckState_ContainsString(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)RT(unknown)"
-            );
+            const uint8_t pattern[] = {
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x2c, 0x02, 0x00, 0x00, 0x00
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, char>) {
-            REQUIRE(inserted == 5*8);
-            Text_CheckState_ContainsString(pack,
-               "12345"
-               "6789:"
-               "6789:"
-               "6789:"
-               "12345"
-               "12345"
-               "12345"
-               "12345,"
-            );
+            const uint8_t pattern[] = {
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x2c
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x2c, 0x02, 0x00, 0x00  //556
+            };
+      
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x2c, 0x02, 0x00, 0x00  //556
+            };
+      
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else {
-            REQUIRE(inserted == 2*5*8);
-            Text_CheckState_ContainsString(pack,
-               "4950515253"
-               "5455565758"
-               "5455565758"
-               "5455565758"
-               "4950515253"
-               "4950515253"
-               "4950515253"
-               "4950515253556"
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00001010, 11, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00001010, 11, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00001010, 11, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00  //556
+            };
+      
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
 
-         BenchmarkTextStd("Absorb/Insert/Array/Front", 30, 100,
+         BenchmarkBytesStd("Absorb/Insert/Array/Front", 30, 100,
             T temp,              temp.InsertAt(Index::Front, darray1),
-            stdstr temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
+            stdbyt temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
          );
       }
 
@@ -1761,22 +2257,22 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          REQUIRE_THROWS(inserted = pack.InsertAt(1000, immovable));
          REQUIRE(inserted == 0);
 
-         Text_CheckState_OwnedFull(pack);
-         Text_CheckState_ContainsOne(pack, *e556);
+         Bytes_CheckState_OwnedFull(pack);
+         Bytes_CheckState_ContainsOne(pack, *e556);
       }
 
       /// MARK: <<                                                            
-      WHEN("Insert at the back by using << operator)") {
-         pack <<           immovable[0]
-              << Refer    {immovable[1]}
-              << Copy     {immovable[2]}
-              << Disown   {immovable[3]}
-              << std::move( movable1[0])
-              << Move     { movable2[0]}
-              << Abandon  { movable3[0]}
-              << Clone    {immovable[4]};
+      WHEN("Insert at the back by using << operator") {
+         REQUIRE_NOTHROW(pack <<           immovable[0]
+                              << Refer    {immovable[1]}
+                              << Copy     {immovable[2]}
+                              << Disown   {immovable[3]}
+                              << std::move( movable1[0])
+                              << Move     { movable2[0]}
+                              << Abandon  { movable3[0]}
+                              << Clone    {immovable[4]});
 
-         Text_CheckState_OwnedFull(pack);
+         Bytes_CheckState_OwnedFull(pack);
 
          if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i)
@@ -1785,46 +2281,105 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
             Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
          }
-
+         
          if constexpr (CT::Sparse<E>) {
             //TODO pointers are always different
          }
          else if constexpr (Same<E, Text>) {
-            Text_CheckState_ContainsString(pack,
-               "\"556\"\"49\"\"50\"\"51\"\"52\"\"54\"\"54\"\"54\"\"53\""
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 10, 3, '5', '5', '6',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '3'
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            Text_CheckState_ContainsString(pack,
-               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, 0x00,
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, char>) {
-            Text_CheckState_ContainsString(pack, ",12346665");
+            const uint8_t pattern[] = {
+               0x2c, 0x31, 0x32, 0x33, 0x34, 0x36, 0x36, 0x36, 0x35
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, //556
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x35, 0x00, 0x00, 0x00, //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {
+               0b00000010, 4, 0x2c, 0x02, 0x00, 0x00, //556
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else {
-            Text_CheckState_ContainsString(pack, "5564950515254545453");
+            const uint8_t pattern[] = {
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00, //556
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
 
-         BenchmarkTextStd("Absorb/Insert/Element/Back", 30, 100,
+         BenchmarkBytesStd("Absorb/Insert/Element/Back", 30, 100,
             T temp,              temp << immovable[0],
-            stdstr temp_std,     temp_std.emplace_back(immovable[0])
+            stdbyt temp_std,     temp_std.emplace_back(immovable[0])
          );
       }
 
       /// MARK: >>                                                            
-      WHEN("Insert at the front by using >> operator)") {
-         pack >>           immovable[0]
-              >> Refer    {immovable[1]}
-              >> Copy     {immovable[2]}
-              >> Disown   {immovable[3]}
-              >> std::move( movable1[0])
-              >> Move     { movable2[0]}
-              >> Abandon  { movable3[0]}
-              >> Clone    {immovable[4]};
+      WHEN("Insert at the front by using >> operator") {
+         REQUIRE_NOTHROW(pack >>           immovable[0]
+                              >> Refer    {immovable[1]}
+                              >> Copy     {immovable[2]}
+                              >> Disown   {immovable[3]}
+                              >> std::move( movable1[0])
+                              >> Move     { movable2[0]}
+                              >> Abandon  { movable3[0]}
+                              >> Clone    {immovable[4]});
 
-         Text_CheckState_OwnedFull(pack);
+         Bytes_CheckState_OwnedFull(pack);
 
          if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i)
@@ -1838,44 +2393,103 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             //TODO pointers are always different
          }
          else if constexpr (Same<E, Text>) {
-            Text_CheckState_ContainsString(pack,
-               "\"53\"\"54\"\"54\"\"54\"\"52\"\"51\"\"50\"\"49\"\"556\""
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 10, 2, '5', '3',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 3, '5', '5', '6'
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, RT>) {
-            Text_CheckState_ContainsString(pack,
-               "RT(copied)RT(copied)RT(copied)RT(copied)"
-               "RT(copied)RT(copied)RT(copied)RT(copied)RT(unknown)"
-            );
+            const uint8_t pattern[] = {
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x2c, 0x02, 0x00, 0x00, 0x00
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, char>) {
-            Text_CheckState_ContainsString(pack, "56664321,");
+            const uint8_t pattern[] = {
+               0x35, 0x36, 0x36, 0x36, 0x34, 0x33, 0x32, 0x31, 0x2c
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {
+               0x35, 0x00, 0x00, 0x00, //53
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x34, 0x00, 0x00, 0x00, //52
+               0x33, 0x00, 0x00, 0x00, //51
+               0x32, 0x00, 0x00, 0x00, //50
+               0x31, 0x00, 0x00, 0x00, //49
+               0x2c, 0x02, 0x00, 0x00  //556
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x2c, 0x02, 0x00, 0x00  //556
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else {
-            Text_CheckState_ContainsString(pack, "5354545452515049556");
+            const uint8_t pattern[] = {
+               0b00001010, 11, 4, 0x35, 0x00, 0x00, 0x00, //53
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00001010, 11, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00001010, 11, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00001010, 11, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00001010, 11, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00  //556
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
 
-         BenchmarkTextStd("Absorb/Insert/Element/Front", 30, 100,
+         BenchmarkBytesStd("Absorb/Insert/Element/Front", 30, 100,
             T temp,              temp >> immovable[0],
-            stdstr temp_std,     temp_std.emplace_front(immovable[0])
+            stdbyt temp_std,     temp_std.emplace_front(immovable[0])
          );
       }
 
       /// MARK: Concat array                                                  
-      if constexpr (CT::Text<E> and CT::Container<E>) {
+      if constexpr (Same<E, Bytes>) {
          WHEN("Concatenate to the back") {
-            size_t inserted = 0;
+            const size_t previous_count = pack.GetCount();
+            volatile size_t inserted = 0;
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back,           immovable[0]));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Refer    {immovable[1]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Copy     {immovable[2]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Disown   {immovable[3]}));
-            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, std::move(movable1[0])));
-            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Move     {movable2[1]}));
-            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Abandon  {movable3[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, std::move( movable1[0])));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Move     { movable2[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Abandon  { movable3[2]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Back, Clone    {immovable[4]}));
-            REQUIRE(inserted == 16);
 
-            Text_CheckState_OwnedFull(pack);
+            Bytes_CheckState_OwnedFull(pack);
 
             if constexpr (CT::Container<E>) {
                for (int i = 0; i < 5; ++i) {
@@ -1886,27 +2500,39 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                }
             }
 
-            Text_CheckState_ContainsString(pack,"\"556\"4950515254555653");
+            const uint8_t pattern[] = {
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00, //556
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x35, 0x00, 0x00, 0x00  //53
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
 
-            BenchmarkTextStd("Absorb/Concat/Element/Back", 30, 100,
+            BenchmarkBytesStd("Absorb/Concat/Element/Back", 30, 100,
                T temp,              temp.ConcatAt(Index::Back, immovable),
-               stdstr temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
+               stdbyt temp_std,     std::copy(immovable, immovable + 5, std::back_inserter(temp_std))
             );
          }
 
          WHEN("Concatenate to the front") {
-            size_t inserted = 0;
+            const size_t previous_count = pack.GetCount();
+            volatile size_t inserted = 0;
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front,           immovable[0]));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Refer    {immovable[1]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Copy     {immovable[2]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Disown   {immovable[3]}));
-            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, std::move(movable1[0])));
-            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Move     {movable2[1]}));
-            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Abandon  {movable3[2]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, std::move( movable1[0])));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Move     { movable2[1]}));
+            REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Abandon  { movable3[2]}));
             REQUIRE_NOTHROW(inserted += pack.ConcatAt(Index::Front, Clone    {immovable[4]}));
-            REQUIRE(inserted == 16);
 
-            Text_CheckState_OwnedFull(pack);
+            Bytes_CheckState_OwnedFull(pack);
 
             if constexpr (CT::Container<E>) {
                for (int i = 0; i < 5; ++i) {
@@ -1917,11 +2543,23 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
                }
             }
 
-            Text_CheckState_ContainsString(pack,"5356555452515049\"556\"");
+            const uint8_t pattern[] = {
+               0x35, 0x00, 0x00, 0x00, //53
+               0x38, 0x00, 0x00, 0x00, //56
+               0x37, 0x00, 0x00, 0x00, //55
+               0x36, 0x00, 0x00, 0x00, //54
+               0x34, 0x00, 0x00, 0x00, //52
+               0x33, 0x00, 0x00, 0x00, //51
+               0x32, 0x00, 0x00, 0x00, //50
+               0x31, 0x00, 0x00, 0x00, //49
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00 //556
+            };
+            REQUIRE(inserted == sizeof(pattern) - previous_count);
+            Bytes_CheckState_ContainsBytes(pack, pattern);
 
-            BenchmarkTextStd("Absorb/Concat/Element/Front", 30, 100,
+            BenchmarkBytesStd("Absorb/Concat/Element/Front", 30, 100,
                T temp,              temp.ConcatAt(Index::Front, darray1),
-               stdstr temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
+               stdbyt temp_std,     std::copy(darray1, darray1 + 5, std::front_inserter(temp_std))
             );
          }
 
@@ -1931,13 +2569,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             REQUIRE_THROWS(inserted = pack.ConcatAt(1000, immovable[0]));
             REQUIRE(inserted == 0);
             
-            Text_CheckState_OwnedFull(pack);
-            Text_CheckState_ContainsOne(pack, *e556);
+            Bytes_CheckState_OwnedFull(pack);
+            Bytes_CheckState_ContainsOne(pack, *e556);
          }
       }
 
       /// MARK: +=                                                            
-      WHEN("Concatenate array at the back by using += operator)") {
+      WHEN("Concatenate array at the back by using += operator") {
          REQUIRE_NOTHROW(pack +=           immovable );
          REQUIRE_NOTHROW(pack += Refer    {immovable});
          REQUIRE_NOTHROW(pack += Copy     {immovable});
@@ -1947,7 +2585,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          REQUIRE_NOTHROW(pack += Abandon  { movable3});
          REQUIRE_NOTHROW(pack += Clone    {immovable});
 
-         Text_CheckState_OwnedFull(pack);
+         Bytes_CheckState_OwnedFull(pack);
 
          if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i)
@@ -1956,66 +2594,301 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
             Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
          }
-
          if constexpr (CT::Sparse<E>) {
             //TODO pointers are always different
          }
          else if constexpr (Same<E, RT>) {
-            Text_CheckState_ContainsString(pack,
-               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, 0x00,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x37, 0x00, 0x00, 0x00, 0b00000010,
+               0x38, 0x00, 0x00, 0x00, 0b00000010,
+               0x39, 0x00, 0x00, 0x00, 0b00000010,
+               0x3a, 0x00, 0x00, 0x00, 0b00000010,
+
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, char>) {
-            Text_CheckState_ContainsString(pack,
-               ",12345"
-                "12345"
-                "12345"
-                "12345"
-                "6789:"
-                "6789:"
-                "6789:"
-                "12345"
-            );
+            const uint8_t pattern[] = {
+               0x2c,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x31, 0x32, 0x33, 0x34, 0x35,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x36, 0x37, 0x38, 0x39, 0x3a,
+               0x31, 0x32, 0x33, 0x34, 0x35
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, Text>) {
-            Text_CheckState_ContainsString(pack,
-               "\"556\"4950515253"
-                      "4950515253"
-                      "4950515253"
-                      "4950515253"
-                      "5455565758"
-                      "5455565758"
-                      "5455565758"
-                      "4950515253"
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 10, 3, '5', '5', '6',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '5',
+               0b00001010, 10, 2, '5', '6',
+               0b00001010, 10, 2, '5', '7',
+               0b00001010, 10, 2, '5', '8',
+
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '3'
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {
+               0b00000010, 4, 0x2c, 0x02, 0x00, 0x00, //556
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00, //53
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x37, 0x00, 0x00, 0x00, //55
+               0b00000010, 4, 0x38, 0x00, 0x00, 0x00, //56
+               0b00000010, 4, 0x39, 0x00, 0x00, 0x00, //57
+               0b00000010, 4, 0x3a, 0x00, 0x00, 0x00, //58
+
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00  //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, //556
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00  //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else {
-            Text_CheckState_ContainsString(pack,
-               "5564950515253"
-                  "4950515253"
-                  "4950515253"
-                  "4950515253"
-                  "5455565758"
-                  "5455565758"
-                  "5455565758"
-                  "4950515253"
-            );
+            const uint8_t pattern[] = {
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00, //556
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00, //53
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x36, 0x00, 0x00, 0x00, //54
+               0x37, 0x00, 0x00, 0x00, //55
+               0x38, 0x00, 0x00, 0x00, //56
+               0x39, 0x00, 0x00, 0x00, //57
+               0x3a, 0x00, 0x00, 0x00, //58
+
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x35, 0x00, 0x00, 0x00  //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
 
-         BenchmarkTextStd("Absorb/+=/Array/Back", 30, 100,
+         BenchmarkBytesStd("Absorb/+=/Array/Back", 30, 100,
             T temp,              temp += immovable,
-            stdstr temp_std,     temp_std.emplace_back(immovable[0])
+            stdbyt temp_std,     temp_std.emplace_back(immovable[0])
          );
       }
 
-      WHEN("Concatenate element the back by using += operator)") {
+      WHEN("Concatenate element the back by using += operator") {
          REQUIRE_NOTHROW(pack +=           immovable[0] );
          REQUIRE_NOTHROW(pack += Refer    {immovable[1]});
          REQUIRE_NOTHROW(pack += Copy     {immovable[2]});
@@ -2025,7 +2898,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
          REQUIRE_NOTHROW(pack += Abandon  { movable3[0]});
          REQUIRE_NOTHROW(pack += Clone    {immovable[4]});
 
-         Text_CheckState_OwnedFull(pack);
+         Bytes_CheckState_OwnedFull(pack);
 
          if constexpr (CT::Container<E>) {
             for (int i = 0; i < 5; ++i)
@@ -2039,24 +2912,85 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Text", TestType
             //TODO pointers are always different
          }
          else if constexpr (Same<E, RT>) {
-            Text_CheckState_ContainsString(pack,
-               "RT(unknown)RT(copied)RT(copied)RT(copied)RT(copied)"
-                          "RT(copied)RT(copied)RT(copied)RT(copied)"
-            );
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, 0x00,
+               0x31, 0x00, 0x00, 0x00, 0b00000010,
+               0x32, 0x00, 0x00, 0x00, 0b00000010,
+               0x33, 0x00, 0x00, 0x00, 0b00000010,
+               0x34, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x36, 0x00, 0x00, 0x00, 0b00000010,
+               0x35, 0x00, 0x00, 0x00, 0b00000010
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, char>) {
-            Text_CheckState_ContainsString(pack, ",12346665");
+            const uint8_t pattern[] = {
+               0x2c, 0x31, 0x32, 0x33, 0x34, 0x36, 0x36, 0x36, 0x35
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else if constexpr (Same<E, Text>) {
-            Text_CheckState_ContainsString(pack, "\"556\"4950515254545453");
+            const uint8_t pattern[] = {
+               0b00001010, 10, 3, '5', '5', '6',
+               0b00001010, 10, 2, '4', '9',
+               0b00001010, 10, 2, '5', '0',
+               0b00001010, 10, 2, '5', '1',
+               0b00001010, 10, 2, '5', '2',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '4',
+               0b00001010, 10, 2, '5', '3'
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, Many>) {
+            const uint8_t pattern[] = {
+               0b00000010, 4, 0x2c, 0x02, 0x00, 0x00, //556
+               0b00000010, 4, 0x31, 0x00, 0x00, 0x00, //49
+               0b00000010, 4, 0x32, 0x00, 0x00, 0x00, //50
+               0b00000010, 4, 0x33, 0x00, 0x00, 0x00, //51
+               0b00000010, 4, 0x34, 0x00, 0x00, 0x00, //52
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x36, 0x00, 0x00, 0x00, //54
+               0b00000010, 4, 0x35, 0x00, 0x00, 0x00  //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
+         }
+         else if constexpr (Same<E, int32_t>) {
+            const uint8_t pattern[] = {
+               0x2c, 0x02, 0x00, 0x00, //556
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x35, 0x00, 0x00, 0x00  //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
          else {
-            Text_CheckState_ContainsString(pack, "5564950515254545453");
+            const uint8_t pattern[] = {
+               0b00001010, 11, 4, 0x2c, 0x02, 0x00, 0x00, //556
+               0x31, 0x00, 0x00, 0x00, //49
+               0x32, 0x00, 0x00, 0x00, //50
+               0x33, 0x00, 0x00, 0x00, //51
+               0x34, 0x00, 0x00, 0x00, //52
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x36, 0x00, 0x00, 0x00, //54
+               0x35, 0x00, 0x00, 0x00  //53
+            };
+            Bytes_CheckState_ContainsBytes(pack, pattern);
          }
 
-         BenchmarkTextStd("Absorb/+=/Element/Back", 30, 100,
+         BenchmarkBytesStd("Absorb/+=/Element/Back", 30, 100,
             T temp,              temp += immovable[0],
-            stdstr temp_std,     temp_std.emplace_back(immovable[0])
+            stdbyt temp_std,     temp_std.emplace_back(immovable[0])
          );
       }
    }

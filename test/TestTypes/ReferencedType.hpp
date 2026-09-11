@@ -96,7 +96,7 @@ static_assert(not Langulus::CT::Deep<RT>);
 LANGULUS_MORPHISM(RT, Langulus::Anyness::Text);
 LANGULUS_MORPHISM_CUSTOM(RT, {
       TO bytes;
-      bytes += from.data;
+      bytes += static_cast<int32_t>(from.data);
       uint8_t mask = 0;
       if (from.destroyed)
          mask |= 1;

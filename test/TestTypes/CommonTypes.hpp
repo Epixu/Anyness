@@ -399,6 +399,7 @@ struct ForcedAbstractInternally {
 
 /// Types that can inherit abstractness                                       
 struct InheritedAbstract1 : ForcedAbstractInternally { };
+struct InheritedAbstract1Disabled : ForcedAbstractInternally { using CTTI_Abstract = No; };
 struct InheritedAbstract2 : PureAbstract { };
 
 /// Types that can inherit abstractness privately                             
@@ -422,8 +423,6 @@ struct PrivatelyDerived : private ImpureVirtual {
 
 /// MARK: Convertible                                                         
 struct ConvertibleToInt {
-   //using CTTI_MapsTo = int;
-
    ConvertibleToInt(int inner = 666)
       : member{inner} {}
 
@@ -572,7 +571,6 @@ namespace Langulus::CTTI
 
 /// MARK: Empty                                                               
 struct EmptyType {};
-static_assert(CT::POD<EmptyType>);
 static_assert(::std::is_copy_constructible_v<EmptyType>);
 static_assert(::std::is_move_constructible_v<EmptyType>);
 static_assert(::std::is_copy_assignable_v<EmptyType>);
@@ -583,7 +581,6 @@ struct ActualAggregateType {
    int i;
    float f;
 };
-static_assert(CT::POD<ActualAggregateType>);
 static_assert(::std::is_copy_constructible_v<ActualAggregateType>);
 static_assert(::std::is_move_constructible_v<ActualAggregateType>);
 static_assert(::std::is_copy_assignable_v<ActualAggregateType>);
@@ -617,8 +614,7 @@ struct NonAggregateTypeDerived : CustomAggregateType {
 struct NonDestructible {
    ~NonDestructible() = delete;
 };
-static_assert(::std::is_standard_layout_v<NonDestructible>);
-static_assert(not CT::POD<NonDestructible>);
+static_assert(    ::std::is_standard_layout_v<NonDestructible>);
 static_assert(not ::std::is_copy_constructible_v<NonDestructible>);
 static_assert(not ::std::is_move_constructible_v<NonDestructible>);
 static_assert(    ::std::is_copy_assignable_v<NonDestructible>);
@@ -629,7 +625,6 @@ struct DestructibleType {
 
    ~DestructibleType() { if (p) delete p; }
 };
-static_assert(not CT::POD<DestructibleType>);
 static_assert(::std::is_copy_constructible_v<DestructibleType>);
 static_assert(::std::is_move_constructible_v<DestructibleType>);
 static_assert(::std::is_copy_assignable_v<DestructibleType>);
@@ -640,7 +635,6 @@ static_assert(::std::is_move_assignable_v<DestructibleType>);
 struct NonIntentConstructible {
    NonIntentConstructible(CT::NoIntent auto&&) {}
 };
-static_assert(not CT::POD<NonIntentConstructible>);
 static_assert(::std::is_copy_constructible_v<NonIntentConstructible>);
 static_assert(::std::is_move_constructible_v<NonIntentConstructible>);
 static_assert(::std::is_copy_assignable_v<NonIntentConstructible>);
@@ -652,7 +646,6 @@ class PrivatelyConstructible {
    PrivatelyConstructible(PrivatelyConstructible const&) = default;
    PrivatelyConstructible(PrivatelyConstructible&&) = default;
 };
-static_assert(CT::POD<PrivatelyConstructible>);
 static_assert(not ::std::is_copy_constructible_v<PrivatelyConstructible>);
 static_assert(not ::std::is_move_constructible_v<PrivatelyConstructible>);
 static_assert(not ::std::is_copy_assignable_v<PrivatelyConstructible>);
@@ -664,7 +657,6 @@ struct PartiallyIntentConstructible {
    template<template<class> class S, class T>
    explicit PartiallyIntentConstructible(S<T>&&) requires CT::Intent<S<T>> {}
 };
-static_assert(not CT::POD<PartiallyIntentConstructible>);
 static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructible>);
 static_assert(::std::is_move_constructible_v<PartiallyIntentConstructible>);
 static_assert(::std::is_copy_assignable_v<PartiallyIntentConstructible>);
@@ -684,7 +676,6 @@ struct PartiallyIntentConstructibleButImplicitly {
    template<template<class> class S, class T>
    PartiallyIntentConstructibleButImplicitly(S<T>&&) requires CT::Intent<S<T>> {}
 };
-static_assert(not CT::POD<PartiallyIntentConstructibleButImplicitly>);
 static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructibleButImplicitly>);
 static_assert(::std::is_move_constructible_v<PartiallyIntentConstructibleButImplicitly>);
 static_assert(::std::is_copy_assignable_v<PartiallyIntentConstructibleButImplicitly>);
@@ -725,7 +716,6 @@ struct alignas(128) Complex {
       if (sparseMember) delete sparseMember;
    }
 };
-static_assert(not CT::POD<Complex>);
 static_assert(    ::std::is_copy_constructible_v<Complex>);
 static_assert(    ::std::is_move_constructible_v<Complex>);
 static_assert(not ::std::is_copy_assignable_v<Complex>);
@@ -872,7 +862,6 @@ struct ForcefullyPod {
    using CTTI_POD = Yes<>;
    Complex mData;
 };
-static_assert(CT::POD<ForcefullyPod>);
 static_assert(    ::std::is_copy_constructible_v<ForcefullyPod>);
 static_assert(    ::std::is_move_constructible_v<ForcefullyPod>);
 static_assert(not ::std::is_copy_assignable_v<ForcefullyPod>); // not available due to missing in mData (implicitly deleted because of custom constructor)

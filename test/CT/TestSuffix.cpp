@@ -41,6 +41,8 @@ namespace Langulus::CTTI
    };
 }
 
+//TODO test extents
+
 #define DEFINE_SUFFIXOF_TYPE_TEST(WHAT, RESULT) \
    WHEN("Taken the suffix of type " #WHAT) { \
       static_assert(SuffixOf<WHAT>() == RESULT); \

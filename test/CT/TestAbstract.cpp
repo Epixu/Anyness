@@ -6,60 +6,22 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "../Main.hpp"
+#include "../TestTypes/CommonTypes.hpp"
 #include <Langulus/CT/Abstract.hpp>
 
 using namespace Langulus;
 
-namespace
-{
-   template<class T>
-   struct SheddableType { using CTTI_Sheddable = T; };
-   struct IncompleteType;
-
-   /// Built-in abstract type via a pure virtual function                     
-   struct PureAbstract {
-      PureAbstract() = delete;
-      virtual ~PureAbstract() {}
-      PureAbstract(void*) {}
-      [[maybe_unused]] virtual auto PureVirtualMethod() -> size_t = 0;
-   };
-
-   /// Proper type, reflected as abstract                                     
-   struct ForcedAbstractExternally {};
-   struct ForcedAbstractInternally {
-      using CTTI_Abstract = Yes<>;
-   };
-
-   /// Types that can inherit abstractness                                    
-   struct InheritedAbstract1 : ForcedAbstractInternally {};
-   struct InheritedAbstract1Disabled : ForcedAbstractInternally { using CTTI_Abstract = No; };
-   struct InheritedAbstract2 : PureAbstract {};
-
-   /// Types that can inherit abstractness privately                          
-   struct ImpureVirtual {
-      virtual ~ImpureVirtual() {}
-   };
-   struct InheritedAbstract1ButPrivate : private ForcedAbstractInternally {};
-   struct InheritedAbstract2ButPrivate : private PureAbstract {};
-   struct InheritedAbstractExternally : ForcedAbstractExternally {};
-}
-
-namespace Langulus::CTTI
-{
-   template<>
-   struct Abstract<ForcedAbstractExternally> {};
-}
-
+//TODO test extents
 
 ///                                                                           
 /// CT::Abstract                                                              
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::Abstract types", TestType
-   //, IncompleteType                // shouldn't compile
-   //, IncompleteType const          // shouldn't compile
-   //, SheddableType<IncompleteType> // shouldn't compile
-   , SheddableType<PureAbstract>
-   , SheddableType<PureAbstract const>
+   //, IncompleteType                     // shouldn't compile
+   //, IncompleteType const               // shouldn't compile
+   //, SheddableType<IncompleteType>      // shouldn't compile
+   //, SheddableType<PureAbstract>        // shouldn't compile
+   //, SheddableType<PureAbstract const>  // shouldn't compile
    , SheddableType<PureAbstract const&>
    , PureAbstract
    , PureAbstract const

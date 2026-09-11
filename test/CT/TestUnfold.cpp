@@ -38,6 +38,7 @@ namespace Langulus::CTTI
    };
 }
 
+//TODO test extents
 
 ///                                                                           
 /// CT::Unfoldable                                                            

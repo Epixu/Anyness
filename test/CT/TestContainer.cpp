@@ -40,6 +40,7 @@ TEST_CASE_TEMPLATE("Testing CT::Container types", TestType
    , Abandon<CustomContainer[5]>
    , Disown<CustomContainer[5]>
    , Clone<CustomContainer[5]>
+   , Clone<CustomContainer[5][5]>
 ) {
    static_assert(CT::Container<TestType>);
 }
@@ -56,6 +57,9 @@ TEST_CASE_TEMPLATE("Testing non CT::Container types", TestType
    , Types<void*>
    , CustomContainer*
    , SheddableType<CustomContainer*>
+   , CustomContainer*[5]
+   , SheddableType<CustomContainer*[5]>
+   , SheddableType<CustomContainer*[5][5]>
 ) {
    static_assert(not CT::Container<TestType>);
 }

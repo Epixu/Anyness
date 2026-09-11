@@ -35,6 +35,7 @@ namespace Langulus::CTTI
    };
 }
 
+//TODO test extents
 
 ///                                                                           
 /// CT::Real                                                                  
