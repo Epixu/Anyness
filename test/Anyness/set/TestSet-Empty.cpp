@@ -8,6 +8,83 @@
 #include "TestSetCommon.hpp"
 
 
+//TODO the following ___very___ rare bug happened windows-2022-clangcl-debug-x86-managed on the CI
+//TODO HUNT IT DOWN!!!! seems like the second table is completely junk, which would suggest, that the pointer was calculated way ahead of the actual place, due to some alignment/local heap footer error
+//TODO probably connected with the removal of some Relevant<> patterns, or the introduction of batch transfers in Heap::ConstructFrom
+//TODO Langulus::Anyness::Inner::Set<Langulus::Anyness::StateValue::Variable> gap test:
+//TODO 10:49:49|I| ▌  Size of std::unordered_set<char*> container is: 40 bytes
+//TODO 10:49:49|I| ▌  Size of Langulus::Anyness::Inner::Set<Langulus::Anyness::StateValue::Variable> container is: 24 bytes
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::StateStack<Langulus::Anyness::Component::State::Disowned<Langulus::Anyness::StateValue::Variable, 0>, Langulus::Anyness::Component::State::Typed<Langulus::Anyness::StateValue::Variable, 0>, Langulus::Anyness::Component::State::Sorted<Langulus::Anyness::StateValue::Variable, 0>, Langulus::Anyness::Component::State::Compressed<Langulus::Anyness::StateValue::Variable, 0>, Langulus::Anyness::Component::State::Encrypted<Langulus::Anyness::StateValue::Variable, 0>> component reserves 1 bytes on the stack
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::TypedStack<Langulus::RTTI::Inner::MetaDataStructured_XY<2, 2>> component reserves 4 bytes on the stack
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::HeapMovable<8, 2, Langulus::Anyness::HeapEntry<>> component reserves 4 bytes on the stack
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::CountStack<uint32, 0> component reserves 4 bytes on the stack
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::ReserveStack<uint32, 0> component reserves 4 bytes on the stack
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::IndexedHashHeap<0, Langulus::Hash> component reserves 1 bytes on the heap per element 
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::OwnershipStack<3, 0> component reserves 4 bytes on the stack
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::OwnershipDeepHeap<3, true, 0> component reserves 4 bytes on the heap per element per dimension per indirection 
+//TODO 10:49:49|I| ▌  Langulus::Anyness::Component::HashHeap<0, Langulus::Hash> component reserves 4 bytes on the heap
+//TODO the type-erased set was containing char* pointers
+//TODO 10:49:49|S| ▌  -------------- table #0 --------------
+//TODO 10:49:49|S| ▌  ^-[0] 52
+//TODO 10:49:49|S| ▌  [1] 53
+//TODO 10:49:49|S| ▌  [2] -
+//TODO 10:49:49|S| ▌  [3] -
+//TODO 10:49:49|S| ▌  [4] -
+//TODO 10:49:49|S| ▌  [5] 49
+//TODO 10:49:49|S| ▌  ^-[6] 51
+//TODO 10:49:49|S| ▌  [7] 50
+//TODO 10:49:49|S| Set dump:
+//TODO 10:49:49|S| ▌  -------------- table #0 --------------
+//TODO 10:49:49|S| ▌  ^-[0] 52
+//TODO 10:49:49|S| ▌  [1] 53
+//TODO 10:49:49|S| ▌  [2] -
+//TODO 10:49:49|S| ▌  [3] -
+//TODO 10:49:49|S| ▌  [4] -
+//TODO 10:49:49|S| ▌  [5] 49
+//TODO 10:49:49|S| ▌  ^-[6] 51
+//TODO 10:49:49|S| ▌  [7] 50
+//TODO 10:49:49|S| Set dump:
+//TODO 10:49:49|S| ▌  -------------- table #0 --------------
+//TODO 10:49:49|S| ▌  ^-[0] 52
+//TODO 10:49:49|S| ▌  [1] 53
+//TODO 10:49:49|S| ▌  [2] -
+//TODO 10:49:49|S| ▌  [3] 57
+//TODO 10:49:49|S| ▌  [4] 56
+//TODO 10:49:49|S| ▌  [5] 49
+//TODO 10:49:49|S| ▌  ^-[6] 51
+//TODO 10:49:49|S| ▌  [7] 50
+//TODO 10:49:49|S| ▌  --------------------------------------
+//TODO 10:49:49|S| ▌  -------------- table #1 --------------
+//TODO 10:49:49|S| ▌  [8] -
+//TODO 10:49:49|S| ▌  [9] -
+//TODO 10:49:49|S| ▌  [10] -
+//TODO 10:49:49|S| ▌  [11] -
+//TODO 10:49:49|S| ▌  [12] -
+//TODO 10:49:49|S| ▌  [13] -
+//TODO 10:49:49|S| ▌  [14] -
+//TODO 10:49:49|S| ▌  [15] -
+//TODO 10:49:49|S| ▌  [16] 54
+//TODO 10:49:49|S| ▌  [17] -
+//TODO 10:49:49|S| ▌  [18] -
+//TODO 10:49:49|S| ▌  [19] -
+//TODO 10:49:49|S| ▌  [20] 58
+//TODO 10:49:49|S| ▌  [21] 55
+//TODO 10:49:49|S| ▌  [22] -
+//TODO 10:49:49|S| ▌  [23] -
+//TODO 10:49:49|S| Set dump:
+//TODO 10:49:49|S| ▌  -------------- table #0 --------------
+//TODO 10:49:49|S| ▌  ^-[0] 52
+//TODO 10:49:49|S| ▌  [1] 53
+//TODO 10:49:49|S| ▌  [2] -
+//TODO 10:49:49|S| ▌  [3] 57
+//TODO 10:49:49|S| ▌  [4] 56
+//TODO 10:49:49|S| ▌  [5] 49
+//TODO 10:49:49|S| ▌  ^-[6] 51
+//TODO 10:49:49|S| ▌  [7] 50
+//TODO 10:49:49|S| ▌  --------------------------------------
+//TODO 10:49:49|S| ▌  -------------- table #1 --------------
+//TODO 10:49:49|S| ▌  ^-[8] 5������������������������������������...etc KBs of junk
+
 namespace Langulus::Anyness
 {
    // Explicit instantiation for using extern templates in other tests  

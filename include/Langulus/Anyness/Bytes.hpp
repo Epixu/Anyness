@@ -220,14 +220,22 @@ namespace Langulus::Anyness
          this->ResetHash();
       }
 
-      /// Assignment                                                          
+      /// MARK: =                                                             
       constexpr Bytes& operator = (Bytes const& other) {
          return this->AssignAbsorb(Refer {other});
       }
       constexpr Bytes& operator = (Bytes&& other) noexcept {
          return this->AssignAbsorb(Move {other});
       }
-      
+
+      template<class A>
+      constexpr Bytes& operator = (A&& argument) {
+         if constexpr (Same<Deint<A>, Bytes>)
+            return this->AssignAbsorb(LglsFwd(argument));
+         else
+            return this->Assign(LglsFwd(argument));
+      }
+
       /// Construction from raw bytes data                                    
       ///   @attention this doesn't apply ownership, only interfaces the data.
       ///      You can TakeOwnership() after this call if you want.           

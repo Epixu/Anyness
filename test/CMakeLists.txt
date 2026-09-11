@@ -71,6 +71,7 @@ add_langulus_test(LangulusAnynessTest-Bytes
    SOURCES	   Main.cpp
                Anyness/bytes/TestBytes-Empty.cpp
                Anyness/bytes/TestBytes-Absorb.cpp
+               Anyness/bytes/TestBytes-Piecewise.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

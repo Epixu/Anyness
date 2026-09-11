@@ -1783,7 +1783,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
       }
 
       /// MARK: +=                                                            
-      WHEN("Concatenate array at the back by using += operator)") {
+      WHEN("Concatenate array at the back by using += operator") {
          REQUIRE_NOTHROW(pack +=           immovable );
          REQUIRE_NOTHROW(pack += Refer    {immovable});
          REQUIRE_NOTHROW(pack += Copy     {immovable});
@@ -1861,7 +1861,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Text", TestType
          );
       }
 
-      WHEN("Concatenate element the back by using += operator)") {
+      WHEN("Concatenate element the back by using += operator") {
          REQUIRE_NOTHROW(pack +=           immovable[0] );
          REQUIRE_NOTHROW(pack += Refer    {immovable[1]});
          REQUIRE_NOTHROW(pack += Copy     {immovable[2]});

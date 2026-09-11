@@ -702,10 +702,13 @@ namespace Langulus::Anyness::Component
             }
             
             const auto head = range.GetHandle();
-            const auto last = self.GetHandle() + pool_size;
-            auto h = self.template FindInner<REVERSE, SID>(head, cookie);
+            //const auto last = self.GetHandle() + pool_size;
 
-            while(h and h.GetRaw() < last.GetRaw()) {
+            while(cookie <= pool_size - range_size /*h and h.GetRaw() < last.GetRaw()*/) {
+               const auto h = self.template FindInner<REVERSE, SID>(head, cookie);
+               if (not h)
+                  return {};
+
                cookie = h - self.GetHandle();
 
                if constexpr (not CT::TypeErased<C> and not CT::TypeErased<T>) {
@@ -751,7 +754,8 @@ namespace Langulus::Anyness::Component
                   }
                }
 
-               h = self.template FindInner<REVERSE, SID>(head, cookie + 1);
+               //h = self.template FindInner<REVERSE, SID>(head, cookie + 1);
+               ++cookie;
             }
 
             // If reached, then range wasn't found                      

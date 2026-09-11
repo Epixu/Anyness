@@ -2594,6 +2594,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Bytes", TestType
             Many_CheckState_OwnedFull<TypeOf<E>>(movable2[0]);
             Many_CheckState_OwnedFull<TypeOf<E>>(movable3[0]);
          }
+         
          if constexpr (CT::Sparse<E>) {
             //TODO pointers are always different
          }

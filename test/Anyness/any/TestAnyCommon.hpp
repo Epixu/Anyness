@@ -360,11 +360,11 @@ template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_DisownedFull(const C& any) {
    Any_Helper_TestType<E>(any);
 
+   REQUIRE      (any.IsDisowned());
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant());
    REQUIRE      (any.IsValid());
    //REQUIRE      (any.GetAllocation()); // A disowned container may or may not have an allocation
-   REQUIRE      (any.IsDisowned());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
    if (any.GetAllocation()) {
