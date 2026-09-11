@@ -81,6 +81,11 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Bytes", TestType
       auto originalElement_movable1 = *originalElement;
       auto originalElement_movable2 = *originalElement;
       auto originalElement_movable3 = *originalElement;
+      if constexpr (Same<E, RT>) {
+         originalElement_movable1.copied_in = false;
+         originalElement_movable2.copied_in = false;
+         originalElement_movable3.copied_in = false;
+      }
 
       T pack_referred1{Piecewise,             *originalElement };
       T pack_referred2{Piecewise,       Refer(*originalElement)};
@@ -192,6 +197,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Bytes", TestType
       WHEN("Assigned value by move") {
          auto assign_move = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
+            if constexpr (Same<E, RT>)
+               movable.copied_in = false;
+               
             REQUIRE_NOTHROW(a.Assign(::std::move(movable)));
 
             if constexpr (CT::DeepDense<E>) {
@@ -489,6 +497,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Bytes", TestType
       WHEN("Assigned value by abandon") {
          auto assign_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
+            if constexpr (Same<E, RT>)
+               movable.copied_in = false;
+
             REQUIRE_NOTHROW(a.Assign(Abandon(movable)));
 
             if constexpr (CT::DeepDense<E>) {
