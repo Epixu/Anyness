@@ -117,8 +117,7 @@ jobs:
           cd emsdk
           git pull
           ./emsdk.bat install latest
-          ./emsdk.bat activate latest --permanent
-          ./emsdk_env.bat --permanent
+          ./emsdk.bat activate latest --system
 
       - if: matrix.os == 'windows-2022' && matrix.cxx != 'emcc'
         name: Configure (Windows with VS2022)
