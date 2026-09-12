@@ -55,10 +55,8 @@ add_langulus_test(LangulusAnynessTest-Logger
    LIBRARIES   doctest
                LangulusAnyness
 )
-configure_file("Logger/canonical_html_test.htm" "${PROJECT_BINARY_DIR}/canonical_html_test.htm" COPYONLY)
-message(STATUS "[LANGULUS] Logger/canonical_html_test.htm copied to ${PROJECT_BINARY_DIR}")
-configure_file("Logger/canonical_txt_test.txt"  "${PROJECT_BINARY_DIR}/canonical_txt_test.txt" COPYONLY)
-message(STATUS "[LANGULUS] Logger/canonical_txt_test.htm copied to ${PROJECT_BINARY_DIR}")
+configure_file("Logger/canonical_html_test.htm" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/canonical_html_test.htm" COPYONLY)
+configure_file("Logger/canonical_txt_test.txt"  "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/canonical_txt_test.txt" COPYONLY)
 
 add_langulus_test(LangulusAnynessTest-Memory
    SOURCES	   Main.cpp

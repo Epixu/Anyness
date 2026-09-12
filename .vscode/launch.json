@@ -21,7 +21,7 @@
             "-f", "./consumption.txt",
             "-c", "${input:percist_folder}/consumption.canon"
          ],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Common",
@@ -29,7 +29,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Common.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Logger",
@@ -37,7 +37,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Logger.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Memory",
@@ -45,7 +45,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Memory.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Text",
@@ -53,7 +53,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Text.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Bytes",
@@ -61,7 +61,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Bytes.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-TRef-TOwn",
@@ -69,7 +69,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-TRef-TOwn.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Any",
@@ -77,7 +77,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Any.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Many",
@@ -85,7 +85,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Many.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Set",
@@ -93,7 +93,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Set.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       },
       {
          "name": "LangulusAnynessTest-Map",
@@ -101,7 +101,7 @@
          "request": "launch",
          "program": "${command:cmake.launchTargetDirectory}/LangulusAnynessTest-Map.exe",
          "args": [],
-         "cwd": "${command:cmake.buildDirectory}"
+         "cwd": "${command:cmake.buildDirectory}/bin"
       }
    ]
 }

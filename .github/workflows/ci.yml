@@ -73,7 +73,7 @@ jobs:
           git pull
           ./emsdk install latest
           ./emsdk activate latest
-          source ./emsdk_env.sh
+          echo 'source "/home/runner/work/Anyness/Anyness/emsdk/emsdk_env.sh"' >> $HOME/.bash_profile
 
       - if: matrix.os == 'windows-2022' && matrix.cxx == 'emcc'
         name: Prepate emscripten environment (Windows)
@@ -81,9 +81,8 @@ jobs:
           git clone https://github.com/emscripten-core/emsdk.git
           cd emsdk
           git pull
-          emsdk.bat install latest
-          emsdk.bat activate latest
-          emsdk_env.bat
+          ./emsdk.bat install latest
+          ./emsdk.bat activate latest
 
       - if: matrix.cxx == 'clang++-21'
         name: Installing Clang 21

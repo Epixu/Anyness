@@ -874,6 +874,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Bytes", TestType
          auto contains_full = [&](auto& a) {
             if constexpr (CT::Sparse<E>) {
                //TODO pointers are always different
+               return;
             }
             else if constexpr (Same<E, Text>)
                REQUIRE(a.Contains('5'));
@@ -911,6 +912,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Bytes", TestType
          auto contains_full = [&](auto& a) {
             if constexpr (CT::Sparse<E>) {
                //TODO pointers are always different
+               return;
             }
             else if constexpr (Same<E, Text>) {
                const uint8_t pattern[] = {10, 3, '5'};
