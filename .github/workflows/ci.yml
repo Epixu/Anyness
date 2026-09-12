@@ -12,10 +12,12 @@ jobs:
         managed: [ON, OFF]
         os: [ubuntu-24.04, windows-2022]   # windows-latest uses vs2026, which uses clang 22, which is full of regressions in concept compilation
         build: [debug, release]
-        cxx: [g++-14, clang++-21, clangcl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
+        cxx: [g++-14, clang++-21, clangcl, emcc] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
         arch: [x86, x64]
 
         exclude:
+          - cxx: emcc
+            arch: x64
           - os: ubuntu-24.04
             cxx: v143
           - os: ubuntu-24.04
@@ -26,6 +28,8 @@ jobs:
             cxx: clang++-21
 
         include:
+          - cxx: emcc
+            c: emcc
           - cxx: g++-14
             c: gcc-14
           - cxx: clang++-21
@@ -55,11 +59,31 @@ jobs:
       - name: Clone
         uses: actions/checkout@v6
 
-      - if: matrix.os == 'ubuntu-24.04' && matrix.arch == 'x86'
+      - if: matrix.os == 'ubuntu-24.04' && matrix.arch == 'x86' && matrix.cxx != 'emcc'
         name: Prepare Linux for cross-compilation
         run: |
           sudo apt update
           sudo apt install g++-14-multilib
+
+      - if: matrix.os == 'ubuntu-24.04' && matrix.cxx == 'emcc'
+        name: Prepate emscripten environment (Linux)
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+
+      - if: matrix.os == 'windows-2022' && matrix.cxx == 'emcc'
+        name: Prepate emscripten environment (Windows)
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          emsdk.bat install latest
+          emsdk.bat activate latest
+          emsdk_env.bat
 
       - if: matrix.cxx == 'clang++-21'
         name: Installing Clang 21

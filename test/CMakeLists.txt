@@ -56,7 +56,9 @@ add_langulus_test(LangulusAnynessTest-Logger
                LangulusAnyness
 )
 configure_file("Logger/canonical_html_test.htm" "${PROJECT_BINARY_DIR}/canonical_html_test.htm" COPYONLY)
+message(STATUS "[LANGULUS] Logger/canonical_html_test.htm copied to ${PROJECT_BINARY_DIR}")
 configure_file("Logger/canonical_txt_test.txt"  "${PROJECT_BINARY_DIR}/canonical_txt_test.txt" COPYONLY)
+message(STATUS "[LANGULUS] Logger/canonical_txt_test.htm copied to ${PROJECT_BINARY_DIR}")
 
 add_langulus_test(LangulusAnynessTest-Memory
    SOURCES	   Main.cpp
