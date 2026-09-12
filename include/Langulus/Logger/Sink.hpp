@@ -11,7 +11,6 @@
 
 namespace Langulus::Logger
 {
-
    ///                                                                        
    /// Consumes all logging messages, so that they don't interfere with       
    /// rendering inside the console.                                          
@@ -28,5 +27,4 @@ namespace Langulus::Logger
       void Clear() const noexcept {}
       auto GetFilename() const noexcept -> ::std::string_view;
    };
-
-} // namespace Langulus::Logger
+}

@@ -5,7 +5,6 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-// ReSharper disable once CppMissingIncludeGuard
 #include <Langulus/Logger.hpp>
 
 #if defined(LglsVerboseEnabled) or defined(LglsVerbose) or defined(LglsVerboseScoped)

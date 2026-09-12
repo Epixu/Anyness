@@ -5,7 +5,6 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-// ReSharper disable once CppMissingIncludeGuard
 #if defined(LglsVerboseEnabled) or defined(LglsVerbose) or defined(LglsVerboseScoped)
 #error "Verbosity has already been defined, did you forget to include <Langulus/Logger/DisableVerbose.hpp> at end of file, where <Langulus/Logger/EnableVerbose.hpp> was included?"
 #endif

@@ -5,7 +5,6 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-// ReSharper disable once CppMissingIncludeGuard
 #undef LglsVerboseEnabled
 #undef LglsVerbose
 #undef LglsVerboseScoped
