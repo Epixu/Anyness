@@ -5,10 +5,11 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#include "Main.hpp"
+#include "../Main.hpp"
 #include <Langulus/Logger.hpp>
 #include <Langulus/Logger/HTML.hpp>
 #include <Langulus/Logger/TXT.hpp>
+#include <fstream>
 
 using namespace Langulus;
 
@@ -93,7 +94,7 @@ SCENARIO("Logging to console (stateful)") {
    Logger::ToTXT txt_test {"txt_test.txt"};
    Logger::AttachDuplicator(&txt_test);
 
-   Logger::Line("\n\nTESTING STATEFUL LOGGING\n");
+   Logger::Info("TESTING STATEFUL LOGGING");
    
    Logger::Line("This should be line #1");
    Logger::Line("This should be line #2");
@@ -256,4 +257,70 @@ SCENARIO("Logging to console (stateful)") {
 
    Logger::DettachDuplicator(&html_test);
    Logger::DettachDuplicator(&txt_test);
+
+   std::locale::global(std::locale::classic());
+
+   WHEN("HTML is compared with the canonical") {
+      std::ifstream f1(          "html_test.htm");
+      std::ifstream f2("canonical_html_test.htm");
+      REQUIRE(f1);
+      REQUIRE(f2);
+
+      [[maybe_unused]] size_t line_counter = 0;
+      std::string line1, line2;
+      do
+      {
+         std::getline(f1, line1);
+         std::getline(f2, line2);
+         ++line_counter;
+
+         // Skip log start/log end messages due to unique timestamps    
+         if (line1.starts_with("<h2>") and line2.starts_with("<h2>"))
+            continue;
+
+         // When comparing lines, skip the timestamp                    
+         if (not line1.empty() and not line2.empty()
+         and line1[2] == ':' and line1[5] == ':' and line1[8] == '|'
+         and line2[2] == ':' and line2[5] == ':' and line2[8] == '|') {
+            REQUIRE(line1.substr(8) == line2.substr(8));
+         }
+         else {
+            REQUIRE(line1 == line2);
+         }
+      }
+      while(not f1.eof() and not f2.eof());
+   }
+
+   WHEN("TXT is compared with the canonical") {
+      std::ifstream f1(          "txt_test.txt");
+      std::ifstream f2("canonical_txt_test.txt");
+      REQUIRE(f1);
+      REQUIRE(f2);
+
+      [[maybe_unused]] size_t line_counter = 0;
+      std::string line1, line2;
+      do
+      {
+         std::getline(f1, line1);
+         std::getline(f2, line2);
+         ++line_counter;
+
+         // Skip log start/log end messages due to unique timestamps    
+         if (line1.starts_with("Log started - ") and line2.starts_with("Log started - "))
+            continue;
+         if (line1.starts_with("Log ended - ") and line2.starts_with("Log ended - "))
+            continue;
+
+         // When comparing lines, skip the timestamp                    
+         if (not line1.empty() and not line2.empty()
+         and line1[2] == ':' and line1[5] == ':' and line1[8] == '|'
+         and line2[2] == ':' and line2[5] == ':' and line2[8] == '|') {
+            REQUIRE(line1.substr(8) == line2.substr(8));
+         }
+         else {
+            REQUIRE(line1 == line2);
+         }
+      }
+      while(not f1.eof() and not f2.eof());
+   }
 }

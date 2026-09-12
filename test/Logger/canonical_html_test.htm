@@ -1,0 +1,386 @@
+<!DOCTYPE html><html>
+<head><style>
+   @keyframes blink {
+        0 % {opacity : 1;}
+       50 % {opacity : 0;}
+      100 % {opacity : 1;}
+   }
+   .f5E{color: royalblue; }
+   .f1E{color: black; }
+   .f5F{color: magenta; }
+   .f1F{color: DarkRed; }
+   .f60{color: cyan; }
+   .f20{color: ForestGreen; }
+   .f61{color: white; }
+   .f21{color: DarkOrange; }
+   .f22{color: blue; }
+   .f23{color: DarkMagenta; }
+   .f24{color: DarkCyan; }
+   .f25{color: LightGray; }
+   .f5A{color: gray; }
+   .f5B{color: Red; }
+   .f5C{color: GreenYellow; }
+   .f5D{color: Gold; }
+   .b5E{background-color: royalblue; }
+   .b1E{background-color: black; }
+   .b5F{background-color: magenta; }
+   .b1F{background-color: DarkRed; }
+   .b60{background-color: cyan; }
+   .b20{background-color: ForestGreen; }
+   .b61{background-color: white; }
+   .b21{background-color: DarkOrange; }
+   .b22{background-color: blue; }
+   .b23{background-color: DarkMagenta; }
+   .b24{background-color: DarkCyan; }
+   .b25{background-color: LightGray; }
+   .b5A{background-color: gray; }
+   .b5B{background-color: Red; }
+   .b5C{background-color: GreenYellow; }
+   .b5D{background-color: Gold; }
+   .e00{}
+   .e01{font-weight: bold; }
+   .e02{text-opacity: 50%; }
+   .e03{font-weight: bold; text-opacity: 50%; }
+   .e04{font-style: italic; }
+   .e05{font-weight: bold; font-style: italic; }
+   .e06{text-opacity: 50%; font-style: italic; }
+   .e07{font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e08{text-decoration: underline; }
+   .e09{text-decoration: underline; font-weight: bold; }
+   .e0A{text-decoration: underline; text-opacity: 50%; }
+   .e0B{text-decoration: underline; font-weight: bold; text-opacity: 50%; }
+   .e0C{text-decoration: underline; font-style: italic; }
+   .e0D{text-decoration: underline; font-weight: bold; font-style: italic; }
+   .e0E{text-decoration: underline; text-opacity: 50%; font-style: italic; }
+   .e0F{text-decoration: underline; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e10{animation: blink 1s infinite; }
+   .e11{animation: blink 1s infinite; font-weight: bold; }
+   .e12{animation: blink 1s infinite; text-opacity: 50%; }
+   .e13{animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e14{animation: blink 1s infinite; font-style: italic; }
+   .e15{animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e16{animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e17{animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e18{text-decoration: underline; animation: blink 1s infinite; }
+   .e19{text-decoration: underline; animation: blink 1s infinite; font-weight: bold; }
+   .e1A{text-decoration: underline; animation: blink 1s infinite; text-opacity: 50%; }
+   .e1B{text-decoration: underline; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e1C{text-decoration: underline; animation: blink 1s infinite; font-style: italic; }
+   .e1D{text-decoration: underline; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e1E{text-decoration: underline; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e1F{text-decoration: underline; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e20{mix-blend-mode: difference; }
+   .e21{mix-blend-mode: difference; font-weight: bold; }
+   .e22{mix-blend-mode: difference; text-opacity: 50%; }
+   .e23{mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; }
+   .e24{mix-blend-mode: difference; font-style: italic; }
+   .e25{mix-blend-mode: difference; font-weight: bold; font-style: italic; }
+   .e26{mix-blend-mode: difference; text-opacity: 50%; font-style: italic; }
+   .e27{mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e28{text-decoration: underline; mix-blend-mode: difference; }
+   .e29{text-decoration: underline; mix-blend-mode: difference; font-weight: bold; }
+   .e2A{text-decoration: underline; mix-blend-mode: difference; text-opacity: 50%; }
+   .e2B{text-decoration: underline; mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; }
+   .e2C{text-decoration: underline; mix-blend-mode: difference; font-style: italic; }
+   .e2D{text-decoration: underline; mix-blend-mode: difference; font-weight: bold; font-style: italic; }
+   .e2E{text-decoration: underline; mix-blend-mode: difference; text-opacity: 50%; font-style: italic; }
+   .e2F{text-decoration: underline; mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e30{mix-blend-mode: difference; animation: blink 1s infinite; }
+   .e31{mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; }
+   .e32{mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; }
+   .e33{mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e34{mix-blend-mode: difference; animation: blink 1s infinite; font-style: italic; }
+   .e35{mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e36{mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e37{mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e38{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; }
+   .e39{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; }
+   .e3A{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; }
+   .e3B{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e3C{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; font-style: italic; }
+   .e3D{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e3E{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e3F{text-decoration: underline; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e40{visibility: hidden; }
+   .e41{visibility: hidden; font-weight: bold; }
+   .e42{visibility: hidden; text-opacity: 50%; }
+   .e43{visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .e44{visibility: hidden; font-style: italic; }
+   .e45{visibility: hidden; font-weight: bold; font-style: italic; }
+   .e46{visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .e47{visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e48{text-decoration: underline; visibility: hidden; }
+   .e49{text-decoration: underline; visibility: hidden; font-weight: bold; }
+   .e4A{text-decoration: underline; visibility: hidden; text-opacity: 50%; }
+   .e4B{text-decoration: underline; visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .e4C{text-decoration: underline; visibility: hidden; font-style: italic; }
+   .e4D{text-decoration: underline; visibility: hidden; font-weight: bold; font-style: italic; }
+   .e4E{text-decoration: underline; visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .e4F{text-decoration: underline; visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e50{visibility: hidden; animation: blink 1s infinite; }
+   .e51{visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .e52{visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .e53{visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e54{visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .e55{visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e56{visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e57{visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e58{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; }
+   .e59{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .e5A{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .e5B{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e5C{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .e5D{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e5E{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e5F{text-decoration: underline; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e60{mix-blend-mode: difference; visibility: hidden; }
+   .e61{mix-blend-mode: difference; visibility: hidden; font-weight: bold; }
+   .e62{mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; }
+   .e63{mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .e64{mix-blend-mode: difference; visibility: hidden; font-style: italic; }
+   .e65{mix-blend-mode: difference; visibility: hidden; font-weight: bold; font-style: italic; }
+   .e66{mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .e67{mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e68{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; }
+   .e69{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; font-weight: bold; }
+   .e6A{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; }
+   .e6B{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .e6C{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; font-style: italic; }
+   .e6D{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; font-weight: bold; font-style: italic; }
+   .e6E{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .e6F{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e70{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; }
+   .e71{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .e72{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .e73{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e74{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .e75{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e76{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e77{mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e78{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; }
+   .e79{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .e7A{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .e7B{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e7C{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .e7D{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e7E{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e7F{text-decoration: underline; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e80{text-decoration: line-through; }
+   .e81{text-decoration: line-through; font-weight: bold; }
+   .e82{text-decoration: line-through; text-opacity: 50%; }
+   .e83{text-decoration: line-through; font-weight: bold; text-opacity: 50%; }
+   .e84{text-decoration: line-through; font-style: italic; }
+   .e85{text-decoration: line-through; font-weight: bold; font-style: italic; }
+   .e86{text-decoration: line-through; text-opacity: 50%; font-style: italic; }
+   .e87{text-decoration: line-through; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e88{text-decoration: underline; text-decoration: line-through; }
+   .e89{text-decoration: underline; text-decoration: line-through; font-weight: bold; }
+   .e8A{text-decoration: underline; text-decoration: line-through; text-opacity: 50%; }
+   .e8B{text-decoration: underline; text-decoration: line-through; font-weight: bold; text-opacity: 50%; }
+   .e8C{text-decoration: underline; text-decoration: line-through; font-style: italic; }
+   .e8D{text-decoration: underline; text-decoration: line-through; font-weight: bold; font-style: italic; }
+   .e8E{text-decoration: underline; text-decoration: line-through; text-opacity: 50%; font-style: italic; }
+   .e8F{text-decoration: underline; text-decoration: line-through; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e90{text-decoration: line-through; animation: blink 1s infinite; }
+   .e91{text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; }
+   .e92{text-decoration: line-through; animation: blink 1s infinite; text-opacity: 50%; }
+   .e93{text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e94{text-decoration: line-through; animation: blink 1s infinite; font-style: italic; }
+   .e95{text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e96{text-decoration: line-through; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e97{text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .e98{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; }
+   .e99{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; }
+   .e9A{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; text-opacity: 50%; }
+   .e9B{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .e9C{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; font-style: italic; }
+   .e9D{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .e9E{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .e9F{text-decoration: underline; text-decoration: line-through; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eA0{text-decoration: line-through; mix-blend-mode: difference; }
+   .eA1{text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; }
+   .eA2{text-decoration: line-through; mix-blend-mode: difference; text-opacity: 50%; }
+   .eA3{text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; }
+   .eA4{text-decoration: line-through; mix-blend-mode: difference; font-style: italic; }
+   .eA5{text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; font-style: italic; }
+   .eA6{text-decoration: line-through; mix-blend-mode: difference; text-opacity: 50%; font-style: italic; }
+   .eA7{text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eA8{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; }
+   .eA9{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; }
+   .eAA{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; text-opacity: 50%; }
+   .eAB{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; }
+   .eAC{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; font-style: italic; }
+   .eAD{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; font-style: italic; }
+   .eAE{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; text-opacity: 50%; font-style: italic; }
+   .eAF{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eB0{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; }
+   .eB1{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; }
+   .eB2{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; }
+   .eB3{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .eB4{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-style: italic; }
+   .eB5{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .eB6{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .eB7{text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eB8{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; }
+   .eB9{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; }
+   .eBA{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; }
+   .eBB{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .eBC{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-style: italic; }
+   .eBD{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .eBE{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .eBF{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eC0{text-decoration: line-through; visibility: hidden; }
+   .eC1{text-decoration: line-through; visibility: hidden; font-weight: bold; }
+   .eC2{text-decoration: line-through; visibility: hidden; text-opacity: 50%; }
+   .eC3{text-decoration: line-through; visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .eC4{text-decoration: line-through; visibility: hidden; font-style: italic; }
+   .eC5{text-decoration: line-through; visibility: hidden; font-weight: bold; font-style: italic; }
+   .eC6{text-decoration: line-through; visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .eC7{text-decoration: line-through; visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eC8{text-decoration: underline; text-decoration: line-through; visibility: hidden; }
+   .eC9{text-decoration: underline; text-decoration: line-through; visibility: hidden; font-weight: bold; }
+   .eCA{text-decoration: underline; text-decoration: line-through; visibility: hidden; text-opacity: 50%; }
+   .eCB{text-decoration: underline; text-decoration: line-through; visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .eCC{text-decoration: underline; text-decoration: line-through; visibility: hidden; font-style: italic; }
+   .eCD{text-decoration: underline; text-decoration: line-through; visibility: hidden; font-weight: bold; font-style: italic; }
+   .eCE{text-decoration: underline; text-decoration: line-through; visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .eCF{text-decoration: underline; text-decoration: line-through; visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eD0{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; }
+   .eD1{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .eD2{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .eD3{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .eD4{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .eD5{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .eD6{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .eD7{text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eD8{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; }
+   .eD9{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .eDA{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .eDB{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .eDC{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .eDD{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .eDE{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .eDF{text-decoration: underline; text-decoration: line-through; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eE0{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; }
+   .eE1{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; }
+   .eE2{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; }
+   .eE3{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .eE4{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-style: italic; }
+   .eE5{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; font-style: italic; }
+   .eE6{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .eE7{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eE8{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; }
+   .eE9{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; }
+   .eEA{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; }
+   .eEB{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; }
+   .eEC{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-style: italic; }
+   .eED{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; font-style: italic; }
+   .eEE{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; text-opacity: 50%; font-style: italic; }
+   .eEF{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eF0{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; }
+   .eF1{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .eF2{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .eF3{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .eF4{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .eF5{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .eF6{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .eF7{text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   .eF8{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; }
+   .eF9{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; }
+   .eFA{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; }
+   .eFB{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; }
+   .eFC{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-style: italic; }
+   .eFD{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; font-style: italic; }
+   .eFE{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; text-opacity: 50%; font-style: italic; }
+   .eFF{text-decoration: underline; text-decoration: line-through; mix-blend-mode: difference; visibility: hidden; animation: blink 1s infinite; font-weight: bold; text-opacity: 50%; font-style: italic; }
+   p {
+      margin: 0em;
+      padding: 0em;
+      line-height: 9px;
+      color: gray; 
+   }
+</style></head>
+<body style = "color: LightGray; background-color: black; font-family: monospace; font-size: 14px; white-space: pre; ">
+<h2>Log started - 2026-09-12 12:01:07.5768915 UTC</h2><p>
+</p><p>
+15:01:07|I| <span class="f25">TESTING STATEFUL LOGGING</span></p><p>
+15:01:07|I| <span class="f25">This should be line #1</span></p><p>
+15:01:07|I| <span class="f25">This should be line #2</span></p><p>
+15:01:07|I| <span class="f25">This should be line #3</span></p><p>
+15:01:07|I| <span class="f25">This should be line #4, and this should be appended #1, and this should be appended #2, too</span></p><p>
+15:01:07|I| <span class="f25">This should be a line before a section</span></p><p>
+15:01:07|I| <span class="f25 e08">This should be the section title</span></p><p>
+15:01:07|I| <span class="f25">▌  This should be a line inside a section #1</span></p><p>
+15:01:07|I| <span class="f25">▌  This should be a line inside a section #2</span></p><p>
+15:01:07|I| <span class="f25">▌  </span><span class="f25 e08">This should be a subsection title</span></p><p>
+15:01:07|I| <span class="f25">▌  ▌  This should be a line inside a subsection #1</span></p><p>
+15:01:07|I| <span class="f25">▌  ▌  This should be a line inside a subsection #2</span></p><p>
+15:01:07|I| <span class="f25">▌  ▌  This should be a line inside a subsection #3, and this should be appended to it</span></p><p>
+15:01:07|I| <span class="f25">This should be a line inside a section #3, and this should be appended to it</span></p><p>
+15:01:07|I| <span class="f25">This should be a line after a section</span></p><p>
+15:01:07|I| <span class="f25 e08">Now testing foreground colors: </span></p><p>
+15:01:07|I| <span class="f25">▌  </span><span class="f1E">Black, </span><span class="f5E">Blue, </span><span class="f60">Cyan, </span><span class="f22">Dark blue, </span></p><p>
+15:01:07|I| <span class="f22">▌  </span><span class="f24">Dark cyan, </span>Dark gray, <span class="f20">Dark green, </span><span class="f23">Dark purple, </span></p><p>
+15:01:07|I| <span class="f23">▌  </span><span class="f1F">Dark red, </span><span class="f21">Dark yellow, </span><span class="f25">Gray, </span><span class="f5C">Green, </span></p><p>
+15:01:07|I| <span class="f5C">▌  </span><span class="f5F">Purple, </span><span class="f5B">Red, </span><span class="f61">White, </span><span class="f5D">Yellow, </span></p><p>
+15:01:07|I| <span class="f5D e08">Now testing background colors: </span></p><p>
+15:01:07|I| <span class="f5D">▌  </span><span class="f5D b1E">Black, </span><span class="f5D b5E">Blue, </span><span class="f5D b60">Cyan, </span><span class="f5D b22">Dark blue, </span></p><p>
+15:01:07|I| <span class="f5D b22">▌  </span><span class="f5D b24">Dark cyan, </span><span class="f5D b5A">Dark gray, </span><span class="f5D b20">Dark green, </span><span class="f5D b23">Dark purple, </span></p><p>
+15:01:07|I| <span class="f5D b23">▌  </span><span class="f5D b1F">Dark red, </span><span class="f5D b21">Dark yellow, </span><span class="f5D b25">Gray, </span><span class="f5D b5C">Green, </span></p><p>
+15:01:07|I| <span class="f5D b5C">▌  </span><span class="f5D b5F">Purple, </span><span class="f5D b5B">Red, </span><span class="f5D b61">White, </span><span class="f5D b5D">Yellow, </span></p><p>
+15:01:07|I| <span class="f25">Done testing colors</span></p><p>
+15:01:07|F| <span class="f1F">This should be a fatal error and should be prefixed with |F|</span></p><p>
+15:01:07|F| <span class="f1F">This should be a continued fatal error on a new line, with |F| prefix, and this should be appended</span></p><p>
+15:01:07|F| <span class="f1F e08">This should be a section inside a fatal error</span></p><p>
+15:01:07|F| <span class="f1F">▌  This should be a line inside a section, inside a fatal error</span></p><p>
+15:01:07|E| <span class="f5B">This should be a non-fatal error, and should be prefixed with |E|</span></p><p>
+15:01:07|E| <span class="f5B">This should be a continued non-fatal error on a new line, with |E| prefix, and this should be appended</span></p><p>
+15:01:07|E| <span class="f5B e08">This should be a section inside an error</span></p><p>
+15:01:07|E| <span class="f5B">▌  This should be a line inside a section, inside an error</span></p><p>
+15:01:07|W| <span class="f21">This should be a warning, and should be prefixed with |W|</span></p><p>
+15:01:07|W| <span class="f21">This should be a continued warning on a new line, with |W| prefix, and this should be appended</span></p><p>
+15:01:07|W| <span class="f21 e08">This should be a section inside a warning</span></p><p>
+15:01:07|W| <span class="f21">▌  This should be a line inside a section, inside a warning</span></p><p>
+15:01:07|V| This is a verbose info message, and should be prefixed with |V|</p><p>
+15:01:07|V| This should be a continued verbose on a new line, with |V| prefix, and this should be appended</p><p>
+15:01:07|V| <span class="e08">This should be a section inside a verbose message</span></p><p>
+15:01:07|V| ▌  This should be a line inside a section, inside a verbose message</p><p>
+15:01:07|I| <span class="f25">This is an info message, and should be prefixed with |I|</span></p><p>
+15:01:07|I| <span class="f25">This should be a continued info on a new line, with |I| prefix, and this should be appended</span></p><p>
+15:01:07|I| <span class="f25 e08">This should be a section inside an info message</span></p><p>
+15:01:07|I| <span class="f25">▌  This should be a line inside a section, inside an info message</span></p><p>
+15:01:07|M| <span class="f61">This is a message directed towards the user, and should be prefixed with |M|</span></p><p>
+15:01:07|M| <span class="f61">This should be a continued message on a new line, with |M| prefix, and this should be appended</span></p><p>
+15:01:07|M| <span class="f61 e08">This should be a section inside a message</span></p><p>
+15:01:07|M| <span class="f61">▌  This should be a line inside a section, inside a message</span></p><p>
+15:01:07|S| <span class="f5F">This is a special message for a special user, like you, and should be prefixed with |S|</span></p><p>
+15:01:07|S| <span class="f5F">This should be a continued special message on a new line, with |S| prefix, and this should be appended</span></p><p>
+15:01:07|S| <span class="f5F e08">This should be a section inside a special message</span></p><p>
+15:01:07|S| <span class="f5F">▌  This should be a line inside a section, inside a special message</span></p><p>
+15:01:07|L| <span class="f24">This is a flow control message, and should be prefixed with |L|</span></p><p>
+15:01:07|L| <span class="f24">This should be a continued flow on a new line, with |L| prefix, and this should be appended</span></p><p>
+15:01:07|L| <span class="f24 e08">This should be a section inside a flow message</span></p><p>
+15:01:07|L| <span class="f24">▌  This should be a line inside a section, inside a flow message</span></p><p>
+15:01:07|N| <span class="f5E">This is an input event message, and should be prefixed with |N|</span></p><p>
+15:01:07|N| <span class="f5E">This should be a continued input on a new line, with |N| prefix, and this should be appended</span></p><p>
+15:01:07|N| <span class="f5E e08">This should be a section inside an input message</span></p><p>
+15:01:07|N| <span class="f5E">▌  This should be a line inside a section, inside an input message</span></p><p>
+15:01:07|T| <span class="f5D">This is a network message, and should be prefixed with |T|</span></p><p>
+15:01:07|T| <span class="f5D">This should be a continued network on a new line, with |T| prefix, and this should be appended</span></p><p>
+15:01:07|T| <span class="f5D e08">This should be a section inside a network message</span></p><p>
+15:01:07|T| <span class="f5D">▌  This should be a line inside a section, inside a network message</span></p><p>
+15:01:07|O| <span class="f22">This is an OS event message, and should be prefixed with |O|</span></p><p>
+15:01:07|O| <span class="f22">This should be a continued OS event on a new line, with |O| prefix, and this should be appended</span></p><p>
+15:01:07|O| <span class="f22 e08">This should be a section inside an OS message</span></p><p>
+15:01:07|O| <span class="f22">▌  This should be a line inside a section, inside an OS message</span></p><p>
+15:01:07|P| <span class="f5C">This is an input prompt, that blocks execution and waits for console input (TODO), and should be prefixed with |P|</span></p><p>
+15:01:07|P| <span class="f5C">This should be a continued Prompt on a new line, with |P| prefix, and this should be appended</span></p><p>
+15:01:07|P| <span class="f5C e08">This should be a section inside a prompt</span></p><p>
+15:01:07|P| <span class="f5C">▌  This should be a line inside a section, inside a prompt</span></p><p>
+15:01:07|O| <span class="f22">▌  </span><span class="f22 e08">This should be an OSSection inside a prompt section</span></p><p>
+15:01:07|T| <span class="f5D">▌  ▌  This is a network message inside two sections</span></p><p>
+15:01:07|S| <span class="f5F">#2 The answer is 42! It's true, I tell ya!</span></p><p>
+15:01:07|S| <span class="f5F">#2 You shouldn't see the following (color should be reset to default intent): </span></p><p>
+15:01:07|W| <span class="f60">This is actually a warning, </span><span class="f60 e08">but now we underline it, </span><span class="f60 b5B e08">then we even change color, </span><span class="f60 e08">but then we return to underlined warning, </span><span class="f60">and finally, back to warning, </span><span class="f21">but if we actually pop once more, we return to the original intent, and any subsequent pop shouldn't change anything</span></p><p>
+15:01:07|W| <span class="f21">^ just checking the above statement
+

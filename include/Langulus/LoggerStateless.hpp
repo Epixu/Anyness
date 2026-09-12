@@ -227,6 +227,30 @@ namespace Langulus::Logger
          catch (...) { fmt::print("<stringification error>"); }
          fflush(stdout);
       }
+
+      LANGULUS(INLINED)
+      void FmtWrite(const Color& c) noexcept {
+         if (c == Color::NoForeground or c == Color::NoBackground)
+            return;
+
+         fmt::text_style style = {};
+         if ((c >= Color::Black    and c < Color::BlackBgr)
+         or  (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
+            // Create a new foreground color style                      
+            style = fg(static_cast<fmt::terminal_color>(c));
+            FmtPrintStyle(style);
+            ///const auto ansi = detail::make_foreground_color<char>(style.get_foreground());
+            ///return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
+         }
+
+         // Create a new background color style                         
+         style = bg(static_cast<fmt::terminal_color>(static_cast<uint8_t>(c) - 10));
+         FmtPrintStyle(style);
+
+         //const auto ansi = detail::make_background_color<char>(style.get_background());
+         //return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
+         // Intentionally noop, must go through FmtPrintStyle           
+      }
    }
    
    /// Generate hexadecimal string from a given value                         
@@ -598,7 +622,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging Logger::Color                      
    ///                                                                        
-   template<>
+   /*template<>
    struct formatter<::Langulus::Logger::Color> {
       using Color = ::Langulus::Logger::Color;
 
@@ -608,7 +632,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-         auto format(Color const& c, CONTEXT& ctx) const {
+      auto format(Color const& c, CONTEXT& ctx) const {
          text_style style = {};
 
          if (c == Color::NoForeground or c == Color::NoBackground)
@@ -627,7 +651,7 @@ namespace fmt
          const auto ansi = detail::make_background_color<char>(style.get_background());
          return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
       }
-   };
+   };*/
 
    ///                                                                        
    /// Extend FMT to be capable of logging Logger::Size                       
@@ -640,7 +664,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-         auto format(::Langulus::Logger::Size const& bs, CONTEXT& ctx) const {
+      auto format(::Langulus::Logger::Size const& bs, CONTEXT& ctx) const {
          return format_to(ctx.out(), "{}", bs.format());
       }
    };
@@ -656,7 +680,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-         auto format(::std::array<char, N> const& a, CONTEXT& ctx) const {
+      auto format(::std::array<char, N> const& a, CONTEXT& ctx) const {
          return format_to(ctx.out(), "{}", ::std::string_view(a.data(), a.size()));
       }
    };

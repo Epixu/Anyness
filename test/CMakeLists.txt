@@ -17,7 +17,6 @@ add_langulus_test(LangulusAnynessTest-Common
                TestIntentOf.cpp
                TestLambda.cpp
                TestLiteral.cpp
-               TestLogger.cpp
                TestMetaOf.cpp
                TestNameOf.cpp
                TestRetype.cpp
@@ -48,6 +47,16 @@ add_langulus_test(LangulusAnynessTest-Common
    LIBRARIES   doctest
                LangulusAnyness
 )
+
+add_langulus_test(LangulusAnynessTest-Logger
+   SOURCES	   Main.cpp 
+               Logger/TestLogger.cpp
+               
+   LIBRARIES   doctest
+               LangulusAnyness
+)
+configure_file("Logger/canonical_html_test.htm" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../canonical_html_test.htm" COPYONLY)
+configure_file("Logger/canonical_txt_test.txt"  "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../canonical_txt_test.txt" COPYONLY)
 
 add_langulus_test(LangulusAnynessTest-Memory
    SOURCES	   Main.cpp

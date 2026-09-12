@@ -29,39 +29,54 @@ ToHTML::~ToHTML() {
 /// Write text                                                                
 ///   @param text - the text to append to the file                            
 void ToHTML::Write(::std::string_view const& text) const noexcept {
+   if (mLastWrittenStyle != GlobalState.GetCurrentStyle())
+      Write(GlobalState.GetCurrentStyle());
+
    mFile << text;
    mFile.flush();
 }
 
 /// Apply some style                                                          
 ///   @param style - the style to set                                         
-void ToHTML::Write(Style style) const noexcept {
-   bool header = false;
+void ToHTML::Write(Style const style) const noexcept {
+   if (mScopeOpened) {
+      mFile << "</span>";
+      mScopeOpened = false;
+   }
+
+   bool needs_separator = false;
    if (style.has_foreground()) {
-      const auto fg = style.get_foreground().value();
+      const uint8_t fg = style.get_foreground().value();
       if (not GlobalState.mDefaultStyle.has_foreground()
       or fg != GlobalState.mDefaultStyle.get_foreground().value()) {
-         if (not header) {
-            mFile << "</span><span class=\"";
-            header = true;
+         if (not mScopeOpened) {
+            mFile << "<span class=\"";
+            mScopeOpened = true;
          }
 
          const auto hex = Hex(fg);
-         mFile << " f" << hex[0] << hex[1];
+         mFile << "f" << hex[0] << hex[1];
+         needs_separator = true;
       }
    }
 
    if (style.has_background()) {
-      const auto bg = style.get_background().value();
+      const uint8_t bg = style.get_background().value();
       if (not GlobalState.mDefaultStyle.has_background()
       or bg != GlobalState.mDefaultStyle.get_background().value()) {
-         if (not header) {
-            mFile << "</span><span class=\"";
-            header = true;
+         if (not mScopeOpened) {
+            mFile << "<span class=\"";
+            mScopeOpened = true;
          }
 
          const auto hex = Hex(bg);
-         mFile << " b" << hex[0] << hex[1];
+         if (needs_separator)
+            mFile << " b";
+         else
+            mFile << "b";
+
+         mFile << hex[0] << hex[1];
+         needs_separator = true;
       }
    }
 
@@ -69,35 +84,47 @@ void ToHTML::Write(Style style) const noexcept {
       const auto em = style.get_emphasis();
       if (not GlobalState.mDefaultStyle.has_emphasis()
       or em != GlobalState.mDefaultStyle.get_emphasis()) {
-         if (not header) {
-            mFile << "</span><span class=\"";
-            header = true;
+         if (not mScopeOpened) {
+            mFile << "<span class=\"";
+            mScopeOpened = true;
          }
 
          const auto hex = Hex(em);
-         mFile << " e" << hex[0] << hex[1];
+         if (needs_separator)
+            mFile << " e";
+         else
+            mFile << "e";
+
+         mFile << hex[0] << hex[1];
       }
    }
 
-   if (header)
+   if (mScopeOpened)
       mFile << "\">";
-   else
-      mFile << "</span><span>";
+   mLastWrittenStyle = GlobalState.GetCurrentStyle();
 }
 
 /// Remove formatting, add a new line, add a timestamp and tabulate           
 ///   @attention top of the style stack is not applied                        
 void ToHTML::NewLine() const noexcept {
-   mFile << "</span></p><p>\n";
+   if (mScopeOpened) {
+      mFile << "</span>";
+      mScopeOpened = false;
+   }
+
+   mFile << "</p><p>\n";
    mFile << GlobalState.GetSimpleTime();
-   Write(GlobalState.mIntentStyle[GlobalState.GetCurrentIntent()].prefix);
-   Write(GlobalState.GetCurrentStyle());
+   mFile << GlobalState.mIntentStyle[GlobalState.GetCurrentIntent()].prefix;
 
    auto tabs = GlobalState.GetTabs();
-   while (tabs) {
-      Write(GlobalState.mTabString);
-      --tabs;
+   if (tabs) {
+      Write(GlobalState.GetCurrentStyle());
+      while (tabs) {
+         mFile << GlobalState.mTabString;
+         --tabs;
+      }
    }
+   else mLastWrittenStyle = GlobalState.mDefaultStyle;
 }
 
 /// Clear the log file                                                        
@@ -115,7 +142,6 @@ auto ToHTML::GetFilename() const noexcept -> ::std::string_view {
 /// Write file header - general HTML styling options, etc.                    
 void ToHTML::WriteHeader() const {
    mFile << "<!DOCTYPE html><html>\n";
-   mFile << "<body style = \"color: LightGray; background-color: black; font-family: monospace; font-size: 14px; white-space: pre; \">\n";
    mFile << "<head><style>\n";
    mFile << "   @keyframes blink {\n"
             "        0 % {opacity : 1;}\n"
@@ -196,12 +222,12 @@ void ToHTML::WriteHeader() const {
       mFile << "      line-height: 9px;\n";
 
       if (GlobalState.mDefaultStyle.has_foreground()) {
-         auto c = GlobalState.mDefaultStyle.get_foreground().value();
+         uint8_t c = GlobalState.mDefaultStyle.get_foreground().value();
          mFile << "      " << foregroundColors[static_cast<fmt::terminal_color>(c)] << "\n";
       }
 
       if (GlobalState.mDefaultStyle.has_background()) {
-         auto c = GlobalState.mDefaultStyle.get_background().value();
+         uint8_t c = GlobalState.mDefaultStyle.get_background().value();
          mFile << "      " << backgroundColors[static_cast<fmt::terminal_color>(c)] << "\n";
       }
 
@@ -218,14 +244,23 @@ void ToHTML::WriteHeader() const {
 
    // Prepare for messages                                              
    mFile << "</style></head>\n";
+   mFile << "<body style = \"color: LightGray; background-color: black; font-family: monospace; font-size: 14px; white-space: pre; \">\n";
    mFile << "<h2>Log started - ";
    mFile << GetAdvancedTime();
-   mFile << "</h2><p><span>\n";
+   mFile << "</h2><p>\n";
+
+   mScopeOpened = false;
+   mLastWrittenStyle = GlobalState.mDefaultStyle;
 }
 
 /// Write file footer - just the official shutdown timestamp                  
 void ToHTML::WriteFooter() const {
-   mFile << "</span></p><h2>Log ended - ";
+   if (mScopeOpened) {
+      mFile << "</span>";
+      mScopeOpened = false;
+   }
+
+   mFile << "</p>\n<h2>Log ended - ";
    mFile << GetAdvancedTime();
    mFile << "</h2></body></html>";
 }

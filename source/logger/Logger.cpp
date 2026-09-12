@@ -51,9 +51,6 @@ State::~State() {}
 ///   @return the timestamp text as {:%F %T %Z}                               
 ::std::string Interface::GetAdvancedTime() noexcept {
    try {
-      //const auto now = Clock::to_time_t(Clock::now());
-      //return fmt::format("{:%F %T %Z}", fmt::localtime(now));
-
       const auto localTime = Clock::now();
       return fmt::format("{:%F %T %Z}", localTime);
    }
@@ -93,13 +90,12 @@ void State::Write(const ::std::string_view& stdString) const noexcept {
       return;
    }
 
-   try { fmt::print("{}", stdString); }
-   catch (...) {
-      Logger::Append("<logger error>");
+   if (mLastWrittenStyle != GetCurrentStyle()) {
+      mLastWrittenStyle = GetCurrentStyle();
+      Detail::FmtPrintStyle(mLastWrittenStyle);
    }
 
-   // Always flush                                                      
-   fflush(stdout);
+   Detail::FmtWrite(stdString);
 
    // Dispatch to duplicators                                           
    for (auto attachment : mDuplicators)
@@ -143,20 +139,7 @@ void State::Write(Style s) const noexcept {
    if (mCurrentIntent == Intent::Ignore)
       return;
 
-   // Dispatch to redirectors                                           
-   if (not mRedirectors.empty()) {
-      for (auto attachment : mRedirectors)
-         attachment->Write(s);
-
-      // The presence of a redirector blocks console printing           
-      return;
-   }
-
-   Detail::FmtPrintStyle(s);
-
-   // Dispatch to duplicators                                           
-   for (auto attachment : mDuplicators)
-      attachment->Write(s);
+   GetCurrentStyle() = s;
 }
 
 /// Add a new line, tabulating properly, but continuing the previous style    
@@ -175,18 +158,24 @@ void State::NewLine() const noexcept {
    }
 
    // Clear formatting, add new line, simple time stamp, and tabs       
-   Detail::FmtPrintStyle(DefaultStyle);
-   fmt::print("\n");
-   fmt::print("{}{}", GetSimpleTime(), mIntentStyle[GetCurrentIntent()].prefix);
+   if (mLastWrittenStyle != DefaultStyle) {
+      Detail::FmtPrintStyle(DefaultStyle);
+      mLastWrittenStyle = DefaultStyle;
+   }
 
-   if (mStyleStack.empty())
-      mStyleStack.push(GetCurrentStyle());
-   Detail::FmtPrintStyle(mStyleStack.top());
+   fmt::print("\n{}{}", GetSimpleTime(), mIntentStyle[GetCurrentIntent()].prefix);
 
    auto tabs = mTabulator;
-   while (tabs) {
-      fmt::print("{}", mTabString);
-      --tabs;
+   if (tabs) {
+      if (mLastWrittenStyle != GetCurrentStyle()) {
+         mLastWrittenStyle = GetCurrentStyle();
+         Detail::FmtPrintStyle(mLastWrittenStyle);
+      }
+
+      while (tabs) {
+         fmt::print("{}", mTabString);
+         --tabs;
+      }
    }
 
    // Dispatch to duplicators                                           
@@ -207,11 +196,7 @@ void State::Clear() const noexcept {
 
    // Clear the window                                                  
    fmt::print("{}", "\x1b[2J");
-
-   if (mStyleStack.empty())
-      mStyleStack.push(GetCurrentStyle());
-
-   Detail::FmtPrintStyle(mStyleStack.top());
+   Detail::FmtPrintStyle(mLastWrittenStyle);
 
    // Dispatch to duplicators                                           
    for (auto attachment : mDuplicators)
@@ -244,10 +229,7 @@ auto State::GetFilename() const noexcept -> ::std::string_view {
       Write(GetAdvancedTime());
       break;
    case Command::Stylize:
-      if (mStyleStack.empty())
-         mStyleStack.push(GetCurrentStyle());
-
-      Write(mStyleStack.top());
+      Write(GetCurrentStyle());
       break;
    }
 }*/
@@ -264,10 +246,7 @@ void State::Write(CommandExt c) const noexcept {
       if (not mStyleStack.empty())
          mStyleStack.pop();
 
-      if (mStyleStack.empty())
-         mStyleStack.push(GetCurrentStyle());
-
-      Write(mStyleStack.top());
+      //Write(GetCurrentStyle());
       break;
    case CommandExt::Push:
       // Duplicate the current style                                    
@@ -298,51 +277,16 @@ void State::Write(CommandExt c) const noexcept {
       while (not mStyleStack.empty())
          mStyleStack.pop();
       break;
-   case CommandExt::Stylize:
-      if (mCurrentIntent == Intent::Ignore)
-         return;
-
-      if (mStyleStack.empty())
-         mStyleStack.push(GetCurrentStyle());
-
-      Write(mStyleStack.top());
-      break;
    }
 }
 
 /// Change the foreground/background color by modifying the current style     
-///   @param c_with_flags - the color with optional mixing flags              
-///   @return the last style, with coloring applied                           
-void State::Write(ColorExt c_with_flags) const noexcept {
+///   @param c - the color                                                    
+void State::Write(Color c) const noexcept {
    if (mCurrentIntent == Intent::Ignore)
       return;
 
-   if (mStyleStack.empty())
-      mStyleStack.push(GetCurrentStyle());
-
-   if (static_cast<uint>(c_with_flags)
-     & static_cast<uint>(ColorExt::PreviousColor)) {
-      // We have to pop                                                 
-      if (mStyleStack.size() > 1)
-         mStyleStack.pop();
-   }
-
-   if (static_cast<uint>(c_with_flags)
-     & static_cast<uint>(ColorExt::NextColor)) {
-      // We have to push                                                
-      mStyleStack.push(mStyleStack.top());
-   }
-
-   // Strip the mixing bits from the color                              
-   const Color c = static_cast<Color>(
-      static_cast<uint>(c_with_flags) & (~(
-          static_cast<uint>(ColorExt::PreviousColor)
-        | static_cast<uint>(ColorExt::NextColor)
-      ))
-   );
-
-   // Mix...                                                            
-   auto& style = mStyleStack.top();
+   auto& style = GetCurrentStyle();
    const auto oldStyle = style;
    if (c == Color::NoForeground) {
       // Reset the foreground color                                     
@@ -372,9 +316,67 @@ void State::Write(ColorExt c_with_flags) const noexcept {
 
    if (oldStyle.has_emphasis())
       style |= oldStyle.get_emphasis();
+}
 
-   // Dispatch the new style                                            
-   Write(style);
+/// Change the foreground/background color by modifying the current style     
+///   @param c_with_flags - the color with optional mixing flags              
+void State::Write(ColorExt c_with_flags) const noexcept {
+   if (mCurrentIntent == Intent::Ignore)
+      return;
+
+   if (static_cast<uint>(c_with_flags)
+     & static_cast<uint>(ColorExt::PreviousColor)) {
+      // We have to pop                                                 
+      if (mStyleStack.size() > 1)
+         mStyleStack.pop();
+   }
+
+   if (static_cast<uint>(c_with_flags)
+     & static_cast<uint>(ColorExt::NextColor)) {
+      // We have to push                                                
+      if (mStyleStack.size() > 0)
+         mStyleStack.push(mStyleStack.top());
+   }
+
+   // Strip the mixing bits from the color                              
+   const Color c = static_cast<Color>(
+      static_cast<uint>(c_with_flags) & (~(
+          static_cast<uint>(ColorExt::PreviousColor)
+        | static_cast<uint>(ColorExt::NextColor)
+      ))
+   );
+
+   // Mix...                                                            
+   auto& style = GetCurrentStyle();
+   const auto oldStyle = style;
+   if (c == Color::NoForeground) {
+      // Reset the foreground color                                     
+      style = {};
+      if (oldStyle.has_background())
+         style |= fmt::bg(oldStyle.get_background());
+   }
+   else if (c == Color::NoBackground) {
+      // Reset the background color                                     
+      style = {};
+      if (oldStyle.has_foreground())
+         style |= fmt::fg(oldStyle.get_foreground());
+   }
+   else if ((c >= Color::Black    and c < Color::BlackBgr) 
+        or  (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
+      // Create a new foreground color style                            
+      style = fmt::fg(static_cast<fmt::terminal_color>(c));
+      if (oldStyle.has_background())
+         style |= fmt::bg(oldStyle.get_background());
+   }
+   else {
+      // Create a new background color style                            
+      style = fmt::bg(static_cast<fmt::terminal_color>(static_cast<uint8_t>(c) - 10));
+      if (oldStyle.has_foreground())
+         style |= fmt::fg(oldStyle.get_foreground());
+   }
+
+   if (oldStyle.has_emphasis())
+      style |= oldStyle.get_emphasis();
 }
 
 /// Push a number of tabs                                                     
@@ -401,14 +403,7 @@ void State::Write(Emphasis e) const noexcept {
    if (mCurrentIntent == Intent::Ignore)
       return;
 
-   if (mStyleStack.empty())
-      mStyleStack.push(GetCurrentStyle());
-
-   auto& style = mStyleStack.top();
-   style |= static_cast<fmt::emphasis>(e);
-
-   // Dispatch the new style                                            
-   Write(style);
+   GetCurrentStyle() |= static_cast<fmt::emphasis>(e);
 }
 
 /// Sets the current intent, and stylizes accordingly, unless Intent::Ignore  
@@ -425,9 +420,6 @@ void State::Write(Intent i) const noexcept {
          mStyleStack.emplace(GlobalState.mIntentStyle[static_cast<int>(i)].style);
       else
          mStyleStack.top() = GlobalState.mIntentStyle[static_cast<int>(i)].style;
-
-      // Dispatch the new style                                         
-      Write(mStyleStack.top());
    }
 }
 
@@ -441,11 +433,12 @@ auto State::NewScope() const noexcept -> Scope {
 /// Get the current style                                                     
 ///   @returns either the top of the style stack, the style of the current    
 ///      intent, or a default style if current intent is Intent::Ignore       
-Style State::GetCurrentStyle() const noexcept {
+Style& State::GetCurrentStyle() const noexcept {
    if (mStyleStack.empty()) {
       if (GlobalState.mCurrentIntent != Intent::Ignore)
-         return GlobalState.mIntentStyle[GlobalState.GetCurrentIntent()].style;
-      return {};
+         mStyleStack.push(GlobalState.mIntentStyle[GlobalState.GetCurrentIntent()].style);
+      else
+         mStyleStack.push(mDefaultStyle);
    }
    return mStyleStack.top();
 }

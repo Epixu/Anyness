@@ -27,8 +27,8 @@ namespace Langulus::Logger
       Push,		// Push the current style (don't stylize)                
       Tab,		// Tab once on a new line after this command             
       Untab,	// Untab once, again on a new line after this command    
-      Reset,   // Reset the state (color stack, tabulation, intent)     
-      Stylize  // Apply the last style                                  
+      Reset//,   // Reset the state (color stack, tabulation, intent)     
+      //Stylize  // Apply the last style                                  
    };
    using enum CommandExt;
    
@@ -226,6 +226,8 @@ namespace Langulus::Logger
       mutable size_t mTabulator = 0;
       // Current intent                                                 
       mutable Intent mCurrentIntent = DefaultIntent;
+      // Last written style                                             
+      mutable Style mLastWrittenStyle = DefaultStyle;
 
       // Redirectors                                                    
       ::std::list<Interface*> mRedirectors;
@@ -262,13 +264,14 @@ namespace Langulus::Logger
       }
 
       LANGULUS_API(LOGGER) void Write(CommandExt) const noexcept;
+      LANGULUS_API(LOGGER) void Write(Color) const noexcept;
       LANGULUS_API(LOGGER) void Write(ColorExt) const noexcept;
       LANGULUS_API(LOGGER) void Write(const Tabs&) const noexcept;
       LANGULUS_API(LOGGER) void Write(Emphasis) const noexcept;
       LANGULUS_API(LOGGER) void Write(Intent) const noexcept;
       LANGULUS_API(LOGGER) auto NewScope() const noexcept -> Scope;
 
-      LANGULUS_API(LOGGER) auto GetCurrentStyle() const noexcept -> Style;
+      LANGULUS_API(LOGGER) auto GetCurrentStyle() const noexcept -> Style&;
       LANGULUS_API(LOGGER) int  GetCurrentIntent() const noexcept;
 
       ///                                                                     
@@ -1224,21 +1227,17 @@ namespace Langulus::Logger
    /// MARK: Attachments                                                      
    inline void AttachDuplicator(Interface* d) noexcept {
       GlobalState.AttachDuplicator(d);
-      Logger::Info("Logging duplicator attached: ", d->GetFilename());
    }
 
    inline void DettachDuplicator(Interface* d) noexcept {
       GlobalState.DettachDuplicator(d);
-      Logger::Info("Logging duplicator detached: ", d->GetFilename());
    }
 
    inline void AttachRedirector(Interface* r) noexcept {
       GlobalState.AttachRedirector(r);
-      Logger::Info("Logging redirector attached: ", r->GetFilename());
    }
 
    inline void DettachRedirector(Interface* r) noexcept {
       GlobalState.DettachRedirector(r);
-      Logger::Info("Logging redirector detached: ", r->GetFilename());
    }
 }

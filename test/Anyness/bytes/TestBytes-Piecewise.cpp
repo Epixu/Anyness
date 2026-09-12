@@ -1213,8 +1213,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Bytes", TestType
    }
 
    GIVEN("Two piecewise-constructed containers") {
-      const ScopedE e1 {555};
-      const ScopedE e2 {666};
+      const ScopedE e1 {Clone{uint32_t{555}}};
+      const ScopedE e2 {Clone{uint32_t{666}}};
       T pack1 {Piecewise, *e1};  //  1 use
       T pack2 {Piecewise, *e2};  //  1 use
       const T memory1 = pack1;   // +1 use

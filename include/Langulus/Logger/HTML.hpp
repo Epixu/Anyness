@@ -26,6 +26,8 @@ namespace Langulus::Logger
    private:
       ::std::string mFilename;
       mutable ::std::ofstream mFile;
+      mutable bool mScopeOpened;
+      mutable Style mLastWrittenStyle;
 
       void WriteHeader() const;
       void WriteFooter() const;
