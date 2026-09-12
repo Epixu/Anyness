@@ -144,9 +144,6 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
 
     if (LANGULUS_OPTION_LOGGING)
         # Configure and link {fmt} library                                    
-        if (EMSCRIPTEN)
-            set(FMT_OS OFF)
-        endif()
         fetch_external_module(
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
@@ -198,9 +195,21 @@ target_include_directories(LangulusAnyness PUBLIC include)
 target_include_directories(LangulusAnyness PUBLIC ./)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
 target_link_libraries(LangulusAnyness
-    PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>
-           $<$<BOOL:${LANGULUS_OPTION_UNICODE}>:simdutf::simdutf>
+    PUBLIC $<$<BOOL:${LANGULUS_OPTION_UNICODE}>:simdutf::simdutf>
 )
+
+if (EMSCRIPTEN)
+    # Ensures that {fmt} is built with /utf-8 and without FMT_OS
+    target_compile_definitions(LangulusAnyness PUBLIC FMT_HEADER_ONLY)
+    target_link_libraries(LangulusAnyness
+        PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt-header-only>
+    )
+else()
+    target_link_libraries(LangulusAnyness
+        PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>
+    )
+endif()
+
 #target_compile_options(LangulusAnyness PUBLIC -Wl,--icf=all)
 
 set(LANGULUS_ALIGNMENT 16 CACHE STRING "Default langulus alignment (in bytes)")

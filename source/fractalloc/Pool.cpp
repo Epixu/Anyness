@@ -23,25 +23,30 @@ namespace Langulus::Fractalloc
    /// Get least significant bit                                              
    /// https://stackoverflow.com/questions/757059                             
    LANGULUS(ALWAYS_INLINED)
-   constexpr uint32_t LSB(const uint32_t n) noexcept {
-      constexpr uint32_t DeBruijnBitPosition[32] = {
-          0,  1, 28,  2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17,  4, 8,
-         31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18,  6, 11,  5, 10, 9
-      };
-      constexpr uint32_t f = 0x077CB531u;
-      return DeBruijnBitPosition[(uint32_t {n & (0 - n)} * f) >> uint32_t {27}];
-   }
+   constexpr size_t LSB(const size_t n) noexcept {
+      static_assert(sizeof(size_t) == 4 or sizeof(size_t) == 8,
+         "Unsupported size_t");
 
-   LANGULUS(ALWAYS_INLINED)
-   constexpr uint64_t LSB(const uint64_t n) noexcept {
-      constexpr uint64_t DeBruijnBitPosition[64] = {
-         0,   1,  2, 53,  3,  7, 54, 27,  4, 38, 41,  8, 34, 55, 48, 28,
-         62,  5, 39, 46, 44, 42, 22,  9, 24, 35, 59, 56, 49, 18, 29, 11,
-         63, 52,  6, 26, 37, 40, 33, 47, 61, 45, 43, 21, 23, 58, 17, 10,
-         51, 25, 36, 32, 60, 20, 57, 16, 50, 31, 19, 15, 30, 14, 13, 12
-      };
-      constexpr uint64_t f = 0x022fdd63cc95386dul;
-      return DeBruijnBitPosition[(uint64_t {n & (0 - n)} * f) >> uint64_t {58}];
+      if constexpr (sizeof(size_t) == 4) {
+         constexpr uint32_t DeBruijnBitPosition[32] = {
+            0,  1, 28,  2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17,  4, 8,
+            31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18,  6, 11,  5, 10, 9
+         };
+         const uint32_t nn = static_cast<uint32_t>(n);
+         constexpr uint32_t f = 0x077CB531u;
+         return DeBruijnBitPosition[(uint32_t {nn & (0 - nn)} * f) >> uint32_t {27}];
+      }
+      else {
+         constexpr uint64_t DeBruijnBitPosition[64] = {
+            0,   1,  2, 53,  3,  7, 54, 27,  4, 38, 41,  8, 34, 55, 48, 28,
+            62,  5, 39, 46, 44, 42, 22,  9, 24, 35, 59, 56, 49, 18, 29, 11,
+            63, 52,  6, 26, 37, 40, 33, 47, 61, 45, 43, 21, 23, 58, 17, 10,
+            51, 25, 36, 32, 60, 20, 57, 16, 50, 31, 19, 15, 30, 14, 13, 12
+         };
+         const uint64_t nn = static_cast<uint64_t>(n);
+         constexpr uint64_t f = 0x022fdd63cc95386dul;
+         return DeBruijnBitPosition[(uint64_t {nn & (0 - nn)} * f) >> uint64_t {58}];
+      }
    }
 
    /// Initialize a pool                                                      
