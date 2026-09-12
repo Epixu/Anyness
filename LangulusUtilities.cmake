@@ -71,10 +71,12 @@ function(add_langulus_library NAME)
       # file by using --preload-file with all the required mods, like         
       # so: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/LangulusMod*.so                 
       foreach(ITEM ${arg_LIBRARIES})
-         target_link_libraries(${NAME}
-            PRIVATE  $<$<TARGET_EXISTS:${ITEM}>:$<TARGET_FILE:${ITEM}>>
-                     ${ITEM}
-         )
+         get_target_property(target_type ${ITEM} TYPE)
+         if (target_type STREQUAL "SHARED_LIBRARY")
+            target_link_libraries(${NAME} PRIVATE $<TARGET_FILE:${ITEM}> ${ITEM})
+         else()
+            target_link_libraries(${NAME} PRIVATE ${ITEM})
+         endif ()
       endforeach()
    else()
       add_library(${NAME} ${LANGULUS_LIBRARY_TYPE} ${arg_SOURCES})
@@ -116,10 +118,12 @@ function(add_langulus_app NAME)
       # file by using --preload-file with all the required mods, like         
       # so: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/LangulusMod*.so                 
       foreach(ITEM ${arg_LIBRARIES})
-         target_link_libraries(${NAME}
-            PRIVATE  $<$<TARGET_EXISTS:${ITEM}>:$<TARGET_FILE:${ITEM}>>
-                     ${ITEM}
-         )
+         get_target_property(target_type ${ITEM} TYPE)
+         if (target_type STREQUAL "SHARED_LIBRARY")
+            target_link_libraries(${NAME} PRIVATE $<TARGET_FILE:${ITEM}> ${ITEM})
+         else()
+            target_link_libraries(${NAME} PRIVATE ${ITEM})
+         endif ()
       endforeach()
    else()
       target_link_libraries(${NAME} PRIVATE ${arg_LIBRARIES})
