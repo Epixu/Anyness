@@ -8,6 +8,7 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
+#include <cstdlib>         // required by emscripten                    
 #include <type_traits>
 
 
