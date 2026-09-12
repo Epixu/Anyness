@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include <Langulus/Logger/HTML.hpp>
-#include <unordered_map>
+#include <map>
 
 using namespace Langulus;
 using namespace Langulus::Logger;
@@ -150,7 +150,7 @@ void ToHTML::WriteHeader() const {
             "   }\n";
 
    // Predeclare all combinations of styles for shorter tags            
-   std::unordered_map<fmt::terminal_color, std::string> foregroundColors;
+   std::map<fmt::terminal_color, std::string> foregroundColors;
    foregroundColors[fmt::terminal_color::black         ] = "color: black; ";
    foregroundColors[fmt::terminal_color::red           ] = "color: DarkRed; ";
    foregroundColors[fmt::terminal_color::green         ] = "color: ForestGreen; ";
@@ -172,7 +172,7 @@ void ToHTML::WriteHeader() const {
       mFile << "   .f" << hex[0] << hex[1] << "{" << fg.second << "}\n";
    }
 
-   std::unordered_map<fmt::terminal_color, std::string> backgroundColors;
+   std::map<fmt::terminal_color, std::string> backgroundColors;
    backgroundColors[fmt::terminal_color::black         ] = "background-" + foregroundColors[fmt::terminal_color::black];
    backgroundColors[fmt::terminal_color::red           ] = "background-" + foregroundColors[fmt::terminal_color::red];
    backgroundColors[fmt::terminal_color::green         ] = "background-" + foregroundColors[fmt::terminal_color::green];
@@ -194,7 +194,7 @@ void ToHTML::WriteHeader() const {
       mFile << "   .b" << hex[0] << hex[1] << "{" << bg.second << "}\n";
    }
 
-   std::unordered_map<fmt::emphasis, std::string> emphasee;
+   std::map<fmt::emphasis, std::string> emphasee;
    emphasee[fmt::emphasis::blink]         = "animation: blink 1s infinite; ";
    emphasee[fmt::emphasis::bold]          = "font-weight: bold; ";
    emphasee[fmt::emphasis::conceal]       = "visibility: hidden; ";

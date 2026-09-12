@@ -1,84 +1,84 @@
-Log started - 2026-09-12 12:01:07.5771990 UTC
+Log started - 2026-09-12 17:34:02.1965187 UTC
 
 
-15:01:07|I| TESTING STATEFUL LOGGING
-15:01:07|I| This should be line #1
-15:01:07|I| This should be line #2
-15:01:07|I| This should be line #3
-15:01:07|I| This should be line #4, and this should be appended #1, and this should be appended #2, too
-15:01:07|I| This should be a line before a section
-15:01:07|I| This should be the section title
-15:01:07|I| ▌  This should be a line inside a section #1
-15:01:07|I| ▌  This should be a line inside a section #2
-15:01:07|I| ▌  This should be a subsection title
-15:01:07|I| ▌  ▌  This should be a line inside a subsection #1
-15:01:07|I| ▌  ▌  This should be a line inside a subsection #2
-15:01:07|I| ▌  ▌  This should be a line inside a subsection #3, and this should be appended to it
-15:01:07|I| This should be a line inside a section #3, and this should be appended to it
-15:01:07|I| This should be a line after a section
-15:01:07|I| Now testing foreground colors: 
-15:01:07|I| ▌  Black, Blue, Cyan, Dark blue, 
-15:01:07|I| ▌  Dark cyan, Dark gray, Dark green, Dark purple, 
-15:01:07|I| ▌  Dark red, Dark yellow, Gray, Green, 
-15:01:07|I| ▌  Purple, Red, White, Yellow, 
-15:01:07|I| Now testing background colors: 
-15:01:07|I| ▌  Black, Blue, Cyan, Dark blue, 
-15:01:07|I| ▌  Dark cyan, Dark gray, Dark green, Dark purple, 
-15:01:07|I| ▌  Dark red, Dark yellow, Gray, Green, 
-15:01:07|I| ▌  Purple, Red, White, Yellow, 
-15:01:07|I| Done testing colors
-15:01:07|F| This should be a fatal error and should be prefixed with |F|
-15:01:07|F| This should be a continued fatal error on a new line, with |F| prefix, and this should be appended
-15:01:07|F| This should be a section inside a fatal error
-15:01:07|F| ▌  This should be a line inside a section, inside a fatal error
-15:01:07|E| This should be a non-fatal error, and should be prefixed with |E|
-15:01:07|E| This should be a continued non-fatal error on a new line, with |E| prefix, and this should be appended
-15:01:07|E| This should be a section inside an error
-15:01:07|E| ▌  This should be a line inside a section, inside an error
-15:01:07|W| This should be a warning, and should be prefixed with |W|
-15:01:07|W| This should be a continued warning on a new line, with |W| prefix, and this should be appended
-15:01:07|W| This should be a section inside a warning
-15:01:07|W| ▌  This should be a line inside a section, inside a warning
-15:01:07|V| This is a verbose info message, and should be prefixed with |V|
-15:01:07|V| This should be a continued verbose on a new line, with |V| prefix, and this should be appended
-15:01:07|V| This should be a section inside a verbose message
-15:01:07|V| ▌  This should be a line inside a section, inside a verbose message
-15:01:07|I| This is an info message, and should be prefixed with |I|
-15:01:07|I| This should be a continued info on a new line, with |I| prefix, and this should be appended
-15:01:07|I| This should be a section inside an info message
-15:01:07|I| ▌  This should be a line inside a section, inside an info message
-15:01:07|M| This is a message directed towards the user, and should be prefixed with |M|
-15:01:07|M| This should be a continued message on a new line, with |M| prefix, and this should be appended
-15:01:07|M| This should be a section inside a message
-15:01:07|M| ▌  This should be a line inside a section, inside a message
-15:01:07|S| This is a special message for a special user, like you, and should be prefixed with |S|
-15:01:07|S| This should be a continued special message on a new line, with |S| prefix, and this should be appended
-15:01:07|S| This should be a section inside a special message
-15:01:07|S| ▌  This should be a line inside a section, inside a special message
-15:01:07|L| This is a flow control message, and should be prefixed with |L|
-15:01:07|L| This should be a continued flow on a new line, with |L| prefix, and this should be appended
-15:01:07|L| This should be a section inside a flow message
-15:01:07|L| ▌  This should be a line inside a section, inside a flow message
-15:01:07|N| This is an input event message, and should be prefixed with |N|
-15:01:07|N| This should be a continued input on a new line, with |N| prefix, and this should be appended
-15:01:07|N| This should be a section inside an input message
-15:01:07|N| ▌  This should be a line inside a section, inside an input message
-15:01:07|T| This is a network message, and should be prefixed with |T|
-15:01:07|T| This should be a continued network on a new line, with |T| prefix, and this should be appended
-15:01:07|T| This should be a section inside a network message
-15:01:07|T| ▌  This should be a line inside a section, inside a network message
-15:01:07|O| This is an OS event message, and should be prefixed with |O|
-15:01:07|O| This should be a continued OS event on a new line, with |O| prefix, and this should be appended
-15:01:07|O| This should be a section inside an OS message
-15:01:07|O| ▌  This should be a line inside a section, inside an OS message
-15:01:07|P| This is an input prompt, that blocks execution and waits for console input (TODO), and should be prefixed with |P|
-15:01:07|P| This should be a continued Prompt on a new line, with |P| prefix, and this should be appended
-15:01:07|P| This should be a section inside a prompt
-15:01:07|P| ▌  This should be a line inside a section, inside a prompt
-15:01:07|O| ▌  This should be an OSSection inside a prompt section
-15:01:07|T| ▌  ▌  This is a network message inside two sections
-15:01:07|S| #2 The answer is 42! It's true, I tell ya!
-15:01:07|S| #2 You shouldn't see the following (color should be reset to default intent): 
-15:01:07|W| This is actually a warning, but now we underline it, then we even change color, but then we return to underlined warning, and finally, back to warning, but if we actually pop once more, we return to the original intent, and any subsequent pop shouldn't change anything
-15:01:07|W| ^ just checking the above statement
+20:34:02|I| TESTING STATEFUL LOGGING
+20:34:02|I| This should be line #1
+20:34:02|I| This should be line #2
+20:34:02|I| This should be line #3
+20:34:02|I| This should be line #4, and this should be appended #1, and this should be appended #2, too
+20:34:02|I| This should be a line before a section
+20:34:02|I| This should be the section title
+20:34:02|I| ▌  This should be a line inside a section #1
+20:34:02|I| ▌  This should be a line inside a section #2
+20:34:02|I| ▌  This should be a subsection title
+20:34:02|I| ▌  ▌  This should be a line inside a subsection #1
+20:34:02|I| ▌  ▌  This should be a line inside a subsection #2
+20:34:02|I| ▌  ▌  This should be a line inside a subsection #3, and this should be appended to it
+20:34:02|I| This should be a line inside a section #3, and this should be appended to it
+20:34:02|I| This should be a line after a section
+20:34:02|I| Now testing foreground colors: 
+20:34:02|I| ▌  Black, Blue, Cyan, Dark blue, 
+20:34:02|I| ▌  Dark cyan, Dark gray, Dark green, Dark purple, 
+20:34:02|I| ▌  Dark red, Dark yellow, Gray, Green, 
+20:34:02|I| ▌  Purple, Red, White, Yellow, 
+20:34:02|I| Now testing background colors: 
+20:34:02|I| ▌  Black, Blue, Cyan, Dark blue, 
+20:34:02|I| ▌  Dark cyan, Dark gray, Dark green, Dark purple, 
+20:34:02|I| ▌  Dark red, Dark yellow, Gray, Green, 
+20:34:02|I| ▌  Purple, Red, White, Yellow, 
+20:34:02|I| Done testing colors
+20:34:02|F| This should be a fatal error and should be prefixed with |F|
+20:34:02|F| This should be a continued fatal error on a new line, with |F| prefix, and this should be appended
+20:34:02|F| This should be a section inside a fatal error
+20:34:02|F| ▌  This should be a line inside a section, inside a fatal error
+20:34:02|E| This should be a non-fatal error, and should be prefixed with |E|
+20:34:02|E| This should be a continued non-fatal error on a new line, with |E| prefix, and this should be appended
+20:34:02|E| This should be a section inside an error
+20:34:02|E| ▌  This should be a line inside a section, inside an error
+20:34:02|W| This should be a warning, and should be prefixed with |W|
+20:34:02|W| This should be a continued warning on a new line, with |W| prefix, and this should be appended
+20:34:02|W| This should be a section inside a warning
+20:34:02|W| ▌  This should be a line inside a section, inside a warning
+20:34:02|V| This is a verbose info message, and should be prefixed with |V|
+20:34:02|V| This should be a continued verbose on a new line, with |V| prefix, and this should be appended
+20:34:02|V| This should be a section inside a verbose message
+20:34:02|V| ▌  This should be a line inside a section, inside a verbose message
+20:34:02|I| This is an info message, and should be prefixed with |I|
+20:34:02|I| This should be a continued info on a new line, with |I| prefix, and this should be appended
+20:34:02|I| This should be a section inside an info message
+20:34:02|I| ▌  This should be a line inside a section, inside an info message
+20:34:02|M| This is a message directed towards the user, and should be prefixed with |M|
+20:34:02|M| This should be a continued message on a new line, with |M| prefix, and this should be appended
+20:34:02|M| This should be a section inside a message
+20:34:02|M| ▌  This should be a line inside a section, inside a message
+20:34:02|S| This is a special message for a special user, like you, and should be prefixed with |S|
+20:34:02|S| This should be a continued special message on a new line, with |S| prefix, and this should be appended
+20:34:02|S| This should be a section inside a special message
+20:34:02|S| ▌  This should be a line inside a section, inside a special message
+20:34:02|L| This is a flow control message, and should be prefixed with |L|
+20:34:02|L| This should be a continued flow on a new line, with |L| prefix, and this should be appended
+20:34:02|L| This should be a section inside a flow message
+20:34:02|L| ▌  This should be a line inside a section, inside a flow message
+20:34:02|N| This is an input event message, and should be prefixed with |N|
+20:34:02|N| This should be a continued input on a new line, with |N| prefix, and this should be appended
+20:34:02|N| This should be a section inside an input message
+20:34:02|N| ▌  This should be a line inside a section, inside an input message
+20:34:02|T| This is a network message, and should be prefixed with |T|
+20:34:02|T| This should be a continued network on a new line, with |T| prefix, and this should be appended
+20:34:02|T| This should be a section inside a network message
+20:34:02|T| ▌  This should be a line inside a section, inside a network message
+20:34:02|O| This is an OS event message, and should be prefixed with |O|
+20:34:02|O| This should be a continued OS event on a new line, with |O| prefix, and this should be appended
+20:34:02|O| This should be a section inside an OS message
+20:34:02|O| ▌  This should be a line inside a section, inside an OS message
+20:34:02|P| This is an input prompt, that blocks execution and waits for console input (TODO), and should be prefixed with |P|
+20:34:02|P| This should be a continued Prompt on a new line, with |P| prefix, and this should be appended
+20:34:02|P| This should be a section inside a prompt
+20:34:02|P| ▌  This should be a line inside a section, inside a prompt
+20:34:02|O| ▌  This should be an OSSection inside a prompt section
+20:34:02|T| ▌  ▌  This is a network message inside two sections
+20:34:02|S| #2 The answer is 42! It's true, I tell ya!
+20:34:02|S| #2 You shouldn't see the following (color should be reset to default intent): 
+20:34:02|W| This is actually a warning, but now we underline it, then we even change color, but then we return to underlined warning, and finally, back to warning, but if we actually pop once more, we return to the original intent, and any subsequent pop shouldn't change anything
+20:34:02|W| ^ just checking the above statement
 
