@@ -60,39 +60,29 @@ jobs:
         uses: actions/checkout@v6
 
       - if: matrix.os == 'ubuntu-24.04' && matrix.arch == 'x86' && matrix.cxx != 'emcc'
-        name: Prepare Linux for cross-compilation
+        name: Prepare for cross-compilation (Linux)
         run: |
           sudo apt update
           sudo apt install g++-14-multilib
 
       - if: matrix.os == 'ubuntu-24.04' && matrix.cxx == 'emcc'
-        name: Prepate emscripten environment (Linux)
+        name: Prepate environment (Linux with emscripten)
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
           cd emsdk
           git pull
           ./emsdk install latest
           ./emsdk activate latest
-          echo 'source "/home/runner/work/Anyness/Anyness/emsdk/emsdk_env.sh"' >> $HOME/.bash_profile
-
-      - if: matrix.os == 'windows-2022' && matrix.cxx == 'emcc'
-        name: Prepate emscripten environment (Windows)
-        run: |
-          git clone https://github.com/emscripten-core/emsdk.git
-          cd emsdk
-          git pull
-          ./emsdk.bat install latest
-          ./emsdk.bat activate latest
 
       - if: matrix.cxx == 'clang++-21'
-        name: Installing Clang 21
+        name: Installing Clang 21 (Linux)
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo apt-add-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main"
           sudo apt update
           sudo apt install clang-21
 
-      - if: matrix.os == 'ubuntu-24.04'
+      - if: matrix.os == 'ubuntu-24.04' && matrix.cxx != 'emcc'
         name: Configure (Linux)
         run: >
           mkdir build && cd build && cmake ..
@@ -106,10 +96,45 @@ jobs:
           -DLANGULUS_OPTION_TESTING=ON
           ${{matrix.debug_flags}}
 
-      - if: matrix.os == 'windows-2022'
+      - if: matrix.os == 'ubuntu-24.04' && matrix.cxx == 'emcc'
+        name: Configure (Linux with emscripten)
+        run: >
+          source "/home/runner/work/Anyness/Anyness/emsdk/emsdk_env.sh" && mkdir build && cd build && cmake ..
+          -DCMAKE_C_COMPILER=${{matrix.c}}
+          -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
+          ${{matrix.cmake_args}}
+          -DCMAKE_BUILD_TYPE=${{matrix.build}}
+          -DLANGULUS_BUILD_ID=\"${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{github.sha}}\"
+          -DLANGULUS_OPTION_MANAGED_MEMORY=${{matrix.managed}}
+          -DLANGULUS_OPTION_MANAGED_REFLECTION=${{matrix.managed}}
+          -DLANGULUS_OPTION_TESTING=ON
+          ${{matrix.debug_flags}}
+
+      - if: matrix.os == 'windows-2022' && matrix.cxx == 'emcc'
+        name: Prepate environment (Windows with emscripten)
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          ./emsdk.bat install latest
+          ./emsdk.bat activate latest
+
+      - if: matrix.os == 'windows-2022' && matrix.cxx != 'emcc'
         name: Configure (Windows with VS2022)
         run: >
           mkdir build && cd build && cmake ..
+          ${{matrix.cmake_args}} -T "${{matrix.cxx}}"
+          -DCMAKE_BUILD_TYPE=${{matrix.build}}
+          -DLANGULUS_BUILD_ID=\"${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{github.sha}}\"
+          -DLANGULUS_OPTION_MANAGED_MEMORY=${{matrix.managed}}
+          -DLANGULUS_OPTION_MANAGED_REFLECTION=${{matrix.managed}}
+          -DLANGULUS_OPTION_TESTING=ON
+          ${{matrix.debug_flags}}
+
+      - if: matrix.os == 'windows-2022' && matrix.cxx == 'emcc'
+        name: Configure (Windows with emscripten)
+        run: >
+          emsdk_env.bat && mkdir build && cd build && cmake ..
           ${{matrix.cmake_args}} -T "${{matrix.cxx}}"
           -DCMAKE_BUILD_TYPE=${{matrix.build}}
           -DLANGULUS_BUILD_ID=\"${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{github.sha}}\"

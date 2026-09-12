@@ -839,10 +839,9 @@ namespace Langulus::Anyness::Component
       template<CT::Handle H, class T>
       static void InsertInner(H& to, T&& a) {
          using I  = IntentOf(a);
-         using IT = DeextAll<Deint<T>>;
-
+         
          if constexpr (CONVERT) {
-            LglsAssumeDev(to.template IsSame<IT>(),
+            LglsAssumeDev(to.template IsSame<DeextAll<Deint<T>>>(),
                "Use ConvertInsertInner instead");
          }
 
