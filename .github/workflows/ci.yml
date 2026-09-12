@@ -99,7 +99,7 @@ jobs:
       - if: matrix.os == 'ubuntu-24.04' && matrix.cxx == 'emcc'
         name: Configure (Linux with emscripten)
         run: >
-          source "/home/runner/work/Anyness/Anyness/emsdk/emsdk_env.sh" && mkdir build && cd build && cmake ..
+          source "/home/runner/work/Anyness/Anyness/emsdk/emsdk_env.sh" && mkdir build && cd build && emcmake cmake ..
           -DCMAKE_C_COMPILER=${{matrix.c}}
           -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
           ${{matrix.cmake_args}}

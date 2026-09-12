@@ -72,7 +72,7 @@ function(add_langulus_library NAME)
       # so: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/LangulusMod*.so                 
       foreach(ITEM ${arg_LIBRARIES})
          target_link_libraries(${NAME}
-            PRIVATE $<IF:$<TARGET_EXISTS:${ITEM}>,$<TARGET_FILE:${ITEM}>, >	
+            PRIVATE  $<$<TARGET_EXISTS:${ITEM}>:$<TARGET_FILE:${ITEM}>>
                      ${ITEM}
          )
       endforeach()
@@ -117,7 +117,7 @@ function(add_langulus_app NAME)
       # so: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/LangulusMod*.so                 
       foreach(ITEM ${arg_LIBRARIES})
          target_link_libraries(${NAME}
-            PRIVATE  $<IF:$<TARGET_EXISTS:${ITEM}>,$<TARGET_FILE:${ITEM}>, >	
+            PRIVATE  $<$<TARGET_EXISTS:${ITEM}>:$<TARGET_FILE:${ITEM}>>
                      ${ITEM}
          )
       endforeach()
