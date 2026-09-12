@@ -117,7 +117,7 @@ jobs:
           cd emsdk
           git pull
           ./emsdk.bat install latest
-          ./emsdk.bat activate latest
+          ./emsdk.bat activate latest --permanent
           ./emsdk_env.bat --permanent
 
       - if: matrix.os == 'windows-2022'
