@@ -144,6 +144,9 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
 
     if (LANGULUS_OPTION_LOGGING)
         # Configure and link {fmt} library                                    
+        if (EMSCRIPTEN)
+            set(FMT_OS OFF)
+        endif()
         fetch_external_module(
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
