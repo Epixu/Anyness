@@ -120,11 +120,22 @@ jobs:
           ./emsdk.bat activate latest --permanent
           ./emsdk_env.bat --permanent
 
-      - if: matrix.os == 'windows-2022'
-        name: Configure (Windows with VS2022/emscripten)
+      - if: matrix.os == 'windows-2022' && matrix.cxx != 'emcc'
+        name: Configure (Windows with VS2022)
         run: >
           mkdir build && cd build && cmake ..
           ${{matrix.cmake_args}} -T "${{matrix.cxx}}"
+          -DCMAKE_BUILD_TYPE=${{matrix.build}}
+          -DLANGULUS_BUILD_ID=\"${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{github.sha}}\"
+          -DLANGULUS_OPTION_MANAGED_MEMORY=${{matrix.managed}}
+          -DLANGULUS_OPTION_MANAGED_REFLECTION=${{matrix.managed}}
+          -DLANGULUS_OPTION_TESTING=ON
+          ${{matrix.debug_flags}}
+
+      - if: matrix.os == 'windows-2022' && matrix.cxx == 'emcc'
+        name: Configure (Windows with emscripten)
+        run: >
+          mkdir build && cd build && emcmake ..
           -DCMAKE_BUILD_TYPE=${{matrix.build}}
           -DLANGULUS_BUILD_ID=\"${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{github.sha}}\"
           -DLANGULUS_OPTION_MANAGED_MEMORY=${{matrix.managed}}
