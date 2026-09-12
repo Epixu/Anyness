@@ -9,6 +9,7 @@
 #include "Core.hpp"
 
 #if LANGULUS_FEATURE(LOGGING)
+#include <stdlib.h>
 #include <fmt/format.h>
 #include <fmt/color.h>
 #include <fmt/chrono.h>
