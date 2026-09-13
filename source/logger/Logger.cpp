@@ -5,10 +5,14 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#include "simdutf/implementation.h"
+#include <Langulus/Core.hpp>
+//#include "simdutf/implementation.h"
 #include <Langulus/Logger.hpp>
 #include <string>
-#include <simdutf.h>
+
+#if LANGULUS_FEATURE(UNICODE)
+   #include <simdutf.h>
+#endif
 
 #if LANGULUS_OS(WINDOWS)
    #define WIN32_LEAN_AND_MEAN
@@ -106,6 +110,7 @@ void State::Write(const ::std::string_view& stdString) const noexcept {
 ///   @attention will always flush file/console                               
 ///   @param stdString - the text view to write                               
 void State::Write(const ::std::wstring_view& stdString) const noexcept {
+#if LANGULUS_FEATURE(UNICODE)
    ::std::string buffer;
    size_t conversion_result = 0;
 
@@ -130,6 +135,9 @@ void State::Write(const ::std::wstring_view& stdString) const noexcept {
       Write("<invalid wide string>");
    else
       Write(buffer);
+#else
+   Write("<unsupported wide string>");
+#endif
 }
 
 /// Apply a style                                                             

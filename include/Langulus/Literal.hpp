@@ -62,7 +62,7 @@ namespace Langulus
    ///                                                                        
    /// String literals are unique types, they can't be used in ?: statements, 
    /// so I've allowed string literals of the form `? "\0\0\0" : "alt"` to    
-   /// be consistent - left literal has a Literal array size of 3, but size() 
+   /// be consistent - left literal has a Literal::ArraySize of 3, but size() 
    /// of 0                                                                   
    ///                                                                        
    template<class T = Unsupported, size_t N = 0>
